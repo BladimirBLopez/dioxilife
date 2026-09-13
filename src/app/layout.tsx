@@ -15,10 +15,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "DioxiLife Bolivia",
   description: "Tienda online DioxiLife Bolivia",
-  icons: {
-    icon: "/favicon.ico",
-    apple: "/icon-512.png",
-  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
