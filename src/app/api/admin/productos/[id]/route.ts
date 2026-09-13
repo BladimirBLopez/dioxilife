@@ -6,7 +6,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const { nombre, descripcion, precio, stock, imagenUrl, categoriaId, activo } =
+  const { nombre, descripcion, precio, mostrarPrecio, imagenUrl, categoriaId, activo } =
     await req.json();
 
   const producto = await prisma.producto.update({
@@ -15,7 +15,7 @@ export async function PUT(
       nombre,
       descripcion: descripcion || null,
       precio,
-      stock,
+      mostrarPrecio,
       imagenUrl: imagenUrl || null,
       categoriaId,
       activo,

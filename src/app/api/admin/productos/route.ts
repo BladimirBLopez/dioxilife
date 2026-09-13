@@ -19,7 +19,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { nombre, descripcion, precio, stock, imagenUrl, categoriaId } =
+  const { nombre, descripcion, precio, mostrarPrecio, imagenUrl, categoriaId } =
     await req.json();
 
   if (!nombre || !precio || !categoriaId) {
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       slug: slugify(nombre) + "-" + Date.now().toString(36),
       descripcion: descripcion || null,
       precio,
-      stock: stock ?? 0,
+      mostrarPrecio: mostrarPrecio ?? false,
       imagenUrl: imagenUrl || null,
       categoriaId,
     },
