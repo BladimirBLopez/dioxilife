@@ -1,0 +1,68 @@
+"use client";
+
+import { useState } from "react";
+import Image from "next/image";
+
+const LINKS = [
+  { href: "#top", label: "Inicio" },
+  { href: "#productos", label: "Productos" },
+  { href: "#testimonios", label: "Testimonios" },
+  { href: "#sucursales", label: "Sucursales" },
+];
+
+export default function SiteHeader() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <header id="top" className="bg-white border-b sticky top-0 z-20">
+      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        <button
+          onClick={() => setOpen(!open)}
+          aria-label="Abrir menú"
+          className="text-2xl leading-none px-1 text-brand-blue md:hidden"
+        >
+          ☰
+        </button>
+
+        <div className="flex-1 flex justify-center md:justify-start">
+          <Image
+            src="/logo.png"
+            alt="DioxiLife Bolivia"
+            width={150}
+            height={124}
+            priority
+          />
+        </div>
+
+        <nav className="hidden md:flex gap-6">
+          {LINKS.map((l) => (
+            <a
+              key={l.href}
+              href={l.href}
+              className="text-sm font-medium text-brand-gray hover:text-brand-pink"
+            >
+              {l.label}
+            </a>
+          ))}
+        </nav>
+
+        <div className="w-7 md:hidden" />
+      </div>
+
+      {open && (
+        <nav className="md:hidden border-t bg-white flex flex-col">
+          {LINKS.map((l) => (
+            <a
+              key={l.href}
+              href={l.href}
+              onClick={() => setOpen(false)}
+              className="px-4 py-3 border-b text-sm font-medium text-brand-gray"
+            >
+              {l.label}
+            </a>
+          ))}
+        </nav>
+      )}
+    </header>
+  );
+}

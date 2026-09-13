@@ -1,5 +1,7 @@
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
+import SiteHeader from "@/components/SiteHeader";
+import BotonWhatsapp from "@/components/BotonWhatsapp";
 
 export const dynamic = "force-dynamic";
 
@@ -80,18 +82,7 @@ export default async function Home({
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-center">
-          <Image
-            src="/logo.png"
-            alt="DioxiLife Bolivia"
-            width={160}
-            height={132}
-            priority
-          />
-        </div>
-      </header>
+      <SiteHeader />
 
       {/* Hero */}
       <section className="bg-gradient-to-r from-brand-pink to-brand-blue text-white text-center py-8 px-4">
@@ -129,7 +120,7 @@ export default async function Home({
       )}
 
       {/* Grid de productos */}
-      <main className="flex-1 max-w-6xl mx-auto w-full px-4 pb-4">
+      <main id="productos" className="flex-1 max-w-6xl mx-auto w-full px-4 pb-4">
         {productos.length === 0 ? (
           <div className="text-center py-20 text-brand-gray">
             <p className="text-lg font-medium">Aún no hay productos disponibles</p>
@@ -176,7 +167,7 @@ export default async function Home({
 
       {/* Testimonios destacados */}
       {testimonios.length > 0 && (
-        <section className="bg-white border-t py-10 px-4">
+        <section id="testimonios" className="bg-white border-t py-10 px-4">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-xl font-bold text-brand-blue text-center mb-6">
               Lo que dicen nuestros clientes
@@ -218,7 +209,7 @@ export default async function Home({
 
       {/* Sucursales por departamento */}
       {sucursales.length > 0 && (
-        <section className="bg-gray-50 border-t py-10 px-4">
+        <section id="sucursales" className="bg-gray-50 border-t py-10 px-4">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-xl font-bold text-brand-blue text-center mb-6">
               Puntos de venta por departamento
@@ -293,6 +284,8 @@ export default async function Home({
       <footer className="bg-white border-t py-4 text-center text-xs text-brand-gray">
         © {new Date().getFullYear()} DioxiLife Bolivia
       </footer>
+
+      <BotonWhatsapp />
     </div>
   );
 }
