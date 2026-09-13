@@ -9,7 +9,7 @@ type Producto = {
   nombre: string;
   descripcion: string | null;
   precio: string;
-  stock: number;
+  mostrarPrecio: boolean;
   imagenUrl: string | null;
   categoriaId: string;
   categoria: Categoria;
@@ -20,7 +20,7 @@ const vacio = {
   nombre: "",
   descripcion: "",
   precio: "",
-  stock: "0",
+  mostrarPrecio: false,
   imagenUrl: "",
   categoriaId: "",
 };
@@ -48,16 +48,19 @@ export default function ProductosPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.nombre || !form.precio || !form.categoriaId) {
-      alert("Nombre, precio y categoría son obligatorios");
+    if (!form.nombre || !form.categoriaId) {
+      alert("Nombre y categoría son obligatorios");
+      return;
+    }
+    if (form.mostrarPrecio && !form.precio) {
+      alert("Ingresa el precio o desactiva 'Mostrar precio'");
       return;
     }
     setLoading(true);
 
     const body = {
       ...form,
-      precio: parseFloat(form.precio),
-      stock: parseInt(form.stock || "0", 10),
+      precio: parseFloat(form.precio || "0"),
       activo: true,
     };
 
@@ -88,7 +91,7 @@ export default function ProductosPage() {
       nombre: p.nombre,
       descripcion: p.descripcion || "",
       precio: String(p.precio),
-      stock: String(p.stock),
+      mostrarPrecio: p.mostrarPrecio,
       imagenUrl: p.imagenUrl || "",
       categoriaId: p.categoriaId,
     });
@@ -145,8 +148,33 @@ export default function ProductosPage() {
             />
           </div>
 
-          <div className="flex gap-3">
-            <div className="flex-1">
+          <div className="flex items-center justify-between border rounded px-3 py-2">
+            <div>
+              <p className="text-sm font-medium">Mostrar precio</p>
+              <p className="text-xs text-gray-500">
+                Si está apagado, en la tienda se verá &quot;Precio a consultar
+                por WhatsApp&quot;
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setForm({ ...form, mostrarPrecio: !form.mostrarPrecio })
+              }
+              className={`shrink-0 w-12 h-7 rounded-full relative transition-colors ${
+                form.mostrarPrecio ? "bg-brand-pink" : "bg-gray-300"
+              }`}
+            >
+              <span
+                className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${
+                  form.mostrarPrecio ? "translate-x-5" : ""
+                }`}
+              />
+            </button>
+          </div>
+
+          {form.mostrarPrecio && (
+            <div>
               <label className="block text-sm mb-1">Precio (Bs.)</label>
               <input
                 type="number"
@@ -157,16 +185,7 @@ export default function ProductosPage() {
                 required
               />
             </div>
-            <div className="flex-1">
-              <label className="block text-sm mb-1">Stock</label>
-              <input
-                type="number"
-                value={form.stock}
-                onChange={(e) => setForm({ ...form, stock: e.target.value })}
-                className="w-full border rounded px-3 py-2"
-              />
-            </div>
-          </div>
+          )}
 
           <div>
             <label className="block text-sm mb-1">Categoría</label>
@@ -222,7 +241,9 @@ export default function ProductosPage() {
               <p className="font-medium">{p.nombre}</p>
               <p className="text-xs text-gray-500">{p.categoria.nombre}</p>
               <p className="text-sm">
-                Bs. {p.precio} · Stock: {p.stock}
+                {p.mostrarPrecio
+                  ? `Bs. ${p.precio}`
+                  : "Precio a consultar por WhatsApp"}
               </p>
               <div className="flex gap-3 text-sm mt-1">
                 <button
