@@ -1,69 +1,130 @@
 import Image from "next/image";
+import { prisma } from "@/lib/prisma";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+type SearchParams = Promise<{ categoria?: string }>;
+
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const { categoria } = await searchParams;
+
+  const [categorias, productos] = await Promise.all([
+    prisma.categoria.findMany({
+      orderBy: { nombre: "asc" },
+      include: { _count: { select: { productos: true } } },
+    }),
+    prisma.producto.findMany({
+      where: {
+        activo: true,
+        ...(categoria ? { categoria: { slug: categoria } } : {}),
+      },
+      include: { categoria: true },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-center">
+          <Image
+            src="/logo.png"
+            alt="DioxiLife Bolivia"
+            width={160}
+            height={132}
+            priority
+          />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
+      </header>
+
+      {/* Hero */}
+      <section className="bg-gradient-to-r from-brand-pink to-brand-blue text-white text-center py-8 px-4">
+        <h1 className="text-2xl font-bold">DioxiLife Bolivia</h1>
+        <p className="text-white/90 mt-1">Tu tienda de confianza en Bolivia</p>
+      </section>
+
+      {/* Categorías */}
+      {categorias.length > 0 && (
+        <nav className="max-w-6xl mx-auto w-full px-4 py-4 flex gap-2 overflow-x-auto">
           <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/"
+            className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border ${
+              !categoria
+                ? "bg-brand-pink text-white border-brand-pink"
+                : "bg-white text-brand-gray border-gray-300"
+            }`}
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
+            Todos
           </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          {categorias.map((c) => (
+            <a
+              key={c.id}
+              href={`/?categoria=${c.slug}`}
+              className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border ${
+                categoria === c.slug
+                  ? "bg-brand-pink text-white border-brand-pink"
+                  : "bg-white text-brand-gray border-gray-300"
+              }`}
+            >
+              {c.nombre} ({c._count.productos})
+            </a>
+          ))}
+        </nav>
+      )}
+
+      {/* Grid de productos */}
+      <main className="flex-1 max-w-6xl mx-auto w-full px-4 pb-12">
+        {productos.length === 0 ? (
+          <div className="text-center py-20 text-brand-gray">
+            <p className="text-lg font-medium">Aún no hay productos disponibles</p>
+            <p className="text-sm mt-1">Vuelve pronto, estamos preparando todo.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-2">
+            {productos.map((p) => (
+              <div
+                key={p.id}
+                className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col"
+              >
+                <div className="aspect-square bg-gray-100 relative">
+                  {p.imagenUrl ? (
+                    <Image
+                      src={p.imagenUrl}
+                      alt={p.nombre}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-brand-gray text-xs">
+                      Sin imagen
+                    </div>
+                  )}
+                </div>
+                <div className="p-3 flex flex-col flex-1">
+                  <span className="text-[11px] uppercase tracking-wide text-brand-pink font-semibold">
+                    {p.categoria.nombre}
+                  </span>
+                  <h3 className="text-sm font-medium mt-0.5 line-clamp-2">
+                    {p.nombre}
+                  </h3>
+                  <p className="text-brand-blue font-bold mt-auto pt-2">
+                    Bs {Number(p.precio).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </main>
+
+      <footer className="bg-white border-t py-4 text-center text-xs text-brand-gray">
+        © {new Date().getFullYear()} DioxiLife Bolivia
+      </footer>
     </div>
   );
 }
