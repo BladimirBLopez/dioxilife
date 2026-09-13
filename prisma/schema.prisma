@@ -9,27 +9,76 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Departamento {
+  LA_PAZ
+  SANTA_CRUZ
+  COCHABAMBA
+  ORURO
+  POTOSI
+  CHUQUISACA
+  TARIJA
+  BENI
+  PANDO
+}
+
 model Categoria {
-  id        String    @id @default(cuid())
+  id        String     @id @default(cuid())
   nombre    String
-  slug      String    @unique
+  slug      String     @unique
   productos Producto[]
-  createdAt DateTime  @default(now())
+  createdAt DateTime   @default(now())
 }
 
 model Producto {
-  id          String    @id @default(cuid())
+  id          String      @id @default(cuid())
   nombre      String
-  slug        String    @unique
+  slug        String      @unique
   descripcion String?
   precio      Decimal
-  stock       Int       @default(0)
+  stock       Int         @default(0)
   imagenUrl   String?
   categoriaId String
-  categoria   Categoria @relation(fields: [categoriaId], references: [id])
-  activo      Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  categoria   Categoria   @relation(fields: [categoriaId], references: [id])
+  protocolos  Protocolo[]
+  activo      Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Protocolo {
+  id         String   @id @default(cuid())
+  titulo     String
+  contenido  String
+  imagenUrl  String?
+  productoId String
+  producto   Producto @relation(fields: [productoId], references: [id])
+  activo     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Testimonio {
+  id            String   @id @default(cuid())
+  nombreCliente String
+  contenido     String
+  calificacion  Int      @default(5)
+  imagenUrl     String?
+  destacado     Boolean  @default(false)
+  activo        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
+
+model Sucursal {
+  id           String       @id @default(cuid())
+  departamento Departamento
+  nombre       String?
+  direccion    String?
+  telefono     String?
+  facebookUrl  String?
+  tiktokUrl    String?
+  instagramUrl String?
+  activo       Boolean      @default(true)
+  createdAt    DateTime     @default(now())
 }
 
 model Admin {
