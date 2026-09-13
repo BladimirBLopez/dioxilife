@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
+const NUMERO_WHATSAPP = "59170758200";
+
 export default async function ProductoDetalle({
   params,
 }: {
@@ -27,6 +29,10 @@ export default async function ProductoDetalle({
     notFound();
   }
 
+  const mensajeWhatsapp = encodeURIComponent(
+    `Hola, quiero consultar el precio de "${producto.nombre}".`
+  );
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <header className="bg-white border-b sticky top-0 z-10">
@@ -34,7 +40,7 @@ export default async function ProductoDetalle({
           <Link href="/" className="text-sm text-brand-blue font-medium">
             ← Volver a la tienda
           </Link>
-          <Image src="/logo.png" alt="DioxiLife Bolivia" width={100} height={82} />
+          <Image src="/logo.png" alt="DioxiLife Bolivia" width={90} height={74} />
         </div>
       </header>
 
@@ -61,21 +67,27 @@ export default async function ProductoDetalle({
               {producto.categoria.nombre}
             </span>
             <h1 className="text-2xl font-bold mt-1">{producto.nombre}</h1>
-            <p className="text-brand-blue font-bold text-2xl mt-3">
-              Bs {Number(producto.precio).toFixed(2)}
-            </p>
+
+            {producto.mostrarPrecio ? (
+              <p className="text-brand-blue font-bold text-2xl mt-3">
+                Bs {Number(producto.precio).toFixed(2)}
+              </p>
+            ) : (
+              <a
+                href={`https://wa.me/${NUMERO_WHATSAPP}?text=${mensajeWhatsapp}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#25D366] font-semibold mt-3"
+              >
+                Precio a consultar por WhatsApp
+              </a>
+            )}
 
             {producto.descripcion && (
               <p className="text-brand-gray mt-4 whitespace-pre-line">
                 {producto.descripcion}
               </p>
             )}
-
-            <p className="text-xs text-gray-400 mt-4">
-              {producto.stock > 0
-                ? `Disponible (${producto.stock} en stock)`
-                : "Agotado por el momento"}
-            </p>
           </div>
         </div>
 
