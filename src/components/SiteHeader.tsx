@@ -15,24 +15,14 @@ export default function SiteHeader() {
 
   return (
     <header id="top" className="bg-white border-b sticky top-0 z-20">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-        <button
-          onClick={() => setOpen(!open)}
-          aria-label="Abrir menú"
-          className="text-2xl leading-none px-1 text-brand-blue md:hidden"
-        >
-          ☰
-        </button>
-
-        <div className="flex-1 flex justify-center md:justify-start">
-          <Image
-            src="/logo.png"
-            alt="DioxiLife Bolivia"
-            width={150}
-            height={124}
-            priority
-          />
-        </div>
+      <div className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-between">
+        <Image
+          src="/logo.png"
+          alt="DioxiLife Bolivia"
+          width={90}
+          height={74}
+          priority
+        />
 
         <nav className="hidden md:flex gap-6">
           {LINKS.map((l) => (
@@ -46,7 +36,13 @@ export default function SiteHeader() {
           ))}
         </nav>
 
-        <div className="w-7 md:hidden" />
+        <button
+          onClick={() => setOpen(!open)}
+          aria-label="Abrir menú"
+          className="text-2xl leading-none px-1 text-brand-blue md:hidden"
+        >
+          ☰
+        </button>
       </div>
 
       {open && (
