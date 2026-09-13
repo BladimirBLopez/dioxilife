@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import LogoutButton from "../LogoutButton";
 
@@ -14,7 +15,7 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Barra superior - solo móvil */}
-      <header className="md:hidden flex items-center justify-between bg-black text-white px-4 py-3 sticky top-0 z-10">
+      <header className="md:hidden flex items-center justify-between bg-brand-blue text-white px-4 py-3 sticky top-0 z-10">
         <button
           onClick={() => setOpen(!open)}
           aria-label="Abrir menú"
@@ -22,12 +23,12 @@ export default function DashboardLayout({
         >
           ☰
         </button>
-        <h2 className="text-lg font-semibold">Panel Admin</h2>
+        <span className="font-semibold">Panel Admin</span>
         <a
           href="/"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-sm bg-white text-black rounded px-3 py-1"
+          className="text-sm bg-brand-pink rounded px-3 py-1"
         >
           Ver tienda
         </a>
@@ -43,31 +44,43 @@ export default function DashboardLayout({
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:static top-0 left-0 h-full w-64 md:w-56 bg-black text-white flex flex-col p-4 z-30
+        className={`fixed md:static top-0 left-0 h-full w-64 md:w-56 bg-brand-blue text-white flex flex-col p-4 z-30
           transform transition-transform duration-200 ease-in-out
           ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
       >
-        <h2 className="text-lg font-semibold mb-6 hidden md:block">
-          Panel Admin
-        </h2>
+        <div className="hidden md:flex justify-center mb-6">
+          <Image src="/logo.png" alt="DioxiLife" width={120} height={99} />
+        </div>
 
         <a
           href="/"
           target="_blank"
           rel="noopener noreferrer"
-          className="hidden md:block text-sm bg-white text-black rounded px-3 py-2 mb-6 text-center hover:bg-gray-200"
+          className="hidden md:block text-sm bg-brand-pink rounded px-3 py-2 mb-6 text-center font-medium hover:opacity-90"
         >
           Ver tienda
         </a>
 
-        <nav className="flex flex-col gap-2 flex-1">
-          <Link href="/admin" onClick={() => setOpen(false)} className="hover:underline">
+        <nav className="flex flex-col gap-1 flex-1">
+          <Link
+            href="/admin"
+            onClick={() => setOpen(false)}
+            className="rounded px-3 py-2 hover:bg-white/10"
+          >
             Inicio
           </Link>
-          <Link href="/admin/categorias" onClick={() => setOpen(false)} className="hover:underline">
+          <Link
+            href="/admin/categorias"
+            onClick={() => setOpen(false)}
+            className="rounded px-3 py-2 hover:bg-white/10"
+          >
             Categorías
           </Link>
-          <Link href="/admin/productos" onClick={() => setOpen(false)} className="hover:underline">
+          <Link
+            href="/admin/productos"
+            onClick={() => setOpen(false)}
+            className="rounded px-3 py-2 hover:bg-white/10"
+          >
             Productos
           </Link>
         </nav>

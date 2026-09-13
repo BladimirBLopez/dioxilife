@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,39 +16,43 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const res = await fetch("/api/admin/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ usuario, password }),
-    });
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ usuario, password }),
+      });
 
-    setLoading(false);
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setError(data?.error || "Error al iniciar sesión");
+        setLoading(false);
+        return;
+      }
 
-    if (!res.ok) {
-      const data = await res.json();
-      setError(data.error || "Error al iniciar sesión");
-      return;
+      router.push("/admin");
+      router.refresh();
+    } catch {
+      setError("No se pudo conectar. Intenta de nuevo.");
+      setLoading(false);
     }
-
-    router.push("/admin");
-    router.refresh();
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-pink to-brand-blue px-4">
       <form
         onSubmit={handleSubmit}
-        className="bg-white shadow-md rounded-lg p-8 w-full max-w-sm"
+        className="bg-white shadow-xl rounded-lg p-8 w-full max-w-sm"
       >
-        <h1 className="text-xl font-semibold mb-6 text-center">
-          Panel Admin
-        </h1>
+        <div className="flex justify-center mb-6">
+          <Image src="/logo.png" alt="DioxiLife" width={140} height={116} priority />
+        </div>
 
         {error && (
           <p className="text-red-600 text-sm mb-4 text-center">{error}</p>
         )}
 
-        <label className="block text-sm mb-1">Usuario</label>
+        <label className="block text-sm mb-1 text-brand-gray">Usuario</label>
         <input
           type="text"
           value={usuario}
@@ -56,7 +61,7 @@ export default function LoginPage() {
           required
         />
 
-        <label className="block text-sm mb-1">Contraseña</label>
+        <label className="block text-sm mb-1 text-brand-gray">Contraseña</label>
         <input
           type="password"
           value={password}
@@ -68,7 +73,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-black text-white rounded py-2 disabled:opacity-50"
+          className="w-full bg-brand-blue text-white rounded py-2 font-medium disabled:opacity-50 hover:opacity-90"
         >
           {loading ? "Ingresando..." : "Ingresar"}
         </button>
