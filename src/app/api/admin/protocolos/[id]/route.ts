@@ -1,0 +1,33 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const { titulo, contenido, imagenUrl, productoId, activo } =
+    await req.json();
+
+  const protocolo = await prisma.protocolo.update({
+    where: { id },
+    data: {
+      titulo,
+      contenido,
+      imagenUrl: imagenUrl || null,
+      productoId,
+      activo,
+    },
+  });
+
+  return NextResponse.json(protocolo);
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  await prisma.protocolo.delete({ where: { id } });
+  return NextResponse.json({ ok: true });
+}
