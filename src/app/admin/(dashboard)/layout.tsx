@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import LogoutButton from "../LogoutButton";
 
@@ -6,24 +9,73 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <div className="min-h-screen flex">
-      <aside className="w-56 bg-black text-white flex flex-col p-4">
-        <h2 className="text-lg font-semibold mb-6">Panel Admin</h2>
+    <div className="min-h-screen flex flex-col md:flex-row">
+      {/* Barra superior - solo móvil */}
+      <header className="md:hidden flex items-center justify-between bg-black text-white px-4 py-3 sticky top-0 z-10">
+        <button
+          onClick={() => setOpen(!open)}
+          aria-label="Abrir menú"
+          className="text-2xl leading-none px-2"
+        >
+          ☰
+        </button>
+        <h2 className="text-lg font-semibold">Panel Admin</h2>
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm bg-white text-black rounded px-3 py-1"
+        >
+          Ver tienda
+        </a>
+      </header>
+
+      {/* Fondo oscuro al abrir el menú en móvil */}
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/50 z-20 md:hidden"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed md:static top-0 left-0 h-full w-64 md:w-56 bg-black text-white flex flex-col p-4 z-30
+          transform transition-transform duration-200 ease-in-out
+          ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+      >
+        <h2 className="text-lg font-semibold mb-6 hidden md:block">
+          Panel Admin
+        </h2>
+
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hidden md:block text-sm bg-white text-black rounded px-3 py-2 mb-6 text-center hover:bg-gray-200"
+        >
+          Ver tienda
+        </a>
+
         <nav className="flex flex-col gap-2 flex-1">
-          <Link href="/admin" className="hover:underline">
+          <Link href="/admin" onClick={() => setOpen(false)} className="hover:underline">
             Inicio
           </Link>
-          <Link href="/admin/categorias" className="hover:underline">
+          <Link href="/admin/categorias" onClick={() => setOpen(false)} className="hover:underline">
             Categorías
           </Link>
-          <Link href="/admin/productos" className="hover:underline">
+          <Link href="/admin/productos" onClick={() => setOpen(false)} className="hover:underline">
             Productos
           </Link>
         </nav>
+
         <LogoutButton />
       </aside>
-      <main className="flex-1 bg-gray-50 p-6">{children}</main>
+
+      <main className="flex-1 bg-gray-50 p-6 min-w-0">{children}</main>
     </div>
   );
 }
