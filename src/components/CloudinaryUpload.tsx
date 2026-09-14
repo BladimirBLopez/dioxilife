@@ -8,9 +8,11 @@ const UPLOAD_PRESET = "dioxilife";
 export default function CloudinaryUpload({
   value,
   onChange,
+  onUploadingChange,
 }: {
   value: string;
   onChange: (url: string) => void;
+  onUploadingChange?: (subiendo: boolean) => void;
 }) {
   const [subiendo, setSubiendo] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -20,6 +22,7 @@ export default function CloudinaryUpload({
     if (!file) return;
 
     setSubiendo(true);
+    onUploadingChange?.(true);
 
     const formData = new FormData();
     formData.append("file", file);
@@ -35,12 +38,13 @@ export default function CloudinaryUpload({
       if (data.secure_url) {
         onChange(data.secure_url);
       } else {
-        alert("Error al subir la imagen");
+        alert(data?.error?.message || "Error al subir la imagen. Intenta de nuevo.");
       }
     } catch {
-      alert("Error al subir la imagen");
+      alert("No se pudo subir la imagen. Revisa tu conexión e intenta de nuevo.");
     } finally {
       setSubiendo(false);
+      onUploadingChange?.(false);
       if (inputRef.current) inputRef.current.value = "";
     }
   }
@@ -81,6 +85,11 @@ export default function CloudinaryUpload({
           {subiendo ? "Subiendo..." : value ? "Cambiar imagen" : "Subir imagen"}
         </label>
         <p className="text-[11px] text-gray-400 mt-1">JPG o PNG</p>
+        {subiendo && (
+          <p className="text-[11px] text-brand-pink font-medium mt-1">
+            Subiendo imagen, espera un momento…
+          </p>
+        )}
       </div>
     </div>
   );

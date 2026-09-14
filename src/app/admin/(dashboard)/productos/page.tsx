@@ -34,6 +34,7 @@ export default function ProductosPage() {
   const [formInicial, setFormInicial] = useState(vacio);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [imagenSubiendo, setImagenSubiendo] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [confirmarSalir, setConfirmarSalir] = useState(false);
   const [borrarId, setBorrarId] = useState<string | null>(null);
@@ -98,6 +99,10 @@ export default function ProductosPage() {
     }
     if (form.mostrarPrecio && !form.precio) {
       alert("Ingresa el precio o desactiva 'Mostrar precio'");
+      return;
+    }
+    if (imagenSubiendo) {
+      alert("Espera a que termine de subir la imagen antes de guardar");
       return;
     }
     setLoading(true);
@@ -304,15 +309,18 @@ export default function ProductosPage() {
               <CloudinaryUpload
                 value={form.imagenUrl}
                 onChange={(url) => setForm({ ...form, imagenUrl: url })}
+                onUploadingChange={setImagenSubiendo}
               />
             </div>
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || imagenSubiendo}
               className="admin-btn-primary w-full"
             >
-              {loading
+              {imagenSubiendo
+                ? "Esperando imagen..."
+                : loading
                 ? "Guardando..."
                 : editandoId
                 ? "Guardar cambios"
