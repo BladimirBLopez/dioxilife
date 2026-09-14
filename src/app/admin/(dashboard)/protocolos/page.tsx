@@ -27,9 +27,11 @@ export default function ProtocolosPage() {
   const [protocolos, setProtocolos] = useState<Protocolo[]>([]);
   const [productos, setProductos] = useState<Producto[]>([]);
   const [form, setForm] = useState(vacio);
+  const [formInicial, setFormInicial] = useState(vacio);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [confirmarSalir, setConfirmarSalir] = useState(false);
   const [borrarId, setBorrarId] = useState<string | null>(null);
 
   async function cargar() {
@@ -45,20 +47,40 @@ export default function ProtocolosPage() {
     cargar();
   }, []);
 
+  function hayCambiosSinGuardar() {
+    return JSON.stringify(form) !== JSON.stringify(formInicial);
+  }
+
+  function pedirCerrarModal() {
+    if (hayCambiosSinGuardar()) {
+      setConfirmarSalir(true);
+    } else {
+      setModalAbierto(false);
+    }
+  }
+
+  function cerrarSinGuardar() {
+    setConfirmarSalir(false);
+    setModalAbierto(false);
+  }
+
   function abrirNuevo() {
     setEditandoId(null);
     setForm(vacio);
+    setFormInicial(vacio);
     setModalAbierto(true);
   }
 
   function abrirEditar(p: Protocolo) {
-    setEditandoId(p.id);
-    setForm({
+    const datos = {
       titulo: p.titulo,
       contenido: p.contenido,
       imagenUrl: p.imagenUrl || "",
       productoId: p.productoId,
-    });
+    };
+    setEditandoId(p.id);
+    setForm(datos);
+    setFormInicial(datos);
     setModalAbierto(true);
   }
 
@@ -153,7 +175,7 @@ export default function ProtocolosPage() {
       {modalAbierto && (
         <Modal
           title={editandoId ? "Editar protocolo" : "Nuevo protocolo"}
-          onClose={() => setModalAbierto(false)}
+          onClose={pedirCerrarModal}
         >
           <form onSubmit={handleSubmit} className="space-y-3">
             <div>
@@ -220,6 +242,16 @@ export default function ProtocolosPage() {
             </button>
           </form>
         </Modal>
+      )}
+
+      {confirmarSalir && (
+        <ConfirmDialog
+          title="Cambios sin guardar"
+          message="Tienes cambios sin guardar en este formulario. Si sales ahora se van a perder."
+          confirmLabel="Descartar cambios"
+          onConfirm={cerrarSinGuardar}
+          onCancel={() => setConfirmarSalir(false)}
+        />
       )}
 
       {borrarId && (

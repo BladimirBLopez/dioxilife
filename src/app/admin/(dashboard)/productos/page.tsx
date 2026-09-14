@@ -31,9 +31,11 @@ export default function ProductosPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [form, setForm] = useState(vacio);
+  const [formInicial, setFormInicial] = useState(vacio);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [confirmarSalir, setConfirmarSalir] = useState(false);
   const [borrarId, setBorrarId] = useState<string | null>(null);
 
   async function cargar() {
@@ -49,22 +51,42 @@ export default function ProductosPage() {
     cargar();
   }, []);
 
+  function hayCambiosSinGuardar() {
+    return JSON.stringify(form) !== JSON.stringify(formInicial);
+  }
+
+  function pedirCerrarModal() {
+    if (hayCambiosSinGuardar()) {
+      setConfirmarSalir(true);
+    } else {
+      setModalAbierto(false);
+    }
+  }
+
+  function cerrarSinGuardar() {
+    setConfirmarSalir(false);
+    setModalAbierto(false);
+  }
+
   function abrirNuevo() {
     setEditandoId(null);
     setForm(vacio);
+    setFormInicial(vacio);
     setModalAbierto(true);
   }
 
   function abrirEditar(p: Producto) {
-    setEditandoId(p.id);
-    setForm({
+    const datos = {
       nombre: p.nombre,
       descripcion: p.descripcion || "",
       precio: String(p.precio),
       mostrarPrecio: p.mostrarPrecio,
       imagenUrl: p.imagenUrl || "",
       categoriaId: p.categoriaId,
-    });
+    };
+    setEditandoId(p.id);
+    setForm(datos);
+    setFormInicial(datos);
     setModalAbierto(true);
   }
 
@@ -179,7 +201,7 @@ export default function ProductosPage() {
       {modalAbierto && (
         <Modal
           title={editandoId ? "Editar producto" : "Nuevo producto"}
-          onClose={() => setModalAbierto(false)}
+          onClose={pedirCerrarModal}
         >
           <form onSubmit={handleSubmit} className="space-y-3">
             <div>
@@ -286,6 +308,16 @@ export default function ProductosPage() {
             </button>
           </form>
         </Modal>
+      )}
+
+      {confirmarSalir && (
+        <ConfirmDialog
+          title="Cambios sin guardar"
+          message="Tienes cambios sin guardar en este formulario. Si sales ahora se van a perder."
+          confirmLabel="Descartar cambios"
+          onConfirm={cerrarSinGuardar}
+          onCancel={() => setConfirmarSalir(false)}
+        />
       )}
 
       {borrarId && (

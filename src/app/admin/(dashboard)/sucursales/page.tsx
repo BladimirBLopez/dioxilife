@@ -41,9 +41,11 @@ const vacio = {
 export default function SucursalesPage() {
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [form, setForm] = useState(vacio);
+  const [formInicial, setFormInicial] = useState(vacio);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [confirmarSalir, setConfirmarSalir] = useState(false);
   const [borrarId, setBorrarId] = useState<string | null>(null);
 
   async function cargar() {
@@ -55,15 +57,32 @@ export default function SucursalesPage() {
     cargar();
   }, []);
 
+  function hayCambiosSinGuardar() {
+    return JSON.stringify(form) !== JSON.stringify(formInicial);
+  }
+
+  function pedirCerrarModal() {
+    if (hayCambiosSinGuardar()) {
+      setConfirmarSalir(true);
+    } else {
+      setModalAbierto(false);
+    }
+  }
+
+  function cerrarSinGuardar() {
+    setConfirmarSalir(false);
+    setModalAbierto(false);
+  }
+
   function abrirNuevo() {
     setEditandoId(null);
     setForm(vacio);
+    setFormInicial(vacio);
     setModalAbierto(true);
   }
 
   function abrirEditar(s: Sucursal) {
-    setEditandoId(s.id);
-    setForm({
+    const datos = {
       departamento: s.departamento,
       nombre: s.nombre || "",
       direccion: s.direccion || "",
@@ -71,7 +90,10 @@ export default function SucursalesPage() {
       facebookUrl: s.facebookUrl || "",
       tiktokUrl: s.tiktokUrl || "",
       instagramUrl: s.instagramUrl || "",
-    });
+    };
+    setEditandoId(s.id);
+    setForm(datos);
+    setFormInicial(datos);
     setModalAbierto(true);
   }
 
@@ -162,7 +184,7 @@ export default function SucursalesPage() {
       {modalAbierto && (
         <Modal
           title={editandoId ? "Editar sucursal" : "Nueva sucursal"}
-          onClose={() => setModalAbierto(false)}
+          onClose={pedirCerrarModal}
         >
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <label className="text-sm font-medium">Departamento</label>
@@ -240,6 +262,16 @@ export default function SucursalesPage() {
             </button>
           </form>
         </Modal>
+      )}
+
+      {confirmarSalir && (
+        <ConfirmDialog
+          title="Cambios sin guardar"
+          message="Tienes cambios sin guardar en este formulario. Si sales ahora se van a perder."
+          confirmLabel="Descartar cambios"
+          onConfirm={cerrarSinGuardar}
+          onCancel={() => setConfirmarSalir(false)}
+        />
       )}
 
       {borrarId && (
