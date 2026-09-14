@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import CartDrawer from "./CartDrawer";
 
 const LINKS_BASE = [
-  { href: "#top", label: "Inicio" },
-  { href: "#productos", label: "Productos" },
-  { href: "#protocolos", label: "Protocolos" },
-  { href: "#aplicaciones-cds", label: "Aplicaciones del CDS" },
-  { href: "#testimonios", label: "Testimonios" },
+  { href: "/", label: "Inicio" },
+  { href: "/#productos", label: "Productos" },
+  { href: "/protocolos", label: "Protocolos" },
+  { href: "/aplicaciones-cds", label: "Aplicaciones del CDS" },
+  { href: "/#testimonios", label: "Testimonios" },
 ];
 
 export default function SiteHeader({
@@ -20,20 +21,22 @@ export default function SiteHeader({
   const [open, setOpen] = useState(false);
 
   const LINKS = mostrarSucursales
-    ? [...LINKS_BASE, { href: "#sucursales", label: "Sucursales" }]
+    ? [...LINKS_BASE, { href: "/#sucursales", label: "Sucursales" }]
     : LINKS_BASE;
 
   return (
-    <header id="top" className="relative bg-white/95 backdrop-blur-sm shadow-[0_1px_3px_rgba(0,0,0,0.06)] sticky top-0 z-20">
+    <header className="relative bg-white/95 backdrop-blur-sm shadow-[0_1px_3px_rgba(0,0,0,0.06)] sticky top-0 z-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4">
-        <Image
-          src="/logo.png"
-          alt="DioxiLife Bolivia"
-          width={200}
-          height={164}
-          priority
-          className="w-14 h-auto md:w-16"
-        />
+        <Link href="/">
+          <Image
+            src="/logo.png"
+            alt="DioxiLife Bolivia"
+            width={200}
+            height={164}
+            priority
+            className="w-14 h-auto md:w-16"
+          />
+        </Link>
 
         <nav className="hidden md:flex items-center gap-7">
           {LINKS.map((l) => (
