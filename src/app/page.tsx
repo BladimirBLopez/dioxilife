@@ -1,13 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { NUMERO_WHATSAPP } from "@/lib/constants";
 import SiteHeader from "@/components/SiteHeader";
 import BotonWhatsapp from "@/components/BotonWhatsapp";
 import SeccionSucursales from "@/components/SeccionSucursales";
+import AgregarCarritoButton from "@/components/AgregarCarritoButton";
 
 export const dynamic = "force-dynamic";
-
-const NUMERO_WHATSAPP = "59170758200";
 
 type SearchParams = Promise<{ categoria?: string }>;
 
@@ -163,59 +163,51 @@ export default async function Home({
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-2">
-            {productos.map((p) => {
-              const mensaje = p.mostrarPrecio
-                ? `Hola, quiero comprar "${p.nombre}", vi que cuesta Bs ${Number(p.precio).toFixed(2)}.`
-                : `Hola, quiero consultar el precio de "${p.nombre}".`;
-              const linkWhatsapp = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensaje)}`;
-
-              return (
-                <div
-                  key={p.id}
-                  className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col"
-                >
-                  <Link href={`/producto/${p.slug}`} className="flex flex-col flex-1">
-                    <div className="aspect-square bg-gray-100 relative">
-                      {p.imagenUrl ? (
-                        <Image
-                          src={p.imagenUrl}
-                          alt={p.nombre}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-brand-gray text-xs">
-                          Sin imagen
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-3 pb-2 flex flex-col flex-1">
-                      <span className="text-[11px] uppercase tracking-wide text-brand-pink font-semibold">
-                        {p.categoria.nombre}
-                      </span>
-                      <h3 className="text-sm font-medium mt-0.5 line-clamp-2">
-                        {p.nombre}
-                      </h3>
-                      {p.mostrarPrecio && (
-                        <p className="text-brand-blue font-bold mt-auto pt-2">
-                          Bs {Number(p.precio).toFixed(2)}
-                        </p>
-                      )}
-                    </div>
-                  </Link>
-                  <div className="px-3 pb-3">
-                    <a
-                      href={linkWhatsapp}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block text-center text-xs font-semibold text-white bg-[#25D366] rounded py-1.5 hover:opacity-90"
-                    >
-                      {p.mostrarPrecio ? "Comprar por WhatsApp" : "Consultar por WhatsApp"}
-                    </a>
+            {productos.map((p) => (
+              <div
+                key={p.id}
+                className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col"
+              >
+                <Link href={`/producto/${p.slug}`} className="flex flex-col flex-1">
+                  <div className="aspect-square bg-gray-100 relative">
+                    {p.imagenUrl ? (
+                      <Image
+                        src={p.imagenUrl}
+                        alt={p.nombre}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-brand-gray text-xs">
+                        Sin imagen
+                      </div>
+                    )}
                   </div>
+                  <div className="p-3 pb-2 flex flex-col flex-1">
+                    <span className="text-[11px] uppercase tracking-wide text-brand-pink font-semibold">
+                      {p.categoria.nombre}
+                    </span>
+                    <h3 className="text-sm font-medium mt-0.5 line-clamp-2">
+                      {p.nombre}
+                    </h3>
+                    {p.mostrarPrecio && (
+                      <p className="text-brand-blue font-bold mt-auto pt-2">
+                        Bs {Number(p.precio).toFixed(2)}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+                <div className="px-3 pb-3">
+                  <AgregarCarritoButton
+                    id={p.id}
+                    nombre={p.nombre}
+                    precio={Number(p.precio)}
+                    mostrarPrecio={p.mostrarPrecio}
+                    imagenUrl={p.imagenUrl}
+                  />
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         )}
       </main>
