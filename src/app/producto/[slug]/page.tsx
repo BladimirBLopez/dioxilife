@@ -2,10 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import AgregarCarritoButton from "@/components/AgregarCarritoButton";
 
 export const dynamic = "force-dynamic";
-
-const NUMERO_WHATSAPP = "59170758200";
 
 export default async function ProductoDetalle({
   params,
@@ -28,11 +27,6 @@ export default async function ProductoDetalle({
   if (!producto || !producto.activo) {
     notFound();
   }
-
-  const mensaje = producto.mostrarPrecio
-    ? `Hola, quiero comprar "${producto.nombre}", vi que cuesta Bs ${Number(producto.precio).toFixed(2)}.`
-    : `Hola, quiero consultar el precio de "${producto.nombre}".`;
-  const linkWhatsapp = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensaje)}`;
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -81,14 +75,15 @@ export default async function ProductoDetalle({
               </p>
             )}
 
-            <a
-              href={linkWhatsapp}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-6 flex items-center justify-center gap-2 bg-[#25D366] text-white font-semibold rounded-lg py-3 hover:opacity-90"
-            >
-              {producto.mostrarPrecio ? "Comprar por WhatsApp" : "Consultar precio por WhatsApp"}
-            </a>
+            <div className="mt-6">
+              <AgregarCarritoButton
+                id={producto.id}
+                nombre={producto.nombre}
+                precio={Number(producto.precio)}
+                mostrarPrecio={producto.mostrarPrecio}
+                imagenUrl={producto.imagenUrl}
+              />
+            </div>
           </div>
         </div>
 
