@@ -19,9 +19,10 @@ export default function SiteHeader() {
         <Image
           src="/logo.png"
           alt="DioxiLife Bolivia"
-          width={90}
-          height={74}
+          width={200}
+          height={164}
           priority
+          className="w-14 h-auto md:w-20"
         />
 
         <nav className="hidden md:flex gap-6">
