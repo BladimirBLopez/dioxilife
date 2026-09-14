@@ -75,7 +75,7 @@ export default async function Home({
       {/* Hero / Banner principal */}
       {banner ? (
         <section
-          className="relative text-white text-center py-10 px-4 overflow-hidden bg-gradient-to-r from-brand-pink to-brand-blue"
+          className="relative text-white text-center overflow-hidden bg-gradient-to-r from-brand-pink to-brand-blue h-56 sm:h-72 md:h-80 flex items-center justify-center px-4"
           style={
             banner.imagenUrl
               ? {
@@ -116,9 +116,6 @@ export default async function Home({
                 </a>
               )}
             </div>
-          )}
-          {!banner.mostrarTexto && !banner.imagenUrl && (
-            <div className="relative z-10 h-10" />
           )}
         </section>
       ) : (
