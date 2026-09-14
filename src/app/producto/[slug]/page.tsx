@@ -53,8 +53,13 @@ export default async function ProductoDetalle({
                 priority
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-brand-gray text-sm">
-                Sin imagen
+              <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-gray-300">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-12 h-12">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none" />
+                  <path d="m21 15-5-5L5 21" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span className="text-sm">Sin imagen</span>
               </div>
             )}
           </div>
