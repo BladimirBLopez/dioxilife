@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import SiteHeader from "@/components/SiteHeader";
 import BotonWhatsapp from "@/components/BotonWhatsapp";
 import Media from "@/components/Media";
+import { esVideo } from "@/lib/media";
 
 export const dynamic = "force-dynamic";
 
@@ -37,12 +38,17 @@ export default async function ProtocolosPage() {
                 className="bg-white rounded-xl shadow-sm overflow-hidden"
               >
                 {p.imagenUrl && (
-                  <div className="aspect-video bg-gray-100 relative">
+                  <div
+                    className={`bg-gray-100 relative ${
+                      esVideo(p.imagenUrl) ? "aspect-[9/16]" : "aspect-video"
+                    }`}
+                  >
                     <Media
                       src={p.imagenUrl}
                       alt={p.titulo}
                       fill
                       className="object-cover"
+                      variant="full"
                     />
                   </div>
                 )}
