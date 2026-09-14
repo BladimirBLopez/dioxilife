@@ -141,8 +141,17 @@ export default function ProductosPage() {
 
   async function confirmarBorrar() {
     if (!borrarId) return;
-    await fetch(`/api/admin/productos/${borrarId}`, { method: "DELETE" });
+    const res = await fetch(`/api/admin/productos/${borrarId}`, {
+      method: "DELETE",
+    });
     setBorrarId(null);
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      alert(data?.error || "No se pudo borrar el producto");
+      return;
+    }
+
     cargar();
   }
 
