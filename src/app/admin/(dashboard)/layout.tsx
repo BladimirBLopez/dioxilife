@@ -98,7 +98,7 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      <header className="md:hidden flex items-center justify-between bg-brand-blue text-white px-4 py-3 sticky top-0 z-10">
+      <header className="md:hidden flex items-center justify-between bg-brand-navy text-white px-4 py-3 sticky top-0 z-10">
         <button
           onClick={() => setOpen(!open)}
           aria-label="Abrir menú"
@@ -125,7 +125,7 @@ export default function DashboardLayout({
       )}
 
       <aside
-        className={`fixed md:static top-0 left-0 h-full w-64 md:w-56 bg-brand-blue text-white flex flex-col p-4 z-30 overflow-y-auto
+        className={`fixed md:static top-0 left-0 h-full w-64 md:w-56 bg-brand-navy text-white flex flex-col p-4 z-30 overflow-y-auto
           transform transition-transform duration-200 ease-in-out
           ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
       >

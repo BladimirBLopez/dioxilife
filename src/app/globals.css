@@ -7,6 +7,7 @@
   --brand-pink: #D73DB9;
   --brand-blue: #280F9E;
   --brand-gray: #5B595C;
+  --brand-navy: #150F33;
 }
 
 @theme inline {
@@ -15,6 +16,7 @@
   --color-brand-pink: var(--brand-pink);
   --color-brand-blue: var(--brand-blue);
   --color-brand-gray: var(--brand-gray);
+  --color-brand-navy: var(--brand-navy);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
