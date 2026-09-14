@@ -90,13 +90,14 @@ model Admin {
 
 model Banner {
   id              String   @id @default(cuid())
-  titulo          String
+  titulo          String?
   subtitulo       String?
   textoBoton      String?
   tipoBoton       String   @default("LINK") // "LINK" o "WHATSAPP"
   linkBoton       String?
   mensajeWhatsapp String?
   imagenUrl       String?
+  mostrarTexto    Boolean  @default(true)
   activo          Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

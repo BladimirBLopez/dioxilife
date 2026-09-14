@@ -18,10 +18,11 @@ export async function PUT(req: NextRequest) {
     linkBoton,
     mensajeWhatsapp,
     imagenUrl,
+    mostrarTexto,
     activo,
   } = await req.json();
 
-  if (!titulo) {
+  if (mostrarTexto && !titulo) {
     return NextResponse.json(
       { error: "El título es requerido" },
       { status: 400 }
@@ -29,13 +30,14 @@ export async function PUT(req: NextRequest) {
   }
 
   const data = {
-    titulo,
-    subtitulo: subtitulo || null,
-    textoBoton: textoBoton || null,
+    titulo: mostrarTexto ? titulo : null,
+    subtitulo: mostrarTexto ? subtitulo || null : null,
+    textoBoton: mostrarTexto ? textoBoton || null : null,
     tipoBoton: tipoBoton || "LINK",
-    linkBoton: linkBoton || null,
-    mensajeWhatsapp: mensajeWhatsapp || null,
+    linkBoton: mostrarTexto ? linkBoton || null : null,
+    mensajeWhatsapp: mostrarTexto ? mensajeWhatsapp || null : null,
     imagenUrl: imagenUrl || null,
+    mostrarTexto: mostrarTexto ?? true,
     activo: activo ?? true,
   };
 

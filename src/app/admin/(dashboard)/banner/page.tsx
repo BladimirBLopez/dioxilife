@@ -12,6 +12,7 @@ const vacio = {
   linkBoton: "",
   mensajeWhatsapp: "",
   imagenUrl: "",
+  mostrarTexto: true,
   activo: true,
 };
 
@@ -34,6 +35,7 @@ export default function BannerPage() {
         linkBoton: data.linkBoton || "",
         mensajeWhatsapp: data.mensajeWhatsapp || "",
         imagenUrl: data.imagenUrl || "",
+        mostrarTexto: data.mostrarTexto ?? true,
         activo: data.activo,
       });
     }
@@ -46,7 +48,7 @@ export default function BannerPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.titulo) {
+    if (form.mostrarTexto && !form.titulo) {
       alert("El título es obligatorio");
       return;
     }
@@ -87,27 +89,6 @@ export default function BannerPage() {
 
       <form onSubmit={handleSubmit} className="admin-card p-5 space-y-4">
         <div>
-          <label className="admin-label">Título</label>
-          <input
-            type="text"
-            value={form.titulo}
-            onChange={(e) => setForm({ ...form, titulo: e.target.value })}
-            className="admin-input"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="admin-label">Subtítulo (opcional)</label>
-          <input
-            type="text"
-            value={form.subtitulo}
-            onChange={(e) => setForm({ ...form, subtitulo: e.target.value })}
-            className="admin-input"
-          />
-        </div>
-
-        <div>
           <label className="admin-label">Imagen de fondo</label>
           <CloudinaryUpload
             value={form.imagenUrl}
@@ -115,60 +96,104 @@ export default function BannerPage() {
           />
         </div>
 
-        <div>
-          <label className="admin-label">Texto del botón (opcional)</label>
+        <label className="flex items-center gap-2 text-sm text-[#1F1B24] border-t pt-4">
           <input
-            type="text"
-            value={form.textoBoton}
-            onChange={(e) => setForm({ ...form, textoBoton: e.target.value })}
-            className="admin-input"
-            placeholder="Ej: Ver productos"
+            type="checkbox"
+            checked={form.mostrarTexto}
+            onChange={(e) =>
+              setForm({ ...form, mostrarTexto: e.target.checked })
+            }
           />
-        </div>
+          Mostrar texto y botón sobre la imagen
+        </label>
 
-        <div>
-          <label className="admin-label mb-2">El botón debe llevar a:</label>
-          <div className="flex gap-4 mb-3 text-sm text-[#1F1B24]">
-            <label className="flex items-center gap-1.5">
+        {form.mostrarTexto && (
+          <>
+            <div>
+              <label className="admin-label">Título</label>
               <input
-                type="radio"
-                name="tipoBoton"
-                checked={form.tipoBoton === "LINK"}
-                onChange={() => setForm({ ...form, tipoBoton: "LINK" })}
+                type="text"
+                value={form.titulo}
+                onChange={(e) => setForm({ ...form, titulo: e.target.value })}
+                className="admin-input"
+                required
               />
-              Un link
-            </label>
-            <label className="flex items-center gap-1.5">
-              <input
-                type="radio"
-                name="tipoBoton"
-                checked={form.tipoBoton === "WHATSAPP"}
-                onChange={() => setForm({ ...form, tipoBoton: "WHATSAPP" })}
-              />
-              WhatsApp
-            </label>
-          </div>
+            </div>
 
-          {form.tipoBoton === "LINK" ? (
-            <input
-              type="text"
-              value={form.linkBoton}
-              onChange={(e) => setForm({ ...form, linkBoton: e.target.value })}
-              className="admin-input"
-              placeholder="/?categoria=slug o https://..."
-            />
-          ) : (
-            <textarea
-              value={form.mensajeWhatsapp}
-              onChange={(e) =>
-                setForm({ ...form, mensajeWhatsapp: e.target.value })
-              }
-              className="admin-input"
-              rows={2}
-              placeholder="Mensaje que se enviará por WhatsApp"
-            />
-          )}
-        </div>
+            <div>
+              <label className="admin-label">Subtítulo (opcional)</label>
+              <input
+                type="text"
+                value={form.subtitulo}
+                onChange={(e) =>
+                  setForm({ ...form, subtitulo: e.target.value })
+                }
+                className="admin-input"
+              />
+            </div>
+
+            <div>
+              <label className="admin-label">Texto del botón (opcional)</label>
+              <input
+                type="text"
+                value={form.textoBoton}
+                onChange={(e) =>
+                  setForm({ ...form, textoBoton: e.target.value })
+                }
+                className="admin-input"
+                placeholder="Ej: Ver productos"
+              />
+            </div>
+
+            <div>
+              <label className="admin-label mb-2">El botón debe llevar a:</label>
+              <div className="flex gap-4 mb-3 text-sm text-[#1F1B24]">
+                <label className="flex items-center gap-1.5">
+                  <input
+                    type="radio"
+                    name="tipoBoton"
+                    checked={form.tipoBoton === "LINK"}
+                    onChange={() => setForm({ ...form, tipoBoton: "LINK" })}
+                  />
+                  Un link
+                </label>
+                <label className="flex items-center gap-1.5">
+                  <input
+                    type="radio"
+                    name="tipoBoton"
+                    checked={form.tipoBoton === "WHATSAPP"}
+                    onChange={() =>
+                      setForm({ ...form, tipoBoton: "WHATSAPP" })
+                    }
+                  />
+                  WhatsApp
+                </label>
+              </div>
+
+              {form.tipoBoton === "LINK" ? (
+                <input
+                  type="text"
+                  value={form.linkBoton}
+                  onChange={(e) =>
+                    setForm({ ...form, linkBoton: e.target.value })
+                  }
+                  className="admin-input"
+                  placeholder="/?categoria=slug o https://..."
+                />
+              ) : (
+                <textarea
+                  value={form.mensajeWhatsapp}
+                  onChange={(e) =>
+                    setForm({ ...form, mensajeWhatsapp: e.target.value })
+                  }
+                  className="admin-input"
+                  rows={2}
+                  placeholder="Mensaje que se enviará por WhatsApp"
+                />
+              )}
+            </div>
+          </>
+        )}
 
         <button
           type="submit"
