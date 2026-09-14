@@ -64,25 +64,35 @@ export default function ProductosPage() {
       activo: true,
     };
 
-    if (editandoId) {
-      await fetch(`/api/admin/productos/${editandoId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-    } else {
-      await fetch("/api/admin/productos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-    }
+    try {
+      const res = editandoId
+        ? await fetch(`/api/admin/productos/${editandoId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          })
+        : await fetch("/api/admin/productos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
 
-    setForm(vacio);
-    setEditandoId(null);
-    setMostrarForm(false);
-    setLoading(false);
-    cargar();
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        alert(data?.error || "Ocurrió un error al guardar el producto");
+        setLoading(false);
+        return;
+      }
+
+      setForm(vacio);
+      setEditandoId(null);
+      setMostrarForm(false);
+      await cargar();
+    } catch {
+      alert("No se pudo conectar con el servidor");
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleEditar(p: Producto) {

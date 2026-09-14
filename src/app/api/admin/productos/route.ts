@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   const { nombre, descripcion, precio, mostrarPrecio, imagenUrl, categoriaId } =
     await req.json();
 
-  if (!nombre || !precio || !categoriaId) {
+  if (!nombre || precio === undefined || precio === null || !categoriaId) {
     return NextResponse.json(
       { error: "Nombre, precio y categoría son requeridos" },
       { status: 400 }
