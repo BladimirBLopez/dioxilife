@@ -3,7 +3,90 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import LogoutButton from "../LogoutButton";
+
+const NAV_ITEMS = [
+  {
+    href: "/admin",
+    label: "Inicio",
+    exact: true,
+    icon: (
+      <path d="M3 10.5 12 3l9 7.5M5 9.5V21h14V9.5" />
+    ),
+  },
+  {
+    href: "/admin/banner",
+    label: "Banner",
+    icon: (
+      <>
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <circle cx="8.5" cy="10" r="1.5" />
+        <path d="m3 16 5-4 4 3 3-2.5L21 16" />
+      </>
+    ),
+  },
+  {
+    href: "/admin/categorias",
+    label: "Categorías",
+    icon: (
+      <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" />
+    ),
+  },
+  {
+    href: "/admin/productos",
+    label: "Productos",
+    icon: (
+      <>
+        <path d="M21 8 12 3 3 8v8l9 5 9-5V8Z" />
+        <path d="M3 8l9 5 9-5M12 13v8" />
+      </>
+    ),
+  },
+  {
+    href: "/admin/protocolos",
+    label: "Protocolos",
+    icon: (
+      <>
+        <rect x="5" y="4" width="14" height="17" rx="2" />
+        <path d="M9 3h6v3H9zM8 10h8M8 14h8M8 18h5" />
+      </>
+    ),
+  },
+  {
+    href: "/admin/testimonios",
+    label: "Testimonios",
+    icon: (
+      <path d="M12 3.5 14.2 9l6 .6-4.5 4 1.3 5.9L12 16.7 6.9 19.5 8.2 13.6l-4.5-4 6-.6L12 3.5Z" />
+    ),
+  },
+  {
+    href: "/admin/sucursales",
+    label: "Sucursales",
+    icon: (
+      <>
+        <path d="M12 21s7-6.1 7-11.5A7 7 0 0 0 5 9.5C5 14.9 12 21 12 21Z" />
+        <circle cx="12" cy="9.5" r="2.3" />
+      </>
+    ),
+  },
+];
+
+function NavIcon({ children }: { children: React.ReactNode }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="w-[18px] h-[18px] shrink-0"
+    >
+      {children}
+    </svg>
+  );
+}
 
 export default function DashboardLayout({
   children,
@@ -11,6 +94,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
@@ -53,39 +137,41 @@ export default function DashboardLayout({
           href="/"
           target="_blank"
           rel="noopener noreferrer"
-          className="hidden md:block text-sm bg-brand-pink rounded px-3 py-2 mb-6 text-center font-medium hover:opacity-90"
+          className="hidden md:block text-sm bg-brand-pink rounded-lg px-3 py-2 mb-6 text-center font-medium hover:opacity-90"
         >
           Ver tienda
         </a>
 
-        <nav className="flex flex-col gap-1 flex-1">
-          <Link href="/admin" onClick={() => setOpen(false)} className="rounded px-3 py-2 hover:bg-white/10">
-            Inicio
-          </Link>
-          <Link href="/admin/banner" onClick={() => setOpen(false)} className="rounded px-3 py-2 hover:bg-white/10">
-            Banner
-          </Link>
-          <Link href="/admin/categorias" onClick={() => setOpen(false)} className="rounded px-3 py-2 hover:bg-white/10">
-            Categorías
-          </Link>
-          <Link href="/admin/productos" onClick={() => setOpen(false)} className="rounded px-3 py-2 hover:bg-white/10">
-            Productos
-          </Link>
-          <Link href="/admin/protocolos" onClick={() => setOpen(false)} className="rounded px-3 py-2 hover:bg-white/10">
-            Protocolos
-          </Link>
-          <Link href="/admin/testimonios" onClick={() => setOpen(false)} className="rounded px-3 py-2 hover:bg-white/10">
-            Testimonios
-          </Link>
-          <Link href="/admin/sucursales" onClick={() => setOpen(false)} className="rounded px-3 py-2 hover:bg-white/10">
-            Sucursales
-          </Link>
+        <nav className="flex flex-col gap-0.5 flex-1">
+          {NAV_ITEMS.map((item) => {
+            const activo = item.exact
+              ? pathname === item.href
+              : pathname?.startsWith(item.href);
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm border-l-2 transition-colors ${
+                  activo
+                    ? "bg-white/10 border-brand-pink font-semibold text-white"
+                    : "border-transparent text-white/75 hover:bg-white/5 hover:text-white"
+                }`}
+              >
+                <NavIcon>{item.icon}</NavIcon>
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <LogoutButton />
       </aside>
 
-      <main className="flex-1 bg-gray-50 p-6 min-w-0">{children}</main>
+      <main className="flex-1 bg-[#F7F7F9] p-4 md:p-6 min-w-0">
+        {children}
+      </main>
     </div>
   );
 }

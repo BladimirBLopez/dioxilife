@@ -124,54 +124,57 @@ export default function TestimoniosPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Testimonios</h1>
-        <button
-          onClick={abrirNuevo}
-          className="bg-black text-white px-4 py-2 rounded"
-        >
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="text-xl font-semibold text-[#1F1B24]">Testimonios</h1>
+        <button onClick={abrirNuevo} className="admin-btn-primary">
           + Nuevo testimonio
         </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {testimonios.length === 0 && (
-          <p className="text-gray-500 text-sm">No hay testimonios aún.</p>
+          <p className="text-sm text-[#8A8790]">No hay testimonios aún.</p>
         )}
         {testimonios.map((t) => (
-          <div key={t.id} className="bg-white rounded-lg shadow p-4 flex gap-3">
-            {t.imagenUrl && (
+          <div key={t.id} className="admin-card p-4 flex gap-3">
+            {t.imagenUrl ? (
               <img
                 src={t.imagenUrl}
                 alt={t.nombreCliente}
-                className="w-16 h-16 object-cover rounded-full"
+                className="w-14 h-14 object-cover rounded-full shrink-0"
               />
+            ) : (
+              <div className="w-14 h-14 rounded-full bg-brand-pink/10 text-brand-pink flex items-center justify-center font-semibold shrink-0">
+                {t.nombreCliente.charAt(0).toUpperCase()}
+              </div>
             )}
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <p className="font-medium">{t.nombreCliente}</p>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="font-medium text-sm text-[#1F1B24]">
+                  {t.nombreCliente}
+                </p>
                 {t.destacado && (
-                  <span className="text-xs bg-brand-pink text-white px-2 py-0.5 rounded">
+                  <span className="text-[11px] bg-brand-pink/10 text-brand-pink font-medium px-2 py-0.5 rounded-full">
                     Destacado
                   </span>
                 )}
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-amber-500 mt-0.5">
                 {"⭐".repeat(t.calificacion)}
               </p>
-              <p className="text-sm text-gray-600 line-clamp-2">
+              <p className="text-sm text-[#6B6870] line-clamp-2 mt-1">
                 {t.contenido}
               </p>
-              <div className="flex gap-3 text-sm mt-1">
+              <div className="flex gap-4 text-sm mt-2">
                 <button
                   onClick={() => abrirEditar(t)}
-                  className="text-blue-600 hover:underline"
+                  className="text-brand-blue font-medium hover:underline"
                 >
                   Editar
                 </button>
                 <button
                   onClick={() => setBorrarId(t.id)}
-                  className="text-red-600 hover:underline"
+                  className="text-red-600 font-medium hover:underline"
                 >
                   Borrar
                 </button>
@@ -186,41 +189,41 @@ export default function TestimoniosPage() {
           title={editandoId ? "Editar testimonio" : "Nuevo testimonio"}
           onClose={pedirCerrarModal}
         >
-          <form onSubmit={handleSubmit} className="space-y-3">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm mb-1">Nombre del cliente</label>
+              <label className="admin-label">Nombre del cliente</label>
               <input
                 type="text"
                 value={form.nombreCliente}
                 onChange={(e) =>
                   setForm({ ...form, nombreCliente: e.target.value })
                 }
-                className="w-full border rounded px-3 py-2"
+                className="admin-input"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm mb-1">Contenido</label>
+              <label className="admin-label">Contenido</label>
               <textarea
                 value={form.contenido}
                 onChange={(e) =>
                   setForm({ ...form, contenido: e.target.value })
                 }
-                className="w-full border rounded px-3 py-2"
+                className="admin-input"
                 rows={3}
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm mb-1">Calificación (1-5)</label>
+              <label className="admin-label">Calificación (1-5)</label>
               <select
                 value={form.calificacion}
                 onChange={(e) =>
                   setForm({ ...form, calificacion: e.target.value })
                 }
-                className="w-full border rounded px-3 py-2"
+                className="admin-input"
               >
                 <option value="1">1</option>
                 <option value="2">2</option>
@@ -231,7 +234,7 @@ export default function TestimoniosPage() {
             </div>
 
             <div>
-              <label className="block text-sm mb-1">Foto (opcional)</label>
+              <label className="admin-label">Foto (opcional)</label>
               <CloudinaryUpload
                 value={form.imagenUrl}
                 onChange={(url) => setForm({ ...form, imagenUrl: url })}
@@ -247,7 +250,7 @@ export default function TestimoniosPage() {
                   setForm({ ...form, destacado: e.target.checked })
                 }
               />
-              <label htmlFor="destacado" className="text-sm">
+              <label htmlFor="destacado" className="text-sm text-[#1F1B24]">
                 Destacado (aparece en la tienda pública)
               </label>
             </div>
@@ -255,7 +258,7 @@ export default function TestimoniosPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-black text-white rounded py-2 disabled:opacity-50"
+              className="admin-btn-primary w-full"
             >
               {loading
                 ? "Guardando..."

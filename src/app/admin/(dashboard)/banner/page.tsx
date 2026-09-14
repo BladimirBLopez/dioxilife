@@ -66,14 +66,16 @@ export default function BannerPage() {
   }
 
   if (cargando) {
-    return <p className="text-gray-500 text-sm">Cargando...</p>;
+    return <p className="text-sm text-[#8A8790]">Cargando...</p>;
   }
 
   return (
     <div className="max-w-xl">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Banner principal</h1>
-        <label className="flex items-center gap-2 text-sm">
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="text-xl font-semibold text-[#1F1B24]">
+          Banner principal
+        </h1>
+        <label className="flex items-center gap-2 text-sm text-[#1F1B24]">
           <input
             type="checkbox"
             checked={form.activo}
@@ -83,30 +85,30 @@ export default function BannerPage() {
         </label>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 bg-white rounded-lg shadow p-4">
+      <form onSubmit={handleSubmit} className="admin-card p-5 space-y-4">
         <div>
-          <label className="block text-sm mb-1">Título</label>
+          <label className="admin-label">Título</label>
           <input
             type="text"
             value={form.titulo}
             onChange={(e) => setForm({ ...form, titulo: e.target.value })}
-            className="w-full border rounded px-3 py-2"
+            className="admin-input"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm mb-1">Subtítulo (opcional)</label>
+          <label className="admin-label">Subtítulo (opcional)</label>
           <input
             type="text"
             value={form.subtitulo}
             onChange={(e) => setForm({ ...form, subtitulo: e.target.value })}
-            className="w-full border rounded px-3 py-2"
+            className="admin-input"
           />
         </div>
 
         <div>
-          <label className="block text-sm mb-1">Imagen de fondo</label>
+          <label className="admin-label">Imagen de fondo</label>
           <CloudinaryUpload
             value={form.imagenUrl}
             onChange={(url) => setForm({ ...form, imagenUrl: url })}
@@ -114,19 +116,19 @@ export default function BannerPage() {
         </div>
 
         <div>
-          <label className="block text-sm mb-1">Texto del botón (opcional)</label>
+          <label className="admin-label">Texto del botón (opcional)</label>
           <input
             type="text"
             value={form.textoBoton}
             onChange={(e) => setForm({ ...form, textoBoton: e.target.value })}
-            className="w-full border rounded px-3 py-2"
+            className="admin-input"
             placeholder="Ej: Ver productos"
           />
         </div>
 
         <div>
-          <label className="block text-sm mb-2">El botón debe llevar a:</label>
-          <div className="flex gap-4 mb-3 text-sm">
+          <label className="admin-label mb-2">El botón debe llevar a:</label>
+          <div className="flex gap-4 mb-3 text-sm text-[#1F1B24]">
             <label className="flex items-center gap-1.5">
               <input
                 type="radio"
@@ -152,7 +154,7 @@ export default function BannerPage() {
               type="text"
               value={form.linkBoton}
               onChange={(e) => setForm({ ...form, linkBoton: e.target.value })}
-              className="w-full border rounded px-3 py-2"
+              className="admin-input"
               placeholder="/?categoria=slug o https://..."
             />
           ) : (
@@ -161,7 +163,7 @@ export default function BannerPage() {
               onChange={(e) =>
                 setForm({ ...form, mensajeWhatsapp: e.target.value })
               }
-              className="w-full border rounded px-3 py-2"
+              className="admin-input"
               rows={2}
               placeholder="Mensaje que se enviará por WhatsApp"
             />
@@ -171,7 +173,7 @@ export default function BannerPage() {
         <button
           type="submit"
           disabled={guardando}
-          className="w-full bg-black text-white rounded py-2 disabled:opacity-50"
+          className="admin-btn-primary w-full"
         >
           {guardando ? "Guardando..." : "Guardar banner"}
         </button>

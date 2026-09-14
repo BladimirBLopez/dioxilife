@@ -135,44 +135,41 @@ export default function SucursalesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Sucursales</h1>
-        <button
-          onClick={abrirNuevo}
-          className="bg-black text-white px-4 py-2 rounded"
-        >
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="text-xl font-semibold text-[#1F1B24]">Sucursales</h1>
+        <button onClick={abrirNuevo} className="admin-btn-primary">
           + Nueva sucursal
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow max-w-2xl">
+      <div className="admin-card max-w-2xl">
         {sucursales.length === 0 && (
-          <p className="p-4 text-gray-500 text-sm">No hay sucursales aún.</p>
+          <p className="p-4 text-sm text-[#8A8790]">No hay sucursales aún.</p>
         )}
         {sucursales.map((s) => (
           <div
             key={s.id}
-            className="flex items-center justify-between border-b last:border-b-0 px-4 py-3"
+            className="flex items-center justify-between border-b border-[#E5E4E7] last:border-b-0 px-4 py-3"
           >
             <div>
-              <p className="font-medium">
+              <p className="font-medium text-sm text-[#1F1B24]">
                 {labelDepto(s.departamento)}
                 {s.nombre ? ` — ${s.nombre}` : ""}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[#8A8790]">
                 {s.direccion || "Sin dirección"}
               </p>
             </div>
-            <div className="flex gap-3 text-sm">
+            <div className="flex gap-4 text-sm">
               <button
                 onClick={() => abrirEditar(s)}
-                className="text-blue-600 hover:underline"
+                className="text-brand-blue font-medium hover:underline"
               >
                 Editar
               </button>
               <button
                 onClick={() => setBorrarId(s.id)}
-                className="text-red-600 hover:underline"
+                className="text-red-600 font-medium hover:underline"
               >
                 Borrar
               </button>
@@ -186,42 +183,44 @@ export default function SucursalesPage() {
           title={editandoId ? "Editar sucursal" : "Nueva sucursal"}
           onClose={pedirCerrarModal}
         >
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-            <label className="text-sm font-medium">Departamento</label>
-            <select
-              value={form.departamento}
-              onChange={(e) =>
-                setForm({ ...form, departamento: e.target.value })
-              }
-              className="border rounded px-3 py-2"
-            >
-              {DEPARTAMENTOS.map((d) => (
-                <option key={d.value} value={d.value}>
-                  {d.label}
-                </option>
-              ))}
-            </select>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div>
+              <label className="admin-label">Departamento</label>
+              <select
+                value={form.departamento}
+                onChange={(e) =>
+                  setForm({ ...form, departamento: e.target.value })
+                }
+                className="admin-input"
+              >
+                {DEPARTAMENTOS.map((d) => (
+                  <option key={d.value} value={d.value}>
+                    {d.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <input
               type="text"
               placeholder="Nombre del punto de venta (opcional)"
               value={form.nombre}
               onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-              className="border rounded px-3 py-2"
+              className="admin-input"
             />
             <input
               type="text"
               placeholder="Dirección"
               value={form.direccion}
               onChange={(e) => setForm({ ...form, direccion: e.target.value })}
-              className="border rounded px-3 py-2"
+              className="admin-input"
             />
             <input
               type="text"
               placeholder="Teléfono"
               value={form.telefono}
               onChange={(e) => setForm({ ...form, telefono: e.target.value })}
-              className="border rounded px-3 py-2"
+              className="admin-input"
             />
             <input
               type="text"
@@ -230,14 +229,14 @@ export default function SucursalesPage() {
               onChange={(e) =>
                 setForm({ ...form, facebookUrl: e.target.value })
               }
-              className="border rounded px-3 py-2"
+              className="admin-input"
             />
             <input
               type="text"
               placeholder="Enlace de TikTok"
               value={form.tiktokUrl}
               onChange={(e) => setForm({ ...form, tiktokUrl: e.target.value })}
-              className="border rounded px-3 py-2"
+              className="admin-input"
             />
             <input
               type="text"
@@ -246,13 +245,13 @@ export default function SucursalesPage() {
               onChange={(e) =>
                 setForm({ ...form, instagramUrl: e.target.value })
               }
-              className="border rounded px-3 py-2"
+              className="admin-input"
             />
 
             <button
               type="submit"
               disabled={loading}
-              className="bg-black text-white rounded py-2 disabled:opacity-50"
+              className="admin-btn-primary"
             >
               {loading
                 ? "Guardando..."

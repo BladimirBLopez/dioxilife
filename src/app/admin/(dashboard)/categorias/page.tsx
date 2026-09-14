@@ -62,21 +62,23 @@ export default function CategoriasPage() {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold mb-6">Categorías</h1>
+    <div className="max-w-md">
+      <h1 className="text-xl font-semibold text-[#1F1B24] mb-5">
+        Categorías
+      </h1>
 
-      <form onSubmit={handleSubmit} className="flex gap-2 mb-6 max-w-md">
+      <form onSubmit={handleSubmit} className="flex gap-2 mb-5">
         <input
           type="text"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           placeholder="Nombre de la categoría"
-          className="flex-1 border rounded px-3 py-2"
+          className="admin-input flex-1"
         />
         <button
           type="submit"
           disabled={loading}
-          className="bg-black text-white px-4 py-2 rounded disabled:opacity-50"
+          className="admin-btn-primary shrink-0"
         >
           {editandoId ? "Guardar" : "Agregar"}
         </button>
@@ -87,38 +89,40 @@ export default function CategoriasPage() {
               setEditandoId(null);
               setNombre("");
             }}
-            className="border px-4 py-2 rounded"
+            className="admin-btn-secondary shrink-0"
           >
             Cancelar
           </button>
         )}
       </form>
 
-      <div className="bg-white rounded-lg shadow max-w-md">
+      <div className="admin-card">
         {categorias.length === 0 && (
-          <p className="p-4 text-gray-500 text-sm">No hay categorías aún.</p>
+          <p className="p-4 text-sm text-[#8A8790]">No hay categorías aún.</p>
         )}
         {categorias.map((cat) => (
           <div
             key={cat.id}
-            className="flex items-center justify-between border-b last:border-b-0 px-4 py-3"
+            className="flex items-center justify-between border-b border-[#E5E4E7] last:border-b-0 px-4 py-3"
           >
             <div>
-              <p className="font-medium">{cat.nombre}</p>
-              <p className="text-xs text-gray-500">
+              <p className="font-medium text-sm text-[#1F1B24]">
+                {cat.nombre}
+              </p>
+              <p className="text-xs text-[#8A8790]">
                 {cat._count.productos} producto(s)
               </p>
             </div>
-            <div className="flex gap-3 text-sm">
+            <div className="flex gap-4 text-sm">
               <button
                 onClick={() => handleEditar(cat)}
-                className="text-blue-600 hover:underline"
+                className="text-brand-blue font-medium hover:underline"
               >
                 Editar
               </button>
               <button
                 onClick={() => handleBorrar(cat.id)}
-                className="text-red-600 hover:underline"
+                className="text-red-600 font-medium hover:underline"
               >
                 Borrar
               </button>

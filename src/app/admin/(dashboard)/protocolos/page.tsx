@@ -124,45 +124,46 @@ export default function ProtocolosPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Protocolos</h1>
-        <button
-          onClick={abrirNuevo}
-          className="bg-black text-white px-4 py-2 rounded"
-        >
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="text-xl font-semibold text-[#1F1B24]">Protocolos</h1>
+        <button onClick={abrirNuevo} className="admin-btn-primary">
           + Nuevo protocolo
         </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {protocolos.length === 0 && (
-          <p className="text-gray-500 text-sm">No hay protocolos aún.</p>
+          <p className="text-sm text-[#8A8790]">No hay protocolos aún.</p>
         )}
         {protocolos.map((p) => (
-          <div key={p.id} className="bg-white rounded-lg shadow p-4 flex gap-3">
-            {p.imagenUrl && (
+          <div key={p.id} className="admin-card p-4 flex gap-3">
+            {p.imagenUrl ? (
               <img
                 src={p.imagenUrl}
                 alt={p.titulo}
-                className="w-16 h-16 object-cover rounded"
+                className="w-16 h-16 object-cover rounded-lg shrink-0"
               />
+            ) : (
+              <div className="w-16 h-16 rounded-lg bg-[#F7F7F9] shrink-0" />
             )}
-            <div className="flex-1">
-              <p className="font-medium">{p.titulo}</p>
-              <p className="text-xs text-gray-500">{p.producto.nombre}</p>
-              <p className="text-sm text-gray-600 line-clamp-2">
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm text-[#1F1B24]">{p.titulo}</p>
+              <p className="text-xs text-brand-pink font-medium mt-0.5">
+                {p.producto.nombre}
+              </p>
+              <p className="text-sm text-[#6B6870] line-clamp-2 mt-1">
                 {p.contenido}
               </p>
-              <div className="flex gap-3 text-sm mt-1">
+              <div className="flex gap-4 text-sm mt-2">
                 <button
                   onClick={() => abrirEditar(p)}
-                  className="text-blue-600 hover:underline"
+                  className="text-brand-blue font-medium hover:underline"
                 >
                   Editar
                 </button>
                 <button
                   onClick={() => setBorrarId(p.id)}
-                  className="text-red-600 hover:underline"
+                  className="text-red-600 font-medium hover:underline"
                 >
                   Borrar
                 </button>
@@ -177,39 +178,39 @@ export default function ProtocolosPage() {
           title={editandoId ? "Editar protocolo" : "Nuevo protocolo"}
           onClose={pedirCerrarModal}
         >
-          <form onSubmit={handleSubmit} className="space-y-3">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm mb-1">Título</label>
+              <label className="admin-label">Título</label>
               <input
                 type="text"
                 value={form.titulo}
                 onChange={(e) => setForm({ ...form, titulo: e.target.value })}
-                className="w-full border rounded px-3 py-2"
+                className="admin-input"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm mb-1">Contenido</label>
+              <label className="admin-label">Contenido</label>
               <textarea
                 value={form.contenido}
                 onChange={(e) =>
                   setForm({ ...form, contenido: e.target.value })
                 }
-                className="w-full border rounded px-3 py-2"
+                className="admin-input"
                 rows={4}
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm mb-1">Producto</label>
+              <label className="admin-label">Producto</label>
               <select
                 value={form.productoId}
                 onChange={(e) =>
                   setForm({ ...form, productoId: e.target.value })
                 }
-                className="w-full border rounded px-3 py-2"
+                className="admin-input"
                 required
               >
                 <option value="">Seleccionar...</option>
@@ -222,7 +223,7 @@ export default function ProtocolosPage() {
             </div>
 
             <div>
-              <label className="block text-sm mb-1">Imagen</label>
+              <label className="admin-label">Imagen</label>
               <CloudinaryUpload
                 value={form.imagenUrl}
                 onChange={(url) => setForm({ ...form, imagenUrl: url })}
@@ -232,7 +233,7 @@ export default function ProtocolosPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-black text-white rounded py-2 disabled:opacity-50"
+              className="admin-btn-primary w-full"
             >
               {loading
                 ? "Guardando..."

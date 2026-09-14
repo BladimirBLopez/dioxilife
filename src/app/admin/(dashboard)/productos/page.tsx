@@ -148,47 +148,48 @@ export default function ProductosPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Productos</h1>
-        <button
-          onClick={abrirNuevo}
-          className="bg-black text-white px-4 py-2 rounded"
-        >
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="text-xl font-semibold text-[#1F1B24]">Productos</h1>
+        <button onClick={abrirNuevo} className="admin-btn-primary">
           + Nuevo producto
         </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {productos.length === 0 && (
-          <p className="text-gray-500 text-sm">No hay productos aún.</p>
+          <p className="text-sm text-[#8A8790]">No hay productos aún.</p>
         )}
         {productos.map((p) => (
-          <div key={p.id} className="bg-white rounded-lg shadow p-4 flex gap-3">
-            {p.imagenUrl && (
+          <div key={p.id} className="admin-card p-4 flex gap-3">
+            {p.imagenUrl ? (
               <img
                 src={p.imagenUrl}
                 alt={p.nombre}
-                className="w-16 h-16 object-cover rounded"
+                className="w-16 h-16 object-cover rounded-lg shrink-0"
               />
+            ) : (
+              <div className="w-16 h-16 rounded-lg bg-[#F7F7F9] shrink-0" />
             )}
-            <div className="flex-1">
-              <p className="font-medium">{p.nombre}</p>
-              <p className="text-xs text-gray-500">{p.categoria.nombre}</p>
-              <p className="text-sm">
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm text-[#1F1B24]">{p.nombre}</p>
+              <p className="text-xs text-brand-pink font-medium mt-0.5">
+                {p.categoria.nombre}
+              </p>
+              <p className="text-sm text-[#6B6870] mt-1">
                 {p.mostrarPrecio
                   ? `Bs. ${p.precio}`
                   : "Precio a consultar por WhatsApp"}
               </p>
-              <div className="flex gap-3 text-sm mt-1">
+              <div className="flex gap-4 text-sm mt-2">
                 <button
                   onClick={() => abrirEditar(p)}
-                  className="text-blue-600 hover:underline"
+                  className="text-brand-blue font-medium hover:underline"
                 >
                   Editar
                 </button>
                 <button
                   onClick={() => setBorrarId(p.id)}
-                  className="text-red-600 hover:underline"
+                  className="text-red-600 font-medium hover:underline"
                 >
                   Borrar
                 </button>
@@ -203,34 +204,36 @@ export default function ProductosPage() {
           title={editandoId ? "Editar producto" : "Nuevo producto"}
           onClose={pedirCerrarModal}
         >
-          <form onSubmit={handleSubmit} className="space-y-3">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm mb-1">Nombre</label>
+              <label className="admin-label">Nombre</label>
               <input
                 type="text"
                 value={form.nombre}
                 onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                className="w-full border rounded px-3 py-2"
+                className="admin-input"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm mb-1">Descripción</label>
+              <label className="admin-label">Descripción</label>
               <textarea
                 value={form.descripcion}
                 onChange={(e) =>
                   setForm({ ...form, descripcion: e.target.value })
                 }
-                className="w-full border rounded px-3 py-2"
+                className="admin-input"
                 rows={2}
               />
             </div>
 
-            <div className="flex items-center justify-between border rounded px-3 py-2">
+            <div className="flex items-center justify-between admin-card px-3 py-2">
               <div>
-                <p className="text-sm font-medium">Mostrar precio</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-sm font-medium text-[#1F1B24]">
+                  Mostrar precio
+                </p>
+                <p className="text-xs text-[#8A8790]">
                   Si está apagado, se verá &quot;Precio a consultar por
                   WhatsApp&quot;
                 </p>
@@ -254,7 +257,7 @@ export default function ProductosPage() {
 
             {form.mostrarPrecio && (
               <div>
-                <label className="block text-sm mb-1">Precio (Bs.)</label>
+                <label className="admin-label">Precio (Bs.)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -262,20 +265,20 @@ export default function ProductosPage() {
                   onChange={(e) =>
                     setForm({ ...form, precio: e.target.value })
                   }
-                  className="w-full border rounded px-3 py-2"
+                  className="admin-input"
                   required
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-sm mb-1">Categoría</label>
+              <label className="admin-label">Categoría</label>
               <select
                 value={form.categoriaId}
                 onChange={(e) =>
                   setForm({ ...form, categoriaId: e.target.value })
                 }
-                className="w-full border rounded px-3 py-2"
+                className="admin-input"
                 required
               >
                 <option value="">Seleccionar...</option>
@@ -288,7 +291,7 @@ export default function ProductosPage() {
             </div>
 
             <div>
-              <label className="block text-sm mb-1">Imagen</label>
+              <label className="admin-label">Imagen</label>
               <CloudinaryUpload
                 value={form.imagenUrl}
                 onChange={(url) => setForm({ ...form, imagenUrl: url })}
@@ -298,7 +301,7 @@ export default function ProductosPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-black text-white rounded py-2 disabled:opacity-50"
+              className="admin-btn-primary w-full"
             >
               {loading
                 ? "Guardando..."
