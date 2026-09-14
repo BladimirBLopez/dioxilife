@@ -57,6 +57,10 @@ export default async function Home({
     }),
   ]);
 
+  const categoriasConProductos = categorias.filter(
+    (c) => c._count.productos > 0
+  );
+
   const sucursalesPorDepartamento = sucursales.reduce<
     Record<string, typeof sucursales>
   >((acc, s) => {
@@ -120,7 +124,7 @@ export default async function Home({
       )}
 
       {/* Categorías */}
-      {categorias.length > 0 && (
+      {categoriasConProductos.length > 0 && (
         <nav className="max-w-6xl mx-auto w-full px-4 py-4 flex gap-2 overflow-x-auto">
           <a
             href="/"
@@ -132,7 +136,7 @@ export default async function Home({
           >
             Todos
           </a>
-          {categorias.map((c) => (
+          {categoriasConProductos.map((c) => (
             <a
               key={c.id}
               href={`/?categoria=${c.slug}`}
