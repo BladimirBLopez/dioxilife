@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import AgregarCarritoButton from "@/components/AgregarCarritoButton";
 import CartDrawer from "@/components/CartDrawer";
+import Media from "@/components/Media";
 
 export const dynamic = "force-dynamic";
 
@@ -45,12 +46,12 @@ export default async function ProductoDetalle({
         <div className="bg-white rounded-xl shadow-sm overflow-hidden md:flex">
           <div className="md:w-1/2 aspect-square bg-gray-100 relative">
             {producto.imagenUrl ? (
-              <Image
+              <Media
                 src={producto.imagenUrl}
                 alt={producto.nombre}
                 fill
                 className="object-cover"
-                priority
+                variant="full"
               />
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-gray-300">
@@ -107,7 +108,7 @@ export default async function ProductoDetalle({
                 >
                   {prot.imagenUrl && (
                     <div className="w-20 h-20 shrink-0 relative rounded-lg overflow-hidden bg-gray-100">
-                      <Image
+                      <Media
                         src={prot.imagenUrl}
                         alt={prot.titulo}
                         fill

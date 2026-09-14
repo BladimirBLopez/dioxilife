@@ -1,7 +1,7 @@
-import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import SiteHeader from "@/components/SiteHeader";
 import BotonWhatsapp from "@/components/BotonWhatsapp";
+import Media from "@/components/Media";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +38,7 @@ export default async function ProtocolosPage() {
               >
                 {p.imagenUrl && (
                   <div className="aspect-video bg-gray-100 relative">
-                    <Image
+                    <Media
                       src={p.imagenUrl}
                       alt={p.titulo}
                       fill
