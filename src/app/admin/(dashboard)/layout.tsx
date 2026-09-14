@@ -54,6 +54,17 @@ const NAV_ITEMS = [
     ),
   },
   {
+    href: "/admin/aplicaciones-cds",
+    label: "Aplicaciones CDS",
+    icon: (
+      <>
+        <path d="M19 8V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3" />
+        <rect x="3" y="8" width="18" height="13" rx="2" />
+        <path d="M8 13h8M8 17h5" />
+      </>
+    ),
+  },
+  {
     href: "/admin/testimonios",
     label: "Testimonios",
     icon: (

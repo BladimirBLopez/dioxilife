@@ -30,32 +30,37 @@ export default async function Home({
 }) {
   const { categoria } = await searchParams;
 
-  const [categorias, productos, testimonios, sucursales, banner] = await Promise.all([
-    prisma.categoria.findMany({
-      orderBy: { nombre: "asc" },
-      include: { _count: { select: { productos: true } } },
-    }),
-    prisma.producto.findMany({
-      where: {
-        activo: true,
-        ...(categoria ? { categoria: { slug: categoria } } : {}),
-      },
-      include: { categoria: true },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.testimonio.findMany({
-      where: { activo: true, destacado: true },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.sucursal.findMany({
-      where: { activo: true },
-      orderBy: { departamento: "asc" },
-    }),
-    prisma.banner.findFirst({
-      where: { activo: true },
-      orderBy: { createdAt: "desc" },
-    }),
-  ]);
+  const [categorias, productos, aplicaciones, testimonios, sucursales, banner] =
+    await Promise.all([
+      prisma.categoria.findMany({
+        orderBy: { nombre: "asc" },
+        include: { _count: { select: { productos: true } } },
+      }),
+      prisma.producto.findMany({
+        where: {
+          activo: true,
+          ...(categoria ? { categoria: { slug: categoria } } : {}),
+        },
+        include: { categoria: true },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.aplicacionCds.findMany({
+        where: { activo: true },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.testimonio.findMany({
+        where: { activo: true, destacado: true },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.sucursal.findMany({
+        where: { activo: true },
+        orderBy: { departamento: "asc" },
+      }),
+      prisma.banner.findFirst({
+        where: { activo: true },
+        orderBy: { createdAt: "desc" },
+      }),
+    ]);
 
   const categoriasConProductos = categorias.filter(
     (c) => c._count.productos > 0
@@ -217,9 +222,56 @@ export default async function Home({
         )}
       </main>
 
+      {/* Aplicaciones del CDS */}
+      {aplicaciones.length > 0 && (
+        <section id="aplicaciones-cds" className="bg-white border-t py-10 px-4">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-xl font-bold text-brand-blue text-center mb-1">
+              Aplicaciones del CDS
+            </h2>
+            <p className="text-sm text-brand-gray text-center mb-6">
+              Conoce para qué se puede usar el dióxido de cloro
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {aplicaciones.map((a) => (
+                <div
+                  key={a.id}
+                  className="bg-gray-50 rounded-xl overflow-hidden flex flex-col"
+                >
+                  <div className="aspect-square bg-gray-100 relative">
+                    {a.imagenUrl ? (
+                      <Image
+                        src={a.imagenUrl}
+                        alt={a.nombre}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-brand-gray text-xs">
+                        Sin imagen
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <h3 className="text-sm font-semibold text-[#1F1B24]">
+                      {a.nombre}
+                    </h3>
+                    {a.descripcion && (
+                      <p className="text-xs text-brand-gray line-clamp-3 mt-1">
+                        {a.descripcion}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Testimonios destacados */}
       {testimonios.length > 0 && (
-        <section id="testimonios" className="bg-white border-t py-10 px-4">
+        <section id="testimonios" className="bg-gray-50 border-t py-10 px-4">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-xl font-bold text-brand-blue text-center mb-6">
               Lo que dicen nuestros clientes
@@ -228,7 +280,7 @@ export default async function Home({
               {testimonios.map((t) => (
                 <div
                   key={t.id}
-                  className="bg-gray-50 rounded-xl p-4 flex flex-col"
+                  className="bg-white rounded-xl p-4 flex flex-col shadow-sm"
                 >
                   <div className="flex items-center gap-3 mb-2">
                     {t.imagenUrl ? (
@@ -261,7 +313,7 @@ export default async function Home({
 
       {/* Sucursales por departamento */}
       {sucursales.length > 0 && (
-        <section id="sucursales" className="bg-gray-50 border-t py-10 px-4">
+        <section id="sucursales" className="bg-white border-t py-10 px-4">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-xl font-bold text-brand-blue text-center mb-6">
               Puntos de venta por departamento

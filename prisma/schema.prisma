@@ -57,6 +57,15 @@ model Protocolo {
   updatedAt  DateTime @updatedAt
 }
 
+model AplicacionCds {
+  id          String   @id @default(cuid())
+  nombre      String
+  descripcion String?
+  imagenUrl   String?
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
 model Testimonio {
   id            String   @id @default(cuid())
   nombreCliente String
@@ -93,7 +102,7 @@ model Banner {
   titulo          String?
   subtitulo       String?
   textoBoton      String?
-  tipoBoton       String   @default("LINK") // "LINK" o "WHATSAPP"
+  tipoBoton       String   @default("LINK")
   linkBoton       String?
   mensajeWhatsapp String?
   imagenUrl       String?
