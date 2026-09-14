@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Modal from "@/components/Modal";
 
 const DEPARTAMENTOS = [
   { value: "LA_PAZ", label: "La Paz" },
@@ -41,16 +42,36 @@ export default function SucursalesPage() {
   const [form, setForm] = useState(vacio);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [modalAbierto, setModalAbierto] = useState(false);
 
   async function cargar() {
     const res = await fetch("/api/admin/sucursales");
-    const data = await res.json();
-    setSucursales(data);
+    setSucursales(await res.json());
   }
 
   useEffect(() => {
     cargar();
   }, []);
+
+  function abrirNuevo() {
+    setEditandoId(null);
+    setForm(vacio);
+    setModalAbierto(true);
+  }
+
+  function abrirEditar(s: Sucursal) {
+    setEditandoId(s.id);
+    setForm({
+      departamento: s.departamento,
+      nombre: s.nombre || "",
+      direccion: s.direccion || "",
+      telefono: s.telefono || "",
+      facebookUrl: s.facebookUrl || "",
+      tiktokUrl: s.tiktokUrl || "",
+      instagramUrl: s.instagramUrl || "",
+    });
+    setModalAbierto(true);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -70,23 +91,11 @@ export default function SucursalesPage() {
       });
     }
 
+    setModalAbierto(false);
     setForm(vacio);
     setEditandoId(null);
     setLoading(false);
     cargar();
-  }
-
-  function handleEditar(s: Sucursal) {
-    setEditandoId(s.id);
-    setForm({
-      departamento: s.departamento,
-      nombre: s.nombre || "",
-      direccion: s.direccion || "",
-      telefono: s.telefono || "",
-      facebookUrl: s.facebookUrl || "",
-      tiktokUrl: s.tiktokUrl || "",
-      instagramUrl: s.instagramUrl || "",
-    });
   }
 
   async function handleBorrar(id: string) {
@@ -101,92 +110,17 @@ export default function SucursalesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-6">Sucursales</h1>
-
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white rounded-lg shadow p-4 mb-6 max-w-lg flex flex-col gap-3"
-      >
-        <label className="text-sm font-medium">Departamento</label>
-        <select
-          value={form.departamento}
-          onChange={(e) => setForm({ ...form, departamento: e.target.value })}
-          className="border rounded px-3 py-2"
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-semibold">Sucursales</h1>
+        <button
+          onClick={abrirNuevo}
+          className="bg-black text-white px-4 py-2 rounded"
         >
-          {DEPARTAMENTOS.map((d) => (
-            <option key={d.value} value={d.value}>
-              {d.label}
-            </option>
-          ))}
-        </select>
+          + Nueva sucursal
+        </button>
+      </div>
 
-        <input
-          type="text"
-          placeholder="Nombre del punto de venta (opcional)"
-          value={form.nombre}
-          onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-          className="border rounded px-3 py-2"
-        />
-        <input
-          type="text"
-          placeholder="Dirección"
-          value={form.direccion}
-          onChange={(e) => setForm({ ...form, direccion: e.target.value })}
-          className="border rounded px-3 py-2"
-        />
-        <input
-          type="text"
-          placeholder="Teléfono"
-          value={form.telefono}
-          onChange={(e) => setForm({ ...form, telefono: e.target.value })}
-          className="border rounded px-3 py-2"
-        />
-        <input
-          type="text"
-          placeholder="Enlace de Facebook"
-          value={form.facebookUrl}
-          onChange={(e) => setForm({ ...form, facebookUrl: e.target.value })}
-          className="border rounded px-3 py-2"
-        />
-        <input
-          type="text"
-          placeholder="Enlace de TikTok"
-          value={form.tiktokUrl}
-          onChange={(e) => setForm({ ...form, tiktokUrl: e.target.value })}
-          className="border rounded px-3 py-2"
-        />
-        <input
-          type="text"
-          placeholder="Enlace de Instagram"
-          value={form.instagramUrl}
-          onChange={(e) => setForm({ ...form, instagramUrl: e.target.value })}
-          className="border rounded px-3 py-2"
-        />
-
-        <div className="flex gap-2">
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-brand-blue text-white px-4 py-2 rounded disabled:opacity-50"
-          >
-            {editandoId ? "Guardar" : "Agregar"}
-          </button>
-          {editandoId && (
-            <button
-              type="button"
-              onClick={() => {
-                setEditandoId(null);
-                setForm(vacio);
-              }}
-              className="border px-4 py-2 rounded"
-            >
-              Cancelar
-            </button>
-          )}
-        </div>
-      </form>
-
-      <div className="bg-white rounded-lg shadow max-w-lg">
+      <div className="bg-white rounded-lg shadow max-w-2xl">
         {sucursales.length === 0 && (
           <p className="p-4 text-gray-500 text-sm">No hay sucursales aún.</p>
         )}
@@ -206,7 +140,7 @@ export default function SucursalesPage() {
             </div>
             <div className="flex gap-3 text-sm">
               <button
-                onClick={() => handleEditar(s)}
+                onClick={() => abrirEditar(s)}
                 className="text-blue-600 hover:underline"
               >
                 Editar
@@ -221,6 +155,89 @@ export default function SucursalesPage() {
           </div>
         ))}
       </div>
+
+      {modalAbierto && (
+        <Modal
+          title={editandoId ? "Editar sucursal" : "Nueva sucursal"}
+          onClose={() => setModalAbierto(false)}
+        >
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            <label className="text-sm font-medium">Departamento</label>
+            <select
+              value={form.departamento}
+              onChange={(e) =>
+                setForm({ ...form, departamento: e.target.value })
+              }
+              className="border rounded px-3 py-2"
+            >
+              {DEPARTAMENTOS.map((d) => (
+                <option key={d.value} value={d.value}>
+                  {d.label}
+                </option>
+              ))}
+            </select>
+
+            <input
+              type="text"
+              placeholder="Nombre del punto de venta (opcional)"
+              value={form.nombre}
+              onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+              className="border rounded px-3 py-2"
+            />
+            <input
+              type="text"
+              placeholder="Dirección"
+              value={form.direccion}
+              onChange={(e) => setForm({ ...form, direccion: e.target.value })}
+              className="border rounded px-3 py-2"
+            />
+            <input
+              type="text"
+              placeholder="Teléfono"
+              value={form.telefono}
+              onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+              className="border rounded px-3 py-2"
+            />
+            <input
+              type="text"
+              placeholder="Enlace de Facebook"
+              value={form.facebookUrl}
+              onChange={(e) =>
+                setForm({ ...form, facebookUrl: e.target.value })
+              }
+              className="border rounded px-3 py-2"
+            />
+            <input
+              type="text"
+              placeholder="Enlace de TikTok"
+              value={form.tiktokUrl}
+              onChange={(e) => setForm({ ...form, tiktokUrl: e.target.value })}
+              className="border rounded px-3 py-2"
+            />
+            <input
+              type="text"
+              placeholder="Enlace de Instagram"
+              value={form.instagramUrl}
+              onChange={(e) =>
+                setForm({ ...form, instagramUrl: e.target.value })
+              }
+              className="border rounded px-3 py-2"
+            />
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-black text-white rounded py-2 disabled:opacity-50"
+            >
+              {loading
+                ? "Guardando..."
+                : editandoId
+                ? "Guardar cambios"
+                : "Agregar sucursal"}
+            </button>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }

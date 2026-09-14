@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import CloudinaryUpload from "@/components/CloudinaryUpload";
+import Modal from "@/components/Modal";
 
 type Producto = { id: string; nombre: string };
 type Protocolo = {
@@ -27,7 +28,7 @@ export default function ProtocolosPage() {
   const [form, setForm] = useState(vacio);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [mostrarForm, setMostrarForm] = useState(false);
+  const [modalAbierto, setModalAbierto] = useState(false);
 
   async function cargar() {
     const [resProt, resProd] = await Promise.all([
@@ -42,6 +43,23 @@ export default function ProtocolosPage() {
     cargar();
   }, []);
 
+  function abrirNuevo() {
+    setEditandoId(null);
+    setForm(vacio);
+    setModalAbierto(true);
+  }
+
+  function abrirEditar(p: Protocolo) {
+    setEditandoId(p.id);
+    setForm({
+      titulo: p.titulo,
+      contenido: p.contenido,
+      imagenUrl: p.imagenUrl || "",
+      productoId: p.productoId,
+    });
+    setModalAbierto(true);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.titulo || !form.contenido || !form.productoId) {
@@ -50,10 +68,7 @@ export default function ProtocolosPage() {
     }
     setLoading(true);
 
-    const body = {
-      ...form,
-      activo: true,
-    };
+    const body = { ...form, activo: true };
 
     if (editandoId) {
       await fetch(`/api/admin/protocolos/${editandoId}`, {
@@ -69,22 +84,11 @@ export default function ProtocolosPage() {
       });
     }
 
+    setModalAbierto(false);
     setForm(vacio);
     setEditandoId(null);
-    setMostrarForm(false);
     setLoading(false);
     cargar();
-  }
-
-  function handleEditar(p: Protocolo) {
-    setEditandoId(p.id);
-    setForm({
-      titulo: p.titulo,
-      contenido: p.contenido,
-      imagenUrl: p.imagenUrl || "",
-      productoId: p.productoId,
-    });
-    setMostrarForm(true);
   }
 
   async function handleBorrar(id: string) {
@@ -98,88 +102,14 @@ export default function ProtocolosPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold">Protocolos</h1>
         <button
-          onClick={() => {
-            setMostrarForm(!mostrarForm);
-            setEditandoId(null);
-            setForm(vacio);
-          }}
+          onClick={abrirNuevo}
           className="bg-black text-white px-4 py-2 rounded"
         >
-          {mostrarForm ? "Cerrar" : "+ Nuevo protocolo"}
+          + Nuevo protocolo
         </button>
       </div>
 
-      {mostrarForm && (
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white rounded-lg shadow p-4 mb-6 max-w-md space-y-3"
-        >
-          <div>
-            <label className="block text-sm mb-1">Título</label>
-            <input
-              type="text"
-              value={form.titulo}
-              onChange={(e) => setForm({ ...form, titulo: e.target.value })}
-              className="w-full border rounded px-3 py-2"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm mb-1">Contenido</label>
-            <textarea
-              value={form.contenido}
-              onChange={(e) =>
-                setForm({ ...form, contenido: e.target.value })
-              }
-              className="w-full border rounded px-3 py-2"
-              rows={4}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm mb-1">Producto</label>
-            <select
-              value={form.productoId}
-              onChange={(e) =>
-                setForm({ ...form, productoId: e.target.value })
-              }
-              className="w-full border rounded px-3 py-2"
-              required
-            >
-              <option value="">Seleccionar...</option>
-              {productos.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm mb-1">Imagen</label>
-            <CloudinaryUpload
-              value={form.imagenUrl}
-              onChange={(url) => setForm({ ...form, imagenUrl: url })}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-black text-white rounded py-2 disabled:opacity-50"
-          >
-            {loading
-              ? "Guardando..."
-              : editandoId
-              ? "Guardar cambios"
-              : "Crear protocolo"}
-          </button>
-        </form>
-      )}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {protocolos.length === 0 && (
           <p className="text-gray-500 text-sm">No hay protocolos aún.</p>
         )}
@@ -200,7 +130,7 @@ export default function ProtocolosPage() {
               </p>
               <div className="flex gap-3 text-sm mt-1">
                 <button
-                  onClick={() => handleEditar(p)}
+                  onClick={() => abrirEditar(p)}
                   className="text-blue-600 hover:underline"
                 >
                   Editar
@@ -216,6 +146,78 @@ export default function ProtocolosPage() {
           </div>
         ))}
       </div>
+
+      {modalAbierto && (
+        <Modal
+          title={editandoId ? "Editar protocolo" : "Nuevo protocolo"}
+          onClose={() => setModalAbierto(false)}
+        >
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div>
+              <label className="block text-sm mb-1">Título</label>
+              <input
+                type="text"
+                value={form.titulo}
+                onChange={(e) => setForm({ ...form, titulo: e.target.value })}
+                className="w-full border rounded px-3 py-2"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm mb-1">Contenido</label>
+              <textarea
+                value={form.contenido}
+                onChange={(e) =>
+                  setForm({ ...form, contenido: e.target.value })
+                }
+                className="w-full border rounded px-3 py-2"
+                rows={4}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm mb-1">Producto</label>
+              <select
+                value={form.productoId}
+                onChange={(e) =>
+                  setForm({ ...form, productoId: e.target.value })
+                }
+                className="w-full border rounded px-3 py-2"
+                required
+              >
+                <option value="">Seleccionar...</option>
+                {productos.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm mb-1">Imagen</label>
+              <CloudinaryUpload
+                value={form.imagenUrl}
+                onChange={(url) => setForm({ ...form, imagenUrl: url })}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-black text-white rounded py-2 disabled:opacity-50"
+            >
+              {loading
+                ? "Guardando..."
+                : editandoId
+                ? "Guardar cambios"
+                : "Crear protocolo"}
+            </button>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }
