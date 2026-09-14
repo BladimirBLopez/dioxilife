@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import CartDrawer from "./CartDrawer";
 
 const LINKS = [
   { href: "#top", label: "Inicio" },
@@ -37,13 +38,16 @@ export default function SiteHeader() {
           ))}
         </nav>
 
-        <button
-          onClick={() => setOpen(!open)}
-          aria-label="Abrir menú"
-          className="text-2xl leading-none px-1 text-brand-blue md:hidden"
-        >
-          ☰
-        </button>
+        <div className="flex items-center gap-3">
+          <CartDrawer />
+          <button
+            onClick={() => setOpen(!open)}
+            aria-label="Abrir menú"
+            className="text-2xl leading-none px-1 text-brand-blue md:hidden"
+          >
+            ☰
+          </button>
+        </div>
       </div>
 
       {open && (
