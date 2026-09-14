@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import CloudinaryUpload from "@/components/CloudinaryUpload";
 import Modal from "@/components/Modal";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 type Testimonio = {
   id: string;
@@ -28,6 +29,7 @@ export default function TestimoniosPage() {
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [borrarId, setBorrarId] = useState<string | null>(null);
 
   async function cargar() {
     const res = await fetch("/api/admin/testimonios");
@@ -91,9 +93,10 @@ export default function TestimoniosPage() {
     cargar();
   }
 
-  async function handleBorrar(id: string) {
-    if (!confirm("¿Borrar este testimonio?")) return;
-    await fetch(`/api/admin/testimonios/${id}`, { method: "DELETE" });
+  async function confirmarBorrar() {
+    if (!borrarId) return;
+    await fetch(`/api/admin/testimonios/${borrarId}`, { method: "DELETE" });
+    setBorrarId(null);
     cargar();
   }
 
@@ -145,7 +148,7 @@ export default function TestimoniosPage() {
                   Editar
                 </button>
                 <button
-                  onClick={() => handleBorrar(t.id)}
+                  onClick={() => setBorrarId(t.id)}
                   className="text-red-600 hover:underline"
                 >
                   Borrar
@@ -240,6 +243,15 @@ export default function TestimoniosPage() {
             </button>
           </form>
         </Modal>
+      )}
+
+      {borrarId && (
+        <ConfirmDialog
+          title="Borrar testimonio"
+          message="¿Seguro que quieres borrar este testimonio? Esta acción no se puede deshacer."
+          onConfirm={confirmarBorrar}
+          onCancel={() => setBorrarId(null)}
+        />
       )}
     </div>
   );

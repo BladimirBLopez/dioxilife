@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import CloudinaryUpload from "@/components/CloudinaryUpload";
 import Modal from "@/components/Modal";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 type Producto = { id: string; nombre: string };
 type Protocolo = {
@@ -29,6 +30,7 @@ export default function ProtocolosPage() {
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [borrarId, setBorrarId] = useState<string | null>(null);
 
   async function cargar() {
     const [resProt, resProd] = await Promise.all([
@@ -91,9 +93,10 @@ export default function ProtocolosPage() {
     cargar();
   }
 
-  async function handleBorrar(id: string) {
-    if (!confirm("¿Borrar este protocolo?")) return;
-    await fetch(`/api/admin/protocolos/${id}`, { method: "DELETE" });
+  async function confirmarBorrar() {
+    if (!borrarId) return;
+    await fetch(`/api/admin/protocolos/${borrarId}`, { method: "DELETE" });
+    setBorrarId(null);
     cargar();
   }
 
@@ -136,7 +139,7 @@ export default function ProtocolosPage() {
                   Editar
                 </button>
                 <button
-                  onClick={() => handleBorrar(p.id)}
+                  onClick={() => setBorrarId(p.id)}
                   className="text-red-600 hover:underline"
                 >
                   Borrar
@@ -217,6 +220,15 @@ export default function ProtocolosPage() {
             </button>
           </form>
         </Modal>
+      )}
+
+      {borrarId && (
+        <ConfirmDialog
+          title="Borrar protocolo"
+          message="¿Seguro que quieres borrar este protocolo? Esta acción no se puede deshacer."
+          onConfirm={confirmarBorrar}
+          onCancel={() => setBorrarId(null)}
+        />
       )}
     </div>
   );

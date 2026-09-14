@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Modal from "@/components/Modal";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 const DEPARTAMENTOS = [
   { value: "LA_PAZ", label: "La Paz" },
@@ -43,6 +44,7 @@ export default function SucursalesPage() {
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [borrarId, setBorrarId] = useState<string | null>(null);
 
   async function cargar() {
     const res = await fetch("/api/admin/sucursales");
@@ -98,9 +100,10 @@ export default function SucursalesPage() {
     cargar();
   }
 
-  async function handleBorrar(id: string) {
-    if (!confirm("¿Borrar esta sucursal?")) return;
-    await fetch(`/api/admin/sucursales/${id}`, { method: "DELETE" });
+  async function confirmarBorrar() {
+    if (!borrarId) return;
+    await fetch(`/api/admin/sucursales/${borrarId}`, { method: "DELETE" });
+    setBorrarId(null);
     cargar();
   }
 
@@ -146,7 +149,7 @@ export default function SucursalesPage() {
                 Editar
               </button>
               <button
-                onClick={() => handleBorrar(s.id)}
+                onClick={() => setBorrarId(s.id)}
                 className="text-red-600 hover:underline"
               >
                 Borrar
@@ -237,6 +240,15 @@ export default function SucursalesPage() {
             </button>
           </form>
         </Modal>
+      )}
+
+      {borrarId && (
+        <ConfirmDialog
+          title="Borrar sucursal"
+          message="¿Seguro que quieres borrar esta sucursal? Esta acción no se puede deshacer."
+          onConfirm={confirmarBorrar}
+          onCancel={() => setBorrarId(null)}
+        />
       )}
     </div>
   );
