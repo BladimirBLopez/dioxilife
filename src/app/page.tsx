@@ -155,9 +155,15 @@ export default async function Home({
                   <h3 className="text-sm font-medium mt-0.5 line-clamp-2">
                     {p.nombre}
                   </h3>
-                  <p className="text-brand-blue font-bold mt-auto pt-2">
-                    Bs {Number(p.precio).toFixed(2)}
-                  </p>
+                  {p.mostrarPrecio ? (
+                    <p className="text-brand-blue font-bold mt-auto pt-2">
+                      Bs {Number(p.precio).toFixed(2)}
+                    </p>
+                  ) : (
+                    <p className="text-[#25D366] text-xs font-semibold mt-auto pt-2">
+                      Precio a consultar por WhatsApp
+                    </p>
+                  )}
                 </div>
               </a>
             ))}
