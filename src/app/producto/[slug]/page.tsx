@@ -29,9 +29,10 @@ export default async function ProductoDetalle({
     notFound();
   }
 
-  const mensajeWhatsapp = encodeURIComponent(
-    `Hola, quiero consultar el precio de "${producto.nombre}".`
-  );
+  const mensaje = producto.mostrarPrecio
+    ? `Hola, quiero comprar "${producto.nombre}", vi que cuesta Bs ${Number(producto.precio).toFixed(2)}.`
+    : `Hola, quiero consultar el precio de "${producto.nombre}".`;
+  const linkWhatsapp = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensaje)}`;
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -40,7 +41,7 @@ export default async function ProductoDetalle({
           <Link href="/" className="text-sm text-brand-blue font-medium">
             ← Volver a la tienda
           </Link>
-          <Image src="/logo.png" alt="DioxiLife Bolivia" width={90} height={74} />
+          <Image src="/logo.png" alt="DioxiLife Bolivia" width={200} height={164} className="w-14 h-auto" />
         </div>
       </header>
 
@@ -68,19 +69,10 @@ export default async function ProductoDetalle({
             </span>
             <h1 className="text-2xl font-bold mt-1">{producto.nombre}</h1>
 
-            {producto.mostrarPrecio ? (
+            {producto.mostrarPrecio && (
               <p className="text-brand-blue font-bold text-2xl mt-3">
                 Bs {Number(producto.precio).toFixed(2)}
               </p>
-            ) : (
-              <a
-                href={`https://wa.me/${NUMERO_WHATSAPP}?text=${mensajeWhatsapp}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#25D366] font-semibold mt-3"
-              >
-                Precio a consultar por WhatsApp
-              </a>
             )}
 
             {producto.descripcion && (
@@ -88,6 +80,15 @@ export default async function ProductoDetalle({
                 {producto.descripcion}
               </p>
             )}
+
+            <a
+              href={linkWhatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 flex items-center justify-center gap-2 bg-[#25D366] text-white font-semibold rounded-lg py-3 hover:opacity-90"
+            >
+              {producto.mostrarPrecio ? "Comprar por WhatsApp" : "Consultar precio por WhatsApp"}
+            </a>
           </div>
         </div>
 
