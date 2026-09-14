@@ -125,19 +125,33 @@ export default function DashboardLayout({
       )}
 
       <aside
-        className={`fixed md:static top-0 left-0 h-full w-64 md:w-56 bg-brand-navy text-white flex flex-col p-4 z-30 overflow-y-auto
+        className={`fixed md:static top-0 left-0 h-full w-72 md:w-64 bg-brand-navy text-white flex flex-col p-4 z-30 overflow-y-auto
           transform transition-transform duration-200 ease-in-out
           ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
       >
-        <div className="hidden md:flex justify-center mb-6">
-          <Image src="/logo.png" alt="DioxiLife" width={120} height={99} />
+        <div className="flex flex-col items-center gap-2 mb-5 pb-5 border-b border-white/10">
+          <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center overflow-hidden shrink-0">
+            <Image
+              src="/logo.png"
+              alt="DioxiLife"
+              width={56}
+              height={56}
+              className="object-contain"
+            />
+          </div>
+          <div className="text-center">
+            <p className="font-semibold text-sm leading-tight">
+              DioxiLife Bolivia
+            </p>
+            <p className="text-xs text-white/55">Panel Admin</p>
+          </div>
         </div>
 
         <a
           href="/"
           target="_blank"
           rel="noopener noreferrer"
-          className="hidden md:block text-sm bg-brand-pink rounded-lg px-3 py-2 mb-6 text-center font-medium hover:opacity-90"
+          className="hidden md:block text-sm bg-brand-pink rounded-lg px-3 py-2 mb-5 text-center font-medium hover:opacity-90"
         >
           Ver tienda
         </a>
