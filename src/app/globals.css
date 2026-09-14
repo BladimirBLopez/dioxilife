@@ -21,6 +21,14 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Tailwind v4 cambió el color de borde por defecto a currentColor (negro).
+   Esto lo devuelve a un gris suave y profesional en todo el sitio. */
+@layer base {
+  *, ::after, ::before, ::backdrop, ::file-selector-button {
+    border-color: #E5E4E7;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
