@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import CloudinaryUpload from "@/components/CloudinaryUpload";
 import Modal from "@/components/Modal";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
@@ -220,14 +219,6 @@ export default function ProtocolosPage() {
                   </option>
                 ))}
               </select>
-            </div>
-
-            <div>
-              <label className="admin-label">Imagen</label>
-              <CloudinaryUpload
-                value={form.imagenUrl}
-                onChange={(url) => setForm({ ...form, imagenUrl: url })}
-              />
             </div>
 
             <button
