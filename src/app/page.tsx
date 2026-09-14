@@ -56,7 +56,7 @@ export default async function Home({
   const [categorias, productos, testimonios, sucursales, banner] = await Promise.all([
     prisma.categoria.findMany({
       orderBy: { nombre: "asc" },
-      include: { _count: { select: { productos: true } } },
+      include: { _count: { select: { productos: { where: { activo: true } } } } },
     }),
     prisma.producto.findMany({
       where: {
@@ -130,33 +130,40 @@ export default async function Home({
       )}
 
       {/* Categorías */}
-      {categorias.length > 0 && (
-        <nav className="max-w-6xl mx-auto w-full px-4 py-4 flex gap-2 overflow-x-auto">
-          <a
-            href="/"
-            className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border ${
-              !categoria
-                ? "bg-brand-pink text-white border-brand-pink"
-                : "bg-white text-brand-gray border-gray-300"
-            }`}
-          >
-            Todos
-          </a>
-          {categorias.map((c) => (
-            <a
-              key={c.id}
-              href={`/?categoria=${c.slug}`}
-              className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border ${
-                categoria === c.slug
-                  ? "bg-brand-pink text-white border-brand-pink"
-                  : "bg-white text-brand-gray border-gray-300"
-              }`}
-            >
-              {c.nombre} ({c._count.productos})
-            </a>
-          ))}
-        </nav>
-      )}
+      {(() => {
+        const categoriasConProductos = categorias.filter(
+          (c) => c._count.productos > 0
+        );
+        return (
+          categoriasConProductos.length > 0 && (
+            <nav className="max-w-6xl mx-auto w-full px-4 py-4 flex gap-2 overflow-x-auto">
+              <a
+                href="/"
+                className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border ${
+                  !categoria
+                    ? "bg-brand-pink text-white border-brand-pink"
+                    : "bg-white text-brand-gray border-gray-300"
+                }`}
+              >
+                Todos
+              </a>
+              {categoriasConProductos.map((c) => (
+                <a
+                  key={c.id}
+                  href={`/?categoria=${c.slug}`}
+                  className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border ${
+                    categoria === c.slug
+                      ? "bg-brand-pink text-white border-brand-pink"
+                      : "bg-white text-brand-gray border-gray-300"
+                  }`}
+                >
+                  {c.nombre} ({c._count.productos})
+                </a>
+              ))}
+            </nav>
+          )
+        );
+      })()}
 
       {/* Grid de productos */}
       <main id="productos" className="flex-1 max-w-6xl mx-auto w-full px-4 pb-4">
