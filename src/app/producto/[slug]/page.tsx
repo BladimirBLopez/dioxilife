@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import AgregarCarritoButton from "@/components/AgregarCarritoButton";
+import CartDrawer from "@/components/CartDrawer";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,7 @@ export default async function ProductoDetalle({
             ← Volver a la tienda
           </Link>
           <Image src="/logo.png" alt="DioxiLife Bolivia" width={200} height={164} className="w-14 h-auto" />
+          <CartDrawer />
         </div>
       </header>
 
