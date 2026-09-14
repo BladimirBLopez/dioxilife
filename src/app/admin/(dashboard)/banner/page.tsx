@@ -21,6 +21,7 @@ export default function BannerPage() {
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [guardado, setGuardado] = useState(false);
+  const [imagenSubiendo, setImagenSubiendo] = useState(false);
 
   async function cargar() {
     const res = await fetch("/api/admin/banner");
@@ -52,19 +53,36 @@ export default function BannerPage() {
       alert("El título es obligatorio");
       return;
     }
+    if (imagenSubiendo) {
+      alert("Espera a que termine de subir la imagen antes de guardar");
+      return;
+    }
     setGuardando(true);
     setGuardado(false);
 
-    const res = await fetch("/api/admin/banner", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    const data = await res.json();
-    setForm((f) => ({ ...f, id: data.id }));
-    setGuardando(false);
-    setGuardado(true);
-    setTimeout(() => setGuardado(false), 2500);
+    try {
+      const res = await fetch("/api/admin/banner", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        alert(data?.error || "Ocurrió un error al guardar el banner");
+        setGuardando(false);
+        return;
+      }
+
+      const data = await res.json();
+      setForm((f) => ({ ...f, id: data.id }));
+      setGuardado(true);
+      setTimeout(() => setGuardado(false), 2500);
+    } catch {
+      alert("No se pudo conectar con el servidor");
+    } finally {
+      setGuardando(false);
+    }
   }
 
   if (cargando) {
@@ -93,6 +111,7 @@ export default function BannerPage() {
           <CloudinaryUpload
             value={form.imagenUrl}
             onChange={(url) => setForm({ ...form, imagenUrl: url })}
+            onUploadingChange={setImagenSubiendo}
           />
         </div>
 
@@ -197,10 +216,14 @@ export default function BannerPage() {
 
         <button
           type="submit"
-          disabled={guardando}
+          disabled={guardando || imagenSubiendo}
           className="admin-btn-primary w-full"
         >
-          {guardando ? "Guardando..." : "Guardar banner"}
+          {imagenSubiendo
+            ? "Esperando imagen..."
+            : guardando
+            ? "Guardando..."
+            : "Guardar banner"}
         </button>
 
         {guardado && (

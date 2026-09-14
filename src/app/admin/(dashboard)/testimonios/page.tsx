@@ -29,6 +29,7 @@ export default function TestimoniosPage() {
   const [formInicial, setFormInicial] = useState(vacio);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [imagenSubiendo, setImagenSubiendo] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [confirmarSalir, setConfirmarSalir] = useState(false);
   const [borrarId, setBorrarId] = useState<string | null>(null);
@@ -86,6 +87,10 @@ export default function TestimoniosPage() {
       alert("Nombre y contenido son obligatorios");
       return;
     }
+    if (imagenSubiendo) {
+      alert("Espera a que termine de subir la imagen antes de guardar");
+      return;
+    }
     setLoading(true);
 
     const body = {
@@ -94,31 +99,50 @@ export default function TestimoniosPage() {
       activo: true,
     };
 
-    if (editandoId) {
-      await fetch(`/api/admin/testimonios/${editandoId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-    } else {
-      await fetch("/api/admin/testimonios", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-    }
+    try {
+      const res = editandoId
+        ? await fetch(`/api/admin/testimonios/${editandoId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          })
+        : await fetch("/api/admin/testimonios", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
 
-    setModalAbierto(false);
-    setForm(vacio);
-    setEditandoId(null);
-    setLoading(false);
-    cargar();
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        alert(data?.error || "Ocurrió un error al guardar el testimonio");
+        setLoading(false);
+        return;
+      }
+
+      setModalAbierto(false);
+      setForm(vacio);
+      setEditandoId(null);
+      await cargar();
+    } catch {
+      alert("No se pudo conectar con el servidor");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function confirmarBorrar() {
     if (!borrarId) return;
-    await fetch(`/api/admin/testimonios/${borrarId}`, { method: "DELETE" });
+    const res = await fetch(`/api/admin/testimonios/${borrarId}`, {
+      method: "DELETE",
+    });
     setBorrarId(null);
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      alert(data?.error || "No se pudo borrar el testimonio");
+      return;
+    }
+
     cargar();
   }
 
@@ -238,6 +262,7 @@ export default function TestimoniosPage() {
               <CloudinaryUpload
                 value={form.imagenUrl}
                 onChange={(url) => setForm({ ...form, imagenUrl: url })}
+                onUploadingChange={setImagenSubiendo}
               />
             </div>
 
@@ -257,10 +282,12 @@ export default function TestimoniosPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || imagenSubiendo}
               className="admin-btn-primary w-full"
             >
-              {loading
+              {imagenSubiendo
+                ? "Esperando imagen..."
+                : loading
                 ? "Guardando..."
                 : editandoId
                 ? "Guardar cambios"
