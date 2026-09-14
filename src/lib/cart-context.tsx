@@ -68,7 +68,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { ...item, cantidad: 1 }];
     });
-    setToast(`${item.nombre} agregado al carrito`);
+    setToast("Agregado al carrito");
   }
 
   function removeItem(id: string) {

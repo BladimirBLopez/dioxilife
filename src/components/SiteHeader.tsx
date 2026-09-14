@@ -22,7 +22,7 @@ export default function SiteHeader({
     : LINKS_BASE;
 
   return (
-    <header id="top" className="bg-white/95 backdrop-blur-sm shadow-[0_1px_3px_rgba(0,0,0,0.06)] sticky top-0 z-20">
+    <header id="top" className="relative bg-white/95 backdrop-blur-sm shadow-[0_1px_3px_rgba(0,0,0,0.06)] sticky top-0 z-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4">
         <Image
           src="/logo.png"
@@ -77,7 +77,7 @@ export default function SiteHeader({
       </div>
 
       <nav
-        className={`md:hidden bg-white overflow-hidden transition-[max-height,box-shadow] duration-300 ease-in-out ${
+        className={`md:hidden absolute top-full left-0 right-0 bg-white overflow-hidden transition-[max-height,box-shadow] duration-300 ease-in-out z-30 ${
           open ? "max-h-72 shadow-[0_8px_16px_rgba(0,0,0,0.06)]" : "max-h-0"
         }`}
       >
