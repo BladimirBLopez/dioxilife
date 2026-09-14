@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Modal from "@/components/Modal";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import CloudinaryUpload from "@/components/CloudinaryUpload";
+import { esVideo } from "@/lib/media";
 
 type Producto = { id: string; nombre: string };
 type Protocolo = {
@@ -29,6 +31,7 @@ export default function ProtocolosPage() {
   const [formInicial, setFormInicial] = useState(vacio);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [subiendoArchivo, setSubiendoArchivo] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [confirmarSalir, setConfirmarSalir] = useState(false);
   const [borrarId, setBorrarId] = useState<string | null>(null);
@@ -137,11 +140,22 @@ export default function ProtocolosPage() {
         {protocolos.map((p) => (
           <div key={p.id} className="admin-card p-4 flex gap-3">
             {p.imagenUrl ? (
-              <img
-                src={p.imagenUrl}
-                alt={p.titulo}
-                className="w-16 h-16 object-cover rounded-lg shrink-0"
-              />
+              esVideo(p.imagenUrl) ? (
+                <video
+                  src={p.imagenUrl}
+                  muted
+                  autoPlay
+                  loop
+                  playsInline
+                  className="w-16 h-16 object-cover rounded-lg shrink-0"
+                />
+              ) : (
+                <img
+                  src={p.imagenUrl}
+                  alt={p.titulo}
+                  className="w-16 h-16 object-cover rounded-lg shrink-0"
+                />
+              )
             ) : (
               <div className="w-16 h-16 rounded-lg bg-[#F7F7F9] shrink-0" />
             )}
@@ -203,6 +217,15 @@ export default function ProtocolosPage() {
             </div>
 
             <div>
+              <label className="admin-label">Imagen o video (opcional)</label>
+              <CloudinaryUpload
+                value={form.imagenUrl}
+                onChange={(url) => setForm({ ...form, imagenUrl: url })}
+                onUploadingChange={setSubiendoArchivo}
+              />
+            </div>
+
+            <div>
               <label className="admin-label">Producto</label>
               <select
                 value={form.productoId}
@@ -223,7 +246,7 @@ export default function ProtocolosPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || subiendoArchivo}
               className="admin-btn-primary w-full"
             >
               {loading
