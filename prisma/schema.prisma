@@ -87,3 +87,17 @@ model Admin {
   passwordHash String
   createdAt    DateTime @default(now())
 }
+
+model Banner {
+  id              String   @id @default(cuid())
+  titulo          String
+  subtitulo       String?
+  textoBoton      String?
+  tipoBoton       String   @default("LINK") // "LINK" o "WHATSAPP"
+  linkBoton       String?
+  mensajeWhatsapp String?
+  imagenUrl       String?
+  activo          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

@@ -62,6 +62,9 @@ export default function DashboardLayout({
           <Link href="/admin" onClick={() => setOpen(false)} className="rounded px-3 py-2 hover:bg-white/10">
             Inicio
           </Link>
+          <Link href="/admin/banner" onClick={() => setOpen(false)} className="rounded px-3 py-2 hover:bg-white/10">
+            Banner
+          </Link>
           <Link href="/admin/categorias" onClick={() => setOpen(false)} className="rounded px-3 py-2 hover:bg-white/10">
             Categorías
           </Link>

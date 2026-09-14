@@ -53,7 +53,7 @@ export default async function Home({
 }) {
   const { categoria } = await searchParams;
 
-  const [categorias, productos, testimonios, sucursales] = await Promise.all([
+  const [categorias, productos, testimonios, sucursales, banner] = await Promise.all([
     prisma.categoria.findMany({
       orderBy: { nombre: "asc" },
       include: { _count: { select: { productos: true } } },
@@ -74,6 +74,10 @@ export default async function Home({
       where: { activo: true },
       orderBy: { departamento: "asc" },
     }),
+    prisma.banner.findFirst({
+      where: { activo: true },
+      orderBy: { createdAt: "desc" },
+    }),
   ]);
 
   const sucursalesPorDepartamento = sucursales.reduce<
@@ -83,15 +87,48 @@ export default async function Home({
     return acc;
   }, {});
 
+  const hrefBotonBanner =
+    banner?.tipoBoton === "WHATSAPP"
+      ? `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(
+          banner.mensajeWhatsapp || `Hola, quiero más información sobre ${banner.titulo}`
+        )}`
+      : banner?.linkBoton || "#";
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <SiteHeader />
 
       {/* Hero */}
-      <section className="bg-gradient-to-r from-brand-pink to-brand-blue text-white text-center py-8 px-4">
-        <h1 className="text-2xl font-bold">DioxiLife Bolivia</h1>
-        <p className="text-white/90 mt-1">Tu tienda de confianza en Bolivia</p>
-      </section>
+      {banner && banner.imagenUrl ? (
+        <section className="relative py-16 px-4 text-center text-white overflow-hidden">
+          <Image
+            src={banner.imagenUrl}
+            alt={banner.titulo}
+            fill
+            className="object-cover -z-10"
+          />
+          <div className="absolute inset-0 bg-black/50 -z-10" />
+          <h1 className="text-2xl md:text-3xl font-bold">{banner.titulo}</h1>
+          {banner.subtitulo && (
+            <p className="text-white/90 mt-2">{banner.subtitulo}</p>
+          )}
+          {banner.textoBoton && (
+            <a
+              href={hrefBotonBanner}
+              target={banner.tipoBoton === "WHATSAPP" ? "_blank" : undefined}
+              rel="noopener noreferrer"
+              className="inline-block mt-4 bg-brand-pink px-6 py-2 rounded-full font-semibold hover:opacity-90"
+            >
+              {banner.textoBoton}
+            </a>
+          )}
+        </section>
+      ) : (
+        <section className="bg-gradient-to-r from-brand-pink to-brand-blue text-white text-center py-8 px-4">
+          <h1 className="text-2xl font-bold">DioxiLife Bolivia</h1>
+          <p className="text-white/90 mt-1">Tu tienda de confianza en Bolivia</p>
+        </section>
+      )}
 
       {/* Categorías */}
       {categorias.length > 0 && (
