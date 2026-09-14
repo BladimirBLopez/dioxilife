@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 export default function Modal({
   title,
@@ -11,7 +12,11 @@ export default function Modal({
   onClose: () => void;
   children: React.ReactNode;
 }) {
+  const [montado, setMontado] = useState(false);
+
   useEffect(() => {
+    setMontado(true);
+
     function handleEsc(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
     }
@@ -23,7 +28,9 @@ export default function Modal({
     };
   }, [onClose]);
 
-  return (
+  if (!montado) return null;
+
+  return createPortal(
     <div
       className="fixed inset-0 z-40 bg-black/50 flex items-start sm:items-center justify-center p-4 overflow-y-auto"
       onClick={onClose}
@@ -46,6 +53,7 @@ export default function Modal({
         </div>
         <div className="p-5">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
