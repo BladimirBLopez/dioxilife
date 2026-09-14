@@ -70,7 +70,7 @@ export default async function Home({
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <SiteHeader />
+      <SiteHeader mostrarSucursales={sucursales.length > 0} />
 
       {/* Hero / Banner principal */}
       {banner ? (

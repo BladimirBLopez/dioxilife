@@ -4,15 +4,22 @@ import { useState } from "react";
 import Image from "next/image";
 import CartDrawer from "./CartDrawer";
 
-const LINKS = [
+const LINKS_BASE = [
   { href: "#top", label: "Inicio" },
   { href: "#productos", label: "Productos" },
   { href: "#testimonios", label: "Testimonios" },
-  { href: "#sucursales", label: "Sucursales" },
 ];
 
-export default function SiteHeader() {
+export default function SiteHeader({
+  mostrarSucursales = true,
+}: {
+  mostrarSucursales?: boolean;
+}) {
   const [open, setOpen] = useState(false);
+
+  const LINKS = mostrarSucursales
+    ? [...LINKS_BASE, { href: "#sucursales", label: "Sucursales" }]
+    : LINKS_BASE;
 
   return (
     <header id="top" className="bg-white border-b sticky top-0 z-20">

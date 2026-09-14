@@ -35,6 +35,13 @@ const STORAGE_KEY = "dioxilife-carrito";
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [cargado, setCargado] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timeout = setTimeout(() => setToast(null), 2200);
+    return () => clearTimeout(timeout);
+  }, [toast]);
 
   useEffect(() => {
     try {
@@ -61,6 +68,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { ...item, cantidad: 1 }];
     });
+    setToast(`${item.nombre} agregado al carrito`);
   }
 
   function removeItem(id: string) {
@@ -101,6 +109,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
+
+      {toast && (
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-brand-blue text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg toast-carrito">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="w-4 h-4 shrink-0">
+            <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          {toast}
+        </div>
+      )}
     </CartContext.Provider>
   );
 }
