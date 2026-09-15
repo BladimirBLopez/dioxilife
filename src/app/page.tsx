@@ -30,33 +30,32 @@ export default async function Home({
 }) {
   const { categoria } = await searchParams;
 
-  const [categorias, productos, testimonios, sucursales, banner] =
-    await Promise.all([
-      prisma.categoria.findMany({
-        orderBy: { nombre: "asc" },
-        include: { _count: { select: { productos: true } } },
-      }),
-      prisma.producto.findMany({
-        where: {
-          activo: true,
-          ...(categoria ? { categoria: { slug: categoria } } : {}),
-        },
-        include: { categoria: true },
-        orderBy: { createdAt: "desc" },
-      }),
-      prisma.testimonio.findMany({
-        where: { activo: true, destacado: true },
-        orderBy: { createdAt: "desc" },
-      }),
-      prisma.sucursal.findMany({
-        where: { activo: true },
-        orderBy: { departamento: "asc" },
-      }),
-      prisma.banner.findFirst({
-        where: { activo: true },
-        orderBy: { createdAt: "desc" },
-      }),
-    ]);
+  const [categorias, productos, testimonios, sucursales, banner] = await Promise.all([
+    prisma.categoria.findMany({
+      orderBy: { nombre: "asc" },
+      include: { _count: { select: { productos: true } } },
+    }),
+    prisma.producto.findMany({
+      where: {
+        activo: true,
+        ...(categoria ? { categoria: { slug: categoria } } : {}),
+      },
+      include: { categoria: true },
+      orderBy: { orden: "asc" },
+    }),
+    prisma.testimonio.findMany({
+      where: { activo: true, destacado: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.sucursal.findMany({
+      where: { activo: true },
+      orderBy: { departamento: "asc" },
+    }),
+    prisma.banner.findFirst({
+      where: { activo: true },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
 
   const categoriasConProductos = categorias.filter(
     (c) => c._count.productos > 0
@@ -71,7 +70,7 @@ export default async function Home({
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <SiteHeader mostrarSucursales={sucursales.length > 0} />
+      <SiteHeader />
 
       {/* Hero / Banner principal */}
       {banner ? (
@@ -167,25 +166,20 @@ export default async function Home({
             {productos.map((p) => (
               <div
                 key={p.id}
-                className="group bg-white rounded-xl shadow-sm hover:shadow-md overflow-hidden flex flex-col transition-shadow duration-200"
+                className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col"
               >
                 <Link href={`/producto/${p.slug}`} className="flex flex-col flex-1">
-                  <div className="aspect-square bg-gray-50 relative overflow-hidden">
+                  <div className="aspect-square bg-gray-100 relative">
                     {p.imagenUrl ? (
                       <Image
                         src={p.imagenUrl}
                         alt={p.nombre}
                         fill
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        className="object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 text-gray-300">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-8 h-8">
-                          <rect x="3" y="3" width="18" height="18" rx="2" />
-                          <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none" />
-                          <path d="m21 15-5-5L5 21" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        <span className="text-[11px]">Sin imagen</span>
+                      <div className="w-full h-full flex items-center justify-center text-brand-gray text-xs">
+                        Sin imagen
                       </div>
                     )}
                   </div>

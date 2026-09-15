@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { DragDropProvider, type DragEndEvent } from "@dnd-kit/react";
+import { useSortable, isSortable } from "@dnd-kit/react/sortable";
 import CloudinaryUpload from "@/components/CloudinaryUpload";
 import Modal from "@/components/Modal";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -16,6 +18,7 @@ type Producto = {
   categoriaId: string;
   categoria: Categoria;
   activo: boolean;
+  orden: number;
 };
 
 const vacio = {
@@ -26,6 +29,75 @@ const vacio = {
   imagenUrl: "",
   categoriaId: "",
 };
+
+function TarjetaProducto({
+  producto,
+  index,
+  onEditar,
+  onBorrar,
+}: {
+  producto: Producto;
+  index: number;
+  onEditar: (p: Producto) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const { ref, handleRef, isDragging } = useSortable({
+    id: producto.id,
+    index,
+  });
+
+  return (
+    <div
+      ref={ref}
+      className={`admin-card p-4 flex gap-3 ${
+        isDragging ? "opacity-50" : ""
+      }`}
+    >
+      <button
+        ref={handleRef}
+        aria-label="Arrastrar para reordenar"
+        className="cursor-grab active:cursor-grabbing text-[#C7C4CC] px-1 self-center touch-none"
+      >
+        ⋮⋮
+      </button>
+
+      {producto.imagenUrl ? (
+        <img
+          src={producto.imagenUrl}
+          alt={producto.nombre}
+          className="w-16 h-16 object-cover rounded-lg shrink-0"
+        />
+      ) : (
+        <div className="w-16 h-16 rounded-lg bg-[#F7F7F9] shrink-0" />
+      )}
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-sm text-[#1F1B24]">{producto.nombre}</p>
+        <p className="text-xs text-brand-pink font-medium mt-0.5">
+          {producto.categoria.nombre}
+        </p>
+        <p className="text-sm text-[#6B6870] mt-1">
+          {producto.mostrarPrecio
+            ? `Bs. ${producto.precio}`
+            : "Precio a consultar por WhatsApp"}
+        </p>
+        <div className="flex gap-4 text-sm mt-2">
+          <button
+            onClick={() => onEditar(producto)}
+            className="text-brand-blue font-medium hover:underline"
+          >
+            Editar
+          </button>
+          <button
+            onClick={() => onBorrar(producto.id)}
+            className="text-red-600 font-medium hover:underline"
+          >
+            Borrar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ProductosPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -38,6 +110,7 @@ export default function ProductosPage() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [confirmarSalir, setConfirmarSalir] = useState(false);
   const [borrarId, setBorrarId] = useState<string | null>(null);
+  const [guardandoOrden, setGuardandoOrden] = useState(false);
 
   async function cargar() {
     const [resProd, resCat] = await Promise.all([
@@ -160,58 +233,79 @@ export default function ProductosPage() {
     cargar();
   }
 
+  async function guardarOrden(lista: Producto[]) {
+    setGuardandoOrden(true);
+    try {
+      const res = await fetch("/api/admin/productos/reorder", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orden: lista.map((p, i) => ({ id: p.id, orden: i })),
+        }),
+      });
+      if (!res.ok) {
+        alert("No se pudo guardar el nuevo orden, refrescando la lista");
+        await cargar();
+      }
+    } catch {
+      alert("No se pudo conectar con el servidor para guardar el orden");
+      await cargar();
+    } finally {
+      setGuardandoOrden(false);
+    }
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    if (event.canceled) return;
+    const { source } = event.operation;
+    if (!isSortable(source)) return;
+
+    const { initialIndex, index } = source;
+    if (initialIndex === index) return;
+
+    setProductos((prev) => {
+      const nuevos = [...prev];
+      const [movido] = nuevos.splice(initialIndex, 1);
+      nuevos.splice(index, 0, movido);
+      guardarOrden(nuevos);
+      return nuevos;
+    });
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-xl font-semibold text-[#1F1B24]">Productos</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl font-semibold text-[#1F1B24]">Productos</h1>
+          {guardandoOrden && (
+            <span className="text-xs text-[#8A8790]">Guardando orden...</span>
+          )}
+        </div>
         <button onClick={abrirNuevo} className="admin-btn-primary">
           + Nuevo producto
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {productos.length === 0 && (
-          <p className="text-sm text-[#8A8790]">No hay productos aún.</p>
-        )}
-        {productos.map((p) => (
-          <div key={p.id} className="admin-card p-4 flex gap-3">
-            {p.imagenUrl ? (
-              <img
-                src={p.imagenUrl}
-                alt={p.nombre}
-                className="w-16 h-16 object-cover rounded-lg shrink-0"
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-lg bg-[#F7F7F9] shrink-0" />
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm text-[#1F1B24]">{p.nombre}</p>
-              <p className="text-xs text-brand-pink font-medium mt-0.5">
-                {p.categoria.nombre}
-              </p>
-              <p className="text-sm text-[#6B6870] mt-1">
-                {p.mostrarPrecio
-                  ? `Bs. ${p.precio}`
-                  : "Precio a consultar por WhatsApp"}
-              </p>
-              <div className="flex gap-4 text-sm mt-2">
-                <button
-                  onClick={() => abrirEditar(p)}
-                  className="text-brand-blue font-medium hover:underline"
-                >
-                  Editar
-                </button>
-                <button
-                  onClick={() => setBorrarId(p.id)}
-                  className="text-red-600 font-medium hover:underline"
-                >
-                  Borrar
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+      <p className="text-xs text-[#8A8790] mb-3">
+        Arrastrá del ícono ⋮⋮ para cambiar el orden en que se muestran en la tienda.
+      </p>
+
+      <DragDropProvider onDragEnd={handleDragEnd}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {productos.length === 0 && (
+            <p className="text-sm text-[#8A8790]">No hay productos aún.</p>
+          )}
+          {productos.map((p, i) => (
+            <TarjetaProducto
+              key={p.id}
+              producto={p}
+              index={i}
+              onEditar={abrirEditar}
+              onBorrar={setBorrarId}
+            />
+          ))}
+        </div>
+      </DragDropProvider>
 
       {modalAbierto && (
         <Modal

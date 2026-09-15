@@ -12,7 +12,7 @@ function slugify(texto: string) {
 
 export async function GET() {
   const productos = await prisma.producto.findMany({
-    orderBy: { createdAt: "desc" },
+    orderBy: { orden: "asc" },
     include: { categoria: true },
   });
   return NextResponse.json(productos);
@@ -29,6 +29,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const ultimo = await prisma.producto.findFirst({
+    orderBy: { orden: "desc" },
+  });
+  const nuevoOrden = ultimo ? ultimo.orden + 1 : 0;
+
   const producto = await prisma.producto.create({
     data: {
       nombre,
@@ -38,6 +43,7 @@ export async function POST(req: NextRequest) {
       mostrarPrecio: mostrarPrecio ?? false,
       imagenUrl: imagenUrl || null,
       categoriaId,
+      orden: nuevoOrden,
     },
   });
 
