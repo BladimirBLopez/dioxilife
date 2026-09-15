@@ -208,7 +208,7 @@ export default async function Home({
                         src={p.imagenUrl}
                         alt={p.nombre}
                         fill
-                        className="object-contain p-2"
+                        className="object-cover"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-brand-gray text-xs">
