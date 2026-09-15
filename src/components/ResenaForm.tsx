@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+const CLAVE_LOCALSTORAGE = "dioxilife_resena_enviada";
 
 export default function ResenaForm({
   productoId,
@@ -14,7 +16,16 @@ export default function ResenaForm({
   const [sitioWeb, setSitioWeb] = useState(""); // honeypot
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
+  const [yaEnvioAntes, setYaEnvioAntes] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (localStorage.getItem(CLAVE_LOCALSTORAGE) === "1") {
+        setYaEnvioAntes(true);
+      }
+    }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,11 +61,17 @@ export default function ResenaForm({
       const data = await res.json().catch(() => null);
 
       if (!res.ok) {
-        setError(data?.error || "No se pudo enviar tu reseña");
+        if (res.status === 409) {
+          localStorage.setItem(CLAVE_LOCALSTORAGE, "1");
+          setYaEnvioAntes(true);
+        } else {
+          setError(data?.error || "No se pudo enviar tu reseña");
+        }
         setEnviando(false);
         return;
       }
 
+      localStorage.setItem(CLAVE_LOCALSTORAGE, "1");
       setEnviado(true);
     } catch {
       setError("No se pudo conectar con el servidor");
@@ -63,10 +80,12 @@ export default function ResenaForm({
     }
   }
 
-  if (enviado) {
+  if (yaEnvioAntes || enviado) {
     return (
       <div className="bg-green-50 border border-green-200 text-green-800 rounded-xl p-4 text-sm text-center">
-        ¡Gracias por tu reseña! Se publicará apenas la revisemos.
+        {enviado
+          ? "¡Gracias por tu reseña! Se publicará apenas la revisemos."
+          : "Ya registramos una reseña tuya. ¡Gracias por compartir tu opinión!"}
       </div>
     );
   }

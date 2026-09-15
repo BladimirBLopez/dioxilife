@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHash } from "crypto";
 import { prisma } from "@/lib/prisma";
+
+function obtenerIpHash(req: NextRequest) {
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "desconocida";
+  return createHash("sha256").update(ip).digest("hex");
+}
 
 export async function POST(req: NextRequest) {
   const { nombreCliente, calificacion, comentario, productoId, sitioWeb } =
@@ -46,12 +55,27 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  const ipHash = obtenerIpHash(req);
+
+  const yaExiste = await prisma.resena.findFirst({
+    where: { ipHash },
+    select: { id: true },
+  });
+
+  if (yaExiste) {
+    return NextResponse.json(
+      { error: "Ya registramos una reseña enviada desde este dispositivo. ¡Gracias por tu opinión!" },
+      { status: 409 }
+    );
+  }
+
   await prisma.resena.create({
     data: {
       nombreCliente: nombre,
       comentario: texto,
       calificacion: estrellas,
       productoId: productoId || null,
+      ipHash,
       aprobado: false,
     },
   });

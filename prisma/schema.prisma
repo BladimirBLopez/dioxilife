@@ -76,6 +76,7 @@ model Resena {
   calificacion  Int
   comentario    String
   imagenUrl     String?
+  ipHash        String?
   productoId    String?
   producto      Producto? @relation(fields: [productoId], references: [id], onDelete: Cascade)
   aprobado      Boolean   @default(false)
