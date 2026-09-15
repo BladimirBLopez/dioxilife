@@ -32,53 +32,42 @@ export default async function Home({
   const { categoria, promo } = await searchParams;
   const soloPromociones = promo === "1";
 
-  const [
-    categorias,
-    productos,
-    testimonios,
-    resenas,
-    sucursales,
-    banner,
-    promoCount,
-  ] = await Promise.all([
-    prisma.categoria.findMany({
-      orderBy: { nombre: "asc" },
-      include: { _count: { select: { productos: true } } },
-    }),
-    prisma.producto.findMany({
-      where: {
-        activo: true,
-        ...(soloPromociones
-          ? { enPromocion: true }
-          : categoria
-          ? { categoria: { slug: categoria } }
-          : {}),
-      },
-      include: { categoria: true },
-      orderBy: { orden: "asc" },
-    }),
-    prisma.testimonio.findMany({
-      where: { activo: true, destacado: true },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.resena.findMany({
-      where: { aprobado: true },
-      include: { producto: { select: { nombre: true, slug: true } } },
-      orderBy: { createdAt: "desc" },
-      take: 9,
-    }),
-    prisma.sucursal.findMany({
-      where: { activo: true },
-      orderBy: { departamento: "asc" },
-    }),
-    prisma.banner.findFirst({
-      where: { activo: true },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.producto.count({
-      where: { activo: true, enPromocion: true },
-    }),
-  ]);
+  const [categorias, productos, resenas, sucursales, banner, promoCount] =
+    await Promise.all([
+      prisma.categoria.findMany({
+        orderBy: { nombre: "asc" },
+        include: { _count: { select: { productos: true } } },
+      }),
+      prisma.producto.findMany({
+        where: {
+          activo: true,
+          ...(soloPromociones
+            ? { enPromocion: true }
+            : categoria
+            ? { categoria: { slug: categoria } }
+            : {}),
+        },
+        include: { categoria: true },
+        orderBy: { orden: "asc" },
+      }),
+      prisma.resena.findMany({
+        where: { aprobado: true },
+        include: { producto: { select: { nombre: true, slug: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 9,
+      }),
+      prisma.sucursal.findMany({
+        where: { activo: true },
+        orderBy: { departamento: "asc" },
+      }),
+      prisma.banner.findFirst({
+        where: { activo: true },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.producto.count({
+        where: { activo: true, enPromocion: true },
+      }),
+    ]);
 
   const categoriasConProductos = categorias.filter(
     (c) => c._count.productos > 0
@@ -93,7 +82,7 @@ export default async function Home({
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <SiteHeader />
+      <SiteHeader mostrarSucursales={sucursales.length > 0} />
 
       {/* Hero / Banner principal */}
       {banner ? (
@@ -273,50 +262,8 @@ export default async function Home({
         )}
       </main>
 
-      {/* Testimonios destacados */}
-      {testimonios.length > 0 && (
-        <section id="testimonios" className="bg-white border-t py-10 px-4">
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-xl font-bold text-brand-blue text-center mb-6">
-              Lo que dicen nuestros clientes
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {testimonios.map((t) => (
-                <div
-                  key={t.id}
-                  className="bg-gray-50 rounded-xl p-4 flex flex-col"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    {t.imagenUrl ? (
-                      <Image
-                        src={t.imagenUrl}
-                        alt={t.nombreCliente}
-                        width={40}
-                        height={40}
-                        className="rounded-full object-cover w-10 h-10"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-brand-pink/20 flex items-center justify-center text-brand-pink font-semibold">
-                        {t.nombreCliente.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div>
-                      <p className="font-medium text-sm">{t.nombreCliente}</p>
-                      <p className="text-xs text-yellow-500">
-                        {"⭐".repeat(t.calificacion)}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-sm text-brand-gray">{t.contenido}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* Reseñas de clientes (moderadas) */}
-      <section id="resenas" className="bg-gray-50 border-t py-10 px-4">
+      <section id="resenas" className="bg-white border-t py-10 px-4">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-xl font-bold text-brand-blue text-center mb-1">
             Reseñas de nuestros clientes
@@ -328,24 +275,37 @@ export default async function Home({
           {resenas.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
               {resenas.map((r) => (
-                <div key={r.id} className="bg-white rounded-xl p-4 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-sm">{r.nombreCliente}</p>
-                    <span className="text-xs text-yellow-500">
-                      {"⭐".repeat(r.calificacion)}
-                    </span>
+                <div key={r.id} className="bg-gray-50 rounded-xl p-4 flex flex-col">
+                  <div className="flex items-center gap-3 mb-2">
+                    {r.imagenUrl ? (
+                      <Image
+                        src={r.imagenUrl}
+                        alt={r.nombreCliente}
+                        width={40}
+                        height={40}
+                        className="rounded-full object-cover w-10 h-10"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-brand-pink/20 flex items-center justify-center text-brand-pink font-semibold">
+                        {r.nombreCliente.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-medium text-sm">{r.nombreCliente}</p>
+                      <p className="text-xs text-yellow-500">
+                        {"⭐".repeat(r.calificacion)}
+                      </p>
+                    </div>
                   </div>
                   {r.producto && (
                     <Link
                       href={`/producto/${r.producto.slug}`}
-                      className="text-xs text-brand-pink font-medium"
+                      className="text-xs text-brand-pink font-medium mb-1"
                     >
                       {r.producto.nombre}
                     </Link>
                   )}
-                  <p className="text-sm text-brand-gray mt-1 whitespace-pre-line">
-                    {r.comentario}
-                  </p>
+                  <p className="text-sm text-brand-gray">{r.comentario}</p>
                 </div>
               ))}
             </div>
@@ -359,7 +319,7 @@ export default async function Home({
 
       {/* Sucursales por departamento */}
       {sucursales.length > 0 && (
-        <section id="sucursales" className="bg-white border-t py-10 px-4">
+        <section id="sucursales" className="bg-gray-50 border-t py-10 px-4">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-xl font-bold text-brand-blue text-center mb-6">
               Puntos de venta por departamento

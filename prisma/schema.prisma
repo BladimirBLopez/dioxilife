@@ -70,22 +70,12 @@ model AplicacionCds {
   createdAt   DateTime @default(now())
 }
 
-model Testimonio {
-  id            String   @id @default(cuid())
-  nombreCliente String
-  contenido     String
-  calificacion  Int      @default(5)
-  imagenUrl     String?
-  destacado     Boolean  @default(false)
-  activo        Boolean  @default(true)
-  createdAt     DateTime @default(now())
-}
-
 model Resena {
   id            String    @id @default(cuid())
   nombreCliente String
   calificacion  Int
   comentario    String
+  imagenUrl     String?
   productoId    String?
   producto      Producto? @relation(fields: [productoId], references: [id], onDelete: Cascade)
   aprobado      Boolean   @default(false)

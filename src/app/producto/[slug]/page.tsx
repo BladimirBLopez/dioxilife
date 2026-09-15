@@ -169,16 +169,31 @@ export default async function ProductoDetalle({
           {resenas.length > 0 ? (
             <div className="space-y-3 mb-6">
               {resenas.map((r) => (
-                <div key={r.id} className="bg-white rounded-xl shadow-sm p-4">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-sm">{r.nombreCliente}</p>
-                    <span className="text-xs text-yellow-500">
-                      {"⭐".repeat(r.calificacion)}
-                    </span>
+                <div key={r.id} className="bg-white rounded-xl shadow-sm p-4 flex gap-3">
+                  {r.imagenUrl ? (
+                    <Image
+                      src={r.imagenUrl}
+                      alt={r.nombreCliente}
+                      width={36}
+                      height={36}
+                      className="rounded-full object-cover w-9 h-9 shrink-0"
+                    />
+                  ) : (
+                    <div className="w-9 h-9 shrink-0 rounded-full bg-brand-pink/20 flex items-center justify-center text-brand-pink font-semibold text-sm">
+                      {r.nombreCliente.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-sm">{r.nombreCliente}</p>
+                      <span className="text-xs text-yellow-500">
+                        {"⭐".repeat(r.calificacion)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-brand-gray mt-1 whitespace-pre-line">
+                      {r.comentario}
+                    </p>
                   </div>
-                  <p className="text-sm text-brand-gray mt-1 whitespace-pre-line">
-                    {r.comentario}
-                  </p>
                 </div>
               ))}
             </div>

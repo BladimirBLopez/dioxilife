@@ -18,11 +18,31 @@ export async function PUT(
   }
 
   const { id } = await params;
-  const { aprobado } = await req.json();
+  const body = await req.json();
+
+  // Toggle simple de aprobado (usado por los botones Aprobar/Ocultar)
+  if (Object.keys(body).length === 1 && "aprobado" in body) {
+    const resena = await prisma.resena.update({
+      where: { id },
+      data: { aprobado: !!body.aprobado },
+    });
+    return NextResponse.json(resena);
+  }
+
+  // Edición completa (usada por el modal de editar)
+  const { nombreCliente, calificacion, comentario, imagenUrl, productoId, aprobado } =
+    body;
 
   const resena = await prisma.resena.update({
     where: { id },
-    data: { aprobado: !!aprobado },
+    data: {
+      nombreCliente,
+      calificacion: Number(calificacion) || 5,
+      comentario,
+      imagenUrl: imagenUrl || null,
+      productoId: productoId || null,
+      aprobado: !!aprobado,
+    },
   });
 
   return NextResponse.json(resena);

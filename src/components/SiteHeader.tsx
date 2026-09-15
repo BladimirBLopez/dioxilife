@@ -10,7 +10,7 @@ const LINKS_BASE = [
   { href: "/#productos", label: "Productos" },
   { href: "/protocolos", label: "Protocolos" },
   { href: "/aplicaciones-cds", label: "Aplicaciones del CDS" },
-  { href: "/#testimonios", label: "Testimonios" },
+  { href: "/#resenas", label: "Reseñas" },
 ];
 
 export default function SiteHeader({
