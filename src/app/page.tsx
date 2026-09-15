@@ -6,6 +6,7 @@ import SiteHeader from "@/components/SiteHeader";
 import BotonWhatsapp from "@/components/BotonWhatsapp";
 import SeccionSucursales from "@/components/SeccionSucursales";
 import AgregarCarritoButton from "@/components/AgregarCarritoButton";
+import ResenaForm from "@/components/ResenaForm";
 
 export const dynamic = "force-dynamic";
 
@@ -31,40 +32,53 @@ export default async function Home({
   const { categoria, promo } = await searchParams;
   const soloPromociones = promo === "1";
 
-  const [categorias, productos, testimonios, sucursales, banner, promoCount] =
-    await Promise.all([
-      prisma.categoria.findMany({
-        orderBy: { nombre: "asc" },
-        include: { _count: { select: { productos: true } } },
-      }),
-      prisma.producto.findMany({
-        where: {
-          activo: true,
-          ...(soloPromociones
-            ? { enPromocion: true }
-            : categoria
-            ? { categoria: { slug: categoria } }
-            : {}),
-        },
-        include: { categoria: true },
-        orderBy: { orden: "asc" },
-      }),
-      prisma.testimonio.findMany({
-        where: { activo: true, destacado: true },
-        orderBy: { createdAt: "desc" },
-      }),
-      prisma.sucursal.findMany({
-        where: { activo: true },
-        orderBy: { departamento: "asc" },
-      }),
-      prisma.banner.findFirst({
-        where: { activo: true },
-        orderBy: { createdAt: "desc" },
-      }),
-      prisma.producto.count({
-        where: { activo: true, enPromocion: true },
-      }),
-    ]);
+  const [
+    categorias,
+    productos,
+    testimonios,
+    resenas,
+    sucursales,
+    banner,
+    promoCount,
+  ] = await Promise.all([
+    prisma.categoria.findMany({
+      orderBy: { nombre: "asc" },
+      include: { _count: { select: { productos: true } } },
+    }),
+    prisma.producto.findMany({
+      where: {
+        activo: true,
+        ...(soloPromociones
+          ? { enPromocion: true }
+          : categoria
+          ? { categoria: { slug: categoria } }
+          : {}),
+      },
+      include: { categoria: true },
+      orderBy: { orden: "asc" },
+    }),
+    prisma.testimonio.findMany({
+      where: { activo: true, destacado: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.resena.findMany({
+      where: { aprobado: true },
+      include: { producto: { select: { nombre: true, slug: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 9,
+    }),
+    prisma.sucursal.findMany({
+      where: { activo: true },
+      orderBy: { departamento: "asc" },
+    }),
+    prisma.banner.findFirst({
+      where: { activo: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.producto.count({
+      where: { activo: true, enPromocion: true },
+    }),
+  ]);
 
   const categoriasConProductos = categorias.filter(
     (c) => c._count.productos > 0
@@ -301,9 +315,51 @@ export default async function Home({
         </section>
       )}
 
+      {/* Reseñas de clientes (moderadas) */}
+      <section id="resenas" className="bg-gray-50 border-t py-10 px-4">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-xl font-bold text-brand-blue text-center mb-1">
+            Reseñas de nuestros clientes
+          </h2>
+          <p className="text-sm text-brand-gray text-center mb-6">
+            Opiniones reales, revisadas antes de publicarse
+          </p>
+
+          {resenas.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+              {resenas.map((r) => (
+                <div key={r.id} className="bg-white rounded-xl p-4 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-sm">{r.nombreCliente}</p>
+                    <span className="text-xs text-yellow-500">
+                      {"⭐".repeat(r.calificacion)}
+                    </span>
+                  </div>
+                  {r.producto && (
+                    <Link
+                      href={`/producto/${r.producto.slug}`}
+                      className="text-xs text-brand-pink font-medium"
+                    >
+                      {r.producto.nombre}
+                    </Link>
+                  )}
+                  <p className="text-sm text-brand-gray mt-1 whitespace-pre-line">
+                    {r.comentario}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="max-w-md mx-auto">
+            <ResenaForm />
+          </div>
+        </div>
+      </section>
+
       {/* Sucursales por departamento */}
       {sucursales.length > 0 && (
-        <section id="sucursales" className="bg-gray-50 border-t py-10 px-4">
+        <section id="sucursales" className="bg-white border-t py-10 px-4">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-xl font-bold text-brand-blue text-center mb-6">
               Puntos de venta por departamento

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import AgregarCarritoButton from "@/components/AgregarCarritoButton";
+import ResenaForm from "@/components/ResenaForm";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,11 @@ export default async function ProductoDetalle({
   if (!producto || !producto.activo) {
     notFound();
   }
+
+  const resenas = await prisma.resena.findMany({
+    where: { productoId: producto.id, aprobado: true },
+    orderBy: { createdAt: "desc" },
+  });
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -67,6 +73,20 @@ export default async function ProductoDetalle({
               {producto.categoria.nombre}
             </span>
             <h1 className="text-2xl font-bold mt-1">{producto.nombre}</h1>
+
+            {resenas.length > 0 && (
+              <p className="text-xs text-yellow-500 mt-1">
+                {"⭐".repeat(
+                  Math.round(
+                    resenas.reduce((acc, r) => acc + r.calificacion, 0) /
+                      resenas.length
+                  )
+                )}{" "}
+                <span className="text-[#6B6870]">
+                  ({resenas.length} reseña{resenas.length === 1 ? "" : "s"})
+                </span>
+              </p>
+            )}
 
             {producto.mostrarPrecio && (
               <div className="mt-3">
@@ -141,6 +161,35 @@ export default async function ProductoDetalle({
             </div>
           </section>
         )}
+
+        {/* Reseñas de este producto */}
+        <section className="mt-10">
+          <h2 className="text-xl font-bold text-brand-blue mb-4">Reseñas</h2>
+
+          {resenas.length > 0 ? (
+            <div className="space-y-3 mb-6">
+              {resenas.map((r) => (
+                <div key={r.id} className="bg-white rounded-xl shadow-sm p-4">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-sm">{r.nombreCliente}</p>
+                    <span className="text-xs text-yellow-500">
+                      {"⭐".repeat(r.calificacion)}
+                    </span>
+                  </div>
+                  <p className="text-sm text-brand-gray mt-1 whitespace-pre-line">
+                    {r.comentario}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-brand-gray mb-6">
+              Todavía no hay reseñas de este producto. ¡Sé el primero en dejar una!
+            </p>
+          )}
+
+          <ResenaForm productoId={producto.id} />
+        </section>
       </main>
 
       <footer className="bg-white border-t py-4 text-center text-xs text-brand-gray">
