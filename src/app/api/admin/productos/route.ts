@@ -19,8 +19,16 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { nombre, descripcion, precio, mostrarPrecio, imagenUrl, categoriaId } =
-    await req.json();
+  const {
+    nombre,
+    descripcion,
+    precio,
+    mostrarPrecio,
+    enPromocion,
+    precioPromocion,
+    imagenUrl,
+    categoriaId,
+  } = await req.json();
 
   if (!nombre || precio === undefined || precio === null || !categoriaId) {
     return NextResponse.json(
@@ -41,6 +49,11 @@ export async function POST(req: NextRequest) {
       descripcion: descripcion || null,
       precio,
       mostrarPrecio: mostrarPrecio ?? false,
+      enPromocion: enPromocion ?? false,
+      precioPromocion:
+        precioPromocion !== undefined && precioPromocion !== null && precioPromocion !== ""
+          ? precioPromocion
+          : null,
       imagenUrl: imagenUrl || null,
       categoriaId,
       orden: nuevoOrden,

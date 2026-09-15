@@ -9,7 +9,7 @@ import AgregarCarritoButton from "@/components/AgregarCarritoButton";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = Promise<{ categoria?: string }>;
+type SearchParams = Promise<{ categoria?: string; promo?: string }>;
 
 const NOMBRE_DEPARTAMENTO: Record<string, string> = {
   LA_PAZ: "La Paz",
@@ -28,34 +28,43 @@ export default async function Home({
 }: {
   searchParams: SearchParams;
 }) {
-  const { categoria } = await searchParams;
+  const { categoria, promo } = await searchParams;
+  const soloPromociones = promo === "1";
 
-  const [categorias, productos, testimonios, sucursales, banner] = await Promise.all([
-    prisma.categoria.findMany({
-      orderBy: { nombre: "asc" },
-      include: { _count: { select: { productos: true } } },
-    }),
-    prisma.producto.findMany({
-      where: {
-        activo: true,
-        ...(categoria ? { categoria: { slug: categoria } } : {}),
-      },
-      include: { categoria: true },
-      orderBy: { orden: "asc" },
-    }),
-    prisma.testimonio.findMany({
-      where: { activo: true, destacado: true },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.sucursal.findMany({
-      where: { activo: true },
-      orderBy: { departamento: "asc" },
-    }),
-    prisma.banner.findFirst({
-      where: { activo: true },
-      orderBy: { createdAt: "desc" },
-    }),
-  ]);
+  const [categorias, productos, testimonios, sucursales, banner, promoCount] =
+    await Promise.all([
+      prisma.categoria.findMany({
+        orderBy: { nombre: "asc" },
+        include: { _count: { select: { productos: true } } },
+      }),
+      prisma.producto.findMany({
+        where: {
+          activo: true,
+          ...(soloPromociones
+            ? { enPromocion: true }
+            : categoria
+            ? { categoria: { slug: categoria } }
+            : {}),
+        },
+        include: { categoria: true },
+        orderBy: { orden: "asc" },
+      }),
+      prisma.testimonio.findMany({
+        where: { activo: true, destacado: true },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.sucursal.findMany({
+        where: { activo: true },
+        orderBy: { departamento: "asc" },
+      }),
+      prisma.banner.findFirst({
+        where: { activo: true },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.producto.count({
+        where: { activo: true, enPromocion: true },
+      }),
+    ]);
 
   const categoriasConProductos = categorias.filter(
     (c) => c._count.productos > 0
@@ -126,24 +135,36 @@ export default async function Home({
       )}
 
       {/* Categorías */}
-      {categoriasConProductos.length > 0 && (
+      {(categoriasConProductos.length > 0 || promoCount > 0) && (
         <nav className="max-w-6xl mx-auto w-full px-4 py-4 flex gap-2 overflow-x-auto">
           <a
             href="/"
             className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border ${
-              !categoria
+              !categoria && !soloPromociones
                 ? "bg-brand-pink text-white border-brand-pink"
                 : "bg-white text-brand-gray border-gray-300"
             }`}
           >
             Todos
           </a>
+          {promoCount > 0 && (
+            <a
+              href="/?promo=1"
+              className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border ${
+                soloPromociones
+                  ? "bg-brand-pink text-white border-brand-pink"
+                  : "bg-white text-brand-gray border-gray-300"
+              }`}
+            >
+              🔥 Promociones
+            </a>
+          )}
           {categoriasConProductos.map((c) => (
             <a
               key={c.id}
               href={`/?categoria=${c.slug}`}
               className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border ${
-                categoria === c.slug
+                categoria === c.slug && !soloPromociones
                   ? "bg-brand-pink text-white border-brand-pink"
                   : "bg-white text-brand-gray border-gray-300"
               }`}
@@ -158,7 +179,11 @@ export default async function Home({
       <main id="productos" className="flex-1 max-w-6xl mx-auto w-full px-4 pb-4">
         {productos.length === 0 ? (
           <div className="text-center py-20 text-brand-gray">
-            <p className="text-lg font-medium">Aún no hay productos disponibles</p>
+            <p className="text-lg font-medium">
+              {soloPromociones
+                ? "No hay productos en promoción por ahora"
+                : "Aún no hay productos disponibles"}
+            </p>
             <p className="text-sm mt-1">Vuelve pronto, estamos preparando todo.</p>
           </div>
         ) : (
@@ -170,6 +195,11 @@ export default async function Home({
               >
                 <Link href={`/producto/${p.slug}`} className="flex flex-col flex-1">
                   <div className="aspect-square bg-gray-100 relative">
+                    {p.enPromocion && (
+                      <span className="absolute top-1.5 left-1.5 z-10 bg-brand-pink text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        OFERTA
+                      </span>
+                    )}
                     {p.imagenUrl ? (
                       <Image
                         src={p.imagenUrl}
@@ -191,9 +221,22 @@ export default async function Home({
                       {p.nombre}
                     </h3>
                     {p.mostrarPrecio && (
-                      <p className="text-brand-blue font-bold mt-auto pt-2">
-                        Bs {Number(p.precio).toFixed(2)}
-                      </p>
+                      <div className="mt-auto pt-2">
+                        {p.enPromocion && p.precioPromocion ? (
+                          <>
+                            <p className="text-xs text-gray-400 line-through">
+                              Bs {Number(p.precio).toFixed(2)}
+                            </p>
+                            <p className="text-brand-pink font-bold">
+                              Bs {Number(p.precioPromocion).toFixed(2)}
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-brand-blue font-bold">
+                            Bs {Number(p.precio).toFixed(2)}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                 </Link>
@@ -201,7 +244,11 @@ export default async function Home({
                   <AgregarCarritoButton
                     id={p.id}
                     nombre={p.nombre}
-                    precio={Number(p.precio)}
+                    precio={
+                      p.enPromocion && p.precioPromocion
+                        ? Number(p.precioPromocion)
+                        : Number(p.precio)
+                    }
                     mostrarPrecio={p.mostrarPrecio}
                     imagenUrl={p.imagenUrl}
                   />

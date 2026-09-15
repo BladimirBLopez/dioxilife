@@ -3,8 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import AgregarCarritoButton from "@/components/AgregarCarritoButton";
-import CartDrawer from "@/components/CartDrawer";
-import Media from "@/components/Media";
 
 export const dynamic = "force-dynamic";
 
@@ -38,29 +36,28 @@ export default async function ProductoDetalle({
             ← Volver a la tienda
           </Link>
           <Image src="/logo.png" alt="DioxiLife Bolivia" width={200} height={164} className="w-14 h-auto" />
-          <CartDrawer />
         </div>
       </header>
 
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-8">
         <div className="bg-white rounded-xl shadow-sm overflow-hidden md:flex">
           <div className="md:w-1/2 aspect-square bg-gray-100 relative">
+            {producto.enPromocion && (
+              <span className="absolute top-2 left-2 z-10 bg-brand-pink text-white text-xs font-bold px-2.5 py-1 rounded-full">
+                OFERTA
+              </span>
+            )}
             {producto.imagenUrl ? (
-              <Media
+              <Image
                 src={producto.imagenUrl}
                 alt={producto.nombre}
                 fill
                 className="object-cover"
-                variant="full"
+                priority
               />
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-gray-300">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-12 h-12">
-                  <rect x="3" y="3" width="18" height="18" rx="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none" />
-                  <path d="m21 15-5-5L5 21" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <span className="text-sm">Sin imagen</span>
+              <div className="w-full h-full flex items-center justify-center text-brand-gray text-sm">
+                Sin imagen
               </div>
             )}
           </div>
@@ -72,9 +69,22 @@ export default async function ProductoDetalle({
             <h1 className="text-2xl font-bold mt-1">{producto.nombre}</h1>
 
             {producto.mostrarPrecio && (
-              <p className="text-brand-blue font-bold text-2xl mt-3">
-                Bs {Number(producto.precio).toFixed(2)}
-              </p>
+              <div className="mt-3">
+                {producto.enPromocion && producto.precioPromocion ? (
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-gray-400 line-through text-lg">
+                      Bs {Number(producto.precio).toFixed(2)}
+                    </p>
+                    <p className="text-brand-pink font-bold text-2xl">
+                      Bs {Number(producto.precioPromocion).toFixed(2)}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-brand-blue font-bold text-2xl">
+                    Bs {Number(producto.precio).toFixed(2)}
+                  </p>
+                )}
+              </div>
             )}
 
             {producto.descripcion && (
@@ -87,7 +97,11 @@ export default async function ProductoDetalle({
               <AgregarCarritoButton
                 id={producto.id}
                 nombre={producto.nombre}
-                precio={Number(producto.precio)}
+                precio={
+                  producto.enPromocion && producto.precioPromocion
+                    ? Number(producto.precioPromocion)
+                    : Number(producto.precio)
+                }
                 mostrarPrecio={producto.mostrarPrecio}
                 imagenUrl={producto.imagenUrl}
               />
@@ -108,7 +122,7 @@ export default async function ProductoDetalle({
                 >
                   {prot.imagenUrl && (
                     <div className="w-20 h-20 shrink-0 relative rounded-lg overflow-hidden bg-gray-100">
-                      <Media
+                      <Image
                         src={prot.imagenUrl}
                         alt={prot.titulo}
                         fill

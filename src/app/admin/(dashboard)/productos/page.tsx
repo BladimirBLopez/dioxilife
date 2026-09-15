@@ -14,6 +14,8 @@ type Producto = {
   descripcion: string | null;
   precio: string;
   mostrarPrecio: boolean;
+  enPromocion: boolean;
+  precioPromocion: string | null;
   imagenUrl: string | null;
   categoriaId: string;
   categoria: Categoria;
@@ -26,6 +28,8 @@ const vacio = {
   descripcion: "",
   precio: "",
   mostrarPrecio: false,
+  enPromocion: false,
+  precioPromocion: "",
   imagenUrl: "",
   categoriaId: "",
 };
@@ -71,15 +75,35 @@ function TarjetaProducto({
         <div className="w-16 h-16 rounded-lg bg-[#F7F7F9] shrink-0" />
       )}
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-sm text-[#1F1B24]">{producto.nombre}</p>
+        <div className="flex items-center gap-2">
+          <p className="font-medium text-sm text-[#1F1B24]">{producto.nombre}</p>
+          {producto.enPromocion && (
+            <span className="text-[10px] font-bold text-white bg-brand-pink px-1.5 py-0.5 rounded-full shrink-0">
+              OFERTA
+            </span>
+          )}
+        </div>
         <p className="text-xs text-brand-pink font-medium mt-0.5">
           {producto.categoria.nombre}
         </p>
-        <p className="text-sm text-[#6B6870] mt-1">
-          {producto.mostrarPrecio
-            ? `Bs. ${producto.precio}`
-            : "Precio a consultar por WhatsApp"}
-        </p>
+        {producto.mostrarPrecio ? (
+          producto.enPromocion && producto.precioPromocion ? (
+            <p className="text-sm mt-1">
+              <span className="line-through text-[#8A8790] mr-1">
+                Bs. {producto.precio}
+              </span>
+              <span className="text-brand-pink font-semibold">
+                Bs. {producto.precioPromocion}
+              </span>
+            </p>
+          ) : (
+            <p className="text-sm text-[#6B6870] mt-1">Bs. {producto.precio}</p>
+          )
+        ) : (
+          <p className="text-sm text-[#6B6870] mt-1">
+            Precio a consultar por WhatsApp
+          </p>
+        )}
         <div className="flex gap-4 text-sm mt-2">
           <button
             onClick={() => onEditar(producto)}
@@ -155,6 +179,8 @@ export default function ProductosPage() {
       descripcion: p.descripcion || "",
       precio: String(p.precio),
       mostrarPrecio: p.mostrarPrecio,
+      enPromocion: p.enPromocion,
+      precioPromocion: p.precioPromocion ? String(p.precioPromocion) : "",
       imagenUrl: p.imagenUrl || "",
       categoriaId: p.categoriaId,
     };
@@ -174,6 +200,15 @@ export default function ProductosPage() {
       alert("Ingresa el precio o desactiva 'Mostrar precio'");
       return;
     }
+    if (
+      form.enPromocion &&
+      form.precioPromocion &&
+      form.mostrarPrecio &&
+      parseFloat(form.precioPromocion) >= parseFloat(form.precio || "0")
+    ) {
+      alert("El precio de promoción debe ser menor al precio normal");
+      return;
+    }
     if (imagenSubiendo) {
       alert("Espera a que termine de subir la imagen antes de guardar");
       return;
@@ -183,6 +218,9 @@ export default function ProductosPage() {
     const body = {
       ...form,
       precio: parseFloat(form.precio || "0"),
+      precioPromocion: form.precioPromocion
+        ? parseFloat(form.precioPromocion)
+        : null,
       activo: true,
     };
 
@@ -377,6 +415,58 @@ export default function ProductosPage() {
                   required
                 />
               </div>
+            )}
+
+            <div className="flex items-center justify-between admin-card px-3 py-2">
+              <div>
+                <p className="text-sm font-medium text-[#1F1B24]">
+                  En promoción
+                </p>
+                <p className="text-xs text-[#8A8790]">
+                  Muestra un cartel &quot;OFERTA&quot; y aparece en la pestaña
+                  Promociones
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setForm({ ...form, enPromocion: !form.enPromocion })
+                }
+                className={`shrink-0 w-12 h-7 rounded-full relative transition-colors ${
+                  form.enPromocion ? "bg-brand-pink" : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${
+                    form.enPromocion ? "translate-x-5" : ""
+                  }`}
+                />
+              </button>
+            </div>
+
+            {form.enPromocion && form.mostrarPrecio && (
+              <div>
+                <label className="admin-label">
+                  Precio de promoción (Bs.) — opcional
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={form.precioPromocion}
+                  onChange={(e) =>
+                    setForm({ ...form, precioPromocion: e.target.value })
+                  }
+                  className="admin-input"
+                  placeholder="Dejalo vacío para mostrar solo el cartel OFERTA"
+                />
+              </div>
+            )}
+
+            {form.enPromocion && !form.mostrarPrecio && (
+              <p className="text-xs text-[#8A8790] -mt-2">
+                Como el precio está oculto, solo se va a ver el cartel
+                &quot;OFERTA&quot;, sin precio tachado.
+              </p>
             )}
 
             <div>
