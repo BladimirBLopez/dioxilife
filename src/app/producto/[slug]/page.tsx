@@ -41,7 +41,7 @@ export default async function ProductoDetalle({
 
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-8">
         <div className="bg-white rounded-xl shadow-sm overflow-hidden md:flex">
-          <div className="md:w-1/2 aspect-square bg-gray-100 relative">
+          <div className="md:w-1/2 aspect-square bg-white relative border-b md:border-b-0 md:border-r">
             {producto.enPromocion && (
               <span className="absolute top-2 left-2 z-10 bg-brand-pink text-white text-xs font-bold px-2.5 py-1 rounded-full">
                 OFERTA
@@ -52,7 +52,7 @@ export default async function ProductoDetalle({
                 src={producto.imagenUrl}
                 alt={producto.nombre}
                 fill
-                className="object-cover"
+                className="object-contain p-4"
                 priority
               />
             ) : (

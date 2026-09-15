@@ -69,7 +69,7 @@ function TarjetaProducto({
         <img
           src={producto.imagenUrl}
           alt={producto.nombre}
-          className="w-16 h-16 object-cover rounded-lg shrink-0"
+          className="w-16 h-16 object-contain rounded-lg shrink-0 bg-[#F7F7F9] p-1"
         />
       ) : (
         <div className="w-16 h-16 rounded-lg bg-[#F7F7F9] shrink-0" />

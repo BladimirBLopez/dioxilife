@@ -194,7 +194,7 @@ export default async function Home({
                 className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col"
               >
                 <Link href={`/producto/${p.slug}`} className="flex flex-col flex-1">
-                  <div className="aspect-square bg-gray-100 relative">
+                  <div className="aspect-square bg-white relative border-b">
                     {p.enPromocion && (
                       <span className="absolute top-1.5 left-1.5 z-10 bg-brand-pink text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                         OFERTA
@@ -205,7 +205,7 @@ export default async function Home({
                         src={p.imagenUrl}
                         alt={p.nombre}
                         fill
-                        className="object-cover"
+                        className="object-contain p-2"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-brand-gray text-xs">
