@@ -4,35 +4,35 @@ import { useState } from "react";
 import Media from "./Media";
 import { esVideo } from "@/lib/media";
 
-type Aplicacion = {
+type Protocolo = {
   id: string;
-  nombre: string;
-  descripcion: string | null;
+  titulo: string;
+  contenido: string;
   imagenUrl: string | null;
 };
 
-export default function AplicacionesCdsGrid({
-  aplicaciones,
+export default function ProtocolosAcordeon({
+  protocolos,
 }: {
-  aplicaciones: Aplicacion[];
+  protocolos: Protocolo[];
 }) {
   const [abiertoId, setAbiertoId] = useState<string | null>(null);
 
   return (
     <div className="space-y-3">
-      {aplicaciones.map((a) => {
-        const abierto = abiertoId === a.id;
+      {protocolos.map((p) => {
+        const abierto = abiertoId === p.id;
         return (
           <div
-            key={a.id}
+            key={p.id}
             className="bg-white rounded-xl shadow-sm overflow-hidden"
           >
             <button
-              onClick={() => setAbiertoId(abierto ? null : a.id)}
+              onClick={() => setAbiertoId(abierto ? null : p.id)}
               className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left"
             >
               <h3 className="text-sm font-semibold text-[#1F1B24]">
-                {a.nombre}
+                {p.titulo}
               </h3>
               <svg
                 viewBox="0 0 24 24"
@@ -51,28 +51,26 @@ export default function AplicacionesCdsGrid({
 
             {abierto && (
               <div className="px-4 pb-4">
-                {a.imagenUrl && (
+                {p.imagenUrl && (
                   <div
                     className={`bg-gray-100 relative rounded-lg overflow-hidden mb-3 ${
-                      esVideo(a.imagenUrl)
+                      esVideo(p.imagenUrl)
                         ? "aspect-[9/16] max-w-[240px] mx-auto"
                         : "aspect-video"
                     }`}
                   >
                     <Media
-                      src={a.imagenUrl}
-                      alt={a.nombre}
+                      src={p.imagenUrl}
+                      alt={p.titulo}
                       fill
                       className="object-cover"
                       variant="full"
                     />
                   </div>
                 )}
-                {a.descripcion && (
-                  <p className="text-sm text-brand-gray whitespace-pre-line">
-                    {a.descripcion}
-                  </p>
-                )}
+                <p className="text-sm text-brand-gray whitespace-pre-line">
+                  {p.contenido}
+                </p>
               </div>
             )}
           </div>

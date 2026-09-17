@@ -1,8 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import SiteHeader from "@/components/SiteHeader";
 import BotonWhatsapp from "@/components/BotonWhatsapp";
-import Media from "@/components/Media";
-import { esVideo } from "@/lib/media";
+import ProtocolosAcordeon from "@/components/ProtocolosAcordeon";
 
 export const dynamic = "force-dynamic";
 
@@ -24,45 +23,14 @@ export default async function ProtocolosPage() {
         <p className="text-white/90 mt-1">Modo de uso e información general</p>
       </section>
 
-      <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-8">
+      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
         {protocolos.length === 0 ? (
           <div className="text-center py-20 text-brand-gray">
             <p className="text-lg font-medium">Aún no hay protocolos publicados</p>
             <p className="text-sm mt-1">Vuelve pronto.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {protocolos.map((p) => (
-              <div
-                key={p.id}
-                className="bg-white rounded-xl shadow-sm overflow-hidden"
-              >
-                {p.imagenUrl && (
-                  <div
-                    className={`bg-gray-100 relative ${
-                      esVideo(p.imagenUrl) ? "aspect-[9/16]" : "aspect-video"
-                    }`}
-                  >
-                    <Media
-                      src={p.imagenUrl}
-                      alt={p.titulo}
-                      fill
-                      className="object-cover"
-                      variant="full"
-                    />
-                  </div>
-                )}
-                <div className="p-4">
-                  <h3 className="text-base font-semibold text-[#1F1B24]">
-                    {p.titulo}
-                  </h3>
-                  <p className="text-sm text-brand-gray whitespace-pre-line mt-2">
-                    {p.contenido}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <ProtocolosAcordeon protocolos={protocolos} />
         )}
       </main>
 
