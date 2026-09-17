@@ -1,7 +1,7 @@
-import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import SiteHeader from "@/components/SiteHeader";
 import BotonWhatsapp from "@/components/BotonWhatsapp";
+import AplicacionesCdsGrid from "@/components/AplicacionesCdsGrid";
 
 export const dynamic = "force-dynamic";
 
@@ -32,39 +32,7 @@ export default async function AplicacionesCdsPage() {
             <p className="text-sm mt-1">Vuelve pronto.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {aplicaciones.map((a) => (
-              <div
-                key={a.id}
-                className="bg-white rounded-xl overflow-hidden flex flex-col shadow-sm"
-              >
-                <div className="aspect-square bg-gray-100 relative">
-                  {a.imagenUrl ? (
-                    <Image
-                      src={a.imagenUrl}
-                      alt={a.nombre}
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-brand-gray text-xs">
-                      Sin imagen
-                    </div>
-                  )}
-                </div>
-                <div className="p-3">
-                  <h3 className="text-sm font-semibold text-[#1F1B24]">
-                    {a.nombre}
-                  </h3>
-                  {a.descripcion && (
-                    <p className="text-xs text-brand-gray mt-1">
-                      {a.descripcion}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+          <AplicacionesCdsGrid aplicaciones={aplicaciones} />
         )}
       </main>
 
