@@ -117,3 +117,66 @@ model Banner {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
+
+enum EstadoMiembro {
+  ACTIVO
+  INACTIVO
+  SUSPENDIDO
+}
+
+enum EstadoComision {
+  PENDIENTE
+  APROBADA
+  PAGADA
+  ANULADA
+}
+
+model Miembro {
+  id             String  @id @default(cuid())
+  nombres        String
+  apellidos      String?
+  email          String  @unique
+  telefono       String?
+  passwordHash   String
+  codigoReferido String  @unique
+
+  patrocinadorId String?
+  patrocinador   Miembro?  @relation("RedMultinivel", fields: [patrocinadorId], references: [id], onDelete: SetNull)
+  referidos      Miembro[] @relation("RedMultinivel")
+
+  estado EstadoMiembro @default(ACTIVO)
+
+  comisionesRecibidas ComisionMultinivel[] @relation("ComisionesBeneficiario")
+  comisionesGeneradas ComisionMultinivel[] @relation("ComisionesOrigen")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([patrocinadorId])
+  @@index([estado])
+}
+
+model ComisionMultinivel {
+  id String @id @default(cuid())
+
+  beneficiarioId String
+  beneficiario   Miembro @relation("ComisionesBeneficiario", fields: [beneficiarioId], references: [id], onDelete: Cascade)
+
+  origenMiembroId String
+  origenMiembro   Miembro @relation("ComisionesOrigen", fields: [origenMiembroId], references: [id], onDelete: Cascade)
+
+  nivel      Int
+  montoBase  Decimal?
+  porcentaje Decimal?
+  monto      Decimal
+  concepto   String?
+  estado     EstadoComision @default(PENDIENTE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([beneficiarioId])
+  @@index([origenMiembroId])
+  @@index([estado])
+  @@index([createdAt])
+}
