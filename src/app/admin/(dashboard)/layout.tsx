@@ -82,6 +82,19 @@ const NAV_ITEMS = [
     ),
   },
   {
+    href: "/admin/multinivel/miembros",
+    label: "Miembros Multinivel",
+    icon: (
+      <>
+        <circle cx="9" cy="8" r="3" />
+        <circle cx="17" cy="9" r="2.5" />
+        <path d="M3 21c0-3.5 3-6 6-6s6 2.5 6 6" />
+        <path d="M15 16c3 0 6 2 6 5" />
+      </>
+    ),
+  },
+
+  {
     href: "/admin/multinivel",
     label: "Multinivel",
     icon: (
