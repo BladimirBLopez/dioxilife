@@ -81,6 +81,18 @@ const NAV_ITEMS = [
       </>
     ),
   },
+  {
+    href: "/admin/multinivel",
+    label: "Multinivel",
+    icon: (
+      <>
+        <circle cx="9" cy="8" r="3" />
+        <circle cx="17" cy="10" r="2.5" />
+        <path d="M3 20c0-3 2.5-5 6-5s6 2 6 5" />
+        <path d="M15 15c3 0 5 1.8 5 5" />
+      </>
+    ),
+  },
 ];
 
 function NavIcon({ children }: { children: React.ReactNode }) {
