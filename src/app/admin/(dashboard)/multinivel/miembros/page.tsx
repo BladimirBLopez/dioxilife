@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
 export default async function MiembrosMultinivelPage() {
@@ -28,9 +29,22 @@ export default async function MiembrosMultinivelPage() {
   return (
     <div>
 
-      <h1 className="text-2xl font-semibold mb-6">
-        Miembros Multinivel
-      </h1>
+      <div className="flex justify-between items-center mb-6">
+
+        <h1 className="text-2xl font-semibold">
+          Miembros Multinivel
+        </h1>
+
+        <div className="bg-white rounded-lg shadow px-5 py-3">
+          <p className="text-xs text-gray-500">
+            Total miembros
+          </p>
+          <p className="text-2xl font-bold">
+            {miembros.length}
+          </p>
+        </div>
+
+      </div>
 
 
       <div className="bg-white rounded-lg shadow overflow-x-auto">
@@ -38,9 +52,11 @@ export default async function MiembrosMultinivelPage() {
         <table className="w-full text-sm">
 
           <thead className="bg-gray-100">
+
             <tr>
+
               <th className="p-3 text-left">
-                Nombre
+                Miembro
               </th>
 
               <th className="p-3 text-left">
@@ -54,7 +70,17 @@ export default async function MiembrosMultinivelPage() {
               <th className="p-3 text-left">
                 Estado
               </th>
+
+              <th className="p-3 text-left">
+                Registro
+              </th>
+
+              <th className="p-3 text-left">
+                Acción
+              </th>
+
             </tr>
+
           </thead>
 
 
@@ -64,15 +90,19 @@ export default async function MiembrosMultinivelPage() {
 
             <tr
               key={m.id}
-              className="border-t"
+              className="border-t hover:bg-gray-50"
             >
 
               <td className="p-3">
-                {m.nombres}
-                <br/>
-                <span className="text-gray-500 text-xs">
+
+                <p className="font-medium">
+                  {m.nombres}
+                </p>
+
+                <p className="text-xs text-gray-500">
                   {m.email}
-                </span>
+                </p>
+
               </td>
 
 
@@ -82,15 +112,45 @@ export default async function MiembrosMultinivelPage() {
 
 
               <td className="p-3">
-                {m.patrocinador?.nombres ?? "-"}
+
+                <p>
+                  {m.patrocinador?.nombres ?? "-"}
+                </p>
+
+                <p className="text-xs text-gray-500">
+                  {m.patrocinador?.codigoReferido ?? ""}
+                </p>
+
               </td>
 
 
               <td className="p-3">
-                <span className="text-green-600">
+
+                <span className="text-green-600 font-medium">
                   {m.estado}
                 </span>
+
               </td>
+
+
+              <td className="p-3 text-xs">
+
+                {new Date(m.createdAt).toLocaleDateString()}
+
+              </td>
+
+
+              <td className="p-3">
+
+                <Link
+                  href={`/admin/multinivel/${m.id}`}
+                  className="text-blue-600 hover:underline"
+                >
+                  Ver
+                </Link>
+
+              </td>
+
 
             </tr>
 
@@ -100,7 +160,9 @@ export default async function MiembrosMultinivelPage() {
 
         </table>
 
+
       </div>
+
 
     </div>
   );
