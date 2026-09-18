@@ -1,8 +1,57 @@
 export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/prisma";
+import ArbolMultinivel from "@/components/admin/ArbolMultinivel";
+
+type Nodo = {
+  id: string;
+  nombres: string;
+  codigoReferido: string;
+  email: string;
+  nivel: number;
+  hijos: Nodo[];
+};
+
+
+async function obtenerRed(
+  id: string,
+  nivel = 1
+): Promise<Nodo[]> {
+
+  if (nivel > 3) {
+    return [];
+  }
+
+
+  const hijos = await prisma.miembro.findMany({
+    where:{
+      patrocinadorId:id
+    },
+    select:{
+      id:true,
+      nombres:true,
+      codigoReferido:true,
+      email:true
+    }
+  });
+
+
+  return Promise.all(
+    hijos.map(async(hijo)=>({
+      ...hijo,
+      nivel,
+      hijos: await obtenerRed(
+        hijo.id,
+        nivel + 1
+      )
+    }))
+  );
+}
+
+
 
 export default async function MultinivelAdminPage() {
+
 
   const [
     totalMiembros,
@@ -35,12 +84,31 @@ export default async function MultinivelAdminPage() {
   ]);
 
 
+
+  const raiz = await prisma.miembro.findFirst({
+    where:{
+      codigoReferido:"CARLOS2026"
+    },
+    select:{
+      id:true
+    }
+  });
+
+
+  const red = raiz
+    ? await obtenerRed(raiz.id)
+    : [];
+
+
+
   return (
     <div>
+
 
       <h1 className="text-2xl font-semibold mb-6">
         Multinivel
       </h1>
+
 
 
       <div className="grid md:grid-cols-2 gap-4 max-w-xl mb-8">
@@ -59,6 +127,7 @@ export default async function MultinivelAdminPage() {
         </div>
 
 
+
         <div className="bg-white rounded-lg shadow p-5">
 
           <p className="text-sm text-gray-500">
@@ -73,6 +142,21 @@ export default async function MultinivelAdminPage() {
 
 
       </div>
+
+
+
+
+      <div className="bg-white rounded-lg shadow p-5 mb-8">
+
+        <h2 className="text-lg font-semibold mb-5">
+          Árbol multinivel
+        </h2>
+
+        <ArbolMultinivel red={red}/>
+
+      </div>
+
+
 
 
 
