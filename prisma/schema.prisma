@@ -30,26 +30,27 @@ model Categoria {
 }
 
 model Producto {
-  id                String      @id @default(cuid())
+  id                String          @id @default(cuid())
   nombre            String
-  slug              String      @unique
+  slug              String          @unique
   descripcion       String?
   precio            Decimal
-  mostrarPrecio     Boolean     @default(false)
-  enPromocion       Boolean     @default(false)
+  mostrarPrecio     Boolean         @default(false)
+  enPromocion       Boolean         @default(false)
   precioPromocion   Decimal?
-  valorComisionable Decimal     @default(0)
-  puntosVolumen     Decimal     @default(0)
-  generaComision    Boolean     @default(false)
+  valorComisionable Decimal         @default(0)
+  puntosVolumen     Decimal         @default(0)
+  generaComision    Boolean         @default(false)
   imagenUrl         String?
   categoriaId       String
-  categoria         Categoria   @relation(fields: [categoriaId], references: [id])
+  categoria         Categoria       @relation(fields: [categoriaId], references: [id])
   protocolos        Protocolo[]
   resenas           Resena[]
-  orden             Int         @default(0)
-  activo            Boolean     @default(true)
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  orden             Int             @default(0)
+  activo            Boolean         @default(true)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  detallePedidos    DetallePedido[]
 }
 
 model Protocolo {
@@ -154,6 +155,7 @@ model Miembro {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  pedidos   Pedido[]
 
   @@index([patrocinadorId])
   @@index([estado])
@@ -182,4 +184,70 @@ model ComisionMultinivel {
   @@index([origenMiembroId])
   @@index([estado])
   @@index([createdAt])
+}
+
+enum EstadoPedido {
+  NUEVO
+  CONFIRMADO
+  PAGADO
+  COMPLETADO
+  CANCELADO
+}
+
+model Pedido {
+  id     String       @id @default(cuid())
+  codigo String       @unique
+  estado EstadoPedido @default(NUEVO)
+
+  nombreCliente   String?
+  telefonoCliente String?
+  observaciones   String?
+
+  miembroId String?
+  miembro   Miembro? @relation(fields: [miembroId], references: [id], onDelete: SetNull)
+
+  total   Decimal @default(0)
+  totalCV Decimal @default(0)
+  totalPV Decimal @default(0)
+
+  requiereCotizacion Boolean @default(false)
+
+  detalles DetallePedido[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([codigo])
+  @@index([estado])
+  @@index([miembroId])
+  @@index([createdAt])
+}
+
+model DetallePedido {
+  id String @id @default(cuid())
+
+  pedidoId String
+  pedido   Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  productoId String
+  producto   Producto @relation(fields: [productoId], references: [id])
+
+  cantidad Int
+
+  nombreProducto String
+  precioUnitario Decimal
+  mostrarPrecio  Boolean
+
+  generaComision    Boolean @default(false)
+  valorComisionable Decimal @default(0)
+  puntosVolumen     Decimal @default(0)
+
+  subtotal   Decimal @default(0)
+  subtotalCV Decimal @default(0)
+  subtotalPV Decimal @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([pedidoId])
+  @@index([productoId])
 }
