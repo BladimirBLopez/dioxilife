@@ -16,6 +16,9 @@ type Producto = {
   mostrarPrecio: boolean;
   enPromocion: boolean;
   precioPromocion: string | null;
+  valorComisionable: string;
+  puntosVolumen: string;
+  generaComision: boolean;
   imagenUrl: string | null;
   categoriaId: string;
   categoria: Categoria;
@@ -30,6 +33,9 @@ const vacio = {
   mostrarPrecio: false,
   enPromocion: false,
   precioPromocion: "",
+  valorComisionable: "",
+  puntosVolumen: "",
+  generaComision: false,
   imagenUrl: "",
   categoriaId: "",
 };
@@ -82,6 +88,12 @@ function TarjetaProducto({
               OFERTA
             </span>
           )}
+
+          {producto.generaComision && (
+            <span className="text-[10px] font-bold text-white bg-green-600 px-1.5 py-0.5 rounded-full shrink-0">
+              MULTINIVEL
+            </span>
+          )}
         </div>
         <p className="text-xs text-brand-pink font-medium mt-0.5">
           {producto.categoria.nombre}
@@ -104,6 +116,12 @@ function TarjetaProducto({
             Precio a consultar por WhatsApp
           </p>
         )}
+        {producto.generaComision && (
+          <p className="mt-1 text-xs text-green-700">
+            CV: Bs. {producto.valorComisionable} · PV: {producto.puntosVolumen}
+          </p>
+        )}
+
         <div className="flex gap-4 text-sm mt-2">
           <button
             onClick={() => onEditar(producto)}
@@ -181,6 +199,13 @@ export default function ProductosPage() {
       mostrarPrecio: p.mostrarPrecio,
       enPromocion: p.enPromocion,
       precioPromocion: p.precioPromocion ? String(p.precioPromocion) : "",
+      valorComisionable: p.valorComisionable
+        ? String(p.valorComisionable)
+        : "",
+      puntosVolumen: p.puntosVolumen
+        ? String(p.puntosVolumen)
+        : "",
+      generaComision: p.generaComision,
       imagenUrl: p.imagenUrl || "",
       categoriaId: p.categoriaId,
     };
@@ -209,6 +234,21 @@ export default function ProductosPage() {
       alert("El precio de promoción debe ser menor al precio normal");
       return;
     }
+    if (form.generaComision) {
+      const cv = parseFloat(form.valorComisionable || "0");
+      const pv = parseFloat(form.puntosVolumen || "0");
+
+      if (!Number.isFinite(cv) || cv <= 0) {
+        alert("Ingresa un valor comisionable (CV) mayor a 0");
+        return;
+      }
+
+      if (!Number.isFinite(pv) || pv <= 0) {
+        alert("Ingresa puntos de volumen (PV) mayores a 0");
+        return;
+      }
+    }
+
     if (imagenSubiendo) {
       alert("Espera a que termine de subir la imagen antes de guardar");
       return;
@@ -221,6 +261,13 @@ export default function ProductosPage() {
       precioPromocion: form.precioPromocion
         ? parseFloat(form.precioPromocion)
         : null,
+      generaComision: form.generaComision,
+      valorComisionable: form.generaComision
+        ? parseFloat(form.valorComisionable || "0")
+        : 0,
+      puntosVolumen: form.generaComision
+        ? parseFloat(form.puntosVolumen || "0")
+        : 0,
       activo: true,
     };
 
@@ -468,6 +515,116 @@ export default function ProductosPage() {
                 &quot;OFERTA&quot;, sin precio tachado.
               </p>
             )}
+
+            <div className="rounded-xl border border-green-200 bg-green-50 p-4 space-y-4">
+
+              <div className="flex items-center justify-between gap-4">
+
+                <div>
+                  <p className="text-sm font-semibold text-[#1F1B24]">
+                    Plan multinivel
+                  </p>
+
+                  <p className="mt-1 text-xs text-[#6B6870]">
+                    Activa este producto para que genere volumen y comisiones.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      generaComision: !form.generaComision,
+                      valorComisionable: form.generaComision
+                        ? ""
+                        : form.valorComisionable,
+                      puntosVolumen: form.generaComision
+                        ? ""
+                        : form.puntosVolumen,
+                    })
+                  }
+                  className={`shrink-0 w-12 h-7 rounded-full relative transition-colors ${
+                    form.generaComision
+                      ? "bg-green-600"
+                      : "bg-gray-300"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${
+                      form.generaComision
+                        ? "translate-x-5"
+                        : ""
+                    }`}
+                  />
+                </button>
+
+              </div>
+
+
+              {form.generaComision && (
+
+                <div className="grid gap-4 sm:grid-cols-2">
+
+                  <div>
+                    <label className="admin-label">
+                      Valor comisionable — CV (Bs.)
+                    </label>
+
+                    <input
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={form.valorComisionable}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          valorComisionable: e.target.value,
+                        })
+                      }
+                      className="admin-input"
+                      placeholder="Ej.: 100"
+                      required
+                    />
+
+                    <p className="mt-1 text-xs text-[#8A8790]">
+                      Base utilizada para calcular las comisiones.
+                    </p>
+                  </div>
+
+
+                  <div>
+                    <label className="admin-label">
+                      Puntos de volumen — PV
+                    </label>
+
+                    <input
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={form.puntosVolumen}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          puntosVolumen: e.target.value,
+                        })
+                      }
+                      className="admin-input"
+                      placeholder="Ej.: 100"
+                      required
+                    />
+
+                    <p className="mt-1 text-xs text-[#8A8790]">
+                      Puntos que aportará este producto al volumen del miembro.
+                    </p>
+                  </div>
+
+                </div>
+
+              )}
+
+            </div>
+
 
             <div>
               <label className="admin-label">Categoría</label>
