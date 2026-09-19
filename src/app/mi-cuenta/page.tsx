@@ -126,23 +126,41 @@ export default function MiCuentaPage() {
 
 
 
-        <div className="mt-6 rounded-2xl bg-white p-6 shadow">
+        <div className="mt-6 grid gap-6 md:grid-cols-2">
 
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="rounded-2xl bg-white p-6 shadow">
 
-            <div>
-              <h2 className="text-xl font-semibold">
-                Mis comisiones
-              </h2>
+            <h2 className="text-xl font-semibold">
+              Mi red multinivel
+            </h2>
 
-              <p className="mt-1 text-sm text-gray-500">
-                Consulta tus ganancias pendientes, aprobadas y pagadas.
-              </p>
-            </div>
+            <p className="mt-2 text-sm text-gray-500">
+              Visualiza tus miembros hasta el nivel 3 y el total de tu red.
+            </p>
+
+            <Link
+              href="/mi-cuenta/red"
+              className="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700"
+            >
+              Ver mi red completa
+            </Link>
+
+          </div>
+
+
+          <div className="rounded-2xl bg-white p-6 shadow">
+
+            <h2 className="text-xl font-semibold">
+              Mis comisiones
+            </h2>
+
+            <p className="mt-2 text-sm text-gray-500">
+              Consulta tus ganancias pendientes, aprobadas y pagadas.
+            </p>
 
             <Link
               href="/mi-cuenta/comisiones"
-              className="inline-flex items-center justify-center rounded-lg bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700"
+              className="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700"
             >
               Ver mis comisiones
             </Link>
