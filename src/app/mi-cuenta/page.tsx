@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 type Miembro = {
   nombres: string;
@@ -120,6 +121,33 @@ export default function MiCuentaPage() {
 
           </div>
 
+
+        </div>
+
+
+
+        <div className="mt-6 rounded-2xl bg-white p-6 shadow">
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+            <div>
+              <h2 className="text-xl font-semibold">
+                Mis comisiones
+              </h2>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Consulta tus ganancias pendientes, aprobadas y pagadas.
+              </p>
+            </div>
+
+            <Link
+              href="/mi-cuenta/comisiones"
+              className="inline-flex items-center justify-center rounded-lg bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700"
+            >
+              Ver mis comisiones
+            </Link>
+
+          </div>
 
         </div>
 
