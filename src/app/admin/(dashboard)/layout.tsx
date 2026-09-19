@@ -106,6 +106,17 @@ const NAV_ITEMS = [
       </>
     ),
   },
+  {
+    href: "/admin/multinivel/comisiones",
+    label: "Comisiones",
+    icon: (
+      <>
+        <circle cx="12" cy="12" r="8" />
+        <path d="M15 9.5c-.6-1-1.7-1.5-3-1.5-1.7 0-3 1-3 2.2 0 1.3 1.1 1.8 3 2.2 1.9.4 3 1 3 2.3 0 1.3-1.3 2.3-3 2.3-1.4 0-2.6-.6-3.2-1.6" />
+        <path d="M12 6.5v11" />
+      </>
+    ),
+  },
 ];
 
 function NavIcon({ children }: { children: React.ReactNode }) {
