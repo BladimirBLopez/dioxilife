@@ -145,6 +145,16 @@ export default async function ComisionesMultinivelPage() {
       </div>
 
 
+      <div className="flex justify-end">
+        <Link
+          href="/admin/multinivel/comisiones/generar"
+          className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800"
+        >
+          + Generar comisiones
+        </Link>
+      </div>
+
+
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
 
         <div className="rounded-xl bg-white p-4 shadow">
