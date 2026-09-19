@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import AccionesComision from "./AccionesComision";
 
 function dinero(valor: unknown) {
   const numero = Number(String(valor ?? 0));
@@ -303,6 +304,10 @@ export default async function ComisionesMultinivelPage() {
                     Fecha
                   </th>
 
+                  <th className="px-4 py-3">
+                    Acciones
+                  </th>
+
                 </tr>
 
               </thead>
@@ -396,6 +401,14 @@ export default async function ComisionesMultinivelPage() {
                       {new Date(
                         comision.createdAt
                       ).toLocaleDateString("es-BO")}
+                    </td>
+
+
+                    <td className="px-4 py-4">
+                      <AccionesComision
+                        id={comision.id}
+                        estado={comision.estado}
+                      />
                     </td>
 
                   </tr>
