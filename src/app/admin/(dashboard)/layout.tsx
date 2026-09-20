@@ -95,6 +95,18 @@ const NAV_ITEMS = [
   },
 
   {
+    href: "/admin/pedidos",
+    label: "Pedidos",
+    icon: (
+      <>
+        <path d="M5 7h14l-1 13H6L5 7Z" />
+        <path d="M9 7V5a3 3 0 0 1 6 0v2" />
+        <path d="M9 11h6" />
+      </>
+    ),
+  },
+
+  {
     href: "/admin/multinivel",
     label: "Multinivel",
     icon: (
