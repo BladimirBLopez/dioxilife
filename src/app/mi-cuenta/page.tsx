@@ -20,8 +20,12 @@ export default function MiCuentaPage() {
 
   const [miembro, setMiembro] = useState<Miembro | null>(null);
   const [error, setError] = useState("");
+  const [origen, setOrigen] = useState("");
+  const [copiado, setCopiado] = useState("");
 
   useEffect(() => {
+
+    setOrigen(window.location.origin);
 
     async function cargarPerfil() {
 
@@ -64,8 +68,50 @@ export default function MiCuentaPage() {
   }
 
 
-  const enlace =
-    `${window.location.origin}/registro?ref=${miembro.codigoReferido}`;
+  const enlaceVentas =
+    origen
+      ? `${origen}/?ref=${miembro.codigoReferido}`
+      : "";
+
+  const enlaceRegistro =
+    origen
+      ? `${origen}/registro?ref=${miembro.codigoReferido}`
+      : "";
+
+  async function copiarEnlace(
+    enlace: string,
+    tipo: string
+  ) {
+    if (!enlace) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(enlace);
+      setCopiado(tipo);
+
+      window.setTimeout(() => {
+        setCopiado("");
+      }, 2000);
+    } catch {
+      setCopiado("");
+    }
+  }
+
+  function compartirVentas() {
+    if (!enlaceVentas) {
+      return;
+    }
+
+    const mensaje =
+      `Hola, te comparto mi enlace oficial de DioxiLife Bolivia:\n\n${enlaceVentas}`;
+
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(mensaje)}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
 
 
   return (
@@ -109,13 +155,80 @@ export default function MiCuentaPage() {
 
           <div className="rounded-2xl bg-white p-6 shadow">
 
-            <h2 className="mb-4 text-xl font-semibold">
-              Mi enlace de invitación
+            <h2 className="text-xl font-semibold">
+              Mis enlaces
             </h2>
 
+            <p className="mt-2 text-sm text-gray-500">
+              Comparte tu enlace de ventas para que los pedidos queden asociados a ti.
+            </p>
 
-            <div className="break-all rounded-lg bg-gray-100 p-3 text-sm">
-              {enlace}
+
+            <div className="mt-5">
+
+              <p className="text-sm font-semibold text-gray-700">
+                Enlace de ventas
+              </p>
+
+              <div className="mt-2 break-all rounded-lg bg-gray-100 p-3 text-sm">
+                {enlaceVentas || "Preparando enlace..."}
+              </div>
+
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    copiarEnlace(
+                      enlaceVentas,
+                      "ventas"
+                    )
+                  }
+                  className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+                >
+                  {copiado === "ventas"
+                    ? "Enlace copiado"
+                    : "Copiar enlace"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={compartirVentas}
+                  className="rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700"
+                >
+                  Compartir por WhatsApp
+                </button>
+
+              </div>
+
+            </div>
+
+
+            <div className="mt-6 border-t pt-5">
+
+              <p className="text-sm font-semibold text-gray-700">
+                Enlace para registrar miembros
+              </p>
+
+              <div className="mt-2 break-all rounded-lg bg-gray-100 p-3 text-sm">
+                {enlaceRegistro || "Preparando enlace..."}
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  copiarEnlace(
+                    enlaceRegistro,
+                    "registro"
+                  )
+                }
+                className="mt-3 w-full rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+              >
+                {copiado === "registro"
+                  ? "Enlace copiado"
+                  : "Copiar enlace de registro"}
+              </button>
+
             </div>
 
 

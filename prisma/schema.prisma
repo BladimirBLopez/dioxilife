@@ -153,9 +153,10 @@ model Miembro {
   comisionesRecibidas ComisionMultinivel[] @relation("ComisionesBeneficiario")
   comisionesGeneradas ComisionMultinivel[] @relation("ComisionesOrigen")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  pedidos   Pedido[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  pedidos          Pedido[] @relation("PedidosComprador")
+  pedidosReferidos Pedido[] @relation("PedidosReferidos")
 
   @@index([patrocinadorId])
   @@index([estado])
@@ -203,8 +204,10 @@ model Pedido {
   telefonoCliente String?
   observaciones   String?
 
-  miembroId String?
-  miembro   Miembro? @relation(fields: [miembroId], references: [id], onDelete: SetNull)
+  miembroId     String?
+  miembro       Miembro? @relation("PedidosComprador", fields: [miembroId], references: [id], onDelete: SetNull)
+  referidoPorId String?
+  referidoPor   Miembro? @relation("PedidosReferidos", fields: [referidoPorId], references: [id], onDelete: SetNull)
 
   total   Decimal @default(0)
   totalCV Decimal @default(0)
@@ -220,6 +223,7 @@ model Pedido {
   @@index([codigo])
   @@index([estado])
   @@index([miembroId])
+  @@index([referidoPorId])
   @@index([createdAt])
 }
 

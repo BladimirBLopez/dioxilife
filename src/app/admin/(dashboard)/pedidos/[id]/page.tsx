@@ -77,6 +77,16 @@ export default async function DetallePedidoPage({
           },
         },
 
+        referidoPor: {
+          select: {
+            id: true,
+            nombres: true,
+            apellidos: true,
+            email: true,
+            codigoReferido: true,
+          },
+        },
+
         detalles: {
           orderBy: {
             createdAt: "asc",
@@ -209,7 +219,7 @@ export default async function DetallePedidoPage({
       </div>
 
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-3">
 
         <div className="rounded-xl bg-white p-5 shadow">
 
@@ -262,6 +272,61 @@ export default async function DetallePedidoPage({
 
               <p className="text-sm text-orange-600">
                 Pedido no asociado a un miembro.
+              </p>
+
+            </div>
+
+          )}
+
+        </div>
+
+
+        <div className="rounded-xl bg-white p-5 shadow">
+
+          <h2 className="mb-4 text-lg font-semibold">
+            Venta referida por
+          </h2>
+
+          {pedido.referidoPor ? (
+
+            <div className="space-y-2">
+
+              <p className="font-semibold">
+                {pedido.referidoPor.nombres}
+                {pedido.referidoPor.apellidos
+                  ? ` ${pedido.referidoPor.apellidos}`
+                  : ""}
+              </p>
+
+              <p className="text-sm text-gray-500">
+                {pedido.referidoPor.email}
+              </p>
+
+              <div className="inline-block rounded-lg bg-blue-50 px-3 py-2 font-mono text-sm font-semibold text-blue-700">
+                {pedido.referidoPor.codigoReferido}
+              </div>
+
+              <div>
+                <Link
+                  href={`/admin/multinivel/${pedido.referidoPor.id}`}
+                  className="inline-block pt-2 text-sm font-medium text-blue-600 hover:underline"
+                >
+                  Ver vendedor
+                </Link>
+              </div>
+
+            </div>
+
+          ) : (
+
+            <div>
+
+              <p className="text-sm font-medium text-gray-500">
+                Venta directa DioxiLife
+              </p>
+
+              <p className="mt-2 text-sm text-gray-400">
+                Este pedido no llegó mediante el enlace de un vendedor.
               </p>
 
             </div>

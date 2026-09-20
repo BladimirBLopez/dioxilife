@@ -79,6 +79,48 @@ async function obtenerMiembroSesion() {
   return miembro;
 }
 
+
+async function obtenerReferidoPedido(
+  compradorId?: string | null
+) {
+  if (compradorId) {
+    return null;
+  }
+
+  const cookieStore =
+    await cookies();
+
+  const referidoId =
+    cookieStore.get(
+      "dioxilife_ref"
+    )?.value;
+
+  if (!referidoId) {
+    return null;
+  }
+
+  const referido =
+    await prisma.miembro.findUnique({
+      where: {
+        id: referidoId,
+      },
+
+      select: {
+        id: true,
+        estado: true,
+      },
+    });
+
+  if (
+    !referido ||
+    referido.estado !== "ACTIVO"
+  ) {
+    return null;
+  }
+
+  return referido;
+}
+
 export async function POST(
   req: NextRequest
 ) {
@@ -291,6 +333,11 @@ export async function POST(
     const miembro =
       await obtenerMiembroSesion();
 
+    const referido =
+      await obtenerReferidoPedido(
+        miembro?.id
+      );
+
     const codigo =
       await generarCodigoPedido();
 
@@ -310,6 +357,9 @@ export async function POST(
 
           miembroId:
             miembro?.id ?? null,
+
+          referidoPorId:
+            referido?.id ?? null,
 
           total,
           totalCV,
@@ -331,6 +381,16 @@ export async function POST(
           totalPV: true,
           requiereCotizacion: true,
           miembroId: true,
+          referidoPorId: true,
+
+          referidoPor: {
+            select: {
+              id: true,
+              nombres: true,
+              apellidos: true,
+              codigoReferido: true,
+            },
+          },
 
           detalles: {
             select: {
