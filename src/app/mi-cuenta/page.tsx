@@ -22,6 +22,7 @@ export default function MiCuentaPage() {
   const [error, setError] = useState("");
   const [origen, setOrigen] = useState("");
   const [copiado, setCopiado] = useState("");
+  const [cerrandoSesion, setCerrandoSesion] = useState(false);
 
   useEffect(() => {
 
@@ -114,14 +115,48 @@ export default function MiCuentaPage() {
   }
 
 
+  async function cerrarSesion() {
+    try {
+      setCerrandoSesion(true);
+
+      await fetch(
+        "/api/multinivel/logout",
+        {
+          method: "POST",
+        }
+      );
+
+      window.location.href =
+        "/login-miembro";
+    } catch {
+      setCerrandoSesion(false);
+    }
+  }
+
+
   return (
     <main className="min-h-screen bg-gray-100 px-4 py-10">
 
       <div className="mx-auto max-w-4xl">
 
-        <h1 className="mb-8 text-3xl font-bold text-gray-900">
-          Hola {miembro.nombres}
-        </h1>
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+          <h1 className="text-3xl font-bold text-gray-900">
+            Hola {miembro.nombres}
+          </h1>
+
+          <button
+            type="button"
+            onClick={cerrarSesion}
+            disabled={cerrandoSesion}
+            className="w-fit rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {cerrandoSesion
+              ? "Cerrando..."
+              : "Cerrar sesión"}
+          </button>
+
+        </div>
 
 
         <div className="grid gap-6 md:grid-cols-2">
