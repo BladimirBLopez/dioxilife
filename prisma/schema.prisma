@@ -197,6 +197,20 @@ model ComisionMultinivel {
   @@index([createdAt])
 }
 
+model ConfiguracionComisiones {
+  id String @id @default("GLOBAL")
+
+  comisionDirecta Decimal @default(10)
+  nivel1          Decimal @default(5)
+  nivel2          Decimal @default(3)
+  nivel3          Decimal @default(2)
+
+  activo Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 enum EstadoPedido {
   NUEVO
   CONFIRMADO

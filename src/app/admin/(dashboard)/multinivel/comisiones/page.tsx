@@ -371,7 +371,9 @@ export default async function ComisionesMultinivelPage() {
 
 
                     <td className="px-4 py-4">
-                      Nivel {comision.nivel}
+                      {comision.nivel === 0
+                          ? "Comisión directa"
+                          : `Nivel ${comision.nivel}`}
                     </td>
 
 

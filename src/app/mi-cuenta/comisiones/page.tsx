@@ -521,7 +521,9 @@ export default async function MisComisionesPage() {
                           </p>
 
                           <p className="mt-1 text-sm font-bold">
-                            {comision.nivel}
+                            {comision.nivel === 0
+                            ? "Directa"
+                            : comision.nivel}
                           </p>
 
                         </div>
@@ -658,7 +660,9 @@ export default async function MisComisionesPage() {
 
 
                           <td className="px-4 py-4">
-                            Nivel {comision.nivel}
+                            {comision.nivel === 0
+                          ? "Comisión directa"
+                          : `Nivel ${comision.nivel}`}
                           </td>
 
 
