@@ -46,6 +46,33 @@ function estiloEstado(
   }
 }
 
+function textoEstado(
+  estado: string
+) {
+  switch (estado) {
+    case "NUEVO":
+      return "Nuevo";
+
+    case "CONFIRMADO":
+      return "Confirmado";
+
+    case "PAGO_REPORTADO":
+      return "Pago reportado";
+
+    case "PAGADO":
+      return "Pagado";
+
+    case "COMPLETADO":
+      return "Completado";
+
+    case "CANCELADO":
+      return "Cancelado";
+
+    default:
+      return estado;
+  }
+}
+
 export default async function MisPedidosPage() {
   const cookieStore =
     await cookies();
@@ -56,7 +83,9 @@ export default async function MisPedidosPage() {
     )?.value;
 
   if (!token) {
-    redirect("/login-miembro");
+    redirect(
+      "/login-miembro"
+    );
   }
 
   const sesion =
@@ -66,7 +95,9 @@ export default async function MisPedidosPage() {
     !sesion ||
     typeof sesion.usuario !== "string"
   ) {
-    redirect("/login-miembro");
+    redirect(
+      "/login-miembro"
+    );
   }
 
   const miembro =
@@ -86,7 +117,9 @@ export default async function MisPedidosPage() {
     !miembro ||
     miembro.estado !== "ACTIVO"
   ) {
-    redirect("/login-miembro");
+    redirect(
+      "/login-miembro"
+    );
   }
 
   const pedidos =
@@ -122,8 +155,25 @@ export default async function MisPedidosPage() {
       },
     });
 
+  const pedidosActivos =
+    pedidos.filter(
+      (pedido) =>
+        pedido.estado !==
+        "CANCELADO"
+    );
+
   const totalVentas =
-    pedidos.length;
+    pedidosActivos.length;
+
+  const montoPedidos =
+    pedidosActivos.reduce(
+      (total, pedido) =>
+        total +
+        Number(
+          String(pedido.total)
+        ),
+      0
+    );
 
   const confirmados =
     pedidos.filter(
@@ -139,103 +189,169 @@ export default async function MisPedidosPage() {
         "PAGO_REPORTADO"
     ).length;
 
-  const pagados =
-    pedidos.filter(
-      (pedido) =>
-        pedido.estado ===
-        "PAGADO" ||
-        pedido.estado ===
-        "COMPLETADO"
-    ).length;
+  const montoPagado =
+    pedidos
+      .filter(
+        (pedido) =>
+          pedido.estado ===
+            "PAGADO" ||
+          pedido.estado ===
+            "COMPLETADO"
+      )
+      .reduce(
+        (total, pedido) =>
+          total +
+          Number(
+            String(pedido.total)
+          ),
+        0
+      );
 
   return (
-    <main className="min-h-screen bg-gray-100 px-4 py-10">
+    <div className="p-4 md:p-6">
 
-      <div className="mx-auto max-w-6xl space-y-6">
+      <div className="mx-auto max-w-7xl space-y-6">
 
-        <div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+
+          <div>
+
+            <p className="text-sm font-medium text-blue-600">
+              Panel del distribuidor
+            </p>
+
+            <h1 className="mt-1 text-2xl font-bold text-gray-900 md:text-3xl">
+              Mis ventas
+            </h1>
+
+            <p className="mt-2 text-sm text-gray-500">
+              Gestiona los pedidos realizados mediante tu enlace personal.
+            </p>
+
+          </div>
+
 
           <Link
             href="/mi-cuenta"
-            className="text-sm font-medium text-blue-600 hover:underline"
+            className="w-fit rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
           >
-            ← Volver a mi cuenta
+            ← Volver al inicio
           </Link>
-
-          <h1 className="mt-3 text-3xl font-bold text-gray-900">
-            Mis ventas
-          </h1>
-
-          <p className="mt-2 text-gray-500">
-            Pedidos realizados mediante tu enlace personal de ventas.
-          </p>
 
         </div>
 
 
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
 
-          <div className="rounded-xl bg-white p-4 shadow">
+          <div className="rounded-2xl bg-white p-5 shadow">
 
-            <p className="text-sm text-gray-500">
-              Total
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+              Ventas
             </p>
 
-            <p className="mt-1 text-2xl font-bold">
+            <p className="mt-2 text-2xl font-bold text-gray-900">
               {totalVentas}
             </p>
 
+            <p className="mt-1 text-xs text-gray-500">
+              Pedidos no cancelados
+            </p>
+
           </div>
 
 
-          <div className="rounded-xl bg-white p-4 shadow">
+          <div className="rounded-2xl bg-white p-5 shadow">
 
-            <p className="text-sm text-gray-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+              Monto pedidos
+            </p>
+
+            <p className="mt-2 text-xl font-bold text-gray-900">
+              Bs {dinero(
+                montoPedidos
+              )}
+            </p>
+
+            <p className="mt-1 text-xs text-gray-500">
+              Antes de validar pagos
+            </p>
+
+          </div>
+
+
+          <div className="rounded-2xl bg-white p-5 shadow">
+
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
               Por reportar
             </p>
 
-            <p className="mt-1 text-2xl font-bold text-blue-600">
+            <p className="mt-2 text-2xl font-bold text-blue-600">
               {confirmados}
             </p>
 
-          </div>
-
-
-          <div className="rounded-xl bg-white p-4 shadow">
-
-            <p className="text-sm text-gray-500">
-              Pago reportado
-            </p>
-
-            <p className="mt-1 text-2xl font-bold text-orange-600">
-              {pagosReportados}
+            <p className="mt-1 text-xs text-gray-500">
+              Pedidos confirmados
             </p>
 
           </div>
 
 
-          <div className="rounded-xl bg-white p-4 shadow">
+          <div className="rounded-2xl bg-white p-5 shadow">
 
-            <p className="text-sm text-gray-500">
-              Pagados
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+              Ventas pagadas
             </p>
 
-            <p className="mt-1 text-2xl font-bold text-green-600">
-              {pagados}
+            <p className="mt-2 text-xl font-bold text-green-600">
+              Bs {dinero(
+                montoPagado
+              )}
+            </p>
+
+            <p className="mt-1 text-xs text-gray-500">
+              Pago aprobado
             </p>
 
           </div>
 
-        </div>
+        </section>
 
 
-        <div className="overflow-hidden rounded-xl bg-white shadow">
+        {pagosReportados > 0 && (
 
-          <div className="border-b p-5">
+          <div className="rounded-xl border border-orange-200 bg-orange-50 p-4">
 
-            <h2 className="text-lg font-semibold">
-              Pedidos atribuidos a {miembro.nombres}
+            <p className="font-semibold text-orange-800">
+              {pagosReportados} pago
+              {pagosReportados === 1
+                ? ""
+                : "s"}{" "}
+              reportado
+              {pagosReportados === 1
+                ? ""
+                : "s"}
+            </p>
+
+            <p className="mt-1 text-sm text-orange-700">
+              DioxiLife está verificando estos pagos.
+            </p>
+
+          </div>
+
+        )}
+
+
+        <section className="overflow-hidden rounded-2xl bg-white shadow">
+
+          <div className="border-b border-gray-100 p-5">
+
+            <h2 className="text-lg font-bold text-gray-900">
+              Historial de ventas
             </h2>
+
+            <p className="mt-1 text-sm text-gray-500">
+              Los pedidos más recientes aparecen primero.
+            </p>
 
           </div>
 
@@ -244,76 +360,49 @@ export default async function MisPedidosPage() {
 
             <div className="p-10 text-center">
 
-              <p className="font-semibold">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  className="h-6 w-6"
+                >
+                  <path d="M5 7h14l-1 13H6L5 7Z" />
+                  <path d="M9 7V5a3 3 0 0 1 6 0v2" />
+                </svg>
+
+              </div>
+
+              <p className="mt-4 font-semibold text-gray-700">
                 Todavía no tienes ventas atribuidas.
               </p>
 
               <p className="mt-2 text-sm text-gray-500">
-                Los pedidos realizados desde tu enlace aparecerán aquí.
+                Comparte tu enlace de ventas para comenzar.
               </p>
 
             </div>
 
           ) : (
 
-            <div className="overflow-x-auto">
+            <>
+              <div className="divide-y divide-gray-100 md:hidden">
 
-              <table className="w-full min-w-[950px] text-left text-sm">
+                {pedidos.map(
+                  (pedido) => (
 
-                <thead className="bg-gray-50 text-gray-600">
+                    <article
+                      key={pedido.id}
+                      className="p-4"
+                    >
 
-                  <tr>
+                      <div className="flex items-start justify-between gap-3">
 
-                    <th className="px-4 py-3">
-                      Pedido
-                    </th>
+                        <div>
 
-                    <th className="px-4 py-3">
-                      Cliente
-                    </th>
-
-                    <th className="px-4 py-3">
-                      Productos
-                    </th>
-
-                    <th className="px-4 py-3">
-                      Total
-                    </th>
-
-                    <th className="px-4 py-3">
-                      CV
-                    </th>
-
-                    <th className="px-4 py-3">
-                      PV
-                    </th>
-
-                    <th className="px-4 py-3">
-                      Estado
-                    </th>
-
-                    <th className="px-4 py-3">
-                      Acción
-                    </th>
-
-                  </tr>
-
-                </thead>
-
-
-                <tbody className="divide-y">
-
-                  {pedidos.map(
-                    (pedido) => (
-
-                      <tr
-                        key={pedido.id}
-                        className="hover:bg-gray-50"
-                      >
-
-                        <td className="px-4 py-4">
-
-                          <p className="font-mono font-semibold">
+                          <p className="font-mono text-sm font-bold text-gray-900">
                             {pedido.codigo}
                           </p>
 
@@ -325,125 +414,356 @@ export default async function MisPedidosPage() {
                             )}
                           </p>
 
-                        </td>
+                        </div>
 
 
-                        <td className="px-4 py-4">
+                        <span
+                          className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${estiloEstado(
+                            pedido.estado
+                          )}`}
+                        >
+                          {textoEstado(
+                            pedido.estado
+                          )}
+                        </span>
 
-                          <p className="font-medium">
-                            {pedido.nombreCliente ||
-                              "Cliente"}
+                      </div>
+
+
+                      <div className="mt-4">
+
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                          Cliente
+                        </p>
+
+                        <p className="mt-1 font-semibold text-gray-900">
+                          {pedido.nombreCliente ||
+                            "Cliente externo"}
+                        </p>
+
+                        {pedido.telefonoCliente && (
+
+                          <p className="mt-1 text-sm text-gray-500">
+                            {pedido.telefonoCliente}
                           </p>
 
-                          {pedido.telefonoCliente && (
-                            <p className="mt-1 text-xs text-gray-500">
-                              {pedido.telefonoCliente}
-                            </p>
-                          )}
+                        )}
 
-                        </td>
+                      </div>
 
 
-                        <td className="px-4 py-4">
-                          {pedido._count.detalles}
-                        </td>
+                      <div className="mt-4 grid grid-cols-4 gap-2 rounded-xl bg-gray-50 p-3">
+
+                        <div>
+
+                          <p className="text-[10px] uppercase text-gray-400">
+                            Productos
+                          </p>
+
+                          <p className="mt-1 text-sm font-bold text-gray-900">
+                            {pedido._count.detalles}
+                          </p>
+
+                        </div>
 
 
-                        <td className="px-4 py-4 font-semibold">
-                          Bs {dinero(pedido.total)}
-                        </td>
+                        <div>
+
+                          <p className="text-[10px] uppercase text-gray-400">
+                            Total
+                          </p>
+
+                          <p className="mt-1 text-sm font-bold text-gray-900">
+                            Bs {dinero(
+                              pedido.total
+                            )}
+                          </p>
+
+                        </div>
 
 
-                        <td className="px-4 py-4">
-                          Bs {dinero(pedido.totalCV)}
-                        </td>
+                        <div>
+
+                          <p className="text-[10px] uppercase text-gray-400">
+                            CV
+                          </p>
+
+                          <p className="mt-1 text-sm font-bold text-gray-900">
+                            {dinero(
+                              pedido.totalCV
+                            )}
+                          </p>
+
+                        </div>
 
 
-                        <td className="px-4 py-4">
-                          {dinero(pedido.totalPV)}
-                        </td>
+                        <div>
+
+                          <p className="text-[10px] uppercase text-gray-400">
+                            PV
+                          </p>
+
+                          <p className="mt-1 text-sm font-bold text-gray-900">
+                            {dinero(
+                              pedido.totalPV
+                            )}
+                          </p>
+
+                        </div>
+
+                      </div>
 
 
-                        <td className="px-4 py-4">
+                      <div className="mt-4 grid gap-2">
 
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${estiloEstado(
-                              pedido.estado
-                            )}`}
+                        <Link
+                          href={`/mi-cuenta/pedidos/${pedido.id}`}
+                          className="flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+                        >
+                          Gestionar pedido
+                        </Link>
+
+
+                        {pedido.estado ===
+                          "CONFIRMADO" && (
+
+                          <form
+                            action={reportarPago.bind(
+                              null,
+                              pedido.id
+                            )}
                           >
-                            {pedido.estado}
-                          </span>
 
-                        </td>
-
-
-                        <td className="px-4 py-4">
-
-                          <div className="flex min-w-[150px] flex-col gap-2">
-
-                            <Link
-                              href={`/mi-cuenta/pedidos/${pedido.id}`}
-                              className="rounded-lg bg-blue-600 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-blue-700"
+                            <button
+                              type="submit"
+                              className="w-full rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-700"
                             >
-                              Gestionar pedido
-                            </Link>
+                              Reportar pago
+                            </button>
 
-                            {pedido.estado ===
-                            "CONFIRMADO" ? (
+                          </form>
 
-                              <form
-                                action={reportarPago.bind(
-                                  null,
-                                  pedido.id
-                                )}
-                              >
-                                <button
-                                  type="submit"
-                                  className="w-full rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-700"
-                                >
-                                  Reportar pago
-                                </button>
-                              </form>
+                        )}
 
-                            ) : pedido.estado ===
-                              "PAGO_REPORTADO" ? (
 
-                              <span className="text-center text-sm font-medium text-orange-600">
-                                En revisión
-                              </span>
+                        {pedido.estado ===
+                          "PAGO_REPORTADO" && (
 
-                            ) : pedido.estado ===
-                              "PAGADO" ||
-                              pedido.estado ===
-                                "COMPLETADO" ? (
-
-                              <span className="text-center text-sm font-medium text-green-600">
-                                Pago aprobado
-                              </span>
-
-                            ) : null}
-
+                          <div className="rounded-lg bg-orange-50 px-4 py-2.5 text-center text-sm font-medium text-orange-700">
+                            Pago en revisión
                           </div>
 
-                        </td>
+                        )}
 
-                      </tr>
 
-                    )
-                  )}
+                        {(pedido.estado ===
+                          "PAGADO" ||
+                          pedido.estado ===
+                            "COMPLETADO") && (
 
-                </tbody>
+                          <div className="rounded-lg bg-green-50 px-4 py-2.5 text-center text-sm font-medium text-green-700">
+                            Pago aprobado
+                          </div>
 
-              </table>
+                        )}
 
-            </div>
+                      </div>
+
+                    </article>
+
+                  )
+                )}
+
+              </div>
+
+
+              <div className="hidden overflow-x-auto md:block">
+
+                <table className="w-full min-w-[1000px] text-left text-sm">
+
+                  <thead className="bg-gray-50 text-gray-600">
+
+                    <tr>
+
+                      <th className="px-4 py-3">
+                        Pedido
+                      </th>
+
+                      <th className="px-4 py-3">
+                        Cliente
+                      </th>
+
+                      <th className="px-4 py-3">
+                        Productos
+                      </th>
+
+                      <th className="px-4 py-3">
+                        Total
+                      </th>
+
+                      <th className="px-4 py-3">
+                        CV
+                      </th>
+
+                      <th className="px-4 py-3">
+                        PV
+                      </th>
+
+                      <th className="px-4 py-3">
+                        Estado
+                      </th>
+
+                      <th className="px-4 py-3">
+                        Acción
+                      </th>
+
+                    </tr>
+
+                  </thead>
+
+
+                  <tbody className="divide-y divide-gray-100">
+
+                    {pedidos.map(
+                      (pedido) => (
+
+                        <tr
+                          key={pedido.id}
+                          className="transition hover:bg-gray-50"
+                        >
+
+                          <td className="px-4 py-4">
+
+                            <p className="font-mono font-semibold">
+                              {pedido.codigo}
+                            </p>
+
+                            <p className="mt-1 text-xs text-gray-400">
+                              {new Date(
+                                pedido.createdAt
+                              ).toLocaleDateString(
+                                "es-BO"
+                              )}
+                            </p>
+
+                          </td>
+
+
+                          <td className="px-4 py-4">
+
+                            <p className="font-medium">
+                              {pedido.nombreCliente ||
+                                "Cliente externo"}
+                            </p>
+
+                            {pedido.telefonoCliente && (
+
+                              <p className="mt-1 text-xs text-gray-500">
+                                {pedido.telefonoCliente}
+                              </p>
+
+                            )}
+
+                          </td>
+
+
+                          <td className="px-4 py-4">
+                            {pedido._count.detalles}
+                          </td>
+
+
+                          <td className="px-4 py-4 font-semibold">
+                            Bs {dinero(
+                              pedido.total
+                            )}
+                          </td>
+
+
+                          <td className="px-4 py-4">
+                            {dinero(
+                              pedido.totalCV
+                            )}
+                          </td>
+
+
+                          <td className="px-4 py-4">
+                            {dinero(
+                              pedido.totalPV
+                            )}
+                          </td>
+
+
+                          <td className="px-4 py-4">
+
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-xs font-semibold ${estiloEstado(
+                                pedido.estado
+                              )}`}
+                            >
+                              {textoEstado(
+                                pedido.estado
+                              )}
+                            </span>
+
+                          </td>
+
+
+                          <td className="px-4 py-4">
+
+                            <div className="flex min-w-[150px] flex-col gap-2">
+
+                              <Link
+                                href={`/mi-cuenta/pedidos/${pedido.id}`}
+                                className="rounded-lg bg-blue-600 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-blue-700"
+                              >
+                                Gestionar
+                              </Link>
+
+
+                              {pedido.estado ===
+                                "CONFIRMADO" && (
+
+                                <form
+                                  action={reportarPago.bind(
+                                    null,
+                                    pedido.id
+                                  )}
+                                >
+
+                                  <button
+                                    type="submit"
+                                    className="w-full rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-700"
+                                  >
+                                    Reportar pago
+                                  </button>
+
+                                </form>
+
+                              )}
+
+                            </div>
+
+                          </td>
+
+                        </tr>
+
+                      )
+                    )}
+
+                  </tbody>
+
+                </table>
+
+              </div>
+
+            </>
 
           )}
 
-        </div>
+        </section>
 
       </div>
 
-    </main>
+    </div>
   );
 }
