@@ -389,6 +389,7 @@ export async function POST(
               nombres: true,
               apellidos: true,
               codigoReferido: true,
+              telefono: true,
             },
           },
 

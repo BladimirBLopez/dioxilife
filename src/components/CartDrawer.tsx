@@ -10,6 +10,15 @@ type PedidoCreado = {
   codigo: string;
   total: string;
   requiereCotizacion: boolean;
+
+  referidoPor: {
+    id: string;
+    nombres: string;
+    apellidos: string | null;
+    codigoReferido: string;
+    telefono: string | null;
+  } | null;
+
   detalles: {
     id: string;
     nombreProducto: string;
@@ -19,6 +28,32 @@ type PedidoCreado = {
     subtotal: string;
   }[];
 };
+
+function normalizarWhatsappBolivia(
+  telefono: string | null | undefined
+) {
+  if (!telefono) {
+    return null;
+  }
+
+  const numero =
+    telefono.replace(/\D/g, "");
+
+  // Número celular boliviano sin código de país.
+  if (numero.length === 8) {
+    return `591${numero}`;
+  }
+
+  // Número boliviano ya guardado con código +591.
+  if (
+    numero.startsWith("591") &&
+    numero.length === 11
+  ) {
+    return numero;
+  }
+
+  return null;
+}
 
 export default function CartDrawer() {
   const [abierto, setAbierto] = useState(false);
@@ -107,8 +142,17 @@ export default function CartDrawer() {
         armarMensaje(pedido)
       );
 
+      const whatsappVendedor =
+        normalizarWhatsappBolivia(
+          pedido.referidoPor?.telefono
+        );
+
+      const numeroDestino =
+        whatsappVendedor ||
+        NUMERO_WHATSAPP;
+
       const url =
-        `https://wa.me/${NUMERO_WHATSAPP}?text=${mensaje}`;
+        `https://wa.me/${numeroDestino}?text=${mensaje}`;
 
       if (ventanaWhatsapp) {
         ventanaWhatsapp.location.href = url;

@@ -7,6 +7,7 @@ type Miembro = {
   nombres: string;
   apellidos: string | null;
   email: string;
+  telefono: string | null;
   codigoReferido: string;
   estado: string;
   referidos: {
@@ -23,6 +24,10 @@ export default function MiCuentaPage() {
   const [origen, setOrigen] = useState("");
   const [copiado, setCopiado] = useState("");
   const [cerrandoSesion, setCerrandoSesion] = useState(false);
+  const [telefono, setTelefono] = useState("");
+  const [guardandoTelefono, setGuardandoTelefono] = useState(false);
+  const [mensajeTelefono, setMensajeTelefono] = useState("");
+  const [errorTelefono, setErrorTelefono] = useState(false);
 
   useEffect(() => {
 
@@ -40,6 +45,10 @@ export default function MiCuentaPage() {
       }
 
       setMiembro(data.miembro);
+
+      setTelefono(
+        data.miembro.telefono || ""
+      );
     }
 
     cargarPerfil();
@@ -115,6 +124,85 @@ export default function MiCuentaPage() {
   }
 
 
+  async function guardarWhatsapp() {
+    if (guardandoTelefono) {
+      return;
+    }
+
+    try {
+      setGuardandoTelefono(true);
+      setMensajeTelefono("");
+      setErrorTelefono(false);
+
+      const res =
+        await fetch(
+          "/api/multinivel/perfil",
+          {
+            method: "PATCH",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              telefono,
+            }),
+          }
+        );
+
+      const data =
+        await res.json();
+
+      if (!res.ok) {
+        setErrorTelefono(true);
+
+        setMensajeTelefono(
+          data.error ||
+            "No se pudo actualizar el WhatsApp."
+        );
+
+        return;
+      }
+
+      const telefonoActualizado =
+        data.telefono || "";
+
+      setTelefono(
+        telefonoActualizado
+      );
+
+      setMiembro(
+        (actual) =>
+          actual
+            ? {
+                ...actual,
+                telefono:
+                  data.telefono,
+              }
+            : actual
+      );
+
+      setErrorTelefono(false);
+
+      setMensajeTelefono(
+        data.mensaje ||
+          "WhatsApp actualizado correctamente."
+      );
+
+    } catch {
+      setErrorTelefono(true);
+
+      setMensajeTelefono(
+        "No se pudo conectar con el servidor."
+      );
+
+    } finally {
+      setGuardandoTelefono(false);
+    }
+  }
+
+
   async function cerrarSesion() {
     try {
       setCerrandoSesion(true);
@@ -176,7 +264,65 @@ export default function MiCuentaPage() {
               <strong>Estado:</strong> {miembro.estado}
             </p>
 
-            <p className="mt-2">
+            <div className="mt-5 border-t border-gray-100 pt-5">
+
+              <label
+                htmlFor="telefonoVentas"
+                className="text-sm font-semibold text-gray-700"
+              >
+                WhatsApp de ventas
+              </label>
+
+              <p className="mt-1 text-xs text-gray-500">
+                Los clientes que compren mediante tu enlace serán enviados a este WhatsApp.
+              </p>
+
+              <input
+                id="telefonoVentas"
+                type="text"
+                inputMode="tel"
+                value={telefono}
+                onChange={(e) => {
+                  setTelefono(
+                    e.target.value
+                  );
+
+                  setMensajeTelefono("");
+                }}
+                placeholder="Ej. 70000000"
+                className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+
+              <button
+                type="button"
+                onClick={guardarWhatsapp}
+                disabled={guardandoTelefono}
+                className="mt-3 w-full rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {guardandoTelefono
+                  ? "Guardando..."
+                  : "Guardar WhatsApp"}
+              </button>
+
+              {mensajeTelefono && (
+                <p
+                  className={`mt-2 text-xs ${
+                    errorTelefono
+                      ? "text-red-600"
+                      : "text-green-600"
+                  }`}
+                >
+                  {mensajeTelefono}
+                </p>
+              )}
+
+              <p className="mt-2 text-xs text-gray-400">
+                Puedes usar 70000000 o +591 70000000. Si lo eliminas, las ventas usarán el WhatsApp central de DioxiLife.
+              </p>
+
+            </div>
+
+            <p className="mt-5">
               <strong>Mi código:</strong>
             </p>
 
