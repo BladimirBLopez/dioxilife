@@ -22,6 +22,23 @@ type Miembro = {
   }[];
 };
 
+type Resumen = {
+  ventasAtribuidas: number;
+  montoPagado: string;
+  redDirecta: number;
+  comisionesPendientes: string;
+  pagosReportados: number;
+
+  ultimosPedidos: {
+    id: string;
+    codigo: string;
+    estado: string;
+    nombreCliente: string | null;
+    total: string;
+    createdAt: string;
+  }[];
+};
+
 export default function MiCuentaPage() {
   const [
     miembro,
@@ -36,6 +53,14 @@ export default function MiCuentaPage() {
     setError,
   ] =
     useState("");
+
+  const [
+    resumen,
+    setResumen,
+  ] =
+    useState<Resumen | null>(
+      null
+    );
 
   const [
     origen,
@@ -80,31 +105,55 @@ export default function MiCuentaPage() {
     );
 
     async function cargarPerfil() {
-      const res =
-        await fetch(
-          "/api/multinivel/perfil"
+      try {
+        const [
+          resPerfil,
+          resResumen,
+        ] = await Promise.all([
+          fetch(
+            "/api/multinivel/perfil"
+          ),
+
+          fetch(
+            "/api/multinivel/resumen"
+          ),
+        ]);
+
+        const dataPerfil =
+          await resPerfil.json();
+
+        const dataResumen =
+          await resResumen.json();
+
+        if (!resPerfil.ok) {
+          setError(
+            dataPerfil.error ||
+              "No se pudo cargar tu perfil."
+          );
+
+          return;
+        }
+
+        setMiembro(
+          dataPerfil.miembro
         );
 
-      const data =
-        await res.json();
+        setTelefono(
+          dataPerfil.miembro.telefono ||
+            ""
+        );
 
-      if (!res.ok) {
+        if (resResumen.ok) {
+          setResumen(
+            dataResumen
+          );
+        }
+
+      } catch {
         setError(
-          data.error ||
-            "No se pudo cargar tu perfil."
+          "No se pudo conectar con el servidor."
         );
-
-        return;
       }
-
-      setMiembro(
-        data.miembro
-      );
-
-      setTelefono(
-        data.miembro.telefono ||
-          ""
-      );
     }
 
     cargarPerfil();
@@ -344,7 +393,57 @@ export default function MiCuentaPage() {
             className="rounded-2xl bg-white p-5 shadow transition hover:-translate-y-0.5 hover:shadow-md"
           >
 
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+            <div className="flex items-start justify-between gap-3">
+
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  className="h-5 w-5"
+                >
+                  <path d="M5 7h14l-1 13H6L5 7Z" />
+                  <path d="M9 7V5a3 3 0 0 1 6 0v2" />
+                </svg>
+
+              </div>
+
+              {resumen &&
+                resumen.pagosReportados > 0 && (
+
+                <span className="rounded-full bg-orange-100 px-2 py-1 text-[10px] font-bold text-orange-700">
+                  {resumen.pagosReportados} por revisar
+                </span>
+
+              )}
+
+            </div>
+
+            <p className="mt-4 text-2xl font-bold text-gray-900">
+              {resumen
+                ? resumen.ventasAtribuidas
+                : "—"}
+            </p>
+
+            <p className="mt-1 text-sm font-semibold text-gray-900">
+              Mis ventas
+            </p>
+
+            <p className="mt-1 text-xs text-gray-500">
+              Pedidos atribuidos a tu enlace.
+            </p>
+
+          </Link>
+
+
+          <Link
+            href="/mi-cuenta/pedidos"
+            className="rounded-2xl bg-white p-5 shadow transition hover:-translate-y-0.5 hover:shadow-md"
+          >
+
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-600">
 
               <svg
                 viewBox="0 0 24 24"
@@ -353,18 +452,30 @@ export default function MiCuentaPage() {
                 strokeWidth="1.8"
                 className="h-5 w-5"
               >
-                <path d="M5 7h14l-1 13H6L5 7Z" />
-                <path d="M9 7V5a3 3 0 0 1 6 0v2" />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="8"
+                />
+                <path d="M12 7v10M9 10h6M9 14h6" />
               </svg>
 
             </div>
 
-            <p className="mt-4 font-semibold text-gray-900">
-              Mis ventas
+            <p className="mt-4 text-xl font-bold text-gray-900">
+              Bs{" "}
+              {Number(
+                resumen?.montoPagado ||
+                  0
+              ).toFixed(2)}
             </p>
 
-            <p className="mt-1 text-xs leading-5 text-gray-500">
-              Gestiona pedidos y clientes.
+            <p className="mt-1 text-sm font-semibold text-gray-900">
+              Ventas pagadas
+            </p>
+
+            <p className="mt-1 text-xs text-gray-500">
+              Solo pagos aprobados por DioxiLife.
             </p>
 
           </Link>
@@ -392,12 +503,18 @@ export default function MiCuentaPage() {
 
             </div>
 
-            <p className="mt-4 font-semibold text-gray-900">
-              Mi red
+            <p className="mt-4 text-2xl font-bold text-gray-900">
+              {resumen
+                ? resumen.redDirecta
+                : "—"}
             </p>
 
-            <p className="mt-1 text-xs leading-5 text-gray-500">
-              {miembro.referidos.length} miembro{miembro.referidos.length === 1 ? "" : "s"} directo{miembro.referidos.length === 1 ? "" : "s"}.
+            <p className="mt-1 text-sm font-semibold text-gray-900">
+              Mi red directa
+            </p>
+
+            <p className="mt-1 text-xs text-gray-500">
+              Miembros directos activos.
             </p>
 
           </Link>
@@ -405,37 +522,6 @@ export default function MiCuentaPage() {
 
           <Link
             href="/mi-cuenta/comisiones"
-            className="rounded-2xl bg-white p-5 shadow transition hover:-translate-y-0.5 hover:shadow-md"
-          >
-
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-600">
-
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                className="h-5 w-5"
-              >
-                <circle cx="12" cy="12" r="8" />
-                <path d="M12 7v10M15 9.5c-.7-1-1.7-1.5-3-1.5-1.7 0-3 1-3 2.2 0 1.3 1.1 1.8 3 2.2 1.9.4 3 1 3 2.3 0 1.3-1.3 2.3-3 2.3-1.4 0-2.6-.6-3.2-1.6" />
-              </svg>
-
-            </div>
-
-            <p className="mt-4 font-semibold text-gray-900">
-              Comisiones
-            </p>
-
-            <p className="mt-1 text-xs leading-5 text-gray-500">
-              Consulta tus ganancias.
-            </p>
-
-          </Link>
-
-
-          <a
-            href="#enlaces"
             className="rounded-2xl bg-white p-5 shadow transition hover:-translate-y-0.5 hover:shadow-md"
           >
 
@@ -448,21 +534,144 @@ export default function MiCuentaPage() {
                 strokeWidth="1.8"
                 className="h-5 w-5"
               >
-                <path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1" />
-                <path d="M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.1-1.1" />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="8"
+                />
+                <path d="M15 9.5c-.6-1-1.7-1.5-3-1.5-1.7 0-3 1-3 2.2 0 1.3 1.1 1.8 3 2.2 1.9.4 3 1 3 2.3 0 1.3-1.3 2.3-3 2.3-1.4 0-2.6-.6-3.2-1.6" />
+                <path d="M12 6.5v11" />
               </svg>
 
             </div>
 
-            <p className="mt-4 font-semibold text-gray-900">
-              Mis enlaces
+            <p className="mt-4 text-xl font-bold text-gray-900">
+              Bs{" "}
+              {Number(
+                resumen?.comisionesPendientes ||
+                  0
+              ).toFixed(2)}
             </p>
 
-            <p className="mt-1 text-xs leading-5 text-gray-500">
-              Comparte y genera ventas.
+            <p className="mt-1 text-sm font-semibold text-gray-900">
+              Comisiones pendientes
             </p>
 
-          </a>
+            <p className="mt-1 text-xs text-gray-500">
+              Pendientes de aprobación o proceso.
+            </p>
+
+          </Link>
+
+        </section>
+
+
+        <section className="rounded-2xl bg-white p-5 shadow md:p-6">
+
+          <div className="flex items-center justify-between gap-4">
+
+            <div>
+
+              <h2 className="text-lg font-bold text-gray-900">
+                Actividad reciente
+              </h2>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Tus últimos pedidos atribuidos.
+              </p>
+
+            </div>
+
+
+            <Link
+              href="/mi-cuenta/pedidos"
+              className="text-sm font-semibold text-blue-600 hover:underline"
+            >
+              Ver todas →
+            </Link>
+
+          </div>
+
+
+          {!resumen ? (
+
+            <div className="mt-5 text-sm text-gray-400">
+              Cargando actividad...
+            </div>
+
+          ) : resumen.ultimosPedidos.length === 0 ? (
+
+            <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-6 text-center">
+
+              <p className="font-medium text-gray-600">
+                Todavía no tienes pedidos atribuidos.
+              </p>
+
+              <p className="mt-1 text-sm text-gray-400">
+                Comparte tu enlace de ventas para comenzar.
+              </p>
+
+            </div>
+
+          ) : (
+
+            <div className="mt-5 divide-y divide-gray-100">
+
+              {resumen.ultimosPedidos.map(
+                (pedido) => (
+
+                  <Link
+                    key={pedido.id}
+                    href={`/mi-cuenta/pedidos/${pedido.id}`}
+                    className="flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0"
+                  >
+
+                    <div className="min-w-0">
+
+                      <div className="flex flex-wrap items-center gap-2">
+
+                        <p className="font-mono text-sm font-bold text-gray-900">
+                          {pedido.codigo}
+                        </p>
+
+                        <span className="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-600">
+                          {pedido.estado}
+                        </span>
+
+                      </div>
+
+
+                      <p className="mt-1 truncate text-sm text-gray-500">
+                        {pedido.nombreCliente ||
+                          "Cliente externo"}
+                      </p>
+
+                    </div>
+
+
+                    <div className="shrink-0 text-right">
+
+                      <p className="font-semibold text-gray-900">
+                        Bs{" "}
+                        {Number(
+                          pedido.total
+                        ).toFixed(2)}
+                      </p>
+
+                      <p className="mt-1 text-xs text-gray-400">
+                        Ver pedido →
+                      </p>
+
+                    </div>
+
+                  </Link>
+
+                )
+              )}
+
+            </div>
+
+          )}
 
         </section>
 
