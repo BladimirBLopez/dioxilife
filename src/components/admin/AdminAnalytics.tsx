@@ -13,7 +13,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Legend,
+  Label,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -146,7 +146,7 @@ export default function AdminAnalytics({
           </div>
 
 
-          <div className="h-[300px] p-3 sm:p-5">
+          <div className="h-[235px] p-3 sm:h-[300px] sm:p-5">
 
             <ResponsiveContainer
               width="100%"
@@ -198,6 +198,9 @@ export default function AdminAnalytics({
                   dataKey="etiqueta"
                   axisLine={false}
                   tickLine={false}
+                  interval="preserveStartEnd"
+                  minTickGap={28}
+                  tickMargin={8}
                   tick={{
                     fontSize: 11,
                     fill: "#94A3B8",
@@ -275,55 +278,100 @@ export default function AdminAnalytics({
 
           ) : (
 
-            <div className="h-[300px] p-3">
+            <div className="p-5">
 
-              <ResponsiveContainer
-                width="100%"
-                height="100%"
-              >
-                <PieChart>
+              <div className="h-[190px] sm:h-[220px]">
 
-                  <Pie
-                    data={estados}
-                    dataKey="total"
-                    nameKey="etiqueta"
-                    cx="50%"
-                    cy="45%"
-                    innerRadius={55}
-                    outerRadius={88}
-                    paddingAngle={3}
-                  >
+                <ResponsiveContainer
+                  width="100%"
+                  height="100%"
+                >
+                  <PieChart>
 
-                    {estados.map(
-                      (item, index) => (
+                    <Pie
+                      data={estados}
+                      dataKey="total"
+                      nameKey="etiqueta"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={48}
+                      outerRadius={73}
+                      paddingAngle={3}
+                    >
 
-                        <Cell
-                          key={item.estado}
-                          fill={
-                            coloresEstados[
-                              index %
-                                coloresEstados.length
-                            ]
-                          }
+                      {estados.map(
+                        (item, index) => (
+
+                          <Cell
+                            key={item.estado}
+                            fill={
+                              coloresEstados[
+                                index %
+                                  coloresEstados.length
+                              ]
+                            }
+                          />
+
+                        )
+                      )}
+
+                      <Label
+                        value={totalEstados}
+                        position="center"
+                        fill="#0F172A"
+                        fontSize={26}
+                        fontWeight={700}
+                      />
+
+                    </Pie>
+
+                    <Tooltip />
+
+                  </PieChart>
+                </ResponsiveContainer>
+
+              </div>
+
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+
+                {estados.map(
+                  (item, index) => (
+
+                    <div
+                      key={item.estado}
+                      className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-3 py-2"
+                    >
+
+                      <div className="flex min-w-0 items-center gap-2">
+
+                        <span
+                          className="h-2.5 w-2.5 shrink-0 rounded-full"
+                          style={{
+                            backgroundColor:
+                              coloresEstados[
+                                index %
+                                  coloresEstados.length
+                              ],
+                          }}
                         />
 
-                      )
-                    )}
+                        <span className="truncate text-[11px] font-medium text-slate-500">
+                          {item.etiqueta}
+                        </span>
 
-                  </Pie>
+                      </div>
 
-                  <Tooltip />
+                      <span className="text-xs font-bold text-slate-800">
+                        {item.total}
+                      </span>
 
-                  <Legend
-                    verticalAlign="bottom"
-                    iconType="circle"
-                    wrapperStyle={{
-                      fontSize: 11,
-                    }}
-                  />
+                    </div>
 
-                </PieChart>
-              </ResponsiveContainer>
+                  )
+                )}
+
+              </div>
 
             </div>
 
