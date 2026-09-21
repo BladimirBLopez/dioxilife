@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { obtenerAdminActual } from "@/lib/admin-auth";
 
 function slugify(texto: string) {
   return texto
@@ -14,6 +15,15 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const admin = await obtenerAdminActual();
+
+  if (!admin) {
+    return NextResponse.json(
+      { error: "No autorizado" },
+      { status: 401 }
+    );
+  }
+
   const { id } = await params;
   const { nombre } = await req.json();
 
@@ -29,6 +39,15 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const admin = await obtenerAdminActual();
+
+  if (!admin) {
+    return NextResponse.json(
+      { error: "No autorizado" },
+      { status: 401 }
+    );
+  }
+
   const { id } = await params;
   await prisma.categoria.delete({ where: { id } });
   return NextResponse.json({ ok: true });

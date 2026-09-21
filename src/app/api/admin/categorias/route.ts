@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { obtenerAdminActual } from "@/lib/admin-auth";
 
 function slugify(texto: string) {
   return texto
@@ -11,6 +12,15 @@ function slugify(texto: string) {
 }
 
 export async function GET() {
+  const admin = await obtenerAdminActual();
+
+  if (!admin) {
+    return NextResponse.json(
+      { error: "No autorizado" },
+      { status: 401 }
+    );
+  }
+
   const categorias = await prisma.categoria.findMany({
     orderBy: { nombre: "asc" },
     include: { _count: { select: { productos: true } } },
@@ -19,6 +29,15 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const admin = await obtenerAdminActual();
+
+  if (!admin) {
+    return NextResponse.json(
+      { error: "No autorizado" },
+      { status: 401 }
+    );
+  }
+
   const { nombre } = await req.json();
 
   if (!nombre) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { obtenerAdminActual } from "@/lib/admin-auth";
 
 type NodoRed = {
   id: string;
@@ -50,6 +51,15 @@ async function obtenerRed(
 
 
 export async function GET(req: NextRequest) {
+  const admin = await obtenerAdminActual();
+
+  if (!admin) {
+    return NextResponse.json(
+      { error: "No autorizado" },
+      { status: 401 }
+    );
+  }
+
 
   try {
 

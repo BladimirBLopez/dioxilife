@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { obtenerAdminActual } from "@/lib/admin-auth";
 
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const admin = await obtenerAdminActual();
+
+  if (!admin) {
+    return NextResponse.json(
+      { error: "No autorizado" },
+      { status: 401 }
+    );
+  }
+
   const { id } = await params;
   const { titulo, contenido, imagenUrl, productoId, activo } =
     await req.json();
@@ -27,6 +37,15 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const admin = await obtenerAdminActual();
+
+  if (!admin) {
+    return NextResponse.json(
+      { error: "No autorizado" },
+      { status: 401 }
+    );
+  }
+
   const { id } = await params;
   await prisma.protocolo.delete({ where: { id } });
   return NextResponse.json({ ok: true });

@@ -1,7 +1,17 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { obtenerAdminActual } from "@/lib/admin-auth";
 
 export async function GET() {
+  const admin = await obtenerAdminActual();
+
+  if (!admin) {
+    return NextResponse.json(
+      { error: "No autorizado" },
+      { status: 401 }
+    );
+  }
+
   try {
 
     const total = await prisma.miembro.count();
