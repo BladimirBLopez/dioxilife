@@ -59,6 +59,8 @@ export default async function DetallePedidoPage({
 
         nombreCliente: true,
         telefonoCliente: true,
+        ciudadCliente: true,
+        direccionCliente: true,
         observaciones: true,
 
         total: true,
@@ -269,12 +271,24 @@ export default async function DetallePedidoPage({
 
               {pedido.telefonoCliente && (
                 <p className="text-sm text-gray-500">
-                  {pedido.telefonoCliente}
+                  WhatsApp: {pedido.telefonoCliente}
                 </p>
               )}
 
-              <p className="text-sm text-orange-600">
-                Pedido no asociado a un miembro.
+              {pedido.ciudadCliente && (
+                <p className="text-sm text-gray-500">
+                  Ciudad: {pedido.ciudadCliente}
+                </p>
+              )}
+
+              {pedido.direccionCliente && (
+                <p className="text-sm text-gray-500">
+                  Dirección: {pedido.direccionCliente}
+                </p>
+              )}
+
+              <p className="pt-1 text-xs text-gray-400">
+                Cliente externo sin cuenta DioxiLife.
               </p>
 
             </div>

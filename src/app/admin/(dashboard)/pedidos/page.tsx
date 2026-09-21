@@ -35,9 +35,30 @@ function estiloEstado(estado: string) {
   }
 }
 
+function nombrePersona(
+  persona:
+    | {
+        nombres: string;
+        apellidos: string | null;
+      }
+    | null
+) {
+  if (!persona) {
+    return "";
+  }
+
+  return [
+    persona.nombres,
+    persona.apellidos,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
 export default async function PedidosAdminPage() {
   const [
     total,
+    montoPedidos,
     nuevos,
     confirmados,
     pagosReportados,
@@ -47,6 +68,18 @@ export default async function PedidosAdminPage() {
     pedidos,
   ] = await Promise.all([
     prisma.pedido.count(),
+
+    prisma.pedido.aggregate({
+      where: {
+        estado: {
+          not: "CANCELADO",
+        },
+      },
+
+      _sum: {
+        total: true,
+      },
+    }),
 
     prisma.pedido.count({
       where: {
@@ -104,10 +137,18 @@ export default async function PedidosAdminPage() {
         totalPV: true,
 
         requiereCotizacion: true,
-
         createdAt: true,
 
         miembro: {
+          select: {
+            id: true,
+            nombres: true,
+            apellidos: true,
+            codigoReferido: true,
+          },
+        },
+
+        referidoPor: {
           select: {
             id: true,
             nombres: true,
@@ -136,18 +177,42 @@ export default async function PedidosAdminPage() {
           </h1>
 
           <p className="mt-1 text-sm text-gray-500">
-            Gestiona los pedidos registrados desde la tienda DioxiLife.
+            Control general de los pedidos registrados en DioxiLife.
           </p>
-        </div>
-
-        <div className="text-sm text-gray-500">
-          {total} pedido{total === 1 ? "" : "s"}
         </div>
 
       </div>
 
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+
+        <div className="rounded-xl bg-white p-4 shadow">
+          <p className="text-sm text-gray-500">
+            Total pedidos
+          </p>
+
+          <p className="mt-1 text-2xl font-bold text-gray-900">
+            {total}
+          </p>
+        </div>
+
+
+        <div className="rounded-xl bg-white p-4 shadow">
+          <p className="text-sm text-gray-500">
+            Monto pedidos
+          </p>
+
+          <p className="mt-1 text-xl font-bold text-gray-900">
+            Bs {dinero(
+              montoPedidos._sum.total
+            )}
+          </p>
+
+          <p className="mt-1 text-xs text-gray-400">
+            No incluye cancelados
+          </p>
+        </div>
+
 
         <div className="rounded-xl bg-white p-4 shadow">
           <p className="text-sm text-gray-500">
@@ -226,7 +291,7 @@ export default async function PedidosAdminPage() {
           </h2>
 
           <p className="mt-1 text-sm text-gray-500">
-            Los pedidos más recientes aparecen primero.
+            Comprador y vendedor se muestran por separado para evitar confusiones.
           </p>
 
         </div>
@@ -248,185 +313,425 @@ export default async function PedidosAdminPage() {
 
         ) : (
 
-          <div className="overflow-x-auto">
+          <>
+            <div className="divide-y md:hidden">
 
-            <table className="w-full min-w-[1100px] text-left text-sm">
+              {pedidos.map((pedido) => (
 
-              <thead className="bg-gray-50 text-gray-600">
+                <div
+                  key={pedido.id}
+                  className="p-4"
+                >
 
-                <tr>
+                  <div className="flex items-start justify-between gap-3">
 
-                  <th className="px-4 py-3">
-                    Pedido
-                  </th>
+                    <div>
 
-                  <th className="px-4 py-3">
-                    Cliente / miembro
-                  </th>
-
-                  <th className="px-4 py-3">
-                    Productos
-                  </th>
-
-                  <th className="px-4 py-3">
-                    Total
-                  </th>
-
-                  <th className="px-4 py-3">
-                    CV
-                  </th>
-
-                  <th className="px-4 py-3">
-                    PV
-                  </th>
-
-                  <th className="px-4 py-3">
-                    Estado
-                  </th>
-
-                  <th className="px-4 py-3">
-                    Fecha
-                  </th>
-
-                  <th className="px-4 py-3">
-                    Acción
-                  </th>
-
-                </tr>
-
-              </thead>
-
-
-              <tbody className="divide-y">
-
-                {pedidos.map((pedido) => (
-
-                  <tr
-                    key={pedido.id}
-                    className="hover:bg-gray-50"
-                  >
-
-                    <td className="px-4 py-4">
-
-                      <p className="font-mono font-semibold">
+                      <p className="font-mono font-bold text-gray-900">
                         {pedido.codigo}
                       </p>
 
-                      {pedido.requiereCotizacion && (
-                        <p className="mt-1 text-xs font-medium text-orange-600">
-                          Requiere cotización
-                        </p>
-                      )}
+                      <p className="mt-1 text-xs text-gray-400">
+                        {new Date(
+                          pedido.createdAt
+                        ).toLocaleDateString(
+                          "es-BO"
+                        )}
+                      </p>
 
-                    </td>
+                    </div>
 
 
-                    <td className="px-4 py-4">
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${estiloEstado(
+                        pedido.estado
+                      )}`}
+                    >
+                      {pedido.estado}
+                    </span>
+
+                  </div>
+
+
+                  {pedido.requiereCotizacion && (
+
+                    <p className="mt-2 text-xs font-semibold text-orange-600">
+                      Requiere cotización
+                    </p>
+
+                  )}
+
+
+                  <div className="mt-4 grid grid-cols-2 gap-4">
+
+                    <div>
+
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                        Comprador
+                      </p>
 
                       {pedido.miembro ? (
 
-                        <div>
-
-                          <p className="font-medium">
-                            {pedido.miembro.nombres}
-                            {pedido.miembro.apellidos
-                              ? ` ${pedido.miembro.apellidos}`
-                              : ""}
+                        <>
+                          <p className="mt-1 text-sm font-semibold text-gray-900">
+                            {nombrePersona(
+                              pedido.miembro
+                            )}
                           </p>
 
-                          <p className="mt-1 font-mono text-xs text-gray-400">
-                            {pedido.miembro.codigoReferido}
+                          <p className="mt-0.5 text-xs text-gray-500">
+                            Miembro DioxiLife
                           </p>
-
-                        </div>
+                        </>
 
                       ) : pedido.nombreCliente ? (
 
-                        <div>
-
-                          <p className="font-medium">
+                        <>
+                          <p className="mt-1 text-sm font-semibold text-gray-900">
                             {pedido.nombreCliente}
                           </p>
 
-                          <p className="mt-1 text-xs text-gray-400">
-                            {pedido.telefonoCliente || "Cliente"}
-                          </p>
-
-                        </div>
+                          {pedido.telefonoCliente && (
+                            <p className="mt-0.5 text-xs text-gray-500">
+                              {pedido.telefonoCliente}
+                            </p>
+                          )}
+                        </>
 
                       ) : (
 
-                        <span className="text-gray-400">
-                          Cliente anónimo
-                        </span>
+                        <p className="mt-1 text-sm text-gray-500">
+                          Cliente externo
+                        </p>
 
                       )}
 
-                    </td>
+                    </div>
 
 
-                    <td className="px-4 py-4">
-                      {pedido._count.detalles}
-                    </td>
+                    <div>
+
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                        Vendedor
+                      </p>
+
+                      {pedido.referidoPor ? (
+
+                        <>
+                          <p className="mt-1 text-sm font-semibold text-gray-900">
+                            {nombrePersona(
+                              pedido.referidoPor
+                            )}
+                          </p>
+
+                          <p className="mt-0.5 font-mono text-xs text-blue-600">
+                            {pedido.referidoPor.codigoReferido}
+                          </p>
+                        </>
+
+                      ) : (
+
+                        <p className="mt-1 text-sm text-gray-500">
+                          Venta directa DioxiLife
+                        </p>
+
+                      )}
+
+                    </div>
+
+                  </div>
 
 
-                    <td className="px-4 py-4 font-semibold">
-                      Bs {dinero(pedido.total)}
-                    </td>
+                  <div className="mt-4 grid grid-cols-4 gap-2 rounded-xl bg-gray-50 p-3">
+
+                    <div>
+                      <p className="text-[11px] text-gray-400">
+                        Productos
+                      </p>
+
+                      <p className="mt-1 text-sm font-bold">
+                        {pedido._count.detalles}
+                      </p>
+                    </div>
 
 
-                    <td className="px-4 py-4">
-                      Bs {dinero(pedido.totalCV)}
-                    </td>
+                    <div>
+                      <p className="text-[11px] text-gray-400">
+                        Total
+                      </p>
+
+                      <p className="mt-1 text-sm font-bold">
+                        Bs {dinero(
+                          pedido.total
+                        )}
+                      </p>
+                    </div>
 
 
-                    <td className="px-4 py-4">
-                      {dinero(pedido.totalPV)} PV
-                    </td>
+                    <div>
+                      <p className="text-[11px] text-gray-400">
+                        CV
+                      </p>
+
+                      <p className="mt-1 text-sm font-bold">
+                        {dinero(
+                          pedido.totalCV
+                        )}
+                      </p>
+                    </div>
 
 
-                    <td className="px-4 py-4">
+                    <div>
+                      <p className="text-[11px] text-gray-400">
+                        PV
+                      </p>
 
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${estiloEstado(
-                          pedido.estado
-                        )}`}
-                      >
-                        {pedido.estado}
-                      </span>
+                      <p className="mt-1 text-sm font-bold">
+                        {dinero(
+                          pedido.totalPV
+                        )}
+                      </p>
+                    </div>
 
-                    </td>
-
-
-                    <td className="px-4 py-4 text-gray-500">
-
-                      {new Date(
-                        pedido.createdAt
-                      ).toLocaleDateString("es-BO")}
-
-                    </td>
+                  </div>
 
 
-                    <td className="px-4 py-4">
+                  <Link
+                    href={`/admin/pedidos/${pedido.id}`}
+                    className="mt-4 flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+                  >
+                    Ver detalle
+                  </Link>
 
-                      <Link
-                        href={`/admin/pedidos/${pedido.id}`}
-                        className="font-medium text-blue-600 hover:underline"
-                      >
-                        Ver pedido
-                      </Link>
+                </div>
 
-                    </td>
+              ))}
+
+            </div>
+
+
+            <div className="hidden overflow-x-auto md:block">
+
+              <table className="w-full min-w-[1200px] text-left text-sm">
+
+                <thead className="bg-gray-50 text-gray-600">
+
+                  <tr>
+
+                    <th className="px-4 py-3">
+                      Pedido
+                    </th>
+
+                    <th className="px-4 py-3">
+                      Comprador
+                    </th>
+
+                    <th className="px-4 py-3">
+                      Vendedor
+                    </th>
+
+                    <th className="px-4 py-3">
+                      Productos
+                    </th>
+
+                    <th className="px-4 py-3">
+                      Total
+                    </th>
+
+                    <th className="px-4 py-3">
+                      CV
+                    </th>
+
+                    <th className="px-4 py-3">
+                      PV
+                    </th>
+
+                    <th className="px-4 py-3">
+                      Estado
+                    </th>
+
+                    <th className="px-4 py-3">
+                      Fecha
+                    </th>
+
+                    <th className="px-4 py-3">
+                      Acción
+                    </th>
 
                   </tr>
 
-                ))}
+                </thead>
 
-              </tbody>
 
-            </table>
+                <tbody className="divide-y">
 
-          </div>
+                  {pedidos.map((pedido) => (
+
+                    <tr
+                      key={pedido.id}
+                      className="hover:bg-gray-50"
+                    >
+
+                      <td className="px-4 py-4">
+
+                        <p className="font-mono font-semibold">
+                          {pedido.codigo}
+                        </p>
+
+                        {pedido.requiereCotizacion && (
+                          <p className="mt-1 text-xs font-medium text-orange-600">
+                            Requiere cotización
+                          </p>
+                        )}
+
+                      </td>
+
+
+                      <td className="px-4 py-4">
+
+                        {pedido.miembro ? (
+
+                          <div>
+
+                            <p className="font-medium">
+                              {nombrePersona(
+                                pedido.miembro
+                              )}
+                            </p>
+
+                            <p className="mt-1 text-xs text-gray-400">
+                              Miembro DioxiLife
+                            </p>
+
+                          </div>
+
+                        ) : pedido.nombreCliente ? (
+
+                          <div>
+
+                            <p className="font-medium">
+                              {pedido.nombreCliente}
+                            </p>
+
+                            <p className="mt-1 text-xs text-gray-400">
+                              {pedido.telefonoCliente ||
+                                "Cliente externo"}
+                            </p>
+
+                          </div>
+
+                        ) : (
+
+                          <span className="text-gray-400">
+                            Cliente externo
+                          </span>
+
+                        )}
+
+                      </td>
+
+
+                      <td className="px-4 py-4">
+
+                        {pedido.referidoPor ? (
+
+                          <div>
+
+                            <p className="font-medium">
+                              {nombrePersona(
+                                pedido.referidoPor
+                              )}
+                            </p>
+
+                            <p className="mt-1 font-mono text-xs text-blue-600">
+                              {pedido.referidoPor.codigoReferido}
+                            </p>
+
+                          </div>
+
+                        ) : (
+
+                          <span className="text-gray-400">
+                            Venta directa DioxiLife
+                          </span>
+
+                        )}
+
+                      </td>
+
+
+                      <td className="px-4 py-4">
+                        {pedido._count.detalles}
+                      </td>
+
+
+                      <td className="px-4 py-4 font-semibold">
+                        Bs {dinero(
+                          pedido.total
+                        )}
+                      </td>
+
+
+                      <td className="px-4 py-4">
+                        {dinero(
+                          pedido.totalCV
+                        )}
+                      </td>
+
+
+                      <td className="px-4 py-4">
+                        {dinero(
+                          pedido.totalPV
+                        )}
+                      </td>
+
+
+                      <td className="px-4 py-4">
+
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${estiloEstado(
+                            pedido.estado
+                          )}`}
+                        >
+                          {pedido.estado}
+                        </span>
+
+                      </td>
+
+
+                      <td className="px-4 py-4 text-gray-500">
+
+                        {new Date(
+                          pedido.createdAt
+                        ).toLocaleDateString(
+                          "es-BO"
+                        )}
+
+                      </td>
+
+
+                      <td className="px-4 py-4">
+
+                        <Link
+                          href={`/admin/pedidos/${pedido.id}`}
+                          className="font-medium text-blue-600 hover:underline"
+                        >
+                          Ver detalle
+                        </Link>
+
+                      </td>
+
+                    </tr>
+
+                  ))}
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </>
 
         )}
 
