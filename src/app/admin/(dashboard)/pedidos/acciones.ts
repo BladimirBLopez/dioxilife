@@ -89,10 +89,13 @@ async function generarComisionesDelPedido(
     );
   }
 
+  /*
+   * Un plan desactivado pausa la generación
+   * de nuevas comisiones, pero nunca debe
+   * impedir registrar un pago real.
+   */
   if (!configuracion.activo) {
-    throw new Error(
-      "El plan de comisiones se encuentra desactivado."
-    );
+    return;
   }
 
   const vendedor =
@@ -131,7 +134,11 @@ async function generarComisionesDelPedido(
     const monto =
       pedido.totalCV
         .mul(porcentaje)
-        .div(100);
+        .div(100)
+        .toDecimalPlaces(
+          2,
+          Prisma.Decimal.ROUND_HALF_UP
+        );
 
     if (monto.lte(0)) {
       return;

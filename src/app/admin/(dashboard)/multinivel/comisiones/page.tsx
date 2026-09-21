@@ -10,7 +10,6 @@ import {
   Banknote,
   CircleX,
   Clock3,
-  Plus,
   WalletCards,
 } from "lucide-react";
 
@@ -402,15 +401,6 @@ export default async function ComisionesMultinivelPage() {
           </p>
 
         </div>
-
-
-        <Link
-          href="/admin/multinivel/comisiones/generar"
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#10182D] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 sm:w-auto"
-        >
-          <Plus className="h-4 w-4" />
-          Generar manualmente
-        </Link>
 
       </div>
 
