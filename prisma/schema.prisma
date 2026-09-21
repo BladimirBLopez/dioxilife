@@ -177,6 +177,9 @@ model ComisionMultinivel {
   origenMiembroId String
   origenMiembro   Miembro @relation("ComisionesOrigen", fields: [origenMiembroId], references: [id], onDelete: Cascade)
 
+  pedidoId String?
+  pedido   Pedido? @relation("ComisionesPedido", fields: [pedidoId], references: [id], onDelete: SetNull)
+
   nivel      Int
   montoBase  Decimal?
   porcentaje Decimal?
@@ -187,6 +190,7 @@ model ComisionMultinivel {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([pedidoId, beneficiarioId, nivel])
   @@index([beneficiarioId])
   @@index([origenMiembroId])
   @@index([estado])
@@ -224,7 +228,8 @@ model Pedido {
 
   requiereCotizacion Boolean @default(false)
 
-  detalles DetallePedido[]
+  detalles   DetallePedido[]
+  comisiones ComisionMultinivel[] @relation("ComisionesPedido")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

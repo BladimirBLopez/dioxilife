@@ -3,10 +3,26 @@
 import { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { obtenerAdminActual } from "@/lib/admin-auth";
 
 export async function generarComisiones(
   formData: FormData
 ) {
+  const admin =
+    await obtenerAdminActual();
+
+  if (!admin) {
+    throw new Error(
+      "No autorizado."
+    );
+  }
+
+  if (admin.rol !== "SUPER_ADMIN") {
+    throw new Error(
+      "Solo el Super Administrador puede generar comisiones."
+    );
+  }
+
   const origenMiembroId = String(
     formData.get("origenMiembroId") ?? ""
   );
