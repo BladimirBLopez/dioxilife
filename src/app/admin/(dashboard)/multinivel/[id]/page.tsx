@@ -29,7 +29,12 @@ import {
   prisma,
 } from "@/lib/prisma";
 
+import {
+  obtenerAdminActual,
+} from "@/lib/admin-auth";
+
 import ArbolMultinivel from "@/components/admin/ArbolMultinivel";
+import MiembroAdministracionCard from "@/components/admin/MiembroAdministracionCard";
 
 
 type NodoRed = {
@@ -321,6 +326,10 @@ export default async function DetalleMiembroPage({
   const {
     id,
   } = await params;
+
+
+  const admin =
+    await obtenerAdminActual();
 
 
   const miembro =
@@ -867,6 +876,24 @@ export default async function DetalleMiembroPage({
         </article>
 
       </section>
+
+
+      {/* ADMINISTRACIÓN E INVITACIÓN */}
+      <MiembroAdministracionCard
+        miembroId={
+          miembro.id
+        }
+        estado={
+          miembro.estado
+        }
+        codigoReferido={
+          miembro.codigoReferido
+        }
+        puedeGestionar={
+          admin?.rol ===
+          "SUPER_ADMIN"
+        }
+      />
 
 
       {/* ACTIVIDAD COMERCIAL */}
