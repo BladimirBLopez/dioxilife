@@ -1,10 +1,9 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { verificarSesion } from "@/lib/auth";
+import { obtenerMiembroActual } from "@/lib/miembro-auth";
 
 function dinero(valor: unknown) {
   return new Intl.NumberFormat(
@@ -61,50 +60,10 @@ function textoEstado(
 }
 
 export default async function MisComisionesPage() {
-  const cookieStore =
-    await cookies();
-
-  const token =
-    cookieStore.get(
-      "miembro_token"
-    )?.value;
-
-  if (!token) {
-    redirect(
-      "/login-miembro"
-    );
-  }
-
-  const sesion =
-    await verificarSesion(token);
-
-  if (
-    !sesion ||
-    typeof sesion.usuario !== "string"
-  ) {
-    redirect(
-      "/login-miembro"
-    );
-  }
-
   const miembro =
-    await prisma.miembro.findUnique({
-      where: {
-        id: sesion.usuario,
-      },
+    await obtenerMiembroActual();
 
-      select: {
-        id: true,
-        nombres: true,
-        apellidos: true,
-        estado: true,
-      },
-    });
-
-  if (
-    !miembro ||
-    miembro.estado !== "ACTIVO"
-  ) {
+  if (!miembro) {
     redirect(
       "/login-miembro"
     );
