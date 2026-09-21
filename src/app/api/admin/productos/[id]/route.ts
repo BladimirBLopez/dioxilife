@@ -6,6 +6,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+
   const {
     nombre,
     descripcion,
@@ -13,28 +14,94 @@ export async function PUT(
     mostrarPrecio,
     enPromocion,
     precioPromocion,
+    valorComisionable,
+    puntosVolumen,
+    generaComision,
     imagenUrl,
     categoriaId,
     activo,
   } = await req.json();
 
-  const producto = await prisma.producto.update({
-    where: { id },
-    data: {
-      nombre,
-      descripcion: descripcion || null,
-      precio,
-      mostrarPrecio,
-      enPromocion: enPromocion ?? false,
-      precioPromocion:
-        precioPromocion !== undefined && precioPromocion !== null && precioPromocion !== ""
-          ? precioPromocion
-          : null,
-      imagenUrl: imagenUrl || null,
-      categoriaId,
-      activo,
-    },
-  });
+  const participaMultinivel =
+    generaComision === true;
+
+  const cv = participaMultinivel
+    ? Number(valorComisionable)
+    : 0;
+
+  const pv = participaMultinivel
+    ? Number(puntosVolumen)
+    : 0;
+
+  if (
+    participaMultinivel &&
+    (!Number.isFinite(cv) || cv <= 0)
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "El valor comisionable (CV) debe ser mayor a 0",
+      },
+      { status: 400 }
+    );
+  }
+
+  if (
+    participaMultinivel &&
+    (!Number.isFinite(pv) || pv <= 0)
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Los puntos de volumen (PV) deben ser mayores a 0",
+      },
+      { status: 400 }
+    );
+  }
+
+  const producto =
+    await prisma.producto.update({
+      where: {
+        id,
+      },
+
+      data: {
+        nombre,
+
+        descripcion:
+          descripcion || null,
+
+        precio,
+
+        mostrarPrecio,
+
+        enPromocion:
+          enPromocion ?? false,
+
+        precioPromocion:
+          precioPromocion !== undefined &&
+          precioPromocion !== null &&
+          precioPromocion !== ""
+            ? precioPromocion
+            : null,
+
+        generaComision:
+          participaMultinivel,
+
+        valorComisionable:
+          cv,
+
+        puntosVolumen:
+          pv,
+
+        imagenUrl:
+          imagenUrl || null,
+
+        categoriaId,
+
+        activo,
+      },
+    });
 
   return NextResponse.json(producto);
 }
@@ -45,9 +112,12 @@ export async function DELETE(
 ) {
   const { id } = await params;
 
-  const protocolosAsociados = await prisma.protocolo.count({
-    where: { productoId: id },
-  });
+  const protocolosAsociados =
+    await prisma.protocolo.count({
+      where: {
+        productoId: id,
+      },
+    });
 
   if (protocolosAsociados > 0) {
     return NextResponse.json(
@@ -58,6 +128,13 @@ export async function DELETE(
     );
   }
 
-  await prisma.producto.delete({ where: { id } });
-  return NextResponse.json({ ok: true });
+  await prisma.producto.delete({
+    where: {
+      id,
+    },
+  });
+
+  return NextResponse.json({
+    ok: true,
+  });
 }

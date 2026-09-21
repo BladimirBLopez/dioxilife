@@ -81,6 +81,54 @@ const NAV_ITEMS = [
       </>
     ),
   },
+  {
+    href: "/admin/multinivel/miembros",
+    label: "Miembros Multinivel",
+    icon: (
+      <>
+        <circle cx="9" cy="8" r="3" />
+        <circle cx="17" cy="9" r="2.5" />
+        <path d="M3 21c0-3.5 3-6 6-6s6 2.5 6 6" />
+        <path d="M15 16c3 0 6 2 6 5" />
+      </>
+    ),
+  },
+
+  {
+    href: "/admin/pedidos",
+    label: "Pedidos",
+    icon: (
+      <>
+        <path d="M5 7h14l-1 13H6L5 7Z" />
+        <path d="M9 7V5a3 3 0 0 1 6 0v2" />
+        <path d="M9 11h6" />
+      </>
+    ),
+  },
+
+  {
+    href: "/admin/multinivel",
+    label: "Multinivel",
+    icon: (
+      <>
+        <circle cx="9" cy="8" r="3" />
+        <circle cx="17" cy="10" r="2.5" />
+        <path d="M3 20c0-3 2.5-5 6-5s6 2 6 5" />
+        <path d="M15 15c3 0 5 1.8 5 5" />
+      </>
+    ),
+  },
+  {
+    href: "/admin/multinivel/comisiones",
+    label: "Comisiones",
+    icon: (
+      <>
+        <circle cx="12" cy="12" r="8" />
+        <path d="M15 9.5c-.6-1-1.7-1.5-3-1.5-1.7 0-3 1-3 2.2 0 1.3 1.1 1.8 3 2.2 1.9.4 3 1 3 2.3 0 1.3-1.3 2.3-3 2.3-1.4 0-2.6-.6-3.2-1.6" />
+        <path d="M12 6.5v11" />
+      </>
+    ),
+  },
 ];
 
 function NavIcon({ children }: { children: React.ReactNode }) {
