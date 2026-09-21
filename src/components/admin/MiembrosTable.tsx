@@ -640,7 +640,7 @@ export default function MiembrosTable({
         <>
 
           {/* MÓVIL */}
-          <div className="divide-y divide-slate-100 md:hidden">
+          <div className="space-y-4 bg-slate-50/80 p-3 md:hidden">
 
             {filas.map(
               (row) => {
@@ -664,7 +664,7 @@ export default function MiembrosTable({
                     key={
                       miembro.id
                     }
-                    className="p-4"
+                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm ring-1 ring-slate-100/70 transition active:scale-[0.995]"
                   >
 
                     <div className="flex items-start gap-3">
@@ -715,7 +715,7 @@ export default function MiembrosTable({
 
                     <div className="mt-4 grid grid-cols-2 gap-3">
 
-                      <div className="rounded-xl bg-slate-50 p-3">
+                      <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
 
                         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                           Código
@@ -730,7 +730,7 @@ export default function MiembrosTable({
                       </div>
 
 
-                      <div className="rounded-xl bg-slate-50 p-3">
+                      <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
 
                         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                           Directos
@@ -788,7 +788,7 @@ export default function MiembrosTable({
                     </div>
 
 
-                    <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
+                    <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4">
 
                       <p className="text-xs text-slate-400">
                         Registro:{" "}
