@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { obtenerAdminActual } from "@/lib/admin-auth";
+import AdminAnalytics from "@/components/admin/AdminAnalytics";
 
 function dinero(
   valor: unknown
@@ -220,6 +221,222 @@ export default async function AdminHome() {
   const nombreAdmin =
     admin?.usuario ||
     "Administrador";
+
+
+  const inicio14Dias =
+    new Date();
+
+  inicio14Dias.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  inicio14Dias.setDate(
+    inicio14Dias.getDate() - 13
+  );
+
+
+  const [
+    pedidosUltimos14Dias,
+    estadosAgrupados,
+  ] = await Promise.all([
+
+    prisma.pedido.findMany({
+      where: {
+        createdAt: {
+          gte: inicio14Dias,
+        },
+
+        estado: {
+          in: [
+            "PAGADO",
+            "COMPLETADO",
+          ],
+        },
+      },
+
+      select: {
+        total: true,
+        createdAt: true,
+      },
+    }),
+
+
+    prisma.pedido.groupBy({
+      by: [
+        "estado",
+      ],
+
+      _count: {
+        _all: true,
+      },
+    }),
+
+  ]);
+
+
+  const mapaVentas =
+    new Map<
+      string,
+      {
+        fecha: string;
+        etiqueta: string;
+        total: number;
+        pedidos: number;
+      }
+    >();
+
+
+  for (
+    let indice = 0;
+    indice < 14;
+    indice++
+  ) {
+    const fecha =
+      new Date(
+        inicio14Dias
+      );
+
+    fecha.setDate(
+      inicio14Dias.getDate() +
+        indice
+    );
+
+    const clave =
+      fecha
+        .toISOString()
+        .slice(0, 10);
+
+    mapaVentas.set(
+      clave,
+      {
+        fecha: clave,
+
+        etiqueta:
+          fecha.toLocaleDateString(
+            "es-BO",
+            {
+              day: "2-digit",
+              month: "short",
+            }
+          ),
+
+        total: 0,
+        pedidos: 0,
+      }
+    );
+  }
+
+
+  for (
+    const pedido of pedidosUltimos14Dias
+  ) {
+    const clave =
+      pedido.createdAt
+        .toISOString()
+        .slice(0, 10);
+
+    const dia =
+      mapaVentas.get(clave);
+
+    if (!dia) {
+      continue;
+    }
+
+    dia.total +=
+      Number(
+        String(
+          pedido.total
+        )
+      );
+
+    dia.pedidos += 1;
+  }
+
+
+  const ventasGrafico = [
+    ...mapaVentas.values(),
+  ];
+
+
+  const ordenEstados = [
+    "NUEVO",
+    "CONFIRMADO",
+    "PAGO_REPORTADO",
+    "PAGADO",
+    "COMPLETADO",
+    "CANCELADO",
+  ] as const;
+
+
+  const etiquetasEstado = {
+    NUEVO: "Nuevos",
+    CONFIRMADO: "Confirmados",
+    PAGO_REPORTADO:
+      "Pago reportado",
+    PAGADO: "Pagados",
+    COMPLETADO: "Completados",
+    CANCELADO: "Cancelados",
+  };
+
+
+  const estadosGrafico =
+    ordenEstados.map(
+      (estado) => {
+
+        const encontrado =
+          estadosAgrupados.find(
+            (item) =>
+              item.estado ===
+              estado
+          );
+
+        return {
+          estado,
+
+          etiqueta:
+            etiquetasEstado[
+              estado
+            ],
+
+          total:
+            encontrado?._count
+              ._all || 0,
+        };
+      }
+    );
+
+
+  const volumenGrafico = [
+    {
+      nombre: "CV",
+
+      valor:
+        Number(
+          String(
+            volumenPagado
+              ._sum
+              .totalCV ?? 0
+          )
+        ),
+    },
+
+    {
+      nombre: "PV",
+
+      valor:
+        Number(
+          String(
+            volumenPagado
+              ._sum
+              .totalPV ?? 0
+          )
+        ),
+    },
+  ];
+
 
   return (
     <div className="mx-auto max-w-[1500px] space-y-6">
@@ -465,6 +682,13 @@ export default async function AdminHome() {
         </Link>
 
       </section>
+
+
+      <AdminAnalytics
+        ventas={ventasGrafico}
+        estados={estadosGrafico}
+        volumen={volumenGrafico}
+      />
 
 
       <section className="grid gap-6 xl:grid-cols-3">
