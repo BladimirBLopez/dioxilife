@@ -92,6 +92,31 @@ export default async function DetallePedidoPage({
           },
         },
 
+        comisiones: {
+          orderBy: {
+            nivel: "asc",
+          },
+
+          select: {
+            id: true,
+            nivel: true,
+            montoBase: true,
+            porcentaje: true,
+            monto: true,
+            estado: true,
+            concepto: true,
+
+            beneficiario: {
+              select: {
+                id: true,
+                nombres: true,
+                apellidos: true,
+                codigoReferido: true,
+              },
+            },
+          },
+        },
+
         detalles: {
           orderBy: {
             createdAt: "asc",
@@ -564,12 +589,177 @@ export default async function DetallePedidoPage({
           Gestión del pedido
         </h2>
 
-        {pedido.estado === "PAGADO" &&
-          !pedido.miembro && (
-            <div className="mb-4 rounded-lg bg-orange-50 p-4 text-sm text-orange-700">
-              Este pedido no está asociado a un miembro. Actualmente no generará PV ni comisiones multinivel.
+        {pedido.referidoPor ? (
+
+          <div className="mb-5 space-y-4">
+
+            <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+
+              <p className="font-semibold text-blue-900">
+                Venta atribuida a un distribuidor
+              </p>
+
+              <div className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
+
+                <div>
+                  <p className="text-blue-600">
+                    Vendedor
+                  </p>
+
+                  <p className="mt-1 font-semibold text-blue-950">
+                    {pedido.referidoPor.nombres}
+                    {pedido.referidoPor.apellidos
+                      ? ` ${pedido.referidoPor.apellidos}`
+                      : ""}
+                  </p>
+
+                  <p className="mt-1 font-mono text-xs text-blue-600">
+                    {pedido.referidoPor.codigoReferido}
+                  </p>
+                </div>
+
+
+                <div>
+                  <p className="text-blue-600">
+                    CV del pedido
+                  </p>
+
+                  <p className="mt-1 font-semibold text-blue-950">
+                    Bs {dinero(pedido.totalCV)}
+                  </p>
+                </div>
+
+
+                <div>
+                  <p className="text-blue-600">
+                    PV del pedido
+                  </p>
+
+                  <p className="mt-1 font-semibold text-blue-950">
+                    {dinero(pedido.totalPV)}
+                  </p>
+                </div>
+
+              </div>
+
             </div>
-          )}
+
+
+            {pedido.estado === "PAGADO" &&
+              pedido.comisiones.length > 0 && (
+
+              <div className="rounded-xl border border-green-100 bg-green-50 p-4">
+
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+
+                  <div>
+
+                    <p className="font-semibold text-green-900">
+                      Comisiones generadas
+                    </p>
+
+                    <p className="mt-1 text-sm text-green-700">
+                      El pago fue aprobado y el plan de compensación fue procesado.
+                    </p>
+
+                  </div>
+
+
+                  <span className="w-fit rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                    {pedido.comisiones.length} comisión
+                    {pedido.comisiones.length === 1
+                      ? ""
+                      : "es"}
+                  </span>
+
+                </div>
+
+
+                <div className="mt-4 space-y-2">
+
+                  {pedido.comisiones.map(
+                    (comision) => (
+
+                      <div
+                        key={comision.id}
+                        className="flex flex-col gap-2 rounded-lg bg-white p-3 sm:flex-row sm:items-center sm:justify-between"
+                      >
+
+                        <div>
+
+                          <p className="font-semibold text-gray-900">
+                            {comision.nivel === 0
+                              ? "Comisión directa"
+                              : `Nivel ${comision.nivel}`}
+                          </p>
+
+                          <p className="mt-1 text-xs text-gray-500">
+                            Beneficiario:{" "}
+                            {comision.beneficiario.nombres}
+                            {comision.beneficiario.apellidos
+                              ? ` ${comision.beneficiario.apellidos}`
+                              : ""}
+                          </p>
+
+                        </div>
+
+
+                        <div className="text-left sm:text-right">
+
+                          <p className="font-bold text-green-700">
+                            Bs {dinero(comision.monto)}
+                          </p>
+
+                          <p className="mt-1 text-xs text-gray-500">
+                            {dinero(comision.porcentaje)}% sobre Bs{" "}
+                            {dinero(comision.montoBase)}
+                          </p>
+
+                          <p className="mt-1 text-xs font-semibold text-gray-600">
+                            {comision.estado}
+                          </p>
+
+                        </div>
+
+                      </div>
+
+                    )
+                  )}
+
+                </div>
+
+              </div>
+
+            )}
+
+
+            {pedido.estado === "PAGADO" &&
+              Number(String(pedido.totalCV)) > 0 &&
+              pedido.comisiones.length === 0 && (
+
+              <div className="rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-800">
+                Este pedido tiene CV comisionable, pero no registra comisiones generadas. Conviene revisar el plan de compensación y el estado del vendedor.
+              </div>
+
+            )}
+
+          </div>
+
+        ) : (
+
+          <div className="mb-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
+
+            <p className="font-semibold text-gray-800">
+              Venta directa DioxiLife
+            </p>
+
+            <p className="mt-1 text-sm text-gray-600">
+              Este pedido no fue atribuido a un distribuidor. El CV y PV permanecen registrados como datos históricos del pedido, pero no generan comisiones de red.
+            </p>
+
+          </div>
+
+        )}
 
 
         <AccionesPedido
