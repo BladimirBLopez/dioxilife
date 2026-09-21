@@ -1,32 +1,70 @@
-export const dynamic = "force-dynamic";
+export const dynamic =
+  "force-dynamic";
 
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
-import AccionesComision from "./AccionesComision";
 
-function dinero(valor: unknown) {
-  const numero = Number(String(valor ?? 0));
+import {
+  ArrowLeft,
+  BadgeCheck,
+  BadgeDollarSign,
+  Banknote,
+  CircleX,
+  Clock3,
+  Plus,
+  WalletCards,
+} from "lucide-react";
 
-  return new Intl.NumberFormat("es-BO", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(numero);
+import {
+  prisma,
+} from "@/lib/prisma";
+
+import ComisionesTable from "@/components/admin/ComisionesTable";
+
+import type {
+  ComisionAdminRow,
+} from "@/components/admin/ComisionesTable";
+
+
+function numero(
+  valor: unknown
+) {
+  return Number(
+    String(
+      valor ?? 0
+    )
+  );
 }
 
-function estiloEstado(estado: string) {
-  switch (estado) {
-    case "PENDIENTE":
-      return "bg-yellow-100 text-yellow-700";
-    case "APROBADA":
-      return "bg-blue-100 text-blue-700";
-    case "PAGADA":
-      return "bg-green-100 text-green-700";
-    case "ANULADA":
-      return "bg-red-100 text-red-700";
-    default:
-      return "bg-gray-100 text-gray-700";
+
+function dinero(
+  valor: unknown
+) {
+  return new Intl.NumberFormat(
+    "es-BO",
+    {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }
+  ).format(
+    numero(valor)
+  );
+}
+
+
+function nombrePersona(
+  persona: {
+    nombres: string;
+    apellidos: string | null;
   }
+) {
+  return [
+    persona.nombres,
+    persona.apellidos,
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
+
 
 export default async function ComisionesMultinivelPage() {
 
@@ -37,6 +75,7 @@ export default async function ComisionesMultinivelPage() {
     pagadas,
     anuladas,
     montoPendiente,
+    montoAprobado,
     montoPagado,
     comisiones,
   ] = await Promise.all([
@@ -45,32 +84,38 @@ export default async function ComisionesMultinivelPage() {
 
     prisma.comisionMultinivel.count({
       where: {
-        estado: "PENDIENTE",
+        estado:
+          "PENDIENTE",
       },
     }),
 
     prisma.comisionMultinivel.count({
       where: {
-        estado: "APROBADA",
+        estado:
+          "APROBADA",
       },
     }),
 
     prisma.comisionMultinivel.count({
       where: {
-        estado: "PAGADA",
+        estado:
+          "PAGADA",
       },
     }),
 
     prisma.comisionMultinivel.count({
       where: {
-        estado: "ANULADA",
+        estado:
+          "ANULADA",
       },
     }),
 
     prisma.comisionMultinivel.aggregate({
       where: {
-        estado: "PENDIENTE",
+        estado:
+          "PENDIENTE",
       },
+
       _sum: {
         monto: true,
       },
@@ -78,8 +123,21 @@ export default async function ComisionesMultinivelPage() {
 
     prisma.comisionMultinivel.aggregate({
       where: {
-        estado: "PAGADA",
+        estado:
+          "APROBADA",
       },
+
+      _sum: {
+        monto: true,
+      },
+    }),
+
+    prisma.comisionMultinivel.aggregate({
+      where: {
+        estado:
+          "PAGADA",
+      },
+
       _sum: {
         monto: true,
       },
@@ -87,19 +145,23 @@ export default async function ComisionesMultinivelPage() {
 
     prisma.comisionMultinivel.findMany({
       orderBy: {
-        createdAt: "desc",
+        createdAt:
+          "desc",
       },
-
-      take: 50,
 
       select: {
         id: true,
+
         nivel: true,
+
         montoBase: true,
         porcentaje: true,
         monto: true,
+
         concepto: true,
+
         estado: true,
+
         createdAt: true,
 
         beneficiario: {
@@ -119,323 +181,411 @@ export default async function ComisionesMultinivelPage() {
             codigoReferido: true,
           },
         },
+
+        pedido: {
+          select: {
+            id: true,
+            codigo: true,
+          },
+        },
       },
     }),
   ]);
 
 
+  const filas:
+    ComisionAdminRow[] =
+    comisiones.map(
+      (comision) => ({
+        id:
+          comision.id,
+
+        beneficiarioId:
+          comision
+            .beneficiario
+            .id,
+
+        beneficiarioNombre:
+          nombrePersona(
+            comision.beneficiario
+          ),
+
+        beneficiarioCodigo:
+          comision
+            .beneficiario
+            .codigoReferido,
+
+        origenId:
+          comision
+            .origenMiembro
+            .id,
+
+        origenNombre:
+          nombrePersona(
+            comision.origenMiembro
+          ),
+
+        origenCodigo:
+          comision
+            .origenMiembro
+            .codigoReferido,
+
+        pedidoId:
+          comision.pedido
+            ?.id ??
+          null,
+
+        pedidoCodigo:
+          comision.pedido
+            ?.codigo ??
+          null,
+
+        nivel:
+          comision.nivel,
+
+        montoBase:
+          comision.montoBase ===
+          null
+            ? null
+            : numero(
+                comision.montoBase
+              ),
+
+        porcentaje:
+          comision.porcentaje ===
+          null
+            ? null
+            : numero(
+                comision.porcentaje
+              ),
+
+        monto:
+          numero(
+            comision.monto
+          ),
+
+        concepto:
+          comision.concepto,
+
+        estado:
+          comision.estado,
+
+        createdAt:
+          comision.createdAt
+            .toISOString(),
+      })
+    );
+
+
+  const tarjetas = [
+    {
+      titulo:
+        "Total",
+
+      valor:
+        String(total),
+
+      descripcion:
+        "Comisiones registradas",
+
+      icono:
+        BadgeDollarSign,
+
+      clase:
+        "bg-slate-100 text-slate-700",
+    },
+
+    {
+      titulo:
+        "Pendientes",
+
+      valor:
+        String(
+          pendientes
+        ),
+
+      descripcion:
+        "Esperando revisión",
+
+      icono:
+        Clock3,
+
+      clase:
+        "bg-yellow-50 text-yellow-700",
+    },
+
+    {
+      titulo:
+        "Aprobadas",
+
+      valor:
+        String(
+          aprobadas
+        ),
+
+      descripcion:
+        "Pendientes de pago",
+
+      icono:
+        BadgeCheck,
+
+      clase:
+        "bg-blue-50 text-blue-700",
+    },
+
+    {
+      titulo:
+        "Pagadas",
+
+      valor:
+        String(
+          pagadas
+        ),
+
+      descripcion:
+        "Pago finalizado",
+
+      icono:
+        WalletCards,
+
+      clase:
+        "bg-emerald-50 text-emerald-700",
+    },
+
+    {
+      titulo:
+        "Anuladas",
+
+      valor:
+        String(
+          anuladas
+        ),
+
+      descripcion:
+        "Sin efecto financiero",
+
+      icono:
+        CircleX,
+
+      clase:
+        "bg-red-50 text-red-700",
+    },
+  ];
+
+
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-[1500px] space-y-6">
 
-      <div>
-        <Link
-          href="/admin/multinivel"
-          className="text-sm text-blue-600 hover:underline"
-        >
-          ← Volver a Multinivel
-        </Link>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
 
-        <h1 className="mt-2 text-2xl font-semibold">
-          Comisiones Multinivel
-        </h1>
+        <div>
 
-        <p className="mt-1 text-sm text-gray-500">
-          Control y seguimiento de las comisiones generadas por la red.
-        </p>
-      </div>
+          <Link
+            href="/admin/multinivel"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 transition hover:text-blue-700"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Resumen multinivel
+          </Link>
 
 
-      <div className="flex justify-end">
+          <p className="mt-5 text-sm font-semibold text-blue-600">
+            Finanzas de red
+          </p>
+
+          <h1 className="mt-1 text-2xl font-bold text-slate-900 md:text-3xl">
+            Comisiones
+          </h1>
+
+          <p className="mt-2 max-w-2xl text-sm text-slate-400">
+            Seguimiento, aprobación y pago de las comisiones generadas por ventas de la red DioxiLife.
+          </p>
+
+        </div>
+
+
         <Link
           href="/admin/multinivel/comisiones/generar"
-          className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#10182D] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 sm:w-auto"
         >
-          + Generar comisiones
+          <Plus className="h-4 w-4" />
+          Generar manualmente
         </Link>
-      </div>
-
-
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-
-        <div className="rounded-xl bg-white p-4 shadow">
-          <p className="text-sm text-gray-500">
-            Total
-          </p>
-
-          <p className="mt-1 text-2xl font-bold">
-            {total}
-          </p>
-        </div>
-
-
-        <div className="rounded-xl bg-white p-4 shadow">
-          <p className="text-sm text-gray-500">
-            Pendientes
-          </p>
-
-          <p className="mt-1 text-2xl font-bold text-yellow-600">
-            {pendientes}
-          </p>
-        </div>
-
-
-        <div className="rounded-xl bg-white p-4 shadow">
-          <p className="text-sm text-gray-500">
-            Aprobadas
-          </p>
-
-          <p className="mt-1 text-2xl font-bold text-blue-600">
-            {aprobadas}
-          </p>
-        </div>
-
-
-        <div className="rounded-xl bg-white p-4 shadow">
-          <p className="text-sm text-gray-500">
-            Pagadas
-          </p>
-
-          <p className="mt-1 text-2xl font-bold text-green-600">
-            {pagadas}
-          </p>
-        </div>
-
-
-        <div className="rounded-xl bg-white p-4 shadow">
-          <p className="text-sm text-gray-500">
-            Anuladas
-          </p>
-
-          <p className="mt-1 text-2xl font-bold text-red-600">
-            {anuladas}
-          </p>
-        </div>
 
       </div>
 
 
-      <div className="grid gap-4 md:grid-cols-2">
-
-        <div className="rounded-xl bg-white p-5 shadow">
-
-          <p className="text-sm text-gray-500">
-            Monto pendiente
-          </p>
-
-          <p className="mt-2 text-3xl font-bold">
-            Bs {dinero(montoPendiente._sum.monto)}
-          </p>
-
-        </div>
-
-
-        <div className="rounded-xl bg-white p-5 shadow">
-
-          <p className="text-sm text-gray-500">
-            Monto pagado
-          </p>
-
-          <p className="mt-2 text-3xl font-bold text-green-600">
-            Bs {dinero(montoPagado._sum.monto)}
-          </p>
-
-        </div>
-
-      </div>
-
-
-      <div className="overflow-hidden rounded-xl bg-white shadow">
-
-        <div className="border-b p-5">
-
-          <h2 className="text-lg font-semibold">
-            Historial de comisiones
-          </h2>
-
-          <p className="mt-1 text-sm text-gray-500">
-            Últimas 50 operaciones registradas.
-          </p>
-
-        </div>
-
-
-        {comisiones.length === 0 ? (
-
-          <div className="p-10 text-center">
-
-            <p className="font-medium">
-              Todavía no existen comisiones registradas.
-            </p>
-
-            <p className="mt-2 text-sm text-gray-500">
-              Cuando el sistema genere comisiones aparecerán aquí.
-            </p>
-
-          </div>
-
-        ) : (
-
-          <div className="overflow-x-auto">
-
-            <table className="w-full min-w-[1000px] text-left text-sm">
-
-              <thead className="bg-gray-50 text-gray-600">
-
-                <tr>
-                  <th className="px-4 py-3">
-                    Beneficiario
-                  </th>
-
-                  <th className="px-4 py-3">
-                    Origen
-                  </th>
-
-                  <th className="px-4 py-3">
-                    Nivel
-                  </th>
-
-                  <th className="px-4 py-3">
-                    Base
-                  </th>
-
-                  <th className="px-4 py-3">
-                    %
-                  </th>
-
-                  <th className="px-4 py-3">
-                    Comisión
-                  </th>
-
-                  <th className="px-4 py-3">
-                    Estado
-                  </th>
-
-                  <th className="px-4 py-3">
-                    Fecha
-                  </th>
-
-                  <th className="px-4 py-3">
-                    Acciones
-                  </th>
-
-                </tr>
-
-              </thead>
-
-
-              <tbody className="divide-y">
-
-                {comisiones.map((comision) => (
-
-                  <tr
-                    key={comision.id}
-                    className="hover:bg-gray-50"
-                  >
-
-                    <td className="px-4 py-4">
-
-                      <Link
-                        href={`/admin/multinivel/${comision.beneficiario.id}`}
-                        className="font-medium text-blue-600 hover:underline"
-                      >
-                        {comision.beneficiario.nombres}
-                        {comision.beneficiario.apellidos
-                          ? ` ${comision.beneficiario.apellidos}`
-                          : ""}
-                      </Link>
-
-                      <p className="mt-1 font-mono text-xs text-gray-400">
-                        {comision.beneficiario.codigoReferido}
-                      </p>
-
-                    </td>
-
-
-                    <td className="px-4 py-4">
-
-                      <Link
-                        href={`/admin/multinivel/${comision.origenMiembro.id}`}
-                        className="font-medium text-blue-600 hover:underline"
-                      >
-                        {comision.origenMiembro.nombres}
-                        {comision.origenMiembro.apellidos
-                          ? ` ${comision.origenMiembro.apellidos}`
-                          : ""}
-                      </Link>
-
-                      <p className="mt-1 font-mono text-xs text-gray-400">
-                        {comision.origenMiembro.codigoReferido}
-                      </p>
-
-                    </td>
-
-
-                    <td className="px-4 py-4">
-                      {comision.nivel === 0
-                          ? "Comisión directa"
-                          : `Nivel ${comision.nivel}`}
-                    </td>
-
-
-                    <td className="px-4 py-4">
-                      {comision.montoBase
-                        ? `Bs ${dinero(comision.montoBase)}`
-                        : "-"}
-                    </td>
-
-
-                    <td className="px-4 py-4">
-                      {comision.porcentaje
-                        ? `${dinero(comision.porcentaje)}%`
-                        : "-"}
-                    </td>
-
-
-                    <td className="px-4 py-4 font-semibold">
-                      Bs {dinero(comision.monto)}
-                    </td>
-
-
-                    <td className="px-4 py-4">
-
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${estiloEstado(
-                          comision.estado
-                        )}`}
-                      >
-                        {comision.estado}
-                      </span>
-
-                    </td>
-
-
-                    <td className="px-4 py-4 text-gray-500">
-                      {new Date(
-                        comision.createdAt
-                      ).toLocaleDateString("es-BO")}
-                    </td>
-
-
-                    <td className="px-4 py-4">
-                      <AccionesComision
-                        id={comision.id}
-                        estado={comision.estado}
-                      />
-                    </td>
-
-                  </tr>
-
-                ))}
-
-              </tbody>
-
-            </table>
-
-          </div>
-
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+
+        {tarjetas.map(
+          (tarjeta) => {
+            const Icono =
+              tarjeta.icono;
+
+            return (
+              <article
+                key={
+                  tarjeta.titulo
+                }
+                className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
+              >
+
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl ${tarjeta.clase}`}
+                >
+                  <Icono className="h-5 w-5" />
+                </div>
+
+                <p className="mt-4 text-2xl font-bold text-slate-900">
+                  {tarjeta.valor}
+                </p>
+
+                <p className="mt-1 text-sm font-semibold text-slate-700">
+                  {tarjeta.titulo}
+                </p>
+
+                <p className="mt-1 text-xs text-slate-400">
+                  {tarjeta.descripcion}
+                </p>
+
+              </article>
+            );
+          }
         )}
 
-      </div>
+      </section>
+
+
+      <section className="grid gap-3 md:grid-cols-3">
+
+        <article className="rounded-2xl border border-yellow-100 bg-white p-5 shadow-sm">
+
+          <div className="flex items-center gap-3">
+
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-50 text-yellow-700">
+              <Clock3 className="h-5 w-5" />
+            </div>
+
+            <div>
+
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Monto pendiente
+              </p>
+
+              <p className="mt-1 text-2xl font-bold text-slate-900">
+                Bs {dinero(
+                  montoPendiente
+                    ._sum
+                    .monto
+                )}
+              </p>
+
+            </div>
+
+          </div>
+
+        </article>
+
+
+        <article className="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
+
+          <div className="flex items-center gap-3">
+
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+              <Banknote className="h-5 w-5" />
+            </div>
+
+            <div>
+
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Aprobado por pagar
+              </p>
+
+              <p className="mt-1 text-2xl font-bold text-slate-900">
+                Bs {dinero(
+                  montoAprobado
+                    ._sum
+                    .monto
+                )}
+              </p>
+
+            </div>
+
+          </div>
+
+        </article>
+
+
+        <article className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm">
+
+          <div className="flex items-center gap-3">
+
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+              <WalletCards className="h-5 w-5" />
+            </div>
+
+            <div>
+
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Monto pagado
+              </p>
+
+              <p className="mt-1 text-2xl font-bold text-emerald-700">
+                Bs {dinero(
+                  montoPagado
+                    ._sum
+                    .monto
+                )}
+              </p>
+
+            </div>
+
+          </div>
+
+        </article>
+
+      </section>
+
+
+      {aprobadas > 0 && (
+
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+
+          <div className="flex items-start gap-3">
+
+            <Banknote className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
+
+            <div>
+
+              <p className="font-semibold text-blue-900">
+                Hay comisiones aprobadas pendientes de pago
+              </p>
+
+              <p className="mt-1 text-sm text-blue-700">
+                {aprobadas} comisión
+                {aprobadas === 1
+                  ? ""
+                  : "es"}{" "}
+                por un total de Bs{" "}
+                {dinero(
+                  montoAprobado
+                    ._sum
+                    .monto
+                )}.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
+
+
+      <ComisionesTable
+        data={filas}
+      />
 
     </div>
   );
