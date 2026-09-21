@@ -669,7 +669,7 @@ export default function PedidosTable({
         <>
 
           {/* MÓVIL */}
-          <div className="divide-y divide-slate-100 md:hidden">
+          <div className="space-y-4 bg-slate-50/80 p-3 md:hidden">
 
             {filas.map(
               (row) => {
@@ -679,7 +679,7 @@ export default function PedidosTable({
                 return (
                   <article
                     key={pedido.id}
-                    className="p-4"
+                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm ring-1 ring-slate-100/70 transition active:scale-[0.995]"
                   >
 
                     <div className="flex items-start justify-between gap-3">
@@ -762,7 +762,7 @@ export default function PedidosTable({
                     </div>
 
 
-                    <div className="mt-4 grid grid-cols-4 gap-2 rounded-xl bg-slate-50 p-3">
+                    <div className="mt-4 grid grid-cols-4 gap-2 rounded-xl border border-slate-100 bg-slate-50 p-3">
 
                       <div>
 

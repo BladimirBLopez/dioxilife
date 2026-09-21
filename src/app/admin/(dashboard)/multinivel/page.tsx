@@ -660,7 +660,7 @@ export default async function MultinivelAdminPage() {
 
         ) : (
 
-          <div className="divide-y divide-slate-100">
+          <div className="space-y-3 bg-slate-50/70 p-3 sm:p-4">
 
             {ultimos.map(
               (miembro) => (
@@ -668,7 +668,7 @@ export default async function MultinivelAdminPage() {
                 <Link
                   key={miembro.id}
                   href={`/admin/multinivel/${miembro.id}`}
-                  className="flex items-center gap-3 p-4 transition hover:bg-slate-50 md:px-5"
+                  className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm ring-1 ring-slate-100/70 transition hover:border-slate-300 hover:shadow-md md:px-5"
                 >
 
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-sm font-bold text-blue-700">

@@ -730,7 +730,7 @@ export default async function AdminHome() {
 
             ) : (
 
-              <div className="divide-y divide-slate-100">
+              <div className="space-y-3 bg-slate-50/70 p-3 sm:p-4">
 
                 {ultimosPedidos.map(
                   (pedido) => {
@@ -751,7 +751,7 @@ export default async function AdminHome() {
                       <Link
                         key={pedido.id}
                         href={`/admin/pedidos/${pedido.id}`}
-                        className="flex flex-col gap-4 p-4 transition hover:bg-slate-50 sm:flex-row sm:items-center sm:p-5"
+                        className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm ring-1 ring-slate-100/70 transition hover:border-slate-300 hover:shadow-md sm:flex-row sm:items-center sm:p-5"
                       >
 
                         <div className="flex min-w-0 flex-1 items-center gap-3">

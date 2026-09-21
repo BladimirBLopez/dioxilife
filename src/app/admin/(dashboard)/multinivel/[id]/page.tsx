@@ -1246,7 +1246,7 @@ export default async function DetalleMiembroPage({
 
           ) : (
 
-            <div className="divide-y divide-slate-100">
+            <div className="space-y-3 bg-slate-50/70 p-3 sm:p-4">
 
               {ultimosPedidos.map(
                 (pedido) => {
@@ -1263,7 +1263,7 @@ export default async function DetalleMiembroPage({
                       key={
                         pedido.id
                       }
-                      className="p-4"
+                      className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm ring-1 ring-slate-100/70"
                     >
 
                       <div className="flex items-start justify-between gap-3">
@@ -1301,7 +1301,7 @@ export default async function DetalleMiembroPage({
                       </div>
 
 
-                      <div className="mt-3 grid grid-cols-3 gap-2 rounded-xl bg-slate-50 p-3">
+                      <div className="mt-3 grid grid-cols-3 gap-2 rounded-xl border border-slate-100 bg-slate-50 p-3">
 
                         <div>
 
@@ -1400,7 +1400,7 @@ export default async function DetalleMiembroPage({
 
           ) : (
 
-            <div className="divide-y divide-slate-100">
+            <div className="space-y-3 bg-slate-50/70 p-3 sm:p-4">
 
               {ultimasComisiones.map(
                 (comision) => (
@@ -1409,7 +1409,7 @@ export default async function DetalleMiembroPage({
                     key={
                       comision.id
                     }
-                    className="flex items-center justify-between gap-3 p-4"
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm ring-1 ring-slate-100/70"
                   >
 
                     <div className="min-w-0">
