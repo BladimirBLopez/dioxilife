@@ -1,56 +1,9 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { verificarSesion } from "@/lib/auth";
-
-async function obtenerMiembroActual() {
-  const cookieStore = await cookies();
-
-  const token =
-    cookieStore.get("miembro_token")?.value;
-
-  if (!token) {
-    throw new Error("No autorizado.");
-  }
-
-  const sesion =
-    await verificarSesion(token);
-
-  if (
-    !sesion ||
-    typeof sesion.usuario !== "string"
-  ) {
-    throw new Error(
-      "Sesión no válida."
-    );
-  }
-
-  const miembro =
-    await prisma.miembro.findUnique({
-      where: {
-        id: sesion.usuario,
-      },
-
-      select: {
-        id: true,
-        estado: true,
-      },
-    });
-
-  if (
-    !miembro ||
-    miembro.estado !== "ACTIVO"
-  ) {
-    throw new Error(
-      "El miembro no está activo."
-    );
-  }
-
-  return miembro;
-}
+import { obtenerMiembroActual } from "@/lib/miembro-auth";
 
 function obtenerTexto(
   formData: FormData,
@@ -83,6 +36,12 @@ export async function actualizarDatosCliente(
 
   const miembro =
     await obtenerMiembroActual();
+
+  if (!miembro) {
+    throw new Error(
+      "No autorizado o cuenta inactiva."
+    );
+  }
 
   const nombreCliente =
     obtenerTexto(
@@ -183,6 +142,12 @@ export async function reportarPago(
 
   const miembro =
     await obtenerMiembroActual();
+
+  if (!miembro) {
+    throw new Error(
+      "No autorizado o cuenta inactiva."
+    );
+  }
 
   const resultado =
     await prisma.pedido.updateMany({

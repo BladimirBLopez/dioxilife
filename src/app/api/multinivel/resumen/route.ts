@@ -1,69 +1,20 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { verificarSesion } from "@/lib/auth";
+import { obtenerMiembroActual } from "@/lib/miembro-auth";
 
 export async function GET() {
   try {
-    const cookieStore =
-      await cookies();
-
-    const token =
-      cookieStore.get(
-        "miembro_token"
-      )?.value;
-
-    if (!token) {
-      return NextResponse.json(
-        {
-          error: "No autorizado",
-        },
-        {
-          status: 401,
-        }
-      );
-    }
-
-    const sesion =
-      await verificarSesion(token);
-
-    if (
-      !sesion ||
-      typeof sesion.usuario !== "string"
-    ) {
-      return NextResponse.json(
-        {
-          error: "Sesión inválida",
-        },
-        {
-          status: 401,
-        }
-      );
-    }
-
     const miembro =
-      await prisma.miembro.findUnique({
-        where: {
-          id: sesion.usuario,
-        },
+      await obtenerMiembroActual();
 
-        select: {
-          id: true,
-          estado: true,
-        },
-      });
-
-    if (
-      !miembro ||
-      miembro.estado !== "ACTIVO"
-    ) {
+    if (!miembro) {
       return NextResponse.json(
         {
           error:
-            "El miembro no se encuentra activo.",
+            "No autorizado o cuenta inactiva",
         },
         {
-          status: 403,
+          status: 401,
         }
       );
     }
