@@ -1,57 +1,63 @@
-import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
+
 import { prisma } from "@/lib/prisma";
-import { verificarSesion } from "@/lib/auth";
+import { obtenerMiembroActual } from "@/lib/miembro-auth";
 
 export async function GET() {
   try {
-    const cookieStore = await cookies();
+    const miembroActual =
+      await obtenerMiembroActual();
 
-    const token = cookieStore.get("miembro_token")?.value;
-
-    if (!token) {
+    if (!miembroActual) {
       return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
+        {
+          error:
+            "No autorizado o cuenta inactiva",
+        },
+        {
+          status: 401,
+        }
       );
     }
 
-    const payload = await verificarSesion(token);
+    const miembro =
+      await prisma.miembro.findUnique({
+        where: {
+          id: miembroActual.id,
+        },
 
-    if (!payload?.usuario) {
-      return NextResponse.json(
-        { error: "Sesión inválida" },
-        { status: 401 }
-      );
-    }
+        select: {
+          id: true,
+          nombres: true,
+          apellidos: true,
+          email: true,
+          telefono: true,
+          codigoReferido: true,
+          estado: true,
+          createdAt: true,
 
-    const miembro = await prisma.miembro.findUnique({
-      where: {
-        id: String(payload.usuario),
-      },
-      select: {
-        id: true,
-        nombres: true,
-        apellidos: true,
-        email: true,
-        telefono: true,
-        codigoReferido: true,
-        estado: true,
-        createdAt: true,
-        referidos: {
-          select: {
-            id: true,
-            nombres: true,
-            codigoReferido: true,
+          referidos: {
+            select: {
+              id: true,
+              nombres: true,
+              codigoReferido: true,
+            },
           },
         },
-      },
-    });
+      });
 
     if (!miembro) {
       return NextResponse.json(
-        { error: "Miembro no encontrado" },
-        { status: 404 }
+        {
+          error:
+            "Miembro no encontrado",
+        },
+        {
+          status: 404,
+        }
       );
     }
 
@@ -63,8 +69,13 @@ export async function GET() {
     console.error(error);
 
     return NextResponse.json(
-      { error: "Error interno" },
-      { status: 500 }
+      {
+        error:
+          "Error interno",
+      },
+      {
+        status: 500,
+      }
     );
   }
 }
@@ -74,35 +85,14 @@ export async function PATCH(
   req: NextRequest
 ) {
   try {
-    const cookieStore =
-      await cookies();
+    const miembroActual =
+      await obtenerMiembroActual();
 
-    const token =
-      cookieStore.get(
-        "miembro_token"
-      )?.value;
-
-    if (!token) {
+    if (!miembroActual) {
       return NextResponse.json(
         {
-          error: "No autorizado",
-        },
-        {
-          status: 401,
-        }
-      );
-    }
-
-    const payload =
-      await verificarSesion(token);
-
-    if (
-      !payload ||
-      typeof payload.usuario !== "string"
-    ) {
-      return NextResponse.json(
-        {
-          error: "Sesión inválida",
+          error:
+            "No autorizado o cuenta inactiva",
         },
         {
           status: 401,
@@ -128,8 +118,6 @@ export async function PATCH(
           ""
         );
 
-      // Si viene como +591 70000000
-      // guardamos solamente 70000000.
       if (
         numero.startsWith("591") &&
         numero.length === 11
@@ -138,8 +126,6 @@ export async function PATCH(
           numero.slice(3);
       }
 
-      // Celulares bolivianos:
-      // 8 dígitos comenzando en 6 o 7.
       if (
         !/^[67]\d{7}$/.test(numero)
       ) {
@@ -160,7 +146,7 @@ export async function PATCH(
     const resultado =
       await prisma.miembro.updateMany({
         where: {
-          id: payload.usuario,
+          id: miembroActual.id,
           estado: "ACTIVO",
         },
 
@@ -175,7 +161,7 @@ export async function PATCH(
       return NextResponse.json(
         {
           error:
-            "No se pudo actualizar el WhatsApp. Verifica que tu cuenta esté activa.",
+            "No se pudo actualizar el WhatsApp.",
         },
         {
           status: 403,
@@ -186,6 +172,7 @@ export async function PATCH(
     return NextResponse.json({
       ok: true,
       telefono,
+
       mensaje: telefono
         ? "WhatsApp actualizado correctamente."
         : "WhatsApp eliminado. Tus pedidos usarán el número central de DioxiLife.",
