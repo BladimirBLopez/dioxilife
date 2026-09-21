@@ -379,46 +379,51 @@ export default async function MisPedidosPage() {
 
                         <td className="px-4 py-4">
 
-                          {pedido.estado ===
-                          "CONFIRMADO" ? (
+                          <div className="flex min-w-[150px] flex-col gap-2">
 
-                            <form
-                              action={reportarPago.bind(
-                                null,
-                                pedido.id
-                              )}
+                            <Link
+                              href={`/mi-cuenta/pedidos/${pedido.id}`}
+                              className="rounded-lg bg-blue-600 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-blue-700"
                             >
-                              <button
-                                type="submit"
-                                className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-700"
+                              Gestionar pedido
+                            </Link>
+
+                            {pedido.estado ===
+                            "CONFIRMADO" ? (
+
+                              <form
+                                action={reportarPago.bind(
+                                  null,
+                                  pedido.id
+                                )}
                               >
-                                Reportar pago
-                              </button>
-                            </form>
+                                <button
+                                  type="submit"
+                                  className="w-full rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-700"
+                                >
+                                  Reportar pago
+                                </button>
+                              </form>
 
-                          ) : pedido.estado ===
-                            "PAGO_REPORTADO" ? (
+                            ) : pedido.estado ===
+                              "PAGO_REPORTADO" ? (
 
-                            <span className="text-sm font-medium text-orange-600">
-                              En revisión
-                            </span>
+                              <span className="text-center text-sm font-medium text-orange-600">
+                                En revisión
+                              </span>
 
-                          ) : pedido.estado ===
-                            "PAGADO" ||
-                            pedido.estado ===
-                              "COMPLETADO" ? (
+                            ) : pedido.estado ===
+                              "PAGADO" ||
+                              pedido.estado ===
+                                "COMPLETADO" ? (
 
-                            <span className="text-sm font-medium text-green-600">
-                              Pago aprobado
-                            </span>
+                              <span className="text-center text-sm font-medium text-green-600">
+                                Pago aprobado
+                              </span>
 
-                          ) : (
+                            ) : null}
 
-                            <span className="text-sm text-gray-400">
-                              Sin acción
-                            </span>
-
-                          )}
+                          </div>
 
                         </td>
 

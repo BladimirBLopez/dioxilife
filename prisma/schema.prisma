@@ -207,9 +207,11 @@ model Pedido {
   codigo String       @unique
   estado EstadoPedido @default(NUEVO)
 
-  nombreCliente   String?
-  telefonoCliente String?
-  observaciones   String?
+  nombreCliente    String?
+  telefonoCliente  String?
+  ciudadCliente    String?
+  direccionCliente String?
+  observaciones    String?
 
   miembroId     String?
   miembro       Miembro? @relation("PedidosComprador", fields: [miembroId], references: [id], onDelete: SetNull)
