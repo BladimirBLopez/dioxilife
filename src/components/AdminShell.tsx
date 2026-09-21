@@ -121,6 +121,34 @@ const grupos: NavGroup[] = [
       },
 
       {
+        href: "/admin/multinivel/red",
+        label: "Red",
+        icon: (
+          <>
+            <circle cx="12" cy="5" r="2.5" />
+            <circle cx="6" cy="18" r="2.5" />
+            <circle cx="18" cy="18" r="2.5" />
+            <path d="M12 7.5v4M12 11.5H6v4M12 11.5h6v4" />
+          </>
+        ),
+      },
+
+      {
+        href: "/admin/multinivel/analitica",
+        label: "Analítica",
+        icon: (
+          <>
+            <path d="M4 19V5" />
+            <path d="M4 19h16" />
+            <path d="M8 16v-4" />
+            <path d="M12 16V8" />
+            <path d="M16 16v-7" />
+            <path d="M20 16v-3" />
+          </>
+        ),
+      },
+
+      {
         href: "/admin/multinivel/comisiones",
         label: "Comisiones",
         icon: (
