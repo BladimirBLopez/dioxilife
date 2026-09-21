@@ -321,6 +321,26 @@ export default function MiCuentaPage() {
 
         <div className="mt-6 rounded-2xl bg-white p-6 shadow">
 
+          <h2 className="text-xl font-semibold">
+            Mis ventas
+          </h2>
+
+          <p className="mt-2 text-sm text-gray-500">
+            Revisa los pedidos realizados mediante tu enlace personal y reporta los pagos de tus clientes.
+          </p>
+
+          <Link
+            href="/mi-cuenta/pedidos"
+            className="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white transition hover:bg-orange-700"
+          >
+            Ver mis ventas
+          </Link>
+
+        </div>
+
+
+        <div className="mt-6 rounded-2xl bg-white p-6 shadow">
+
           <h2 className="mb-4 text-xl font-semibold">
             Mi red directa (Nivel 1)
           </h2>

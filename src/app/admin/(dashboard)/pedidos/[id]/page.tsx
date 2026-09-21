@@ -20,6 +20,9 @@ function estiloEstado(estado: string) {
     case "CONFIRMADO":
       return "bg-blue-100 text-blue-700";
 
+    case "PAGO_REPORTADO":
+      return "bg-orange-100 text-orange-700";
+
     case "PAGADO":
       return "bg-green-100 text-green-700";
 

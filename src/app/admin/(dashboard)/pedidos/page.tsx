@@ -18,6 +18,9 @@ function estiloEstado(estado: string) {
     case "CONFIRMADO":
       return "bg-blue-100 text-blue-700";
 
+    case "PAGO_REPORTADO":
+      return "bg-orange-100 text-orange-700";
+
     case "PAGADO":
       return "bg-green-100 text-green-700";
 
@@ -37,6 +40,7 @@ export default async function PedidosAdminPage() {
     total,
     nuevos,
     confirmados,
+    pagosReportados,
     pagados,
     completados,
     cancelados,
@@ -53,6 +57,12 @@ export default async function PedidosAdminPage() {
     prisma.pedido.count({
       where: {
         estado: "CONFIRMADO",
+      },
+    }),
+
+    prisma.pedido.count({
+      where: {
+        estado: "PAGO_REPORTADO",
       },
     }),
 
@@ -137,7 +147,7 @@ export default async function PedidosAdminPage() {
       </div>
 
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
 
         <div className="rounded-xl bg-white p-4 shadow">
           <p className="text-sm text-gray-500">
@@ -157,6 +167,17 @@ export default async function PedidosAdminPage() {
 
           <p className="mt-1 text-2xl font-bold text-blue-600">
             {confirmados}
+          </p>
+        </div>
+
+
+        <div className="rounded-xl bg-white p-4 shadow">
+          <p className="text-sm text-gray-500">
+            Pagos reportados
+          </p>
+
+          <p className="mt-1 text-2xl font-bold text-orange-600">
+            {pagosReportados}
           </p>
         </div>
 

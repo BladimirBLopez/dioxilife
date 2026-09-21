@@ -100,10 +100,16 @@ model Sucursal {
   createdAt    DateTime     @default(now())
 }
 
+enum RolAdmin {
+  SUPER_ADMIN
+  ADMIN
+}
+
 model Admin {
   id           String   @id @default(cuid())
   usuario      String   @unique
   passwordHash String
+  rol          RolAdmin @default(ADMIN)
   createdAt    DateTime @default(now())
 }
 
@@ -190,6 +196,7 @@ model ComisionMultinivel {
 enum EstadoPedido {
   NUEVO
   CONFIRMADO
+  PAGO_REPORTADO
   PAGADO
   COMPLETADO
   CANCELADO
