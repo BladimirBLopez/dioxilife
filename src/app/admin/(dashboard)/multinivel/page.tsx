@@ -235,11 +235,11 @@ export default async function MultinivelAdminPage() {
 
 
           <h1 className="mt-4 text-2xl font-bold md:text-3xl">
-            Gestión Multinivel
+            Resumen multinivel
           </h1>
 
           <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">
-            Supervisa distribuidores, estructura de patrocinio, volumen y comisiones desde una sola vista.
+            Vista general de la red, el volumen y las comisiones de DioxiLife.
           </p>
 
         </div>

@@ -95,7 +95,7 @@ const grupos: NavGroup[] = [
     items: [
       {
         href: "/admin/multinivel",
-        label: "Resumen de red",
+        label: "Resumen",
         exact: true,
         icon: (
           <>
