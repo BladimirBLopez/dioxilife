@@ -6,8 +6,16 @@ import {
 import bcrypt from "bcryptjs";
 
 import {
+  revalidatePath,
+} from "next/cache";
+
+import {
   prisma,
 } from "@/lib/prisma";
+
+import {
+  obtenerAdminActual,
+} from "@/lib/admin-auth";
 
 import {
   generarCodigoReferido,
@@ -18,6 +26,39 @@ export async function POST(
   req: NextRequest
 ) {
   try {
+
+    const admin =
+      await obtenerAdminActual();
+
+
+    if (!admin) {
+      return NextResponse.json(
+        {
+          error:
+            "Sesión administrativa no válida",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
+
+
+    if (
+      admin.rol !==
+      "SUPER_ADMIN"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Solo el Super Admin puede registrar miembros manualmente",
+        },
+        {
+          status: 403,
+        }
+      );
+    }
+
 
     const body =
       await req.json();
@@ -50,12 +91,12 @@ export async function POST(
         body.password || ""
       );
 
-    const ref =
+    const patrocinadorId =
       String(
-        body.ref || ""
-      )
-        .trim()
-        .toUpperCase();
+        body.patrocinadorId ||
+          ""
+      ).trim() ||
+      null;
 
 
     if (
@@ -108,27 +149,7 @@ export async function POST(
     }
 
 
-    /*
-     * El registro público pertenece al flujo
-     * de invitaciones.
-     *
-     * Los miembros sin patrocinador se crean
-     * únicamente desde Super Admin.
-     */
-    if (!ref) {
-      return NextResponse.json(
-        {
-          error:
-            "Necesitas un código o enlace de invitación para registrarte",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-
-    const miembroExistente =
+    const existente =
       await prisma.miembro.findUnique({
         where: {
           email,
@@ -140,11 +161,11 @@ export async function POST(
       });
 
 
-    if (miembroExistente) {
+    if (existente) {
       return NextResponse.json(
         {
           error:
-            "Ya existe una cuenta con este correo electrónico",
+            "Ya existe un miembro con ese correo electrónico",
         },
         {
           status: 409,
@@ -153,48 +174,49 @@ export async function POST(
     }
 
 
-    const patrocinador =
-      await prisma.miembro.findUnique({
-        where: {
-          codigoReferido:
-            ref,
-        },
+    if (patrocinadorId) {
 
-        select: {
-          id: true,
-          nombres: true,
-          apellidos: true,
-          estado: true,
-        },
-      });
+      const patrocinador =
+        await prisma.miembro.findUnique({
+          where: {
+            id:
+              patrocinadorId,
+          },
 
-
-    if (!patrocinador) {
-      return NextResponse.json(
-        {
-          error:
-            "El código de patrocinador no existe",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
+          select: {
+            id: true,
+            estado: true,
+          },
+        });
 
 
-    if (
-      patrocinador.estado !==
-      "ACTIVO"
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "El patrocinador no se encuentra activo",
-        },
-        {
-          status: 400,
-        }
-      );
+      if (!patrocinador) {
+        return NextResponse.json(
+          {
+            error:
+              "El patrocinador seleccionado no existe",
+          },
+          {
+            status: 400,
+          }
+        );
+      }
+
+
+      if (
+        patrocinador.estado !==
+        "ACTIVO"
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "El patrocinador seleccionado no está activo",
+          },
+          {
+            status: 400,
+          }
+        );
+      }
     }
 
 
@@ -203,6 +225,7 @@ export async function POST(
         password,
         12
       );
+
 
     const codigoReferido =
       await generarCodigoReferido();
@@ -227,8 +250,7 @@ export async function POST(
 
           codigoReferido,
 
-          patrocinadorId:
-            patrocinador.id,
+          patrocinadorId,
 
           estado:
             "ACTIVO",
@@ -242,26 +264,26 @@ export async function POST(
           codigoReferido: true,
           patrocinadorId: true,
           estado: true,
-          createdAt: true,
-
-          patrocinador: {
-            select: {
-              nombres: true,
-              apellidos: true,
-              codigoReferido: true,
-            },
-          },
         },
       });
+
+
+    revalidatePath(
+      "/admin/multinivel"
+    );
+
+    revalidatePath(
+      "/admin/multinivel/miembros"
+    );
+
+    revalidatePath(
+      "/admin/multinivel/red"
+    );
 
 
     return NextResponse.json(
       {
         ok: true,
-
-        mensaje:
-          "Cuenta creada correctamente",
-
         miembro,
       },
       {
@@ -272,14 +294,14 @@ export async function POST(
   } catch (error) {
 
     console.error(
-      "Error al registrar miembro:",
+      "Error al crear miembro desde Super Admin:",
       error
     );
 
     return NextResponse.json(
       {
         error:
-          "No se pudo crear la cuenta",
+          "No se pudo crear el miembro",
       },
       {
         status: 500,

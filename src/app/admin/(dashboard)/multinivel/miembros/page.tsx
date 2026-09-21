@@ -1,8 +1,11 @@
 export const dynamic =
   "force-dynamic";
 
+import Link from "next/link";
+
 import {
   Network,
+  Plus,
   UserCheck,
   UserRoundX,
   UsersRound,
@@ -11,6 +14,10 @@ import {
 import {
   prisma,
 } from "@/lib/prisma";
+
+import {
+  obtenerAdminActual,
+} from "@/lib/admin-auth";
 
 import MiembrosTable from "@/components/admin/MiembrosTable";
 
@@ -41,6 +48,9 @@ function nombrePersona(
 
 
 export default async function MiembrosMultinivelPage() {
+
+  const admin =
+    await obtenerAdminActual();
 
   const miembros =
     await prisma.miembro.findMany({
@@ -228,19 +238,36 @@ export default async function MiembrosMultinivelPage() {
   return (
     <div className="mx-auto max-w-[1500px] space-y-6">
 
-      <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 
-        <p className="text-sm font-semibold text-blue-600">
-          Multinivel
-        </p>
+        <div>
 
-        <h1 className="mt-1 text-2xl font-bold text-slate-900 md:text-3xl">
-          Miembros
-        </h1>
+          <p className="text-sm font-semibold text-blue-600">
+            Multinivel
+          </p>
 
-        <p className="mt-2 max-w-2xl text-sm text-slate-400">
-          Administración y consulta de los miembros que forman parte de la red DioxiLife.
-        </p>
+          <h1 className="mt-1 text-2xl font-bold text-slate-900 md:text-3xl">
+            Miembros
+          </h1>
+
+          <p className="mt-2 max-w-2xl text-sm text-slate-400">
+            Administración y consulta de los miembros que forman parte de la red DioxiLife.
+          </p>
+
+        </div>
+
+
+        {admin?.rol === "SUPER_ADMIN" && (
+
+          <Link
+            href="/admin/multinivel/miembros/nuevo"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#10182D] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-slate-700"
+          >
+            <Plus className="h-4 w-4" />
+            Nuevo miembro
+          </Link>
+
+        )}
 
       </div>
 
