@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import ArbolMultinivel from "@/components/admin/ArbolMultinivel";
+import MultinivelAnalytics from "@/components/admin/MultinivelAnalytics";
 
 type Nodo = {
   id: string;
@@ -84,6 +85,22 @@ function estiloEstado(
 }
 
 export default async function MultinivelAdminPage() {
+
+  const inicio30Dias =
+    new Date();
+
+  inicio30Dias.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  inicio30Dias.setDate(
+    inicio30Dias.getDate() - 29
+  );
+
+
   const [
     totalMiembros,
     miembrosActivos,
@@ -91,6 +108,17 @@ export default async function MultinivelAdminPage() {
     montoComisionesPendientes,
     cantidadComisionesPendientes,
     pedidosPagados,
+
+    montoComisionesAprobadas,
+    montoComisionesPagadas,
+    montoComisionesAnuladas,
+
+    cantidadComisionesAprobadas,
+    cantidadComisionesPagadas,
+    cantidadComisionesAnuladas,
+
+    miembrosPeriodo,
+
     ultimos,
     raicesBase,
   ] = await Promise.all([
@@ -144,6 +172,74 @@ export default async function MultinivelAdminPage() {
         },
       },
     }),
+
+
+    prisma.comisionMultinivel.aggregate({
+      where: {
+        estado: "APROBADA",
+      },
+
+      _sum: {
+        monto: true,
+      },
+    }),
+
+
+    prisma.comisionMultinivel.aggregate({
+      where: {
+        estado: "PAGADA",
+      },
+
+      _sum: {
+        monto: true,
+      },
+    }),
+
+
+    prisma.comisionMultinivel.aggregate({
+      where: {
+        estado: "ANULADA",
+      },
+
+      _sum: {
+        monto: true,
+      },
+    }),
+
+
+    prisma.comisionMultinivel.count({
+      where: {
+        estado: "APROBADA",
+      },
+    }),
+
+
+    prisma.comisionMultinivel.count({
+      where: {
+        estado: "PAGADA",
+      },
+    }),
+
+
+    prisma.comisionMultinivel.count({
+      where: {
+        estado: "ANULADA",
+      },
+    }),
+
+
+    prisma.miembro.findMany({
+      where: {
+        createdAt: {
+          gte: inicio30Dias,
+        },
+      },
+
+      select: {
+        createdAt: true,
+      },
+    }),
+
 
     prisma.miembro.findMany({
       orderBy: {
@@ -212,6 +308,198 @@ export default async function MultinivelAdminPage() {
   const inactivos =
     totalMiembros -
     miembrosActivos;
+
+
+  const mapaCrecimiento =
+    new Map<
+      string,
+      {
+        fecha: string;
+        etiqueta: string;
+        nuevos: number;
+      }
+    >();
+
+
+  for (
+    let indice = 0;
+    indice < 30;
+    indice++
+  ) {
+    const fecha =
+      new Date(
+        inicio30Dias
+      );
+
+    fecha.setDate(
+      inicio30Dias.getDate() +
+        indice
+    );
+
+    const clave =
+      fecha
+        .toISOString()
+        .slice(0, 10);
+
+    mapaCrecimiento.set(
+      clave,
+      {
+        fecha: clave,
+
+        etiqueta:
+          fecha.toLocaleDateString(
+            "es-BO",
+            {
+              day: "2-digit",
+              month: "short",
+            }
+          ),
+
+        nuevos: 0,
+      }
+    );
+  }
+
+
+  for (
+    const miembro of miembrosPeriodo
+  ) {
+    const clave =
+      miembro.createdAt
+        .toISOString()
+        .slice(0, 10);
+
+    const dia =
+      mapaCrecimiento.get(
+        clave
+      );
+
+    if (!dia) {
+      continue;
+    }
+
+    dia.nuevos += 1;
+  }
+
+
+  const crecimientoGrafico = [
+    ...mapaCrecimiento.values(),
+  ];
+
+
+  const estadosMiembrosGrafico = [
+    {
+      estado: "ACTIVO",
+      etiqueta: "Activos",
+      total: miembrosActivos,
+    },
+
+    {
+      estado: "NO_ACTIVOS",
+      etiqueta: "No activos",
+      total: inactivos,
+    },
+  ];
+
+
+  const comisionesGrafico = [
+    {
+      estado: "PENDIENTE",
+      etiqueta: "Pendientes",
+
+      monto:
+        Number(
+          String(
+            montoComisionesPendientes
+              ._sum
+              .monto ?? 0
+          )
+        ),
+
+      cantidad:
+        cantidadComisionesPendientes,
+    },
+
+    {
+      estado: "APROBADA",
+      etiqueta: "Aprobadas",
+
+      monto:
+        Number(
+          String(
+            montoComisionesAprobadas
+              ._sum
+              .monto ?? 0
+          )
+        ),
+
+      cantidad:
+        cantidadComisionesAprobadas,
+    },
+
+    {
+      estado: "PAGADA",
+      etiqueta: "Pagadas",
+
+      monto:
+        Number(
+          String(
+            montoComisionesPagadas
+              ._sum
+              .monto ?? 0
+          )
+        ),
+
+      cantidad:
+        cantidadComisionesPagadas,
+    },
+
+    {
+      estado: "ANULADA",
+      etiqueta: "Anuladas",
+
+      monto:
+        Number(
+          String(
+            montoComisionesAnuladas
+              ._sum
+              .monto ?? 0
+          )
+        ),
+
+      cantidad:
+        cantidadComisionesAnuladas,
+    },
+  ];
+
+
+  const volumenGrafico = [
+    {
+      nombre: "CV",
+
+      valor:
+        Number(
+          String(
+            volumenPagado
+              ._sum
+              .totalCV ?? 0
+          )
+        ),
+    },
+
+    {
+      nombre: "PV",
+
+      valor:
+        Number(
+          String(
+            volumenPagado
+              ._sum
+              .totalPV ?? 0
+          )
+        ),
+    },
+  ];
 
 
   return (
@@ -446,6 +734,14 @@ export default async function MultinivelAdminPage() {
         </Link>
 
       </section>
+
+
+      <MultinivelAnalytics
+        crecimiento={crecimientoGrafico}
+        estadosMiembros={estadosMiembrosGrafico}
+        comisiones={comisionesGrafico}
+        volumen={volumenGrafico}
+      />
 
 
       <section className="grid gap-4 md:grid-cols-3">
