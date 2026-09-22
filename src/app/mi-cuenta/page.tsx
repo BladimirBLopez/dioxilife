@@ -680,102 +680,115 @@ export default function MiCuentaPage() {
 
           <section
             id="enlaces"
-            className="rounded-2xl bg-white p-5 shadow xl:col-span-3 md:p-6"
+            className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100 xl:col-span-3 md:p-6"
           >
 
             <div className="flex items-start justify-between gap-4">
 
               <div>
-
                 <h2 className="text-lg font-bold text-gray-900">
-                  Mis enlaces
+                  Mis enlaces de distribución
                 </h2>
 
                 <p className="mt-1 text-sm text-gray-500">
-                  Utiliza estos enlaces para vender y construir tu red.
+                  Comparte estos enlaces para vender productos e invitar nuevos distribuidores.
                 </p>
-
               </div>
 
 
-              <span className="rounded-lg bg-blue-50 px-3 py-1.5 font-mono text-xs font-semibold text-blue-700">
+              <span className="rounded-xl bg-blue-50 px-3 py-1.5 font-mono text-xs font-bold text-blue-700">
                 {miembro.codigoReferido}
               </span>
 
             </div>
 
 
-            <div className="mt-6">
+            <div className="mt-6 space-y-5">
 
-              <p className="text-sm font-semibold text-gray-700">
-                Enlace de ventas
-              </p>
 
-              <div className="mt-2 break-all rounded-xl border border-gray-100 bg-gray-50 p-3 text-sm text-gray-600">
-                {enlaceVentas ||
-                  "Preparando enlace..."}
+              <div className="rounded-2xl border border-gray-100 bg-gray-50/60 p-4">
+
+                <p className="text-sm font-bold text-gray-900">
+                  🛒 Enlace de ventas
+                </p>
+
+                <p className="mt-1 text-xs text-gray-500">
+                  Comparte este enlace para recibir clientes y registrar tus ventas.
+                </p>
+
+
+                <div className="mt-3 break-all rounded-xl bg-white p-3 text-sm text-gray-600 ring-1 ring-gray-100">
+                  {enlaceVentas ||
+                    "Preparando enlace..."}
+                </div>
+
+
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      copiarEnlace(
+                        enlaceVentas,
+                        "ventas"
+                      )
+                    }
+                    className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+                  >
+                    {copiado === "ventas"
+                      ? "✓ Copiado"
+                      : "Copiar enlace"}
+                  </button>
+
+
+                  <button
+                    type="button"
+                    onClick={compartirVentas}
+                    className="rounded-xl bg-[#25D366] px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
+                  >
+                    WhatsApp
+                  </button>
+
+                </div>
+
               </div>
 
 
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+
+              <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4">
+
+                <p className="text-sm font-bold text-gray-900">
+                  👥 Enlace de afiliación
+                </p>
+
+                <p className="mt-1 text-xs text-gray-500">
+                  Invita personas para formar parte de tu red DioxiLife.
+                </p>
+
+
+                <div className="mt-3 break-all rounded-xl bg-white p-3 text-sm text-gray-600 ring-1 ring-gray-100">
+                  {enlaceRegistro ||
+                    "Preparando enlace..."}
+                </div>
+
 
                 <button
                   type="button"
                   onClick={() =>
                     copiarEnlace(
-                      enlaceVentas,
-                      "ventas"
+                      enlaceRegistro,
+                      "registro"
                     )
                   }
-                  className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+                  className="mt-3 w-full rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
                 >
-                  {copiado === "ventas"
-                    ? "Enlace copiado"
-                    : "Copiar enlace"}
-                </button>
-
-
-                <button
-                  type="button"
-                  onClick={
-                    compartirVentas
-                  }
-                  className="rounded-lg bg-[#25D366] px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
-                >
-                  Compartir por WhatsApp
+                  {copiado === "registro"
+                    ? "✓ Copiado"
+                    : "Copiar enlace de afiliación"}
                 </button>
 
               </div>
 
-            </div>
-
-
-            <div className="mt-6 border-t border-gray-100 pt-5">
-
-              <p className="text-sm font-semibold text-gray-700">
-                Enlace para registrar miembros
-              </p>
-
-              <div className="mt-2 break-all rounded-xl border border-gray-100 bg-gray-50 p-3 text-sm text-gray-600">
-                {enlaceRegistro ||
-                  "Preparando enlace..."}
-              </div>
-
-
-              <button
-                type="button"
-                onClick={() =>
-                  copiarEnlace(
-                    enlaceRegistro,
-                    "registro"
-                  )
-                }
-                className="mt-3 w-full rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
-              >
-                {copiado === "registro"
-                  ? "Enlace copiado"
-                  : "Copiar enlace de registro"}
-              </button>
 
             </div>
 
