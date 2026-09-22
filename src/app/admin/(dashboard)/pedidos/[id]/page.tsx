@@ -171,7 +171,9 @@ export default async function DetallePedidoPage({
               Registrado el{" "}
               {new Date(
                 pedido.createdAt
-              ).toLocaleString("es-BO")}
+              ).toLocaleString("es-BO", {
+                timeZone: "America/La_Paz",
+              })}
             </p>
           </div>
 
