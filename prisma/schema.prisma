@@ -156,6 +156,11 @@ model Miembro {
 
   estado EstadoMiembro @default(ACTIVO)
 
+  activado              Boolean   @default(true)
+  tokenActivacionHash   String?   @unique
+  tokenActivacionExpira DateTime?
+  fechaActivacion       DateTime?
+
   comisionesRecibidas ComisionMultinivel[] @relation("ComisionesBeneficiario")
   comisionesGeneradas ComisionMultinivel[] @relation("ComisionesOrigen")
 

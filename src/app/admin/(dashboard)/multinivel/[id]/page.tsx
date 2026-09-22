@@ -351,6 +351,10 @@ export default async function DetalleMiembroPage({
 
         estado: true,
 
+        activado: true,
+        fechaActivacion: true,
+        tokenActivacionExpira: true,
+
         createdAt: true,
 
         patrocinador: {
@@ -888,6 +892,20 @@ export default async function DetalleMiembroPage({
         }
         codigoReferido={
           miembro.codigoReferido
+        }
+        activado={
+          miembro.activado
+        }
+        fechaActivacion={
+          miembro.fechaActivacion?.toISOString() ??
+          null
+        }
+        tokenActivacionExpira={
+          miembro.tokenActivacionExpira?.toISOString() ??
+          null
+        }
+        telefono={
+          miembro.telefono
         }
         puedeGestionar={
           admin?.rol ===

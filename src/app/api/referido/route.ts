@@ -43,6 +43,7 @@ export async function POST(
           apellidos: true,
           codigoReferido: true,
           estado: true,
+          activado: true,
         },
       });
 
@@ -51,7 +52,8 @@ export async function POST(
 
     if (
       !miembro ||
-      miembro.estado !== "ACTIVO"
+      miembro.estado !== "ACTIVO" ||
+      !miembro.activado
     ) {
       cookieStore.delete(
         COOKIE_REFERIDO

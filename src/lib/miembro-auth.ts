@@ -37,12 +37,14 @@ export async function obtenerMiembroActual() {
         apellidos: true,
         codigoReferido: true,
         estado: true,
+        activado: true,
       },
     });
 
   if (
     !miembro ||
-    miembro.estado !== "ACTIVO"
+    miembro.estado !== "ACTIVO" ||
+    !miembro.activado
   ) {
     return null;
   }

@@ -4,6 +4,10 @@ import {
 } from "next/server";
 
 import bcrypt from "bcryptjs";
+import {
+  createHash,
+  randomBytes,
+} from "crypto";
 
 import {
   revalidatePath,
@@ -101,13 +105,12 @@ export async function POST(
 
     if (
       !nombres ||
-      !email ||
-      !password
+      !email
     ) {
       return NextResponse.json(
         {
           error:
-            "Nombre, correo y contraseña son obligatorios",
+            "Nombre y correo son obligatorios",
         },
         {
           status: 400,
@@ -133,20 +136,6 @@ export async function POST(
       );
     }
 
-
-    if (
-      password.length < 8
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "La contraseña debe tener al menos 8 caracteres",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
 
 
     const existente =
@@ -186,6 +175,7 @@ export async function POST(
           select: {
             id: true,
             estado: true,
+            activado: true,
           },
         });
 
@@ -205,7 +195,8 @@ export async function POST(
 
       if (
         patrocinador.estado !==
-        "ACTIVO"
+          "ACTIVO" ||
+        !patrocinador.activado
       ) {
         return NextResponse.json(
           {
@@ -220,10 +211,38 @@ export async function POST(
     }
 
 
+    const passwordTemporal =
+      randomBytes(32).toString(
+        "hex"
+      );
+
+
     const passwordHash =
       await bcrypt.hash(
-        password,
+        passwordTemporal,
         12
+      );
+
+
+    const tokenActivacion =
+      randomBytes(32).toString(
+        "hex"
+      );
+
+
+    const tokenActivacionHash =
+      createHash("sha256")
+        .update(tokenActivacion)
+        .digest("hex");
+
+
+    const tokenActivacionExpira =
+      new Date(
+        Date.now() +
+          48 *
+            60 *
+            60 *
+            1000
       );
 
 
@@ -254,6 +273,16 @@ export async function POST(
 
           estado:
             "ACTIVO",
+
+          activado:
+            false,
+
+          tokenActivacionHash,
+
+          tokenActivacionExpira,
+
+          fechaActivacion:
+            null,
         },
 
         select: {
@@ -285,6 +314,17 @@ export async function POST(
       {
         ok: true,
         miembro,
+
+        activacion: {
+          token:
+            tokenActivacion,
+
+          ruta:
+            `/activar/${tokenActivacion}`,
+
+          expira:
+            tokenActivacionExpira,
+        },
       },
       {
         status: 201,

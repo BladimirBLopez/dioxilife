@@ -62,6 +62,7 @@ export async function GET() {
             miembro.id,
 
           estado: "ACTIVO",
+          activado: true,
         },
       }),
 

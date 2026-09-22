@@ -28,6 +28,7 @@ async function obtenerRed(
       where: {
         patrocinadorId: miembroId,
         estado: "ACTIVO",
+        activado: true,
       },
 
       orderBy: {

@@ -66,6 +66,9 @@ export default async function NuevoMiembroPage() {
       where: {
         estado:
           "ACTIVO",
+
+        activado:
+          true,
       },
 
       orderBy: [

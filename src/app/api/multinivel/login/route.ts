@@ -29,6 +29,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (!miembro.activado) {
+      return NextResponse.json(
+        {
+          error:
+            "Tu cuenta todavía no fue activada. Utiliza tu enlace de activación.",
+        },
+        {
+          status: 403,
+        }
+      );
+    }
+
     const correcto = await bcrypt.compare(
       password,
       miembro.passwordHash

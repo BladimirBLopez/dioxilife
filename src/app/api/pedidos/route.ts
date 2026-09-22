@@ -154,12 +154,14 @@ async function obtenerMiembroSesion() {
       select: {
         id: true,
         estado: true,
+        activado: true,
       },
     });
 
   if (
     !miembro ||
-    miembro.estado !== "ACTIVO"
+    miembro.estado !== "ACTIVO" ||
+    !miembro.activado
   ) {
     return null;
   }
@@ -181,12 +183,14 @@ async function obtenerReferidoPedido(
         select: {
           id: true,
           estado: true,
+          activado: true,
         },
       });
 
     if (
       miembro &&
-      miembro.estado === "ACTIVO"
+      miembro.estado === "ACTIVO" &&
+      miembro.activado
     ) {
       return miembro;
     }
@@ -215,12 +219,14 @@ async function obtenerReferidoPedido(
       select: {
         id: true,
         estado: true,
+        activado: true,
       },
     });
 
   if (
     !referido ||
-    referido.estado !== "ACTIVO"
+    referido.estado !== "ACTIVO" ||
+    !referido.activado
   ) {
     return null;
   }

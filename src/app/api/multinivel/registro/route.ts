@@ -165,6 +165,7 @@ export async function POST(
           nombres: true,
           apellidos: true,
           estado: true,
+          activado: true,
         },
       });
 
@@ -184,7 +185,8 @@ export async function POST(
 
     if (
       patrocinador.estado !==
-      "ACTIVO"
+        "ACTIVO" ||
+      !patrocinador.activado
     ) {
       return NextResponse.json(
         {
@@ -232,6 +234,12 @@ export async function POST(
 
           estado:
             "ACTIVO",
+
+          activado:
+            true,
+
+          fechaActivacion:
+            new Date(),
         },
 
         select: {

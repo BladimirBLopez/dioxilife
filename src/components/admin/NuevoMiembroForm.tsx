@@ -13,6 +13,9 @@ import {
 } from "sonner";
 
 import {
+  CheckCircle2,
+  Copy,
+  MessageCircle,
   Save,
   UserRoundPlus,
 } from "lucide-react";
@@ -22,6 +25,16 @@ type Patrocinador = {
   id: string;
   nombre: string;
   codigoReferido: string;
+};
+
+
+type ResultadoCreacion = {
+  id: string;
+  nombre: string;
+  email: string;
+  codigoReferido: string;
+  enlaceActivacion: string;
+  expira: string;
 };
 
 
@@ -63,12 +76,6 @@ export default function NuevoMiembroForm({
     useState("");
 
 
-  const [
-    password,
-    setPassword,
-  ] =
-    useState("");
-
 
   const [
     patrocinadorId,
@@ -82,6 +89,15 @@ export default function NuevoMiembroForm({
     setLoading,
   ] =
     useState(false);
+
+
+  const [
+    resultado,
+    setResultado,
+  ] =
+    useState<ResultadoCreacion | null>(
+      null
+    );
 
 
   async function guardar(
@@ -122,7 +138,6 @@ export default function NuevoMiembroForm({
                 apellidos,
                 email,
                 telefono,
-                password,
                 patrocinadorId,
               }),
           }
@@ -141,20 +156,43 @@ export default function NuevoMiembroForm({
       }
 
 
+      const nombreCompleto =
+        [
+          data.miembro.nombres,
+          data.miembro.apellidos,
+        ]
+          .filter(Boolean)
+          .join(" ");
+
+
+      setResultado({
+        id:
+          data.miembro.id,
+
+        nombre:
+          nombreCompleto,
+
+        email:
+          data.miembro.email,
+
+        codigoReferido:
+          data.miembro.codigoReferido,
+
+        enlaceActivacion:
+          `${window.location.origin}${data.activacion.ruta}`,
+
+        expira:
+          data.activacion.expira,
+      });
+
+
       toast.success(
-        "Miembro creado correctamente",
+        "Distribuidor creado correctamente",
         {
           id:
             toastId,
         }
       );
-
-
-      router.push(
-        `/admin/multinivel/${data.miembro.id}`
-      );
-
-      router.refresh();
 
     } catch (error) {
 
@@ -172,6 +210,191 @@ export default function NuevoMiembroForm({
 
       setLoading(false);
     }
+  }
+
+
+  const datosResultado =
+    resultado;
+
+
+  if (datosResultado) {
+
+    const copiarEnlace = async () => {
+      await navigator.clipboard.writeText(
+        datosResultado.enlaceActivacion
+      );
+
+      toast.success(
+        "Enlace de activación copiado"
+      );
+    };
+
+
+    const enviarWhatsapp = () => {
+
+      let numero =
+        telefono.replace(
+          /\D/g,
+          ""
+        );
+
+
+      if (
+        /^[67]\d{7}$/.test(
+          numero
+        )
+      ) {
+        numero =
+          `591${numero}`;
+      }
+
+
+      const mensaje =
+        [
+          `Hola ${datosResultado.nombre}.`,
+          "",
+          "Bienvenido a DioxiLife.",
+          "Para activar tu cuenta de distribuidor y crear tu contraseña, ingresa al siguiente enlace:",
+          "",
+          datosResultado.enlaceActivacion,
+          "",
+          "Este enlace es personal y tiene una vigencia de 48 horas.",
+        ].join("\n");
+
+
+      const destino =
+        numero
+          ? `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`
+          : `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+
+
+      window.open(
+        destino,
+        "_blank",
+        "noopener,noreferrer"
+      );
+    };
+
+
+    return (
+      <div className="overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-sm">
+
+        <div className="border-b border-emerald-100 bg-emerald-50 p-5 md:p-6">
+
+          <div className="flex items-start gap-3">
+
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+
+            <div>
+
+              <p className="text-sm font-bold text-emerald-700">
+                Distribuidor creado correctamente
+              </p>
+
+              <h2 className="mt-1 text-xl font-bold text-slate-900">
+                {datosResultado.nombre}
+              </h2>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Ahora debe activar su cuenta y crear su propia contraseña.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div className="space-y-5 p-5 md:p-6">
+
+          <div className="grid gap-4 sm:grid-cols-2">
+
+            <div className="rounded-xl border border-slate-200 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Correo
+              </p>
+              <p className="mt-1 break-all font-semibold text-slate-800">
+                {datosResultado.email}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Código referido
+              </p>
+              <p className="mt-1 font-mono font-bold text-blue-700">
+                {datosResultado.codigoReferido}
+              </p>
+            </div>
+
+          </div>
+
+
+          <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+
+            <p className="text-sm font-bold text-slate-900">
+              Enlace de activación
+            </p>
+
+            <p className="mt-2 break-all font-mono text-xs leading-5 text-blue-700">
+              {datosResultado.enlaceActivacion}
+            </p>
+
+            <p className="mt-3 text-xs leading-5 text-slate-500">
+              Este enlace es personal, vence en 48 horas y debe entregarse únicamente al distribuidor.
+            </p>
+
+          </div>
+
+
+          <div className="grid gap-3 sm:grid-cols-3">
+
+            <button
+              type="button"
+              onClick={
+                copiarEnlace
+              }
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+            >
+              <Copy className="h-4 w-4" />
+              Copiar enlace
+            </button>
+
+
+            <button
+              type="button"
+              onClick={
+                enviarWhatsapp
+              }
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-emerald-700"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Enviar WhatsApp
+            </button>
+
+
+            <button
+              type="button"
+              onClick={
+                () =>
+                  router.push(
+                    `/admin/multinivel/${datosResultado.id}`
+                  )
+              }
+              className="inline-flex items-center justify-center rounded-xl bg-[#10182D] px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-700"
+            >
+              Ver perfil
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+    );
   }
 
 
@@ -198,7 +421,7 @@ export default function NuevoMiembroForm({
             </h2>
 
             <p className="mt-1 text-xs text-slate-400">
-              La cuenta quedará activa inmediatamente.
+              La cuenta quedará pendiente hasta que el distribuidor cree su contraseña.
             </p>
 
           </div>
@@ -304,35 +527,6 @@ export default function NuevoMiembroForm({
             maxLength={30}
             className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-50"
           />
-
-        </div>
-
-
-        <div>
-
-          <label className="mb-1.5 block text-sm font-semibold text-slate-700">
-            Contraseña temporal *
-          </label>
-
-          <input
-            type="password"
-            value={
-              password
-            }
-            onChange={
-              (e) =>
-                setPassword(
-                  e.target.value
-                )
-            }
-            minLength={8}
-            className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-50"
-            required
-          />
-
-          <p className="mt-1.5 text-xs text-slate-400">
-            Mínimo 8 caracteres. Entrégala de forma privada al nuevo miembro.
-          </p>
 
         </div>
 
