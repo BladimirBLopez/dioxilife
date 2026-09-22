@@ -172,6 +172,25 @@ async function obtenerReferidoPedido(
   compradorId?: string | null
 ) {
   if (compradorId) {
+    const miembro =
+      await prisma.miembro.findUnique({
+        where: {
+          id: compradorId,
+        },
+
+        select: {
+          id: true,
+          estado: true,
+        },
+      });
+
+    if (
+      miembro &&
+      miembro.estado === "ACTIVO"
+    ) {
+      return miembro;
+    }
+
     return null;
   }
 
