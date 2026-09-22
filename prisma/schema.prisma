@@ -221,9 +221,10 @@ enum EstadoPedido {
 }
 
 model Pedido {
-  id     String       @id @default(cuid())
-  codigo String       @unique
-  estado EstadoPedido @default(NUEVO)
+  id         String       @id @default(cuid())
+  codigo     String       @unique
+  claveUnica String?      @unique
+  estado     EstadoPedido @default(NUEVO)
 
   nombreCliente    String?
   telefonoCliente  String?

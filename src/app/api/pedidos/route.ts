@@ -10,6 +10,94 @@ type ItemEntrada = {
   cantidad: number;
 };
 
+const PEDIDO_SELECT = {
+  id: true,
+  codigo: true,
+  estado: true,
+  total: true,
+  totalCV: true,
+  totalPV: true,
+  requiereCotizacion: true,
+  miembroId: true,
+  referidoPorId: true,
+
+  referidoPor: {
+    select: {
+      id: true,
+      nombres: true,
+      apellidos: true,
+      codigoReferido: true,
+      telefono: true,
+    },
+  },
+
+  detalles: {
+    select: {
+      id: true,
+      nombreProducto: true,
+      cantidad: true,
+      precioUnitario: true,
+      mostrarPrecio: true,
+      subtotal: true,
+    },
+  },
+} satisfies Prisma.PedidoSelect;
+
+type PedidoSeleccionado =
+  Prisma.PedidoGetPayload<{
+    select: typeof PEDIDO_SELECT;
+  }>;
+
+function responderPedido(
+  pedido: PedidoSeleccionado,
+  status: number
+) {
+  return NextResponse.json(
+    {
+      pedido: {
+        ...pedido,
+
+        total:
+          pedido.total.toString(),
+
+        totalCV:
+          pedido.totalCV.toString(),
+
+        totalPV:
+          pedido.totalPV.toString(),
+
+        detalles:
+          pedido.detalles.map(
+            (detalle) => ({
+              ...detalle,
+
+              precioUnitario:
+                detalle.precioUnitario.toString(),
+
+              subtotal:
+                detalle.subtotal.toString(),
+            })
+          ),
+      },
+    },
+    {
+      status,
+    }
+  );
+}
+
+async function buscarPedidoPorClave(
+  claveUnica: string
+) {
+  return prisma.pedido.findUnique({
+    where: {
+      claveUnica,
+    },
+
+    select: PEDIDO_SELECT,
+  });
+}
+
 async function generarCodigoPedido() {
   for (let intento = 0; intento < 10; intento++) {
     const codigo =
@@ -124,7 +212,42 @@ async function obtenerReferidoPedido(
 export async function POST(
   req: NextRequest
 ) {
+  let claveUnica = "";
+
   try {
+    claveUnica =
+      req.headers
+        .get("Idempotency-Key")
+        ?.trim() || "";
+
+    if (
+      !/^[A-Za-z0-9_-]{16,100}$/.test(
+        claveUnica
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "No se pudo identificar correctamente el intento de pedido.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const pedidoExistente =
+      await buscarPedidoPorClave(
+        claveUnica
+      );
+
+    if (pedidoExistente) {
+      return responderPedido(
+        pedidoExistente,
+        200
+      );
+    }
+
     const body = await req.json();
 
     const items =
@@ -345,6 +468,7 @@ export async function POST(
       await prisma.pedido.create({
         data: {
           codigo,
+          claveUnica,
 
           nombreCliente:
             nombreCliente || null,
@@ -372,73 +496,34 @@ export async function POST(
           },
         },
 
-        select: {
-          id: true,
-          codigo: true,
-          estado: true,
-          total: true,
-          totalCV: true,
-          totalPV: true,
-          requiereCotizacion: true,
-          miembroId: true,
-          referidoPorId: true,
-
-          referidoPor: {
-            select: {
-              id: true,
-              nombres: true,
-              apellidos: true,
-              codigoReferido: true,
-              telefono: true,
-            },
-          },
-
-          detalles: {
-            select: {
-              id: true,
-              nombreProducto: true,
-              cantidad: true,
-              precioUnitario: true,
-              mostrarPrecio: true,
-              subtotal: true,
-            },
-          },
-        },
+        select: PEDIDO_SELECT,
       });
 
-    return NextResponse.json(
-      {
-        pedido: {
-          ...pedido,
-
-          total:
-            pedido.total.toString(),
-
-          totalCV:
-            pedido.totalCV.toString(),
-
-          totalPV:
-            pedido.totalPV.toString(),
-
-          detalles:
-            pedido.detalles.map(
-              (detalle) => ({
-                ...detalle,
-
-                precioUnitario:
-                  detalle.precioUnitario.toString(),
-
-                subtotal:
-                  detalle.subtotal.toString(),
-              })
-            ),
-        },
-      },
-      {
-        status: 201,
-      }
+    return responderPedido(
+      pedido,
+      201
     );
+
   } catch (error) {
+    if (
+      claveUnica &&
+      error instanceof
+        Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      const pedidoExistente =
+        await buscarPedidoPorClave(
+          claveUnica
+        );
+
+      if (pedidoExistente) {
+        return responderPedido(
+          pedidoExistente,
+          200
+        );
+      }
+    }
+
     console.error(
       "Error creando pedido:",
       error

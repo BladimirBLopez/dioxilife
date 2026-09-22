@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import Modal from "./Modal";
 import { useCart } from "@/lib/cart-context";
@@ -58,6 +58,12 @@ function normalizarWhatsappBolivia(
 export default function CartDrawer() {
   const [abierto, setAbierto] = useState(false);
   const [finalizando, setFinalizando] = useState(false);
+
+  const intentoPedidoRef =
+    useRef<{
+      firma: string;
+      clave: string;
+    } | null>(null);
   const {
     items,
     removeItem,
@@ -67,6 +73,90 @@ export default function CartDrawer() {
     totalPrecio,
     tieneItemsAConsultar,
   } = useCart();
+
+  function obtenerClaveUnicaPedido() {
+    const firma =
+      items
+        .map(
+          (item) =>
+            `${item.id}:${item.cantidad}`
+        )
+        .sort()
+        .join("|");
+
+    if (
+      intentoPedidoRef.current?.firma ===
+      firma
+    ) {
+      return intentoPedidoRef.current.clave;
+    }
+
+    try {
+      const guardado =
+        sessionStorage.getItem(
+          "dioxilife_pedido_intento"
+        );
+
+      if (guardado) {
+        const intento =
+          JSON.parse(guardado) as {
+            firma?: string;
+            clave?: string;
+          };
+
+        if (
+          intento.firma === firma &&
+          typeof intento.clave ===
+            "string"
+        ) {
+          intentoPedidoRef.current = {
+            firma,
+            clave: intento.clave,
+          };
+
+          return intento.clave;
+        }
+      }
+    } catch {
+      // Si el navegador bloquea el almacenamiento,
+      // seguimos usando la memoria de esta pestaña.
+    }
+
+    const clave =
+      crypto.randomUUID();
+
+    intentoPedidoRef.current = {
+      firma,
+      clave,
+    };
+
+    try {
+      sessionStorage.setItem(
+        "dioxilife_pedido_intento",
+        JSON.stringify({
+          firma,
+          clave,
+        })
+      );
+    } catch {
+      // La compra puede continuar aunque
+      // sessionStorage no esté disponible.
+    }
+
+    return clave;
+  }
+
+  function limpiarClaveUnicaPedido() {
+    intentoPedidoRef.current = null;
+
+    try {
+      sessionStorage.removeItem(
+        "dioxilife_pedido_intento"
+      );
+    } catch {
+      // No bloqueamos la compra por esto.
+    }
+  }
 
   function armarMensaje(pedido: PedidoCreado) {
     const lineas = pedido.detalles.map((detalle) => {
@@ -105,6 +195,9 @@ export default function CartDrawer() {
 
     setFinalizando(true);
 
+    const claveUnica =
+      obtenerClaveUnicaPedido();
+
     // Abrimos la pestaña inmediatamente para evitar
     // que el navegador bloquee WhatsApp después del await.
     const ventanaWhatsapp = window.open("", "_blank");
@@ -114,6 +207,8 @@ export default function CartDrawer() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Idempotency-Key":
+            claveUnica,
         },
         body: JSON.stringify({
           items: items.map((item) => ({
@@ -160,6 +255,7 @@ export default function CartDrawer() {
         window.location.href = url;
       }
 
+      limpiarClaveUnicaPedido();
       clear();
       setAbierto(false);
 
