@@ -32,6 +32,45 @@ export async function PUT(
     activo,
   } = await req.json();
 
+  const precioNumero = Number(precio);
+
+  if (
+    !Number.isFinite(precioNumero) ||
+    precioNumero < 0
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "El precio debe ser un número válido.",
+      },
+      { status: 400 }
+    );
+  }
+
+  const precioPromocionNumero =
+    precioPromocion !== undefined &&
+    precioPromocion !== null &&
+    precioPromocion !== ""
+      ? Number(precioPromocion)
+      : null;
+
+  if (
+    precioPromocionNumero !== null &&
+    (
+      !Number.isFinite(precioPromocionNumero) ||
+      precioPromocionNumero < 0 ||
+      precioPromocionNumero > precioNumero
+    )
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "El precio de promoción no puede superar el precio normal.",
+      },
+      { status: 400 }
+    );
+  }
+
   const participaMultinivel =
     generaComision === true;
 
@@ -137,6 +176,23 @@ export async function DELETE(
         productoId: id,
       },
     });
+
+  const ventasAsociadas =
+    await prisma.detallePedido.count({
+      where: {
+        productoId: id,
+      },
+    });
+
+  if (ventasAsociadas > 0) {
+    return NextResponse.json(
+      {
+        error:
+          "No se puede borrar este producto porque ya tiene ventas registradas. Desactívalo.",
+      },
+      { status: 409 }
+    );
+  }
 
   if (protocolosAsociados > 0) {
     return NextResponse.json(

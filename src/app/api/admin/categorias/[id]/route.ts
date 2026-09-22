@@ -49,6 +49,29 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  await prisma.categoria.delete({ where: { id } });
+
+  const productos =
+    await prisma.producto.count({
+      where: {
+        categoriaId: id,
+      },
+    });
+
+  if (productos > 0) {
+    return NextResponse.json(
+      {
+        error:
+          `No se puede eliminar esta categoría porque tiene ${productos} producto(s) asociado(s).`,
+      },
+      { status: 409 }
+    );
+  }
+
+  await prisma.categoria.delete({
+    where: {
+      id,
+    },
+  });
+
   return NextResponse.json({ ok: true });
 }

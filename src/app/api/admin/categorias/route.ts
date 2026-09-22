@@ -40,12 +40,21 @@ export async function POST(req: NextRequest) {
 
   const { nombre } = await req.json();
 
-  if (!nombre) {
-    return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
+  const nombreLimpio =
+    String(nombre || "").trim();
+
+  if (!nombreLimpio) {
+    return NextResponse.json(
+      { error: "Nombre requerido" },
+      { status: 400 }
+    );
   }
 
   const categoria = await prisma.categoria.create({
-    data: { nombre, slug: slugify(nombre) },
+    data: {
+      nombre: nombreLimpio,
+      slug: slugify(nombreLimpio),
+    },
   });
 
   return NextResponse.json(categoria);
