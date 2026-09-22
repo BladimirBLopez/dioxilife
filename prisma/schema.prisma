@@ -30,27 +30,28 @@ model Categoria {
 }
 
 model Producto {
-  id                String          @id @default(cuid())
-  nombre            String
-  slug              String          @unique
-  descripcion       String?
-  precio            Decimal
-  mostrarPrecio     Boolean         @default(false)
-  enPromocion       Boolean         @default(false)
-  precioPromocion   Decimal?
-  valorComisionable Decimal         @default(0)
-  puntosVolumen     Decimal         @default(0)
-  generaComision    Boolean         @default(false)
-  imagenUrl         String?
-  categoriaId       String
-  categoria         Categoria       @relation(fields: [categoriaId], references: [id])
-  protocolos        Protocolo[]
-  resenas           Resena[]
-  orden             Int             @default(0)
-  activo            Boolean         @default(true)
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  detallePedidos    DetallePedido[]
+  id                  String                @id @default(cuid())
+  nombre              String
+  slug                String                @unique
+  descripcion         String?
+  precio              Decimal
+  mostrarPrecio       Boolean               @default(false)
+  enPromocion         Boolean               @default(false)
+  precioPromocion     Decimal?
+  valorComisionable   Decimal               @default(0)
+  puntosVolumen       Decimal               @default(0)
+  generaComision      Boolean               @default(false)
+  imagenUrl           String?
+  categoriaId         String
+  categoria           Categoria             @relation(fields: [categoriaId], references: [id])
+  protocolos          Protocolo[]
+  informacionProducto InformacionProducto[]
+  resenas             Resena[]
+  orden               Int                   @default(0)
+  activo              Boolean               @default(true)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  detallePedidos      DetallePedido[]
 }
 
 model Protocolo {
@@ -63,6 +64,33 @@ model Protocolo {
   activo     Boolean  @default(true)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+enum TipoInformacion {
+  BENEFICIO
+  VIDEO
+  INGREDIENTE
+  FAQ
+  DOCUMENTO
+}
+
+model InformacionProducto {
+  id        String          @id @default(cuid())
+  tipo      TipoInformacion
+  titulo    String
+  contenido String?
+  imagenUrl String?
+  videoUrl  String?
+  orden     Int             @default(0)
+  activo    Boolean         @default(true)
+
+  productoId String
+  producto   Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productoId])
 }
 
 model AplicacionCds {

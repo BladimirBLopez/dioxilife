@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import AgregarCarritoButton from "@/components/AgregarCarritoButton";
 import ResenaForm from "@/components/ResenaForm";
+import InformacionProductoPublica from "@/components/InformacionProductoPublica";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,18 @@ export default async function ProductoDetalle({
       protocolos: {
         where: { activo: true },
         orderBy: { createdAt: "asc" },
+      },
+      informacionProducto: {
+        where: { activo: true },
+        orderBy: { orden: "asc" },
+        select: {
+          id: true,
+          tipo: true,
+          titulo: true,
+          contenido: true,
+          imagenUrl: true,
+          videoUrl: true,
+        },
       },
     },
   });
@@ -124,6 +137,11 @@ export default async function ProductoDetalle({
                 }
                 mostrarPrecio={producto.mostrarPrecio}
                 imagenUrl={producto.imagenUrl}
+              />
+
+              <InformacionProductoPublica
+                nombreProducto={producto.nombre}
+                informaciones={producto.informacionProducto}
               />
             </div>
           </div>

@@ -8,6 +8,25 @@ import Modal from "@/components/Modal";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
 type Categoria = { id: string; nombre: string };
+type TipoInformacion =
+  | "BENEFICIO"
+  | "VIDEO"
+  | "INGREDIENTE"
+  | "FAQ"
+  | "DOCUMENTO";
+
+type InformacionProducto = {
+  id: string;
+  productoId: string;
+  tipo: TipoInformacion;
+  titulo: string;
+  contenido: string | null;
+  imagenUrl: string | null;
+  videoUrl: string | null;
+  orden: number;
+  activo: boolean;
+};
+
 type Producto = {
   id: string;
   nombre: string;
@@ -44,11 +63,13 @@ function TarjetaProducto({
   producto,
   index,
   onEditar,
+  onInformacion,
   onBorrar,
 }: {
   producto: Producto;
   index: number;
   onEditar: (p: Producto) => void;
+  onInformacion: (p: Producto) => void;
   onBorrar: (id: string) => void;
 }) {
   const { ref, handleRef, isDragging } = useSortable({
@@ -129,6 +150,14 @@ function TarjetaProducto({
           >
             Editar
           </button>
+
+          <button
+            onClick={() => onInformacion(producto)}
+            className="text-green-700 font-medium hover:underline"
+          >
+            Información
+          </button>
+
           <button
             onClick={() => onBorrar(producto.id)}
             className="text-red-600 font-medium hover:underline"
@@ -152,6 +181,32 @@ export default function ProductosPage() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [confirmarSalir, setConfirmarSalir] = useState(false);
   const [borrarId, setBorrarId] = useState<string | null>(null);
+
+  const [productoInformacion, setProductoInformacion] =
+    useState<Producto | null>(null);
+
+  const [informaciones, setInformaciones] =
+    useState<InformacionProducto[]>([]);
+
+  const [cargandoInformacion, setCargandoInformacion] =
+    useState(false);
+
+  const [guardandoInformacion, setGuardandoInformacion] =
+    useState(false);
+
+  const [errorInformacion, setErrorInformacion] = useState("");
+
+  const [editandoInformacionId, setEditandoInformacionId] =
+    useState<string | null>(null);
+
+  const [nuevaInformacion, setNuevaInformacion] =
+    useState({
+      tipo: "BENEFICIO" as TipoInformacion,
+      titulo: "",
+      contenido: "",
+      imagenUrl: "",
+      videoUrl: "",
+    });
   const [guardandoOrden, setGuardandoOrden] = useState(false);
 
   async function cargar() {
@@ -189,6 +244,164 @@ export default function ProductosPage() {
     setForm(vacio);
     setFormInicial(vacio);
     setModalAbierto(true);
+  }
+
+  async function abrirInformacion(producto: Producto) {
+    setProductoInformacion(producto);
+
+    setCargandoInformacion(true);
+
+    try {
+      const res = await fetch(
+        `/api/admin/productos/${producto.id}/informacion`
+      );
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setInformaciones(data);
+      } else {
+        setInformaciones([]);
+      }
+
+    } catch {
+      setInformaciones([]);
+    } finally {
+      setCargandoInformacion(false);
+    }
+  }
+
+  async function guardarInformacion(e: React.FormEvent) {
+    e.preventDefault();
+
+    if (!productoInformacion) return;
+
+    if (!nuevaInformacion.titulo.trim()) {
+      setErrorInformacion("El título es obligatorio.");
+      return;
+    }
+
+    setGuardandoInformacion(true);
+    setErrorInformacion("");
+
+    try {
+      const url = editandoInformacionId
+        ? `/api/admin/productos/${productoInformacion.id}/informacion/${editandoInformacionId}`
+        : `/api/admin/productos/${productoInformacion.id}/informacion`;
+
+      const res = await fetch(url, {
+        method: editandoInformacionId ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          tipo: nuevaInformacion.tipo,
+          titulo: nuevaInformacion.titulo.trim(),
+          contenido: nuevaInformacion.contenido.trim() || null,
+          imagenUrl: nuevaInformacion.imagenUrl.trim() || null,
+          videoUrl: nuevaInformacion.videoUrl.trim() || null,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorInformacion(
+          data.error || "No se pudo guardar la información."
+        );
+        return;
+      }
+
+      if (editandoInformacionId) {
+        setInformaciones((anteriores) =>
+          anteriores.map((info) =>
+            info.id === editandoInformacionId ? data : info
+          )
+        );
+      } else {
+        setInformaciones((anteriores) => [...anteriores, data]);
+      }
+
+      setEditandoInformacionId(null);
+
+      setNuevaInformacion({
+        tipo: "BENEFICIO",
+        titulo: "",
+        contenido: "",
+        imagenUrl: "",
+        videoUrl: "",
+      });
+    } catch {
+      setErrorInformacion("No se pudo conectar con el servidor.");
+    } finally {
+      setGuardandoInformacion(false);
+    }
+  }
+
+  function editarInformacion(info: InformacionProducto) {
+    setEditandoInformacionId(info.id);
+    setErrorInformacion("");
+
+    setNuevaInformacion({
+      tipo: info.tipo,
+      titulo: info.titulo,
+      contenido: info.contenido || "",
+      imagenUrl: info.imagenUrl || "",
+      videoUrl: info.videoUrl || "",
+    });
+  }
+
+  function cancelarEdicionInformacion() {
+    setEditandoInformacionId(null);
+    setErrorInformacion("");
+
+    setNuevaInformacion({
+      tipo: "BENEFICIO",
+      titulo: "",
+      contenido: "",
+      imagenUrl: "",
+      videoUrl: "",
+    });
+  }
+
+  async function eliminarInformacion(infoId: string) {
+    if (!productoInformacion) return;
+
+    const confirmar = window.confirm(
+      "¿Seguro que deseas eliminar esta información?"
+    );
+
+    if (!confirmar) return;
+
+    setErrorInformacion("");
+
+    try {
+      const res = await fetch(
+        `/api/admin/productos/${productoInformacion.id}/informacion/${infoId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorInformacion(
+          data.error || "No se pudo eliminar la información."
+        );
+        return;
+      }
+
+      setInformaciones((anteriores) =>
+        anteriores.filter((info) => info.id !== infoId)
+      );
+
+      if (editandoInformacionId === infoId) {
+        cancelarEdicionInformacion();
+      }
+    } catch {
+      setErrorInformacion("No se pudo conectar con el servidor.");
+    }
   }
 
   function abrirEditar(p: Producto) {
@@ -386,6 +599,7 @@ export default function ProductosPage() {
               producto={p}
               index={i}
               onEditar={abrirEditar}
+              onInformacion={abrirInformacion}
               onBorrar={setBorrarId}
             />
           ))}
@@ -668,6 +882,252 @@ export default function ProductosPage() {
                 : "Crear producto"}
             </button>
           </form>
+        </Modal>
+      )}
+
+      {productoInformacion && (
+        <Modal
+          title={`Información: ${productoInformacion.nombre}`}
+          onClose={() => {
+            setProductoInformacion(null);
+            setInformaciones([]);
+            setErrorInformacion("");
+            setEditandoInformacionId(null);
+            setNuevaInformacion({
+              tipo: "BENEFICIO",
+              titulo: "",
+              contenido: "",
+              imagenUrl: "",
+              videoUrl: "",
+            });
+          }}
+        >
+          <div className="space-y-5">
+
+            <form onSubmit={guardarInformacion} className="space-y-4">
+              <div>
+                <label className="admin-label">
+                  Tipo de información
+                </label>
+
+                <select
+                  value={nuevaInformacion.tipo}
+                  onChange={(e) =>
+                    setNuevaInformacion({
+                      ...nuevaInformacion,
+                      tipo: e.target.value as TipoInformacion,
+                    })
+                  }
+                  className="admin-input"
+                >
+                  <option value="BENEFICIO">Beneficio</option>
+                  <option value="VIDEO">Video</option>
+                  <option value="INGREDIENTE">Ingrediente</option>
+                  <option value="FAQ">Pregunta frecuente</option>
+                  <option value="DOCUMENTO">Documento</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="admin-label">
+                  Título
+                </label>
+
+                <input
+                  type="text"
+                  value={nuevaInformacion.titulo}
+                  onChange={(e) =>
+                    setNuevaInformacion({
+                      ...nuevaInformacion,
+                      titulo: e.target.value,
+                    })
+                  }
+                  className="admin-input"
+                  placeholder={
+                    nuevaInformacion.tipo === "FAQ"
+                      ? "Ej.: ¿Cómo se consume?"
+                      : "Ej.: Beneficios principales"
+                  }
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="admin-label">
+                  {nuevaInformacion.tipo === "FAQ"
+                    ? "Respuesta"
+                    : "Contenido"}
+                </label>
+
+                <textarea
+                  value={nuevaInformacion.contenido}
+                  onChange={(e) =>
+                    setNuevaInformacion({
+                      ...nuevaInformacion,
+                      contenido: e.target.value,
+                    })
+                  }
+                  className="admin-input"
+                  rows={4}
+                  placeholder="Escribe la información..."
+                />
+              </div>
+
+              <div>
+                <label className="admin-label">
+                  Imagen opcional
+                </label>
+
+                <CloudinaryUpload
+                  value={nuevaInformacion.imagenUrl}
+                  onChange={(url) =>
+                    setNuevaInformacion({
+                      ...nuevaInformacion,
+                      imagenUrl: url,
+                    })
+                  }
+                />
+              </div>
+
+              {nuevaInformacion.tipo === "VIDEO" && (
+                <div>
+                  <label className="admin-label">
+                    Enlace del video
+                  </label>
+
+                  <input
+                    type="url"
+                    value={nuevaInformacion.videoUrl}
+                    onChange={(e) =>
+                      setNuevaInformacion({
+                        ...nuevaInformacion,
+                        videoUrl: e.target.value,
+                      })
+                    }
+                    className="admin-input"
+                    placeholder="https://youtube.com/..."
+                  />
+                </div>
+              )}
+
+              {errorInformacion && (
+                <p className="text-sm text-red-600">
+                  {errorInformacion}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={guardandoInformacion}
+                className="admin-btn-primary w-full"
+              >
+                {guardandoInformacion
+                  ? "Guardando..."
+                  : editandoInformacionId
+                    ? "Guardar cambios"
+                    : "Agregar información"}
+              </button>
+
+              {editandoInformacionId && (
+                <button
+                  type="button"
+                  onClick={cancelarEdicionInformacion}
+                  className="w-full text-sm text-[#6B6870] font-medium"
+                >
+                  Cancelar edición
+                </button>
+              )}
+            </form>
+
+            <div className="border-t pt-4">
+              <h3 className="font-semibold text-[#1F1B24] mb-3">
+                Información registrada
+              </h3>
+
+              {cargandoInformacion ? (
+                <p className="text-sm text-[#8A8790]">
+                  Cargando...
+                </p>
+              ) : informaciones.length === 0 ? (
+                <p className="text-sm text-[#8A8790]">
+                  Este producto todavía no tiene información adicional.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {informaciones.map((info) => (
+                    <div
+                      key={info.id}
+                      className="admin-card p-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <span className="text-[10px] font-bold text-brand-pink">
+                            {info.tipo === "BENEFICIO"
+                              ? "BENEFICIO"
+                              : info.tipo === "VIDEO"
+                                ? "VIDEO"
+                                : info.tipo === "INGREDIENTE"
+                                  ? "INGREDIENTE"
+                                  : info.tipo === "FAQ"
+                                    ? "PREGUNTA FRECUENTE"
+                                    : "DOCUMENTO"}
+                          </span>
+
+                          <p className="font-medium text-sm mt-1">
+                            {info.titulo}
+                          </p>
+
+                          <div className="flex items-center gap-3 mt-2">
+                            <button
+                              type="button"
+                              onClick={() => editarInformacion(info)}
+                              className="text-xs text-brand-blue font-semibold hover:underline"
+                            >
+                              Editar
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => eliminarInformacion(info.id)}
+                              className="text-xs text-red-600 font-semibold hover:underline"
+                            >
+                              Eliminar
+                            </button>
+                          </div>
+
+                          {info.contenido && (
+                            <p className="text-sm text-[#6B6870] mt-1 whitespace-pre-line">
+                              {info.contenido}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {info.imagenUrl && (
+                        <img
+                          src={info.imagenUrl}
+                          alt={info.titulo}
+                          className="mt-3 max-h-40 w-full object-contain rounded-lg bg-[#F7F7F9]"
+                        />
+                      )}
+
+                      {info.videoUrl && (
+                        <a
+                          href={info.videoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-block mt-2 text-sm text-brand-pink font-medium hover:underline"
+                        >
+                          Ver video
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+          </div>
         </Modal>
       )}
 
