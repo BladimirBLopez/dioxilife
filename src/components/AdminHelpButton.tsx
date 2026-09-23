@@ -9,6 +9,7 @@ export default function AdminHelpButton() {
   const [abierto, setAbierto] = useState(false);
   const [tutorial, setTutorial] = useState(false);
   const [paso, setPaso] = useState(0);
+  const [busqueda, setBusqueda] = useState("");
 
   useEffect(() => {
     if (abierto) {
@@ -22,6 +23,11 @@ export default function AdminHelpButton() {
     };
   }, [abierto]);
 
+  useEffect(() => {
+    setTutorial(false);
+    setPaso(0);
+  }, [pathname]);
+
   const actual =
     ayudas.find((a) => pathname.startsWith(a.ruta)) ||
     {
@@ -34,14 +40,23 @@ export default function AdminHelpButton() {
     (a) => a.titulo !== actual.titulo
   );
 
+  const resultados = ayudas.filter((a) =>
+    `${a.titulo} ${a.descripcion}`
+      .toLowerCase()
+      .includes(busqueda.toLowerCase())
+  );
+
   return (
     <>
       <button
         onClick={() => setAbierto(true)}
-        className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-brand-pink text-white text-2xl shadow-lg hover:scale-105 transition"
+        className="fixed bottom-5 right-5 z-50 h-14 min-w-14 px-4 rounded-full bg-brand-pink text-white text-2xl shadow-lg hover:scale-105 transition flex items-center justify-center gap-2"
         aria-label="Ayuda"
       >
-        ?
+        <span>?</span>
+        <span className="hidden sm:inline text-sm font-semibold">
+          Ayuda
+        </span>
       </button>
 
       {abierto && (
@@ -66,6 +81,15 @@ export default function AdminHelpButton() {
                 ✕
               </button>
             </div>
+
+
+            <input
+              type="text"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="🔎 Buscar tutorial..."
+              className="w-full border rounded-lg px-3 py-2 text-sm mb-5"
+            />
 
 
             <div className="bg-brand-pink/10 rounded-xl p-4 mb-5">
@@ -168,7 +192,9 @@ export default function AdminHelpButton() {
 
 
             <div className="space-y-3">
-              {otros.map((a) => (
+              {resultados
+                .filter((a) => a.titulo !== actual.titulo)
+                .map((a) => (
                 <div
                   key={a.titulo}
                   className="bg-gray-50 rounded-xl p-4"
