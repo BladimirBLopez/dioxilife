@@ -4,6 +4,7 @@ export type PasoAyuda = {
   ruta?: string;
   boton?: string;
   consejo?: string;
+  imagen?: string;
 };
 
 export type AyudaModulo = {

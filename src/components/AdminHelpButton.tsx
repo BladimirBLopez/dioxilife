@@ -152,6 +152,14 @@ export default function AdminHelpButton() {
                       {actual.pasos[paso].texto}
                     </p>
 
+                    {actual.pasos[paso].imagen && (
+                      <img
+                        src={actual.pasos[paso].imagen}
+                        alt={actual.pasos[paso].titulo}
+                        className="w-full rounded-xl border mt-4"
+                      />
+                    )}
+
                     {actual.pasos[paso].consejo && (
                       <div className="mt-3 bg-yellow-50 rounded-lg p-3">
                         <p className="text-xs font-semibold text-yellow-700">
