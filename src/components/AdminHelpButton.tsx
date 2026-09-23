@@ -152,6 +152,27 @@ export default function AdminHelpButton() {
                       {actual.pasos[paso].texto}
                     </p>
 
+                    {actual.pasos[paso].consejo && (
+                      <div className="mt-3 bg-yellow-50 rounded-lg p-3">
+                        <p className="text-xs font-semibold text-yellow-700">
+                          💡 Consejo
+                        </p>
+
+                        <p className="text-sm text-gray-700 mt-1">
+                          {actual.pasos[paso].consejo}
+                        </p>
+                      </div>
+                    )}
+
+                    {actual.pasos[paso].ruta && (
+                      <a
+                        href={actual.pasos[paso].ruta}
+                        className="block mt-3 text-center bg-brand-blue text-white rounded-lg py-2 text-sm font-semibold"
+                      >
+                        {actual.pasos[paso].boton || "Abrir módulo"}
+                      </a>
+                    )}
+
                     <div className="flex gap-2 mt-5">
 
                       <button

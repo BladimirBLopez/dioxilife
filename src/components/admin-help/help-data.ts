@@ -1,6 +1,9 @@
 export type PasoAyuda = {
   titulo: string;
   texto: string;
+  ruta?: string;
+  boton?: string;
+  consejo?: string;
 };
 
 export type AyudaModulo = {
@@ -19,6 +22,9 @@ export const ayudas: AyudaModulo[] = [
       {
         titulo: "Crear producto",
         texto: "Presiona Nuevo producto y completa nombre, categoría, precio e imagen.",
+        ruta: "/admin/productos",
+        boton: "Abrir Productos",
+        consejo: "Verifica que la imagen, precio y datos principales estén completos.",
       },
       {
         titulo: "Agregar información",
@@ -39,6 +45,9 @@ export const ayudas: AyudaModulo[] = [
       {
         titulo: "Revisar pendientes",
         texto: "Verifica los testimonios antes de publicarlos.",
+        ruta: "/admin/resenas",
+        boton: "Abrir Testimonios",
+        consejo: "Revisa que la experiencia sea real antes de aprobar.",
       },
       {
         titulo: "Aprobar experiencia",
@@ -59,6 +68,9 @@ export const ayudas: AyudaModulo[] = [
       {
         titulo: "Revisar pedidos nuevos",
         texto: "Visualiza pedidos pendientes y solicitudes recientes.",
+        ruta: "/admin/pedidos",
+        boton: "Abrir Pedidos",
+        consejo: "Confirma la información del cliente antes de actualizar estados.",
       },
       {
         titulo: "Ver detalle",
@@ -79,6 +91,9 @@ export const ayudas: AyudaModulo[] = [
       {
         titulo: "Crear banner",
         texto: "Sube una imagen promocional.",
+        ruta: "/admin/banner",
+        boton: "Abrir Banner",
+        consejo: "Utiliza imágenes de buena calidad para mantener una presentación profesional.",
       },
       {
         titulo: "Configurar contenido",
@@ -99,6 +114,9 @@ export const ayudas: AyudaModulo[] = [
       {
         titulo: "Crear categoría",
         texto: "Registra grupos para clasificar productos.",
+        ruta: "/admin/categorias",
+        boton: "Abrir Categorías",
+        consejo: "Mantén categorías claras para facilitar la navegación del cliente.",
       },
       {
         titulo: "Ordenar",
@@ -123,6 +141,9 @@ export const ayudas: AyudaModulo[] = [
       {
         titulo: "Crear protocolo",
         texto: "Agrega instrucciones o recomendaciones.",
+        ruta: "/admin/protocolos",
+        boton: "Abrir Protocolos",
+        consejo: "Revisa que la información sea clara antes de publicarla.",
       },
       {
         titulo: "Publicar",
@@ -139,6 +160,9 @@ export const ayudas: AyudaModulo[] = [
       {
         titulo: "Crear contenido",
         texto: "Registra información organizada.",
+        ruta: "/admin/aplicaciones-cds",
+        boton: "Abrir Aplicaciones CDS",
+        consejo: "Mantén actualizado el contenido informativo del producto.",
       },
       {
         titulo: "Revisar datos",
@@ -159,6 +183,9 @@ export const ayudas: AyudaModulo[] = [
       {
         titulo: "Registrar sucursal",
         texto: "Agrega departamento, dirección y datos.",
+        ruta: "/admin/sucursales",
+        boton: "Abrir Sucursales",
+        consejo: "Verifica que teléfonos y direcciones estén actualizados.",
       },
       {
         titulo: "Agregar redes",
@@ -179,6 +206,9 @@ export const ayudas: AyudaModulo[] = [
       {
         titulo: "Gestionar miembros",
         texto: "Revisa usuarios registrados.",
+        ruta: "/admin/multinivel",
+        boton: "Abrir Multinivel",
+        consejo: "Administra la red verificando correctamente los datos.",
       },
       {
         titulo: "Consultar red",
