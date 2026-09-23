@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import LogoutButton from "@/app/admin/LogoutButton";
+import AdminHelpButton from "@/components/AdminHelpButton";
 
 type AdminShellProps = {
   children: ReactNode;
@@ -543,6 +544,8 @@ export default function AdminShell({
         <main className="p-4 md:p-6 xl:p-8">
           {children}
         </main>
+
+        <AdminHelpButton />
 
       </div>
 
