@@ -160,6 +160,19 @@ export default function AdminHelpButton() {
                       />
                     )}
 
+                    {actual.pasos[paso].video && (
+                      <video
+                        controls
+                        className="w-full rounded-xl border mt-4"
+                      >
+                        <source
+                          src={actual.pasos[paso].video}
+                          type="video/mp4"
+                        />
+                        Tu navegador no soporta videos.
+                      </video>
+                    )}
+
                     {actual.pasos[paso].consejo && (
                       <div className="mt-3 bg-yellow-50 rounded-lg p-3">
                         <p className="text-xs font-semibold text-yellow-700">
