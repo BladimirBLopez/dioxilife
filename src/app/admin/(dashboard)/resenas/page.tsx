@@ -16,6 +16,8 @@ type Resena = {
   productoId: string | null;
   producto: { nombre: string } | null;
   aprobado: boolean;
+  tiempoUso: string | null;
+  destacado: boolean;
   createdAt: string;
 };
 
@@ -72,8 +74,36 @@ export default function ResenasPage() {
         prev.map((r) => (r.id === id ? { ...r, aprobado } : r))
       );
     } else {
-      alert("No se pudo actualizar la reseña");
+      alert("No se pudo actualizar la testimonio");
     }
+    setProcesandoId(null);
+  }
+
+  async function cambiarDestacado(id: string, destacado: boolean) {
+    setProcesandoId(id);
+
+    const res = await fetch(`/api/admin/resenas/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        destacado,
+      }),
+    });
+
+    if (res.ok) {
+      setResenas((prev) =>
+        prev.map((r) =>
+          r.id === id
+            ? { ...r, destacado }
+            : r
+        )
+      );
+    } else {
+      alert("No se pudo actualizar el destacado");
+    }
+
     setProcesandoId(null);
   }
 
@@ -86,7 +116,7 @@ export default function ResenasPage() {
     if (res.ok) {
       setResenas((prev) => prev.filter((r) => r.id !== borrarId));
     } else {
-      alert("No se pudo borrar la reseña");
+      alert("No se pudo borrar la testimonio");
     }
   }
 
@@ -192,9 +222,9 @@ export default function ResenasPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-xl font-semibold text-[#1F1B24]">Reseñas</h1>
+        <h1 className="text-xl font-semibold text-[#1F1B24]">Testimonios</h1>
         <button onClick={abrirNueva} className="admin-btn-primary">
-          + Nueva reseña
+          + Nueva testimonio
         </button>
       </div>
 
@@ -234,7 +264,7 @@ export default function ResenasPage() {
       {cargando ? (
         <p className="text-sm text-[#8A8790]">Cargando...</p>
       ) : visibles.length === 0 ? (
-        <p className="text-sm text-[#8A8790]">No hay reseñas en esta vista.</p>
+        <p className="text-sm text-[#8A8790]">No hay testimonios en esta vista.</p>
       ) : (
         <div className="space-y-3">
           {visibles.map((r) => (
@@ -264,9 +294,15 @@ export default function ResenasPage() {
                       PENDIENTE
                     </span>
                   )}
+
+                  {r.destacado && (
+                    <span className="text-[10px] font-bold text-white bg-yellow-500 px-1.5 py-0.5 rounded-full">
+                      ⭐ DESTACADO EN INICIO
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs text-brand-pink font-medium mt-0.5">
-                  {r.producto ? r.producto.nombre : "Reseña general de la tienda"}
+                  {r.producto ? r.producto.nombre : "Testimonio general de la tienda"}
                 </p>
                 <p className="text-sm text-[#6B6870] mt-1 whitespace-pre-line">
                   {r.comentario}
@@ -303,6 +339,17 @@ export default function ResenasPage() {
                   >
                     Editar
                   </button>
+
+                  <button
+                    onClick={() => cambiarDestacado(r.id, !r.destacado)}
+                    disabled={procesandoId === r.id}
+                    className="text-yellow-600 font-medium hover:underline"
+                  >
+                    {r.destacado
+                      ? "★ Quitar destacado"
+                      : "⭐ Destacar"}
+                  </button>
+
                   <button
                     onClick={() => setBorrarId(r.id)}
                     className="text-red-600 font-medium hover:underline"
@@ -318,7 +365,7 @@ export default function ResenasPage() {
 
       {modalAbierto && (
         <Modal
-          title={editandoId ? "Editar reseña" : "Nueva reseña"}
+          title={editandoId ? "Editar testimonio" : "Nueva testimonio"}
           onClose={pedirCerrarModal}
         >
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -367,7 +414,7 @@ export default function ResenasPage() {
 
             <div>
               <label className="admin-label">
-                Producto (opcional — vacío = reseña general)
+                Producto (opcional — vacío = testimonio general)
               </label>
               <select
                 value={form.productoId}
@@ -405,7 +452,7 @@ export default function ResenasPage() {
                 ? "Guardando..."
                 : editandoId
                 ? "Guardar cambios"
-                : "Crear reseña"}
+                : "Crear testimonio"}
             </button>
           </form>
         </Modal>
@@ -423,8 +470,8 @@ export default function ResenasPage() {
 
       {borrarId && (
         <ConfirmDialog
-          title="Borrar reseña"
-          message="¿Seguro que quieres borrar esta reseña? Esta acción no se puede deshacer."
+          title="Borrar testimonio"
+          message="¿Seguro que quieres borrar esta testimonio? Esta acción no se puede deshacer."
           onConfirm={confirmarBorrar}
           onCancel={() => setBorrarId(null)}
         />

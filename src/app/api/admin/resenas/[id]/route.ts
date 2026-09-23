@@ -45,6 +45,26 @@ export async function PUT(
     );
   }
 
+  if (
+    Object.keys(body).length === 1 &&
+    "destacado" in body
+  ) {
+    const resena =
+      await prisma.resena.update({
+        where: {
+          id,
+        },
+        data: {
+          destacado:
+            Boolean(body.destacado),
+        },
+      });
+
+    return NextResponse.json(
+      resena
+    );
+  }
+
   const {
     nombreCliente,
     calificacion,

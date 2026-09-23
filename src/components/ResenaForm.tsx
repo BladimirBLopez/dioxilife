@@ -13,6 +13,7 @@ export default function ResenaForm({
   const [calificacion, setCalificacion] = useState(0);
   const [calificacionHover, setCalificacionHover] = useState(0);
   const [comentario, setComentario] = useState("");
+  const [tiempoUso, setTiempoUso] = useState("");
   const [sitioWeb, setSitioWeb] = useState(""); // honeypot
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
@@ -52,6 +53,7 @@ export default function ResenaForm({
         body: JSON.stringify({
           nombreCliente,
           calificacion,
+          tiempoUso,
           comentario,
           productoId: productoId || null,
           sitioWeb,
@@ -65,7 +67,7 @@ export default function ResenaForm({
           localStorage.setItem(CLAVE_LOCALSTORAGE, "1");
           setYaEnvioAntes(true);
         } else {
-          setError(data?.error || "No se pudo enviar tu reseña");
+          setError(data?.error || "No se pudo enviar tu testimonio");
         }
         setEnviando(false);
         return;
@@ -84,8 +86,8 @@ export default function ResenaForm({
     return (
       <div className="bg-green-50 border border-green-200 text-green-800 rounded-xl p-4 text-sm text-center">
         {enviado
-          ? "¡Gracias por tu reseña! Se publicará apenas la revisemos."
-          : "Ya registramos una reseña tuya. ¡Gracias por compartir tu opinión!"}
+          ? "¡Gracias por tu testimonio! Se publicará apenas la revisemos."
+          : "Ya registramos una testimonio tuya. ¡Gracias por compartir tu opinión!"}
       </div>
     );
   }
@@ -143,7 +145,24 @@ export default function ResenaForm({
 
       <div>
         <label className="block text-sm font-medium text-[#1F1B24] mb-1">
-          Tu comentario
+          Tiempo usando el producto
+        </label>
+
+        <select
+          value={tiempoUso}
+          onChange={(e) => setTiempoUso(e.target.value)}
+          className="w-full border rounded-lg px-3 py-2 text-sm"
+        >
+          <option value="">Seleccionar...</option>
+          <option value="Menos de 1 mes">Menos de 1 mes</option>
+          <option value="1 a 3 meses">1 a 3 meses</option>
+          <option value="Más de 3 meses">Más de 3 meses</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-[#1F1B24] mb-1">
+          Tu experiencia
         </label>
         <textarea
           value={comentario}
@@ -151,7 +170,7 @@ export default function ResenaForm({
           maxLength={1000}
           rows={3}
           className="w-full border rounded-lg px-3 py-2 text-sm"
-          placeholder="Cuéntanos tu experiencia..."
+          placeholder="Comparte cómo ha sido tu experiencia con el producto..."
         />
       </div>
 
@@ -162,7 +181,7 @@ export default function ResenaForm({
         disabled={enviando}
         className="w-full bg-brand-pink text-white font-semibold text-sm rounded-lg py-2.5 disabled:opacity-50"
       >
-        {enviando ? "Enviando..." : "Enviar reseña"}
+        {enviando ? "Enviando..." : "Enviar testimonio"}
       </button>
     </form>
   );

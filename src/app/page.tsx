@@ -51,8 +51,25 @@ export default async function Home({
         orderBy: { orden: "asc" },
       }),
       prisma.resena.findMany({
-        where: { aprobado: true },
-        include: { producto: { select: { nombre: true, slug: true } } },
+        where: {
+          aprobado: true,
+          destacado: true,
+        },
+
+        select: {
+          id: true,
+          nombreCliente: true,
+          calificacion: true,
+          comentario: true,
+          imagenUrl: true,
+          tiempoUso: true,
+          producto: {
+            select: {
+              nombre: true,
+              slug: true,
+            },
+          },
+        },
         orderBy: { createdAt: "desc" },
         take: 9,
       }),
@@ -262,17 +279,17 @@ export default async function Home({
         )}
       </main>
 
-      {/* Reseñas de clientes (moderadas) */}
+      {/* Testimonios de clientes (moderadas) */}
       <section id="resenas" className="bg-white border-t py-10 px-4">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-xl font-bold text-brand-blue text-center mb-1">
-            Reseñas de nuestros clientes
+            Historias DioxiLife
           </h2>
           <p className="text-sm text-brand-gray text-center mb-6">
-            Opiniones reales, revisadas antes de publicarse
+            Experiencias reales de personas que eligieron DioxiLife
           </p>
 
-          {resenas.length > 0 && (
+          {resenas.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
               {resenas.map((r) => (
                 <div key={r.id} className="bg-gray-50 rounded-xl p-4 flex flex-col">
@@ -309,6 +326,10 @@ export default async function Home({
                 </div>
               ))}
             </div>
+          ) : (
+            <p className="text-sm text-brand-gray text-center mb-8">
+              Muy pronto compartiremos experiencias reales de nuestra comunidad DioxiLife.
+            </p>
           )}
 
           <div className="max-w-md mx-auto">

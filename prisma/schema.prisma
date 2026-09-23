@@ -112,6 +112,8 @@ model Resena {
   productoId    String?
   producto      Producto? @relation(fields: [productoId], references: [id], onDelete: Cascade)
   aprobado      Boolean   @default(false)
+  tiempoUso     String?
+  destacado     Boolean   @default(false)
   createdAt     DateTime  @default(now())
 }
 

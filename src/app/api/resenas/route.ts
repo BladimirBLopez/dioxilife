@@ -11,7 +11,7 @@ function obtenerIpHash(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { nombreCliente, calificacion, comentario, productoId, sitioWeb } =
+  const { nombreCliente, calificacion, tiempoUso, comentario, productoId, sitioWeb } =
     await req.json();
 
   // Campo trampa: si viene lleno, es un bot. Respondemos "éxito" sin guardar nada.
@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
 
   const nombre = String(nombreCliente || "").trim().slice(0, 80);
   const texto = String(comentario || "").trim().slice(0, 1000);
+  const uso = tiempoUso ? String(tiempoUso).trim().slice(0, 50) : null;
   const estrellas = Number(calificacion);
 
   if (!nombre || nombre.length < 2) {
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
 
   if (yaExiste) {
     return NextResponse.json(
-      { error: "Ya registramos una reseña enviada desde este dispositivo. ¡Gracias por tu opinión!" },
+      { error: "Ya registramos un testimonio enviado desde este dispositivo. ¡Gracias por tu opinión!" },
       { status: 409 }
     );
   }
@@ -74,6 +75,7 @@ export async function POST(req: NextRequest) {
       nombreCliente: nombre,
       comentario: texto,
       calificacion: estrellas,
+      tiempoUso: uso,
       productoId: productoId || null,
       ipHash,
       aprobado: false,

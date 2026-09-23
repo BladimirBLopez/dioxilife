@@ -200,7 +200,7 @@ const grupos: NavGroup[] = [
 
       {
         href: "/admin/resenas",
-        label: "Reseñas",
+        label: "Testimonios",
         icon: (
           <path d="M12 3.5 14.2 9l6 .6-4.5 4 1.3 5.9L12 16.7 6.9 19.5 8.2 13.6l-4.5-4 6-.6L12 3.5Z" />
         ),

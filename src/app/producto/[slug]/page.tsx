@@ -96,7 +96,7 @@ export default async function ProductoDetalle({
                   )
                 )}{" "}
                 <span className="text-[#6B6870]">
-                  ({resenas.length} reseña{resenas.length === 1 ? "" : "s"})
+                  ({resenas.length} testimonio{resenas.length === 1 ? "" : "s"})
                 </span>
               </p>
             )}
@@ -180,9 +180,9 @@ export default async function ProductoDetalle({
           </section>
         )}
 
-        {/* Reseñas de este producto */}
+        {/* Testimonios de este producto */}
         <section className="mt-10">
-          <h2 className="text-xl font-bold text-brand-blue mb-4">Reseñas</h2>
+          <h2 className="text-xl font-bold text-brand-blue mb-4">Testimonios</h2>
 
           {resenas.length > 0 ? (
             <div className="space-y-3 mb-6">
@@ -211,13 +211,19 @@ export default async function ProductoDetalle({
                     <p className="text-sm text-brand-gray mt-1 whitespace-pre-line">
                       {r.comentario}
                     </p>
+
+                    {r.tiempoUso && (
+                      <p className="text-xs text-[#8A8790] mt-2">
+                        🕒 Tiempo usando: {r.tiempoUso}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
           ) : (
             <p className="text-sm text-brand-gray mb-6">
-              Todavía no hay reseñas de este producto. ¡Sé el primero en dejar una!
+              Todavía no hay testimonios de este producto. ¡Sé el primero en dejar una!
             </p>
           )}
 
