@@ -210,6 +210,20 @@ export default function AdminHelpButton() {
               ))}
             </div>
 
+            <div className="border-t mt-6 pt-4 text-center">
+              <p className="text-xs font-semibold text-gray-500">
+                🌱 DioxiLife Admin Guide
+              </p>
+
+              <p className="text-[11px] text-gray-400 mt-1">
+                Versión 1.0 · Manual interno de administración
+              </p>
+
+              <p className="text-[11px] text-gray-400">
+                Actualizado: Septiembre 2026
+              </p>
+            </div>
+
           </div>
         </div>
       )}
