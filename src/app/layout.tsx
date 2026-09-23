@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import {
   Geist,
   Geist_Mono,
@@ -9,6 +9,7 @@ import "./globals.css";
 
 import { CartProvider } from "@/lib/cart-context";
 import ReferralTracker from "@/components/ReferralTracker";
+import RegisterServiceWorker from "@/components/RegisterServiceWorker";
 
 const geistSans = Geist({
   variable:
@@ -24,11 +25,23 @@ const geistMono =
   });
 
 export const metadata: Metadata = {
-  title:
-    "DioxiLife Bolivia",
+  title: "DioxiLife Bolivia",
+  description: "Tienda online DioxiLife Bolivia",
+  applicationName: "DioxiLife Bolivia",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/icon-192.png",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "DioxiLife",
+    statusBarStyle: "default",
+  },
+};
 
-  description:
-    "Tienda online DioxiLife Bolivia",
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({
@@ -41,6 +54,7 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col">
 
+        <RegisterServiceWorker />
         <ReferralTracker />
 
         <CartProvider>
