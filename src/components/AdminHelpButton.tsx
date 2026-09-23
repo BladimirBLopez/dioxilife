@@ -1,50 +1,26 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-
-const ayudas = [
-  {
-    ruta: "/admin/productos",
-    titulo: "📦 Productos",
-    texto:
-      "Administra el catálogo DioxiLife. Puedes crear productos, editar información, precios, imágenes, promociones y contenido adicional.",
-  },
-  {
-    ruta: "/admin/resenas",
-    titulo: "⭐ Testimonios",
-    texto:
-      "Revisa experiencias de clientes, aprueba testimonios y marca los mejores como destacados para mostrarlos en la página principal.",
-  },
-  {
-    ruta: "/admin/banner",
-    titulo: "🖼 Banner",
-    texto:
-      "Gestiona imágenes principales, campañas y promociones visibles en la tienda.",
-  },
-  {
-    ruta: "/admin/categorias",
-    titulo: "🏷 Categorías",
-    texto:
-      "Organiza los productos por categorías para mejorar la navegación de clientes.",
-  },
-  {
-    ruta: "/admin/sucursales",
-    titulo: "🏪 Sucursales",
-    texto:
-      "Administra puntos de venta, direcciones y datos de contacto.",
-  },
-  {
-    ruta: "/admin/multinivel",
-    titulo: "👥 Multinivel",
-    texto:
-      "Gestiona miembros, estructura de red, rangos y comisiones del sistema.",
-  },
-];
+import { useEffect, useState } from "react";
+import { ayudas } from "@/components/admin-help/help-data";
 
 export default function AdminHelpButton() {
   const pathname = usePathname();
   const [abierto, setAbierto] = useState(false);
+  const [tutorial, setTutorial] = useState(false);
+  const [paso, setPaso] = useState(0);
+
+  useEffect(() => {
+    if (abierto) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [abierto]);
 
   const actual =
     ayudas.find((a) => pathname.startsWith(a.ruta)) ||
@@ -69,8 +45,14 @@ export default function AdminHelpButton() {
       </button>
 
       {abierto && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex justify-end">
-          <div className="bg-white w-full max-w-sm h-full p-6 overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 bg-black/40 flex justify-end"
+          onClick={() => setAbierto(false)}
+        >
+          <div
+            className="bg-white w-full max-w-sm h-full p-6 overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
 
             <div className="flex justify-between items-center mb-5">
               <h2 className="font-bold text-lg">
@@ -95,9 +77,88 @@ export default function AdminHelpButton() {
                 {actual.titulo}
               </h3>
 
-              <p className="text-sm text-gray-700 mt-3">
-                {actual.texto}
-              </p>
+              {!tutorial ? (
+                <>
+                  <p className="text-sm text-gray-700 mt-3">
+                    {"descripcion" in actual
+                      ? actual.descripcion
+                      : "Ayuda del módulo DioxiLife"}
+                  </p>
+
+                  {"pasos" in actual && actual.pasos.length > 0 && (
+                    <button
+                      onClick={() => {
+                        setTutorial(true);
+                        setPaso(0);
+                      }}
+                      className="mt-4 w-full bg-brand-pink text-white rounded-lg py-2 text-sm font-semibold"
+                    >
+                      Iniciar tutorial
+                    </button>
+                  )}
+                </>
+              ) : (
+                "pasos" in actual && (
+                  <div className="mt-4">
+
+                    <div className="flex justify-between text-xs text-gray-500 mb-2">
+                      <span>
+                        Paso {paso + 1} de {actual.pasos.length}
+                      </span>
+
+                      <span>
+                        {Math.round(((paso + 1) / actual.pasos.length) * 100)}%
+                      </span>
+                    </div>
+
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-4">
+                      <div
+                        className="h-full bg-brand-pink"
+                        style={{
+                          width: `${((paso + 1) / actual.pasos.length) * 100}%`,
+                        }}
+                      />
+                    </div>
+
+                    <h4 className="font-semibold">
+                      {actual.pasos[paso].titulo}
+                    </h4>
+
+                    <p className="text-sm text-gray-700 mt-2">
+                      {actual.pasos[paso].texto}
+                    </p>
+
+                    <div className="flex gap-2 mt-5">
+
+                      <button
+                        disabled={paso === 0}
+                        onClick={() => setPaso(paso - 1)}
+                        className="flex-1 border rounded-lg py-2 text-sm disabled:opacity-40"
+                      >
+                        ← Atrás
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          if (paso < actual.pasos.length - 1) {
+                            setPaso(paso + 1);
+                          } else {
+                            setTutorial(false);
+                            setPaso(0);
+                          }
+                        }}
+                        className="flex-1 bg-brand-pink text-white rounded-lg py-2 text-sm"
+                      >
+                        {paso === actual.pasos.length - 1
+                          ? "Finalizar"
+                          : "Siguiente →"}
+                      </button>
+
+                    </div>
+
+                  </div>
+                )
+              )}
             </div>
 
 
@@ -117,7 +178,7 @@ export default function AdminHelpButton() {
                   </h4>
 
                   <p className="text-sm text-gray-600 mt-1">
-                    {a.texto}
+                    {a.descripcion}
                   </p>
                 </div>
               ))}
