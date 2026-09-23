@@ -90,6 +90,38 @@ export async function POST(
         body.telefono || ""
       ).trim();
 
+    const direccion =
+      String(
+        body.direccion || ""
+      ).trim();
+
+    const googleMapsUrl =
+      String(
+        body.googleMapsUrl || ""
+      ).trim();
+
+    const esDistribuidorPublico =
+      Boolean(
+        body.esDistribuidorPublico
+      );
+
+
+    if (
+      esDistribuidorPublico &&
+      !googleMapsUrl
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Para mostrar el distribuidor públicamente debe registrar su ubicación de Google Maps",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+
     const password =
       String(
         body.password || ""
@@ -264,6 +296,16 @@ export async function POST(
           telefono:
             telefono ||
             null,
+
+          direccion:
+            direccion ||
+            null,
+
+          googleMapsUrl:
+            googleMapsUrl ||
+            null,
+
+          esDistribuidorPublico,
 
           passwordHash,
 

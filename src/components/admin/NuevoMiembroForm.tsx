@@ -76,6 +76,27 @@ export default function NuevoMiembroForm({
     useState("");
 
 
+  const [
+    direccion,
+    setDireccion,
+  ] =
+    useState("");
+
+
+  const [
+    googleMapsUrl,
+    setGoogleMapsUrl,
+  ] =
+    useState("");
+
+
+  const [
+    esDistribuidorPublico,
+    setEsDistribuidorPublico,
+  ] =
+    useState(false);
+
+
 
   const [
     patrocinadorId,
@@ -138,6 +159,9 @@ export default function NuevoMiembroForm({
                 apellidos,
                 email,
                 telefono,
+                direccion,
+                googleMapsUrl,
+                esDistribuidorPublico,
                 patrocinadorId,
               }),
           }
@@ -528,6 +552,57 @@ export default function NuevoMiembroForm({
             className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-50"
           />
 
+        </div>
+
+
+        <div>
+          <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+            Dirección del distribuidor
+          </label>
+
+          <input
+            type="text"
+            value={direccion}
+            onChange={(e) =>
+              setDireccion(e.target.value)
+            }
+            maxLength={200}
+            placeholder="Ej: Av. Principal #123"
+            className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-50"
+          />
+        </div>
+
+
+        <div>
+          <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+            Enlace Google Maps
+          </label>
+
+          <input
+            type="url"
+            value={googleMapsUrl}
+            onChange={(e) =>
+              setGoogleMapsUrl(e.target.value)
+            }
+            placeholder="https://maps.app.goo.gl/..."
+            className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-50"
+          />
+        </div>
+
+
+        <div className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={esDistribuidorPublico}
+            onChange={(e) =>
+              setEsDistribuidorPublico(e.target.checked)
+            }
+            className="h-4 w-4"
+          />
+
+          <label className="text-sm font-semibold text-slate-700">
+            Mostrar como distribuidor público
+          </label>
         </div>
 
 

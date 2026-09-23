@@ -347,6 +347,10 @@ export default async function DetalleMiembroPage({
         email: true,
         telefono: true,
 
+        direccion: true,
+        googleMapsUrl: true,
+        esDistribuidorPublico: true,
+
         codigoReferido: true,
 
         estado: true,
@@ -774,6 +778,37 @@ export default async function DetalleMiembroPage({
               </p>
 
             </div>
+
+
+            {miembro.esDistribuidorPublico && (
+              <div className="rounded-xl bg-emerald-50 p-4">
+
+                <div className="flex items-center gap-2 text-emerald-600">
+                  <ExternalLink className="h-4 w-4" />
+
+                  <span className="text-xs font-semibold uppercase tracking-wide">
+                    Distribuidor público
+                  </span>
+                </div>
+
+                <p className="mt-2 text-sm font-semibold text-slate-800">
+                  {miembro.direccion ||
+                    "Sin dirección registrada"}
+                </p>
+
+                {miembro.googleMapsUrl && (
+                  <a
+                    href={miembro.googleMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-emerald-700 hover:underline"
+                  >
+                    🗺 Ver ubicación en Google Maps
+                  </a>
+                )}
+
+              </div>
+            )}
 
 
             <div className="rounded-xl bg-slate-50 p-4">

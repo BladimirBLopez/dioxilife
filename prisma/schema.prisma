@@ -123,6 +123,7 @@ model Sucursal {
   nombre       String?
   direccion    String?
   telefono     String?
+  googleMapsUrl String?
   facebookUrl  String?
   tiktokUrl    String?
   instagramUrl String?
@@ -177,6 +178,9 @@ model Miembro {
   apellidos      String?
   email          String  @unique
   telefono       String?
+  direccion      String?
+  googleMapsUrl  String?
+  esDistribuidorPublico Boolean @default(false)
   passwordHash   String
   codigoReferido String  @unique
 
