@@ -249,6 +249,10 @@ export default function AdminShell({
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
+  const [gruposAbiertos, setGruposAbiertos] = useState<string[]>(
+    grupos.map((g) => g.titulo)
+  );
+
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -378,9 +382,35 @@ export default function AdminShell({
 
               <div key={grupo.titulo}>
 
-                <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
-                  {grupo.titulo}
-                </p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setGruposAbiertos((actuales) =>
+                      actuales.includes(grupo.titulo)
+                        ? actuales.filter(
+                            (g) => g !== grupo.titulo
+                          )
+                        : [
+                            ...actuales,
+                            grupo.titulo,
+                          ]
+                    )
+                  }
+                  className="mb-2 flex w-full items-center justify-between px-3"
+                >
+                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
+                    {grupo.titulo}
+                  </span>
+
+                  <span className="text-xs text-white/30">
+                    {gruposAbiertos.includes(grupo.titulo)
+                      ? "⌄"
+                      : "›"}
+                  </span>
+                </button>
+
+
+                {gruposAbiertos.includes(grupo.titulo) && (
 
                 <div className="space-y-1">
 
@@ -441,6 +471,8 @@ export default function AdminShell({
                   })}
 
                 </div>
+
+                )}
 
               </div>
 
