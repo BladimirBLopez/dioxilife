@@ -30,6 +30,7 @@ export async function GET() {
         nombre: true,
         imagenUrl: true,
         activo: true,
+        precio: true,
         stockActual: true,
         stockMinimo: true,
         categoria: {

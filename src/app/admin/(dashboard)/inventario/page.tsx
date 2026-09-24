@@ -21,6 +21,7 @@ type ProductoInventario = {
   nombre: string;
   imagenUrl: string | null;
   activo: boolean;
+  precio: string;
   stockActual: number;
   stockMinimo: number;
   categoria: {
@@ -214,6 +215,15 @@ export default function InventarioPage() {
       0
     );
 
+  const valorInventario =
+    productos.reduce(
+      (total, producto) =>
+        total +
+        producto.stockActual *
+          Number(producto.precio),
+      0
+    );
+
   const bajoStock =
     productos.filter(
       (producto) =>
@@ -388,6 +398,16 @@ export default function InventarioPage() {
           </p>
           <p className="text-xs text-[#77737D]">
             Unidades disponibles
+          </p>
+        </div>
+
+        <div className="admin-card p-4">
+          <Boxes className="h-5 w-5 text-blue-600" />
+          <p className="mt-3 text-2xl font-bold">
+            Bs {valorInventario.toFixed(2)}
+          </p>
+          <p className="text-xs text-[#77737D]">
+            Valor inventario
           </p>
         </div>
 
