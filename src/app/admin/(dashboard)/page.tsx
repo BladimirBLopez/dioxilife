@@ -109,6 +109,7 @@ export default async function AdminHome() {
     comisionesPendientes,
     comisionesPagadas,
     ultimosPedidos,
+    productosInventario,
   ] = await Promise.all([
     prisma.categoria.count(),
 
@@ -216,7 +217,43 @@ export default async function AdminHome() {
         },
       },
     }),
+    prisma.producto.findMany({
+      where: {
+        activo: true,
+      },
+      select: {
+        stockActual: true,
+        stockMinimo: true,
+      },
+    }),
+
   ]);
+
+  const totalUnidadesInventario =
+    productosInventario.reduce(
+      (total, producto) =>
+        total + producto.stockActual,
+      0
+    );
+
+  const productosBajoStock =
+    productosInventario.filter(
+      (producto) =>
+        producto.stockActual > 0 &&
+        producto.stockActual <=
+          producto.stockMinimo
+    ).length;
+
+  const productosSinStock =
+    productosInventario.filter(
+      (producto) =>
+        producto.stockActual <= 0
+    ).length;
+
+  const productosReponer =
+    productosBajoStock +
+    productosSinStock;
+
 
   const nombreAdmin =
     admin?.usuario ||
@@ -680,6 +717,61 @@ export default async function AdminHome() {
           </p>
 
         </Link>
+
+
+        <Link
+          href="/admin/inventario"
+          className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        >
+
+          <div className="flex items-start justify-between gap-3">
+
+            <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${
+              productosReponer > 0
+                ? "bg-red-50 text-red-600"
+                : "bg-emerald-50 text-emerald-600"
+            }`}>
+
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                className="h-5 w-5"
+              >
+                <path d="M4 7h16v14H4z" />
+                <path d="M8 7V5h8v2" />
+                <path d="M8 12h8M8 16h5" />
+              </svg>
+
+            </div>
+
+            <span className="text-xs font-medium text-slate-400">
+              Inventario
+            </span>
+
+          </div>
+
+
+          <p className="mt-5 text-2xl font-bold text-slate-900">
+            {totalUnidadesInventario}
+          </p>
+
+
+          <p className="mt-1 text-sm font-semibold text-slate-800">
+            Unidades disponibles
+          </p>
+
+
+          <p className="mt-1 text-xs text-slate-400">
+            {productosSinStock > 0
+              ? `${productosSinStock} sin stock · `
+              : ""}
+            {productosReponer} requieren reposición
+          </p>
+
+        </Link>
+
 
       </section>
 
