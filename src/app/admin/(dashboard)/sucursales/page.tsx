@@ -22,6 +22,7 @@ type Sucursal = {
   nombre: string | null;
   direccion: string | null;
   telefono: string | null;
+  googleMapsUrl: string | null;
   facebookUrl: string | null;
   tiktokUrl: string | null;
   instagramUrl: string | null;
@@ -33,6 +34,7 @@ const vacio = {
   nombre: "",
   direccion: "",
   telefono: "",
+  googleMapsUrl: "",
   facebookUrl: "",
   tiktokUrl: "",
   instagramUrl: "",
@@ -87,6 +89,7 @@ export default function SucursalesPage() {
       nombre: s.nombre || "",
       direccion: s.direccion || "",
       telefono: s.telefono || "",
+      googleMapsUrl: s.googleMapsUrl || "",
       facebookUrl: s.facebookUrl || "",
       tiktokUrl: s.tiktokUrl || "",
       instagramUrl: s.instagramUrl || "",
@@ -161,6 +164,18 @@ export default function SucursalesPage() {
               </p>
             </div>
             <div className="flex gap-4 text-sm">
+
+              {s.googleMapsUrl && (
+                <a
+                  href={s.googleMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-emerald-600 font-medium hover:underline"
+                >
+                  🗺 Ubicación
+                </a>
+              )}
+
               <button
                 onClick={() => abrirEditar(s)}
                 className="text-brand-blue font-medium hover:underline"
@@ -222,6 +237,19 @@ export default function SucursalesPage() {
               onChange={(e) => setForm({ ...form, telefono: e.target.value })}
               className="admin-input"
             />
+            <input
+              type="url"
+              placeholder="Enlace de Google Maps"
+              value={form.googleMapsUrl}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  googleMapsUrl: e.target.value,
+                })
+              }
+              className="admin-input"
+            />
+
             <input
               type="text"
               placeholder="Enlace de Facebook"
