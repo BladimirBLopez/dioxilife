@@ -7,6 +7,7 @@ type Sucursal = {
   nombre: string | null;
   direccion: string | null;
   telefono: string | null;
+  googleMapsUrl: string | null;
   facebookUrl: string | null;
   tiktokUrl: string | null;
   instagramUrl: string | null;
@@ -127,7 +128,10 @@ export default function SeccionSucursales({
                         )}
                         {s.direccion && (
                           <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${consultaMaps}`}
+                            href={
+                              s.googleMapsUrl ||
+                              `https://www.google.com/maps/search/?api=1&query=${consultaMaps}`
+                            }
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-1 text-xs font-medium border border-brand-pink text-brand-pink rounded-full px-3 py-1"
