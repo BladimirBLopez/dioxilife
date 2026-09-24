@@ -30,28 +30,31 @@ model Categoria {
 }
 
 model Producto {
-  id                  String                @id @default(cuid())
-  nombre              String
-  slug                String                @unique
-  descripcion         String?
-  precio              Decimal
-  mostrarPrecio       Boolean               @default(false)
-  enPromocion         Boolean               @default(false)
-  precioPromocion     Decimal?
-  valorComisionable   Decimal               @default(0)
-  puntosVolumen       Decimal               @default(0)
-  generaComision      Boolean               @default(false)
-  imagenUrl           String?
-  categoriaId         String
-  categoria           Categoria             @relation(fields: [categoriaId], references: [id])
-  protocolos          Protocolo[]
-  informacionProducto InformacionProducto[]
-  resenas             Resena[]
-  orden               Int                   @default(0)
-  activo              Boolean               @default(true)
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
-  detallePedidos      DetallePedido[]
+  id                    String                 @id @default(cuid())
+  nombre                String
+  slug                  String                 @unique
+  descripcion           String?
+  precio                Decimal
+  mostrarPrecio         Boolean                @default(false)
+  enPromocion           Boolean                @default(false)
+  precioPromocion       Decimal?
+  valorComisionable     Decimal                @default(0)
+  puntosVolumen         Decimal                @default(0)
+  generaComision        Boolean                @default(false)
+  imagenUrl             String?
+  categoriaId           String
+  categoria             Categoria              @relation(fields: [categoriaId], references: [id])
+  protocolos            Protocolo[]
+  informacionProducto   InformacionProducto[]
+  resenas               Resena[]
+  movimientosInventario MovimientoInventario[]
+  stockActual           Int                    @default(0)
+  stockMinimo           Int                    @default(5)
+  orden                 Int                    @default(0)
+  activo                Boolean                @default(true)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  detallePedidos        DetallePedido[]
 }
 
 model Protocolo {
@@ -118,17 +121,17 @@ model Resena {
 }
 
 model Sucursal {
-  id           String       @id @default(cuid())
-  departamento Departamento
-  nombre       String?
-  direccion    String?
-  telefono     String?
+  id            String       @id @default(cuid())
+  departamento  Departamento
+  nombre        String?
+  direccion     String?
+  telefono      String?
   googleMapsUrl String?
-  facebookUrl  String?
-  tiktokUrl    String?
-  instagramUrl String?
-  activo       Boolean      @default(true)
-  createdAt    DateTime     @default(now())
+  facebookUrl   String?
+  tiktokUrl     String?
+  instagramUrl  String?
+  activo        Boolean      @default(true)
+  createdAt     DateTime     @default(now())
 }
 
 enum RolAdmin {
@@ -137,11 +140,12 @@ enum RolAdmin {
 }
 
 model Admin {
-  id           String   @id @default(cuid())
-  usuario      String   @unique
-  passwordHash String
-  rol          RolAdmin @default(ADMIN)
-  createdAt    DateTime @default(now())
+  id                    String                 @id @default(cuid())
+  usuario               String                 @unique
+  passwordHash          String
+  rol                   RolAdmin               @default(ADMIN)
+  movimientosInventario MovimientoInventario[]
+  createdAt             DateTime               @default(now())
 }
 
 model Banner {
@@ -173,16 +177,16 @@ enum EstadoComision {
 }
 
 model Miembro {
-  id             String  @id @default(cuid())
-  nombres        String
-  apellidos      String?
-  email          String  @unique
-  telefono       String?
-  direccion      String?
-  googleMapsUrl  String?
+  id                    String  @id @default(cuid())
+  nombres               String
+  apellidos             String?
+  email                 String  @unique
+  telefono              String?
+  direccion             String?
+  googleMapsUrl         String?
   esDistribuidorPublico Boolean @default(false)
-  passwordHash   String
-  codigoReferido String  @unique
+  passwordHash          String
+  codigoReferido        String  @unique
 
   patrocinadorId String?
   patrocinador   Miembro?  @relation("RedMultinivel", fields: [patrocinadorId], references: [id], onDelete: SetNull)
@@ -282,8 +286,9 @@ model Pedido {
 
   requiereCotizacion Boolean @default(false)
 
-  detalles   DetallePedido[]
-  comisiones ComisionMultinivel[] @relation("ComisionesPedido")
+  detalles              DetallePedido[]
+  comisiones            ComisionMultinivel[]   @relation("ComisionesPedido")
+  movimientosInventario MovimientoInventario[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -292,6 +297,43 @@ model Pedido {
   @@index([estado])
   @@index([miembroId])
   @@index([referidoPorId])
+  @@index([createdAt])
+}
+
+enum TipoMovimientoInventario {
+  ENTRADA
+  SALIDA
+  VENTA
+  DEVOLUCION
+  AJUSTE
+}
+
+model MovimientoInventario {
+  id String @id @default(cuid())
+
+  productoId String
+  producto   Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+
+  tipo     TipoMovimientoInventario
+  cantidad Int
+
+  stockAnterior Int
+  stockNuevo    Int
+
+  motivo String?
+
+  pedidoId String?
+  pedido   Pedido? @relation(fields: [pedidoId], references: [id], onDelete: SetNull)
+
+  adminId String?
+  admin   Admin?  @relation(fields: [adminId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([productoId])
+  @@index([pedidoId])
+  @@index([adminId])
+  @@index([tipo])
   @@index([createdAt])
 }
 

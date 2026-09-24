@@ -82,6 +82,18 @@ const grupos: NavGroup[] = [
       },
 
       {
+        href: "/admin/inventario",
+        label: "Inventario",
+        icon: (
+          <>
+            <path d="M4 6h16v14H4V6Z" />
+            <path d="M4 10h16" />
+            <path d="M9 14h6" />
+          </>
+        ),
+      },
+
+      {
         href: "/admin/categorias",
         label: "Categorías",
         icon: (
