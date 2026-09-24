@@ -29,6 +29,19 @@ function IconoTelefono() {
   );
 }
 
+function IconoWhatsapp() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className="w-4 h-4"
+    >
+      <path d="M12 2a10 10 0 0 0-8.7 14.9L2 22l5.3-1.3A10 10 0 1 0 12 2Zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3.1.8.8-3-.2-.3A8 8 0 1 1 12 20Z" />
+      <path d="M16.6 13.8c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.7.8-.9 1-.2.2-.3.2-.6.1-1.5-.7-2.5-1.3-3.5-3-.3-.5.3-.5.8-1.7.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.7.7-1 1.5-1 2.4 0 .9.7 1.8.8 2 .1.1 1.4 2.2 3.5 3.1 2.1.9 2.1.6 2.5.6.4 0 1.3-.5 1.5-1 .2-.5.2-.9.1-1Z" />
+    </svg>
+  );
+}
+
 function IconoChevron({ abierto }: { abierto: boolean }) {
   return (
     <svg
@@ -120,10 +133,12 @@ export default function SeccionSucursales({
                       <div className="flex flex-wrap gap-2 pt-2">
                         {s.telefono && (
                           <a
-                            href={`tel:${s.telefono.replace(/\s+/g, "")}`}
-                            className="flex items-center gap-1 text-xs font-medium border border-brand-blue text-brand-blue rounded-full px-3 py-1"
+                            href={`https://wa.me/591${s.telefono.replace(/\D/g, "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-xs font-medium border border-green-500 text-green-600 rounded-full px-3 py-1"
                           >
-                            <IconoTelefono /> Llamar
+                            <IconoWhatsapp /> WhatsApp
                           </a>
                         )}
                         {s.direccion && (

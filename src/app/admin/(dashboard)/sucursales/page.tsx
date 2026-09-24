@@ -231,10 +231,17 @@ export default function SucursalesPage() {
               className="admin-input"
             />
             <input
-              type="text"
-              placeholder="Teléfono"
+              type="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="WhatsApp"
               value={form.telefono}
-              onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  telefono: e.target.value.replace(/\D/g, ""),
+                })
+              }
               className="admin-input"
             />
             <input
