@@ -277,6 +277,175 @@ async function generarComisionesDelPedido(
   });
 }
 
+async function descontarInventarioDelPedido(
+  tx: Prisma.TransactionClient,
+  pedidoId: string,
+  adminId: string
+) {
+  const pedido =
+    await tx.pedido.findUnique({
+      where: {
+        id: pedidoId,
+      },
+      select: {
+        codigo: true,
+        detalles: {
+          select: {
+            productoId: true,
+            cantidad: true,
+            nombreProducto: true,
+          },
+        },
+      },
+    });
+
+  if (!pedido) {
+    throw new Error(
+      "Pedido no encontrado al procesar inventario."
+    );
+  }
+
+  if (pedido.detalles.length === 0) {
+    throw new Error(
+      "El pedido no tiene productos para descontar del inventario."
+    );
+  }
+
+  /*
+   * Agrupa cantidades por producto.
+   * Esto evita problemas si un mismo producto
+   * aparece más de una vez en el pedido.
+   */
+  const cantidades =
+    new Map<
+      string,
+      {
+        cantidad: number;
+        nombre: string;
+      }
+    >();
+
+  for (const detalle of pedido.detalles) {
+    const actual =
+      cantidades.get(
+        detalle.productoId
+      );
+
+    if (actual) {
+      actual.cantidad +=
+        detalle.cantidad;
+    } else {
+      cantidades.set(
+        detalle.productoId,
+        {
+          cantidad:
+            detalle.cantidad,
+          nombre:
+            detalle.nombreProducto,
+        }
+      );
+    }
+  }
+
+  for (
+    const [
+      productoId,
+      datos,
+    ] of cantidades
+  ) {
+    if (datos.cantidad <= 0) {
+      throw new Error(
+        `Cantidad inválida para ${datos.nombre}.`
+      );
+    }
+
+    /*
+     * Descuento atómico:
+     * solamente modifica el producto si todavía
+     * existe stock suficiente en la base de datos.
+     *
+     * Esto evita sobreventa si dos pedidos se
+     * aprueban al mismo tiempo.
+     */
+    const descuento =
+      await tx.producto.updateMany({
+        where: {
+          id: productoId,
+          stockActual: {
+            gte: datos.cantidad,
+          },
+        },
+        data: {
+          stockActual: {
+            decrement: datos.cantidad,
+          },
+        },
+      });
+
+    if (descuento.count === 0) {
+      const productoActual =
+        await tx.producto.findUnique({
+          where: {
+            id: productoId,
+          },
+          select: {
+            nombre: true,
+            stockActual: true,
+          },
+        });
+
+      if (!productoActual) {
+        throw new Error(
+          `No se encontró el producto ${datos.nombre}.`
+        );
+      }
+
+      throw new Error(
+        `Stock insuficiente para ${productoActual.nombre}. Disponible: ${productoActual.stockActual}, requerido: ${datos.cantidad}.`
+      );
+    }
+
+    const productoActual =
+      await tx.producto.findUnique({
+        where: {
+          id: productoId,
+        },
+        select: {
+          nombre: true,
+          stockActual: true,
+        },
+      });
+
+    if (!productoActual) {
+      throw new Error(
+        `No se encontró el producto ${datos.nombre}.`
+      );
+    }
+
+    const stockNuevo =
+      productoActual.stockActual;
+
+    const stockAnterior =
+      stockNuevo +
+      datos.cantidad;
+
+    await tx.movimientoInventario.create({
+      data: {
+        productoId,
+        tipo: "VENTA",
+        cantidad:
+          datos.cantidad,
+        stockAnterior,
+        stockNuevo,
+        motivo:
+          `Venta automática - pedido ${pedido.codigo}`,
+        pedidoId,
+        adminId,
+      },
+    });
+  }
+}
+
 export async function actualizarEstadoPedido(
   id: string,
   nuevoEstado: EstadoDestino
@@ -377,6 +546,12 @@ export async function actualizarEstadoPedido(
           );
         }
 
+        await descontarInventarioDelPedido(
+          tx,
+          id,
+          admin.id
+        );
+
         await generarComisionesDelPedido(
           tx,
           id
@@ -409,6 +584,10 @@ export async function actualizarEstadoPedido(
       );
     }
   }
+
+  revalidatePath(
+    "/admin/inventario"
+  );
 
   revalidatePath(
     "/admin/pedidos"
