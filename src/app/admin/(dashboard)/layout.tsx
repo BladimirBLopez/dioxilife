@@ -20,6 +20,7 @@ export default async function DashboardLayout({
   const [
     pagosReportados,
     pedidosNuevos,
+    productosInventario,
   ] = await Promise.all([
     prisma.pedido.count({
       where: {
@@ -32,7 +33,24 @@ export default async function DashboardLayout({
         estado: "NUEVO",
       },
     }),
+
+    prisma.producto.findMany({
+      where: {
+        activo: true,
+      },
+      select: {
+        stockActual: true,
+        stockMinimo: true,
+      },
+    }),
   ]);
+
+  const stockBajo =
+    productosInventario.filter(
+      (producto) =>
+        producto.stockActual <=
+        producto.stockMinimo
+    ).length;
 
   return (
     <AdminShell
@@ -43,6 +61,7 @@ export default async function DashboardLayout({
       alertas={{
         pagosReportados,
         pedidosNuevos,
+        stockBajo,
       }}
     >
       {children}

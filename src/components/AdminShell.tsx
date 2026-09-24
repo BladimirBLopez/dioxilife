@@ -19,6 +19,7 @@ type AdminShellProps = {
   alertas: {
     pagosReportados: number;
     pedidosNuevos: number;
+    stockBajo: number;
   };
 };
 
@@ -27,7 +28,7 @@ type NavItem = {
   label: string;
   icon: ReactNode;
   exact?: boolean;
-  badge?: "pagos" | "nuevos";
+  badge?: "pagos" | "nuevos" | "stock";
 };
 
 type NavGroup = {
@@ -84,6 +85,7 @@ const grupos: NavGroup[] = [
       {
         href: "/admin/inventario",
         label: "Inventario",
+        badge: "stock",
         icon: (
           <>
             <path d="M4 6h16v14H4V6Z" />
@@ -284,7 +286,7 @@ export default function AdminShell({
       .toUpperCase() || "A";
 
   function obtenerBadge(
-    tipo: "pagos" | "nuevos" | undefined
+    tipo: "pagos" | "nuevos" | "stock" | undefined
   ) {
     if (tipo === "pagos") {
       return alertas.pagosReportados;
@@ -292,6 +294,10 @@ export default function AdminShell({
 
     if (tipo === "nuevos") {
       return alertas.pedidosNuevos;
+    }
+
+    if (tipo === "stock") {
+      return alertas.stockBajo;
     }
 
     return 0;
