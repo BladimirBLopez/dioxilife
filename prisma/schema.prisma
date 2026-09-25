@@ -411,6 +411,7 @@ model Compra {
   detalles DetalleCompra[]
 
   createdAt             DateTime               @default(now())
+  recibidaAt            DateTime?
   updatedAt             DateTime               @updatedAt
   movimientoInventarios MovimientoInventario[]
 }

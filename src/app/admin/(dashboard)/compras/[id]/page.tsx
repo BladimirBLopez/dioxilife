@@ -3,6 +3,8 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import AccionesCompra from "./AccionesCompra";
+import ExportarCompraPDF from "./ExportarCompraPDF";
 
 function dinero(valor: unknown) {
   return new Intl.NumberFormat("es-BO", {
@@ -11,12 +13,56 @@ function dinero(valor: unknown) {
   }).format(Number(String(valor ?? 0)));
 }
 
-function fecha(valor: Date) {
-  return valor.toLocaleDateString("es-BO", {
+function fechaHora(valor: Date | null) {
+  if (!valor) {
+    return "Pendiente";
+  }
+
+  return new Intl.DateTimeFormat("es-BO", {
+    timeZone: "America/La_Paz",
     year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(valor);
+}
+
+function nombreEstado(
+  estado: string
+) {
+  if (
+    estado === "RECIBIDA"
+  ) {
+    return "Recibida";
+  }
+
+  if (
+    estado === "ANULADA"
+  ) {
+    return "Anulada";
+  }
+
+  return "Pendiente de recibir";
+}
+
+function claseEstado(
+  estado: string
+) {
+  if (
+    estado === "RECIBIDA"
+  ) {
+    return "bg-emerald-50 text-emerald-700";
+  }
+
+  if (
+    estado === "ANULADA"
+  ) {
+    return "bg-red-50 text-red-600";
+  }
+
+  return "bg-amber-50 text-amber-700";
 }
 
 export default async function DetalleCompraPage({
@@ -60,7 +106,7 @@ export default async function DetalleCompraPage({
   return (
     <div className="space-y-6">
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
 
         <div>
           <p className="text-xs uppercase tracking-wider text-brand-pink font-semibold">
@@ -72,17 +118,36 @@ export default async function DetalleCompraPage({
           </h1>
 
           <p className="text-sm text-[#77737D]">
-            Detalle de compra registrada.
+            Detalle de compra y recepción de mercadería.
           </p>
         </div>
 
 
-        <Link
-          href="/admin/compras"
-          className="admin-btn-secondary"
-        >
-          Volver
-        </Link>
+        <div className="flex flex-wrap gap-2">
+
+          <ExportarCompraPDF
+            codigo={compra.codigo}
+            proveedor={compra.proveedor.nombre}
+            estado={compra.estado}
+            fechaRegistro={fechaHora(compra.createdAt)}
+            fechaRecepcion={fechaHora(compra.recibidaAt)}
+            total={Number(compra.total)}
+            productos={compra.detalles.map((detalle) => ({
+              nombre: detalle.producto.nombre,
+              cantidad: detalle.cantidad,
+              costoUnitario: Number(detalle.costoUnitario),
+              subtotal: Number(detalle.subtotal),
+            }))}
+          />
+
+          <Link
+            href="/admin/compras"
+            className="admin-btn-secondary"
+          >
+            Volver
+          </Link>
+
+        </div>
 
       </div>
 
@@ -90,6 +155,7 @@ export default async function DetalleCompraPage({
       <div className="grid gap-4 md:grid-cols-3">
 
         <div className="admin-card p-5">
+
           <p className="text-xs text-[#77737D]">
             Proveedor
           </p>
@@ -101,32 +167,69 @@ export default async function DetalleCompraPage({
           <p className="text-sm text-[#77737D]">
             {compra.proveedor.telefono || "Sin teléfono"}
           </p>
+
         </div>
 
 
         <div className="admin-card p-5">
+
           <p className="text-xs text-[#77737D]">
             Estado
           </p>
 
-          <p className="mt-2 font-semibold">
-            {compra.estado}
-          </p>
+          <span
+            className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${claseEstado(compra.estado)}`}
+          >
+            {nombreEstado(compra.estado)}
+          </span>
 
-          <p className="text-sm text-[#77737D]">
-            {fecha(compra.createdAt)}
-          </p>
         </div>
 
 
         <div className="admin-card p-5">
+
           <p className="text-xs text-[#77737D]">
-            Total inversión
+            Total
           </p>
 
           <p className="mt-2 text-xl font-bold">
             Bs {dinero(compra.total)}
           </p>
+
+        </div>
+
+      </div>
+
+
+      <div className="admin-card p-5">
+
+        <div className="grid gap-4 md:grid-cols-2">
+
+          <div>
+
+            <p className="text-xs text-[#77737D]">
+              Fecha y hora de registro
+            </p>
+
+            <p className="mt-1 font-medium">
+              {fechaHora(compra.createdAt)}
+            </p>
+
+          </div>
+
+
+          <div>
+
+            <p className="text-xs text-[#77737D]">
+              Fecha y hora de recepción
+            </p>
+
+            <p className="mt-1 font-medium">
+              {fechaHora(compra.recibidaAt)}
+            </p>
+
+          </div>
+
         </div>
 
       </div>
@@ -136,115 +239,135 @@ export default async function DetalleCompraPage({
 
         <div className="border-b p-5">
           <h2 className="font-semibold">
-            Productos comprados
+            Productos
           </h2>
         </div>
 
 
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
 
-          <thead className="bg-[#F8F8FA]">
-            <tr>
-              <th className="p-4 text-left">
-                Producto
-              </th>
+          <table className="w-full text-sm">
 
-              <th className="p-4">
-                Cantidad
-              </th>
+            <thead className="bg-[#F8F8FA]">
+              <tr>
 
-              <th className="p-4">
-                Costo unitario
-              </th>
+                <th className="p-4 text-left">
+                  Producto
+                </th>
 
-              <th className="p-4">
-                Subtotal
-              </th>
-            </tr>
-          </thead>
+                <th className="p-4 text-center">
+                  Cantidad
+                </th>
+
+                <th className="p-4 text-center">
+                  Costo
+                </th>
+
+                <th className="p-4 text-center">
+                  Subtotal
+                </th>
+
+              </tr>
+            </thead>
 
 
-          <tbody>
+            <tbody>
 
-          {compra.detalles.map((detalle)=>(
+              {compra.detalles.map(
+                (detalle) => (
 
-            <tr
-              key={detalle.id}
-              className="border-t"
-            >
+                  <tr
+                    key={detalle.id}
+                    className="border-t"
+                  >
 
-              <td className="p-4 font-medium">
-                {detalle.producto.nombre}
-              </td>
+                    <td className="p-4 font-medium">
+                      {detalle.producto.nombre}
+                    </td>
 
-              <td className="p-4 text-center">
-                {detalle.cantidad}
-              </td>
+                    <td className="p-4 text-center">
+                      {detalle.cantidad}
+                    </td>
 
-              <td className="p-4 text-center">
-                Bs {dinero(detalle.costoUnitario)}
-              </td>
+                    <td className="p-4 text-center">
+                      Bs {dinero(detalle.costoUnitario)}
+                    </td>
 
-              <td className="p-4 text-center font-semibold">
-                Bs {dinero(detalle.subtotal)}
-              </td>
+                    <td className="p-4 text-center font-semibold">
+                      Bs {dinero(detalle.subtotal)}
+                    </td>
 
-            </tr>
+                  </tr>
 
-          ))}
+                )
+              )}
 
-          </tbody>
+            </tbody>
 
-        </table>
+          </table>
+
+        </div>
 
       </div>
 
 
       <div className="admin-card p-5">
 
-        <h2 className="font-semibold mb-4">
-          Movimientos de inventario generados
+        <h2 className="mb-4 font-semibold">
+          Recepción
         </h2>
 
+        <AccionesCompra
+          id={compra.id}
+          estado={compra.estado}
+        />
 
-        {compra.movimientoInventarios.length === 0 ? (
-          <p className="text-sm text-[#77737D]">
-            Sin movimientos registrados.
-          </p>
-        ) : (
+      </div>
+
+
+      {compra.movimientoInventarios.length > 0 && (
+
+        <div className="admin-card p-5">
+
+          <h2 className="mb-4 font-semibold">
+            Movimientos generados
+          </h2>
+
 
           <div className="space-y-3">
 
-            {compra.movimientoInventarios.map((movimiento)=>(
+            {compra.movimientoInventarios.map(
+              (movimiento) => (
 
-              <div
-                key={movimiento.id}
-                className="rounded-xl border p-3 text-sm"
-              >
+                <div
+                  key={movimiento.id}
+                  className="rounded-xl border p-3 text-sm"
+                >
 
-                <p className="font-medium">
-                  {movimiento.tipo}
-                </p>
+                  <p className="font-medium">
+                    Entrada de inventario
+                  </p>
 
-                <p>
-                  Stock: {movimiento.stockAnterior}
-                  {" → "}
-                  {movimiento.stockNuevo}
-                </p>
+                  <p>
+                    Stock: {movimiento.stockAnterior}
+                    {" → "}
+                    {movimiento.stockNuevo}
+                  </p>
 
-                <p className="text-xs text-[#77737D]">
-                  {movimiento.motivo}
-                </p>
+                  <p className="mt-1 text-xs text-[#77737D]">
+                    {movimiento.motivo}
+                  </p>
 
-              </div>
+                </div>
 
-            ))}
+              )
+            )}
 
           </div>
 
-        )}
+        </div>
 
-      </div>
+      )}
 
 
     </div>
