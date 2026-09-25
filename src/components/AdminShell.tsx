@@ -96,6 +96,29 @@ const grupos: NavGroup[] = [
       },
 
       {
+        href: "/admin/compras",
+        label: "Compras",
+        icon: (
+          <>
+            <path d="M6 2h12v20H6z" />
+            <path d="M9 6h6M9 10h6M9 14h4" />
+          </>
+        ),
+      },
+
+      {
+        href: "/admin/proveedores",
+        label: "Proveedores",
+        icon: (
+          <>
+            <path d="M3 7h18v13H3z" />
+            <path d="M8 7V4h8v3" />
+            <path d="M8 12h8" />
+          </>
+        ),
+      },
+
+      {
         href: "/admin/categorias",
         label: "Categorías",
         icon: (

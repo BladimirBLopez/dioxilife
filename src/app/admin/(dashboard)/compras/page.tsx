@@ -1,0 +1,210 @@
+
+export const dynamic = "force-dynamic";
+
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import {
+  ShoppingCart,
+  CircleDollarSign,
+  Truck,
+  ClipboardList,
+} from "lucide-react";
+
+
+function dinero(valor: unknown) {
+  return new Intl.NumberFormat(
+    "es-BO",
+    {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }
+  ).format(Number(valor ?? 0));
+}
+
+
+export default async function ComprasPage() {
+
+  const [
+    totalCompras,
+    montoInvertido,
+    proveedores,
+    compras,
+  ] = await Promise.all([
+
+    prisma.compra.count(),
+
+    prisma.compra.aggregate({
+      _sum:{
+        total:true
+      }
+    }),
+
+    prisma.proveedor.count(),
+
+    prisma.compra.findMany({
+      orderBy:{
+        createdAt:"desc"
+      },
+      take:50,
+      include:{
+        proveedor:true
+      }
+    })
+
+  ]);
+
+
+  return (
+    <div className="space-y-6">
+
+      <div className="flex items-center justify-between">
+
+        <div>
+          <p className="text-xs uppercase tracking-wider text-brand-pink font-semibold">
+            Abastecimiento
+          </p>
+
+          <h1 className="text-2xl font-bold text-[#1F1B24]">
+            Compras
+          </h1>
+
+          <p className="text-sm text-[#77737D]">
+            Gestión de compras y abastecimiento de inventario.
+          </p>
+        </div>
+
+
+        <Link
+          href="/admin/compras/nueva"
+          className="admin-btn-primary"
+        >
+          Nueva compra
+        </Link>
+
+      </div>
+
+
+
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+
+        <div className="admin-card p-4">
+          <ClipboardList className="h-5 w-5 text-blue-600"/>
+          <p className="mt-3 text-2xl font-bold">
+            {totalCompras}
+          </p>
+          <p className="text-xs text-[#77737D]">
+            Compras registradas
+          </p>
+        </div>
+
+
+        <div className="admin-card p-4">
+          <CircleDollarSign className="h-5 w-5 text-green-600"/>
+          <p className="mt-3 text-2xl font-bold">
+            Bs {dinero(montoInvertido._sum.total)}
+          </p>
+          <p className="text-xs text-[#77737D]">
+            Inversión total
+          </p>
+        </div>
+
+
+        <div className="admin-card p-4">
+          <Truck className="h-5 w-5 text-orange-600"/>
+          <p className="mt-3 text-2xl font-bold">
+            {proveedores}
+          </p>
+          <p className="text-xs text-[#77737D]">
+            Proveedores
+          </p>
+        </div>
+
+
+        <div className="admin-card p-4">
+          <ShoppingCart className="h-5 w-5 text-purple-600"/>
+          <p className="mt-3 text-2xl font-bold">
+            {compras.length}
+          </p>
+          <p className="text-xs text-[#77737D]">
+            Últimas compras
+          </p>
+        </div>
+
+      </div>
+
+
+
+      <div className="admin-card overflow-hidden">
+
+        <table className="w-full text-sm">
+
+          <thead className="bg-[#F8F8FA] text-xs uppercase text-[#77737D]">
+            <tr>
+              <th className="p-4 text-left">
+                Código
+              </th>
+              <th className="p-4 text-left">
+                Proveedor
+              </th>
+              <th className="p-4 text-left">
+                Estado
+              </th>
+              <th className="p-4 text-left">
+                Total
+              </th>
+              <th className="p-4 text-left">
+                Fecha
+              </th>
+            </tr>
+          </thead>
+
+
+          <tbody>
+
+          {compras.map((compra)=>(
+
+            <tr
+              key={compra.id}
+              className="border-t"
+            >
+
+              <td className="p-4 font-medium">
+                <Link
+                  href={`/admin/compras/${compra.id}`}
+                  className="text-blue-600 hover:underline"
+                >
+                  {compra.codigo} →
+                </Link>
+              </td>
+
+              <td className="p-4">
+                {compra.proveedor.nombre}
+              </td>
+
+              <td className="p-4">
+                {compra.estado}
+              </td>
+
+              <td className="p-4 font-semibold">
+                Bs {dinero(compra.total)}
+              </td>
+
+              <td className="p-4 text-xs text-[#77737D]">
+                {new Date(compra.createdAt)
+                .toLocaleDateString("es-BO")}
+              </td>
+
+            </tr>
+
+          ))}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+
+    </div>
+  );
+}

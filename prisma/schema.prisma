@@ -55,6 +55,7 @@ model Producto {
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
   detallePedidos        DetallePedido[]
+  detalleCompras        DetalleCompra[]
 }
 
 model Protocolo {
@@ -328,6 +329,9 @@ model MovimientoInventario {
   pedidoId String?
   pedido   Pedido? @relation(fields: [pedidoId], references: [id], onDelete: SetNull)
 
+  compraId String?
+  compra   Compra? @relation(fields: [compraId], references: [id], onDelete: SetNull)
+
   adminId String?
   admin   Admin?  @relation(fields: [adminId], references: [id], onDelete: SetNull)
 
@@ -335,6 +339,7 @@ model MovimientoInventario {
 
   @@index([productoId])
   @@index([pedidoId])
+  @@index([compraId])
   @@index([adminId])
   @@index([tipo])
   @@index([createdAt])
@@ -367,4 +372,63 @@ model DetallePedido {
 
   @@index([pedidoId])
   @@index([productoId])
+}
+
+enum EstadoCompra {
+  REGISTRADA
+  RECIBIDA
+  ANULADA
+}
+
+model Proveedor {
+  id String @id @default(cuid())
+
+  nombre    String
+  telefono  String?
+  email     String?
+  direccion String?
+
+  activo Boolean @default(true)
+
+  compras Compra[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Compra {
+  id String @id @default(cuid())
+
+  codigo String @unique
+
+  proveedorId String
+  proveedor   Proveedor @relation(fields: [proveedorId], references: [id])
+
+  estado EstadoCompra @default(REGISTRADA)
+
+  total Decimal @default(0)
+
+  detalles DetalleCompra[]
+
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  movimientoInventarios MovimientoInventario[]
+}
+
+model DetalleCompra {
+  id String @id @default(cuid())
+
+  compraId String
+  compra   Compra @relation(fields: [compraId], references: [id], onDelete: Cascade)
+
+  productoId String
+  producto   Producto @relation(fields: [productoId], references: [id])
+
+  cantidad Int
+
+  costoUnitario Decimal
+
+  subtotal Decimal
+
+  createdAt DateTime @default(now())
 }
