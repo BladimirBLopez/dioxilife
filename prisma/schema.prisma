@@ -316,7 +316,7 @@ model MovimientoInventario {
   id String @id @default(cuid())
 
   productoId String
-  producto   Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  producto   Producto @relation(fields: [productoId], references: [id], onDelete: Restrict)
 
   tipo     TipoMovimientoInventario
   cantidad Int

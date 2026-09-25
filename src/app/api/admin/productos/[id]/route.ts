@@ -29,14 +29,13 @@ export async function PUT(
     generaComision,
     imagenUrl,
     categoriaId,
-    activo,
   } = await req.json();
 
   const precioNumero = Number(precio);
 
   if (
     !Number.isFinite(precioNumero) ||
-    precioNumero < 0
+    precioNumero <= 0
   ) {
     return NextResponse.json(
       {
@@ -59,7 +58,7 @@ export async function PUT(
     (
       !Number.isFinite(precioPromocionNumero) ||
       precioPromocionNumero < 0 ||
-      precioPromocionNumero > precioNumero
+      precioPromocionNumero >= precioNumero
     )
   ) {
     return NextResponse.json(
@@ -128,6 +127,7 @@ export async function PUT(
           enPromocion ?? false,
 
         precioPromocion:
+          enPromocion === true &&
           precioPromocion !== undefined &&
           precioPromocion !== null &&
           precioPromocion !== ""
@@ -147,13 +147,49 @@ export async function PUT(
           imagenUrl || null,
 
         categoriaId,
-
-        activo,
       },
     });
 
   return NextResponse.json(producto);
 }
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const admin = await obtenerAdminActual();
+
+  if (!admin) {
+    return NextResponse.json(
+      { error: "No autorizado" },
+      { status: 401 }
+    );
+  }
+
+  const { id } = await params;
+  const body = await req.json();
+
+  if (typeof body.activo !== "boolean") {
+    return NextResponse.json(
+      { error: "Estado inválido" },
+      { status: 400 }
+    );
+  }
+
+  const producto = await prisma.producto.update({
+    where: { id },
+    data: {
+      activo: body.activo,
+    },
+    select: {
+      id: true,
+      activo: true,
+    },
+  });
+
+  return NextResponse.json(producto);
+}
+
 
 export async function DELETE(
   _req: NextRequest,
@@ -170,43 +206,63 @@ export async function DELETE(
 
   const { id } = await params;
 
-  const protocolosAsociados =
-    await prisma.protocolo.count({
-      where: {
-        productoId: id,
-      },
-    });
+  const producto = await prisma.producto.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      stockActual: true,
+    },
+  });
 
-  const ventasAsociadas =
-    await prisma.detallePedido.count({
-      where: {
-        productoId: id,
-      },
-    });
-
-  if (ventasAsociadas > 0) {
+  if (!producto) {
     return NextResponse.json(
-      {
-        error:
-          "No se puede borrar este producto porque ya tiene ventas registradas. Desactívalo.",
-      },
-      { status: 409 }
+      { error: "Producto no encontrado" },
+      { status: 404 }
     );
   }
 
-  if (protocolosAsociados > 0) {
+  const [
+    ventas,
+    compras,
+    movimientos,
+    protocolos,
+  ] = await Promise.all([
+    prisma.detallePedido.count({
+      where: { productoId: id },
+    }),
+
+    prisma.detalleCompra.count({
+      where: { productoId: id },
+    }),
+
+    prisma.movimientoInventario.count({
+      where: { productoId: id },
+    }),
+
+    prisma.protocolo.count({
+      where: { productoId: id },
+    }),
+  ]);
+
+  const tieneHistorial =
+    ventas > 0 ||
+    compras > 0 ||
+    movimientos > 0 ||
+    protocolos > 0 ||
+    producto.stockActual > 0;
+
+  if (tieneHistorial) {
     return NextResponse.json(
       {
-        error: `No se puede borrar este producto porque tiene ${protocolosAsociados} protocolo(s) asociado(s). Borra primero ese(s) protocolo(s) desde la sección Protocolos.`,
+        error:
+          "Este producto ya tiene historial o stock. No puede eliminarse; desactívalo.",
       },
       { status: 409 }
     );
   }
 
   await prisma.producto.delete({
-    where: {
-      id,
-    },
+    where: { id },
   });
 
   return NextResponse.json({

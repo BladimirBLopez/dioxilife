@@ -64,13 +64,13 @@ function TarjetaProducto({
   index,
   onEditar,
   onInformacion,
-  onBorrar,
+  onCambiarEstado,
 }: {
   producto: Producto;
   index: number;
   onEditar: (p: Producto) => void;
   onInformacion: (p: Producto) => void;
-  onBorrar: (id: string) => void;
+  onCambiarEstado: (p: Producto) => void;
 }) {
   const { ref, handleRef, isDragging } = useSortable({
     id: producto.id,
@@ -101,68 +101,79 @@ function TarjetaProducto({
       ) : (
         <div className="w-16 h-16 rounded-lg bg-[#F7F7F9] shrink-0" />
       )}
+
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="font-medium text-sm text-[#1F1B24]">{producto.nombre}</p>
+        <div className="flex items-start justify-between gap-2">
+          <p className="font-medium text-sm text-[#1F1B24]">
+            {producto.nombre}
+          </p>
+
+          <span
+            className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+              producto.activo
+                ? "bg-green-50 text-green-700"
+                : "bg-gray-100 text-gray-600"
+            }`}
+          >
+            {producto.activo ? "ACTIVO" : "INACTIVO"}
+          </span>
+        </div>
+
+        <p className="mt-0.5 text-xs font-medium text-brand-pink">
+          {producto.categoria.nombre}
+        </p>
+
+        <div className="mt-1 flex items-center gap-2 text-sm">
+          {producto.enPromocion && producto.precioPromocion ? (
+            <>
+              <span className="text-[#8A8790] line-through">
+                Bs. {producto.precio}
+              </span>
+
+              <span className="font-semibold text-brand-pink">
+                Bs. {producto.precioPromocion}
+              </span>
+            </>
+          ) : (
+            <span className="text-[#6B6870]">
+              Bs. {producto.precio}
+            </span>
+          )}
+
           {producto.enPromocion && (
-            <span className="text-[10px] font-bold text-white bg-brand-pink px-1.5 py-0.5 rounded-full shrink-0">
+            <span className="rounded-full bg-brand-pink px-1.5 py-0.5 text-[9px] font-bold text-white">
               OFERTA
             </span>
           )}
-
-          {producto.generaComision && (
-            <span className="text-[10px] font-bold text-white bg-green-600 px-1.5 py-0.5 rounded-full shrink-0">
-              MULTINIVEL
-            </span>
-          )}
         </div>
-        <p className="text-xs text-brand-pink font-medium mt-0.5">
-          {producto.categoria.nombre}
-        </p>
-        {producto.mostrarPrecio ? (
-          producto.enPromocion && producto.precioPromocion ? (
-            <p className="text-sm mt-1">
-              <span className="line-through text-[#8A8790] mr-1">
-                Bs. {producto.precio}
-              </span>
-              <span className="text-brand-pink font-semibold">
-                Bs. {producto.precioPromocion}
-              </span>
-            </p>
-          ) : (
-            <p className="text-sm text-[#6B6870] mt-1">Bs. {producto.precio}</p>
-          )
-        ) : (
-          <p className="text-sm text-[#6B6870] mt-1">
-            Precio a consultar por WhatsApp
-          </p>
-        )}
-        {producto.generaComision && (
-          <p className="mt-1 text-xs text-green-700">
-            CV: Bs. {producto.valorComisionable} · PV: {producto.puntosVolumen}
-          </p>
-        )}
 
-        <div className="flex gap-4 text-sm mt-2">
+        <div className="mt-3 flex flex-wrap gap-3 text-sm">
           <button
+            type="button"
             onClick={() => onEditar(producto)}
-            className="text-brand-blue font-medium hover:underline"
+            className="font-medium text-brand-blue hover:underline"
           >
             Editar
           </button>
 
           <button
+            type="button"
             onClick={() => onInformacion(producto)}
-            className="text-green-700 font-medium hover:underline"
+            className="font-medium text-green-700 hover:underline"
           >
             Información
           </button>
 
           <button
-            onClick={() => onBorrar(producto.id)}
-            className="text-red-600 font-medium hover:underline"
+            type="button"
+            onClick={() => onCambiarEstado(producto)}
+            className={
+              producto.activo
+                ? "font-medium text-red-600 hover:underline"
+                : "font-medium text-green-700 hover:underline"
+            }
           >
-            Borrar
+            {producto.activo ? "Desactivar" : "Activar"}
           </button>
         </div>
       </div>
@@ -180,7 +191,6 @@ export default function ProductosPage() {
   const [imagenSubiendo, setImagenSubiendo] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [confirmarSalir, setConfirmarSalir] = useState(false);
-  const [borrarId, setBorrarId] = useState<string | null>(null);
 
   const [productoInformacion, setProductoInformacion] =
     useState<Producto | null>(null);
@@ -434,14 +444,15 @@ export default function ProductosPage() {
       alert("Nombre y categoría son obligatorios");
       return;
     }
-    if (form.mostrarPrecio && !form.precio) {
-      alert("Ingresa el precio o desactiva 'Mostrar precio'");
+    const precio = Number(form.precio);
+
+    if (!Number.isFinite(precio) || precio <= 0) {
+      alert("Ingresa un precio de venta válido");
       return;
     }
     if (
       form.enPromocion &&
       form.precioPromocion &&
-      form.mostrarPrecio &&
       parseFloat(form.precioPromocion) >= parseFloat(form.precio || "0")
     ) {
       alert("El precio de promoción debe ser menor al precio normal");
@@ -471,9 +482,10 @@ export default function ProductosPage() {
     const body = {
       ...form,
       precio: parseFloat(form.precio || "0"),
-      precioPromocion: form.precioPromocion
-        ? parseFloat(form.precioPromocion)
-        : null,
+      precioPromocion:
+        form.enPromocion && form.precioPromocion
+          ? parseFloat(form.precioPromocion)
+          : null,
       generaComision: form.generaComision,
       valorComisionable: form.generaComision
         ? parseFloat(form.valorComisionable || "0")
@@ -481,7 +493,6 @@ export default function ProductosPage() {
       puntosVolumen: form.generaComision
         ? parseFloat(form.puntosVolumen || "0")
         : 0,
-      activo: true,
     };
 
     try {
@@ -515,21 +526,36 @@ export default function ProductosPage() {
     }
   }
 
-  async function confirmarBorrar() {
-    if (!borrarId) return;
-    const res = await fetch(`/api/admin/productos/${borrarId}`, {
-      method: "DELETE",
-    });
-    setBorrarId(null);
+  async function cambiarEstado(producto: Producto) {
+    try {
+      const res = await fetch(
+        `/api/admin/productos/${producto.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            activo: !producto.activo,
+          }),
+        }
+      );
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => null);
-      alert(data?.error || "No se pudo borrar el producto");
-      return;
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        alert(
+          data?.error ||
+            "No se pudo cambiar el estado del producto"
+        );
+        return;
+      }
+
+      await cargar();
+    } catch {
+      alert("No se pudo conectar con el servidor");
     }
-
-    cargar();
   }
+
 
   async function guardarOrden(lista: Producto[]) {
     setGuardandoOrden(true);
@@ -600,7 +626,7 @@ export default function ProductosPage() {
               index={i}
               onEditar={abrirEditar}
               onInformacion={abrirInformacion}
-              onBorrar={setBorrarId}
+              onCambiarEstado={cambiarEstado}
             />
           ))}
         </div>
@@ -662,21 +688,26 @@ export default function ProductosPage() {
               </button>
             </div>
 
-            {form.mostrarPrecio && (
-              <div>
-                <label className="admin-label">Precio (Bs.)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={form.precio}
-                  onChange={(e) =>
-                    setForm({ ...form, precio: e.target.value })
-                  }
-                  className="admin-input"
-                  required
-                />
-              </div>
-            )}
+            <div>
+              <label className="admin-label">
+                Precio de venta (Bs.)
+              </label>
+
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={form.precio}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    precio: e.target.value,
+                  })
+                }
+                className="admin-input"
+                required
+              />
+            </div>
 
             <div className="flex items-center justify-between admin-card px-3 py-2">
               <div>
@@ -1141,14 +1172,6 @@ export default function ProductosPage() {
         />
       )}
 
-      {borrarId && (
-        <ConfirmDialog
-          title="Borrar producto"
-          message="¿Seguro que quieres borrar este producto? Esta acción no se puede deshacer."
-          onConfirm={confirmarBorrar}
-          onCancel={() => setBorrarId(null)}
-        />
-      )}
     </div>
   );
 }

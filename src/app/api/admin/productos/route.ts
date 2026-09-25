@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     !nombre ||
     !categoriaId ||
     !Number.isFinite(precioNumero) ||
-    precioNumero < 0
+    precioNumero <= 0
   ) {
     return NextResponse.json(
       {
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     (
       !Number.isFinite(precioPromocionNumero) ||
       precioPromocionNumero < 0 ||
-      precioPromocionNumero > precioNumero
+      precioPromocionNumero >= precioNumero
     )
   ) {
     return NextResponse.json(
@@ -162,6 +162,7 @@ export async function POST(req: NextRequest) {
           enPromocion ?? false,
 
         precioPromocion:
+          enPromocion === true &&
           precioPromocion !== undefined &&
           precioPromocion !== null &&
           precioPromocion !== ""
