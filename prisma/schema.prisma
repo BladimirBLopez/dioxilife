@@ -199,6 +199,9 @@ model Miembro {
   tokenActivacionExpira DateTime?
   fechaActivacion       DateTime?
 
+  passwordResetTokenHash String?   @unique
+  passwordResetExpira    DateTime?
+
   comisionesRecibidas ComisionMultinivel[] @relation("ComisionesBeneficiario")
   comisionesGeneradas ComisionMultinivel[] @relation("ComisionesOrigen")
 
