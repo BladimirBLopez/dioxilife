@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import RegistroRapidoProveedor from "@/components/admin/RegistroRapidoProveedor";
+
 type Proveedor = {
   id: string;
   nombre: string;
@@ -25,6 +27,12 @@ export default function NuevaCompraPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
 
   const [proveedorId, setProveedorId] = useState("");
+
+  const [
+    mostrarNuevoProveedor,
+    setMostrarNuevoProveedor,
+  ] = useState(false);
+
   const [detalles, setDetalles] = useState<Detalle[]>([]);
 
   const [productoId, setProductoId] = useState("");
@@ -182,27 +190,75 @@ export default function NuevaCompraPage() {
 
       <div className="admin-card p-5 space-y-4">
 
-        <label className="block text-sm font-medium">
-          Proveedor
-        </label>
+        <div className="flex items-center justify-between gap-3">
+
+          <label className="block text-sm font-medium">
+            Proveedor
+          </label>
+
+          <button
+            type="button"
+            onClick={() =>
+              setMostrarNuevoProveedor(
+                true
+              )
+            }
+            className="text-sm font-semibold text-brand-pink hover:underline"
+          >
+            + Nuevo proveedor
+          </button>
+
+        </div>
+
 
         <select
-          value={proveedorId}
-          onChange={(e)=>setProveedorId(e.target.value)}
+          value={
+            proveedorId
+          }
+          onChange={(e) =>
+            setProveedorId(
+              e.target.value
+            )
+          }
           className="admin-input w-full"
         >
+
           <option value="">
             Seleccionar proveedor
           </option>
 
           {proveedores
-            .filter(p=>p.activo)
-            .map(p=>(
-              <option key={p.id} value={p.id}>
-                {p.nombre}
-              </option>
-            ))}
+            .filter(
+              (p) =>
+                p.activo
+            )
+            .map(
+              (p) => (
+
+                <option
+                  key={
+                    p.id
+                  }
+                  value={
+                    p.id
+                  }
+                >
+                  {p.nombre}
+                </option>
+
+              )
+            )}
+
         </select>
+
+
+        {proveedores.length === 0 && (
+
+          <p className="text-xs text-[#77737D]">
+            Todavía no tienes proveedores registrados. Usa “+ Nuevo proveedor” para crear el primero.
+          </p>
+
+        )}
 
 
         <div className="grid gap-3 md:grid-cols-4">
@@ -347,6 +403,41 @@ export default function NuevaCompraPage() {
           ? "Registrando..."
           : "Registrar compra"}
       </button>
+
+
+      {mostrarNuevoProveedor && (
+
+        <RegistroRapidoProveedor
+          onClose={() =>
+            setMostrarNuevoProveedor(
+              false
+            )
+          }
+
+          onCreado={
+            (proveedor) => {
+
+              setProveedores(
+                (actual) =>
+                  [
+                    ...actual,
+                    proveedor,
+                  ].sort(
+                    (a, b) =>
+                      a.nombre.localeCompare(
+                        b.nombre
+                      )
+                  )
+              );
+
+              setProveedorId(
+                proveedor.id
+              );
+            }
+          }
+        />
+
+      )}
 
 
     </div>
