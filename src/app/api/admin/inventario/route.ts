@@ -2,16 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { obtenerAdminActual } from "@/lib/admin-auth";
 
-const TIPOS_MANUALES = ["ENTRADA", "SALIDA", "AJUSTE"] as const;
-type TipoManual = (typeof TIPOS_MANUALES)[number];
-
-function esTipoManual(valor: unknown): valor is TipoManual {
-  return (
-    typeof valor === "string" &&
-    TIPOS_MANUALES.includes(valor as TipoManual)
-  );
-}
-
 export async function GET() {
   const admin = await obtenerAdminActual();
 
@@ -100,9 +90,19 @@ export async function POST(req: NextRequest) {
       ? body.motivo.trim()
       : "";
 
-  if (!productoId || !esTipoManual(tipo)) {
+  if (!productoId) {
     return NextResponse.json(
-      { error: "Producto y tipo de movimiento son requeridos" },
+      { error: "Producto requerido" },
+      { status: 400 }
+    );
+  }
+
+  if (tipo !== "AJUSTE") {
+    return NextResponse.json(
+      {
+        error:
+          "Las entradas y salidas de stock deben generarse desde Compras o Pedidos",
+      },
       { status: 400 }
     );
   }
@@ -121,17 +121,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (
-    (tipo === "ENTRADA" || tipo === "SALIDA") &&
-    cantidad <= 0
-  ) {
-    return NextResponse.json(
-      { error: "La cantidad debe ser mayor a cero" },
-      { status: 400 }
-    );
-  }
-
-  if (tipo === "AJUSTE" && cantidad < 0) {
+  if (cantidad < 0) {
     return NextResponse.json(
       { error: "El stock ajustado no puede ser negativo" },
       { status: 400 }
@@ -158,29 +148,13 @@ export async function POST(req: NextRequest) {
 
         const stockAnterior = producto.stockActual;
 
-        let stockNuevo = stockAnterior;
-        let cantidadMovimiento = cantidad;
+        const stockNuevo = cantidad;
 
-        if (tipo === "ENTRADA") {
-          stockNuevo = stockAnterior + cantidad;
-        }
+        const cantidadMovimiento =
+          stockNuevo - stockAnterior;
 
-        if (tipo === "SALIDA") {
-          if (cantidad > stockAnterior) {
-            throw new Error("STOCK_INSUFICIENTE");
-          }
-
-          stockNuevo = stockAnterior - cantidad;
-        }
-
-        if (tipo === "AJUSTE") {
-          stockNuevo = cantidad;
-          cantidadMovimiento =
-            stockNuevo - stockAnterior;
-
-          if (cantidadMovimiento === 0) {
-            throw new Error("SIN_CAMBIOS");
-          }
+        if (cantidadMovimiento === 0) {
+          throw new Error("SIN_CAMBIOS");
         }
 
         await tx.producto.update({
@@ -235,13 +209,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: "Producto no encontrado" },
         { status: 404 }
-      );
-    }
-
-    if (mensaje === "STOCK_INSUFICIENTE") {
-      return NextResponse.json(
-        { error: "No existe stock suficiente para realizar la salida" },
-        { status: 400 }
       );
     }
 

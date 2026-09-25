@@ -6,8 +6,6 @@ import {
   useState,
 } from "react";
 import {
-  ArrowDownToLine,
-  ArrowUpFromLine,
   Boxes,
   PackageCheck,
   PackageX,
@@ -50,11 +48,6 @@ type Movimiento = {
     usuario: string;
   } | null;
 };
-
-type TipoManual =
-  | "ENTRADA"
-  | "SALIDA"
-  | "AJUSTE";
 
 function estadoProducto(
   producto: ProductoInventario
@@ -131,9 +124,6 @@ export default function InventarioPage() {
 
   const [productoSeleccionado, setProductoSeleccionado] =
     useState<ProductoInventario | null>(null);
-
-  const [tipo, setTipo] =
-    useState<TipoManual>("ENTRADA");
 
   const [cantidad, setCantidad] =
     useState("");
@@ -238,17 +228,13 @@ export default function InventarioPage() {
         producto.stockActual <= 0
     ).length;
 
-  function abrirMovimiento(
-    producto: ProductoInventario,
-    nuevoTipo: TipoManual
+  function abrirAjuste(
+    producto: ProductoInventario
   ) {
     setProductoSeleccionado(producto);
-    setTipo(nuevoTipo);
 
     setCantidad(
-      nuevoTipo === "AJUSTE"
-        ? String(producto.stockActual)
-        : ""
+      String(producto.stockActual)
     );
 
     setMotivo("");
@@ -278,7 +264,7 @@ export default function InventarioPage() {
             body: JSON.stringify({
               productoId:
                 productoSeleccionado.id,
-              tipo,
+              tipo: "AJUSTE",
               cantidad,
               motivo,
             }),
@@ -375,8 +361,8 @@ export default function InventarioPage() {
         </h1>
 
         <p className="mt-1 text-sm text-[#77737D]">
-          Gestiona entradas, salidas,
-          ajustes y niveles mínimos de stock.
+          Consulta existencias, movimientos,
+          niveles mínimos y realiza ajustes excepcionales de stock.
         </p>
       </div>
 
@@ -449,7 +435,7 @@ export default function InventarioPage() {
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-brand-pink">
-                Nuevo movimiento
+                Ajuste de inventario
               </p>
 
               <h2 className="mt-1 font-semibold text-[#1F1B24]">
@@ -473,53 +459,46 @@ export default function InventarioPage() {
             </button>
           </div>
 
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
-            <select
-              value={tipo}
-              onChange={(e) =>
-                setTipo(
-                  e.target.value as TipoManual
-                )
-              }
-              className="admin-input"
-            >
-              <option value="ENTRADA">
-                Entrada
-              </option>
-              <option value="SALIDA">
-                Salida
-              </option>
-              <option value="AJUSTE">
-                Ajuste
-              </option>
-            </select>
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+            Utiliza el ajuste únicamente cuando el stock físico real
+            sea diferente al registrado por el sistema.
+          </div>
 
-            <input
-              type="number"
-              min="0"
-              step="1"
-              inputMode="numeric"
-              value={cantidad}
-              onChange={(e) =>
-                setCantidad(e.target.value)
-              }
-              placeholder={
-                tipo === "AJUSTE"
-                  ? "Nuevo stock real"
-                  : "Cantidad"
-              }
-              className="admin-input"
-            />
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-[#77737D]">
+                Nuevo stock real
+              </label>
 
-            <input
-              type="text"
-              value={motivo}
-              onChange={(e) =>
-                setMotivo(e.target.value)
-              }
-              placeholder="Motivo del movimiento"
-              className="admin-input"
-            />
+              <input
+                type="number"
+                min="0"
+                step="1"
+                inputMode="numeric"
+                value={cantidad}
+                onChange={(e) =>
+                  setCantidad(e.target.value)
+                }
+                placeholder="Nuevo stock real"
+                className="admin-input"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium text-[#77737D]">
+                Motivo del ajuste
+              </label>
+
+              <input
+                type="text"
+                value={motivo}
+                onChange={(e) =>
+                  setMotivo(e.target.value)
+                }
+                placeholder="Ej. Conteo físico, producto dañado..."
+                className="admin-input"
+              />
+            </div>
           </div>
 
           <button
@@ -530,7 +509,7 @@ export default function InventarioPage() {
           >
             {guardando
               ? "Guardando..."
-              : "Registrar movimiento"}
+              : "Confirmar ajuste"}
           </button>
         </div>
       )}
@@ -654,43 +633,14 @@ export default function InventarioPage() {
                         <button
                           type="button"
                           onClick={() =>
-                            abrirMovimiento(
-                              producto,
-                              "ENTRADA"
-                            )
-                          }
-                          className="flex items-center gap-1 rounded-lg bg-green-50 px-3 py-2 text-xs font-semibold text-green-700"
-                        >
-                          <ArrowDownToLine className="h-4 w-4" />
-                          Entrada
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            abrirMovimiento(
-                              producto,
-                              "SALIDA"
-                            )
-                          }
-                          className="flex items-center gap-1 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-700"
-                        >
-                          <ArrowUpFromLine className="h-4 w-4" />
-                          Salida
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            abrirMovimiento(
-                              producto,
-                              "AJUSTE"
+                            abrirAjuste(
+                              producto
                             )
                           }
                           className="flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700"
                         >
                           <RefreshCcw className="h-4 w-4" />
-                          Ajustar
+                          Ajustar inventario
                         </button>
                       </div>
                     </div>
