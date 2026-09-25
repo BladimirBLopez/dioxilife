@@ -25,11 +25,49 @@ export async function PUT(
   }
 
   const { id } = await params;
-  const { nombre } = await req.json();
+  const body = await req.json();
+
+  const nombre =
+    typeof body.nombre === "string"
+      ? body.nombre.trim()
+      : "";
+
+  if (nombre.length < 2) {
+    return NextResponse.json(
+      { error: "Ingresa un nombre válido" },
+      { status: 400 }
+    );
+  }
+
+  const slug = slugify(nombre);
+
+  const existente = await prisma.categoria.findFirst({
+    where: {
+      slug,
+      NOT: {
+        id,
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (existente) {
+    return NextResponse.json(
+      { error: "Ya existe una categoría con ese nombre" },
+      { status: 409 }
+    );
+  }
 
   const categoria = await prisma.categoria.update({
-    where: { id },
-    data: { nombre, slug: slugify(nombre) },
+    where: {
+      id,
+    },
+    data: {
+      nombre,
+      slug,
+    },
   });
 
   return NextResponse.json(categoria);
@@ -50,18 +88,17 @@ export async function DELETE(
 
   const { id } = await params;
 
-  const productos =
-    await prisma.producto.count({
-      where: {
-        categoriaId: id,
-      },
-    });
+  const productos = await prisma.producto.count({
+    where: {
+      categoriaId: id,
+    },
+  });
 
   if (productos > 0) {
     return NextResponse.json(
       {
         error:
-          `No se puede eliminar esta categoría porque tiene ${productos} producto(s) asociado(s).`,
+          "No se puede eliminar una categoría que tiene productos.",
       },
       { status: 409 }
     );
@@ -73,5 +110,7 @@ export async function DELETE(
     },
   });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({
+    ok: true,
+  });
 }

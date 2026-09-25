@@ -120,12 +120,15 @@ export default function CategoriasPage() {
               >
                 Editar
               </button>
-              <button
-                onClick={() => handleBorrar(cat.id)}
-                className="text-red-600 font-medium hover:underline"
-              >
-                Borrar
-              </button>
+              {cat._count.productos === 0 && (
+                <button
+                  type="button"
+                  onClick={() => handleBorrar(cat.id)}
+                  className="text-red-600 font-medium hover:underline"
+                >
+                  Eliminar
+                </button>
+              )}
             </div>
           </div>
         ))}

@@ -22,9 +22,21 @@ export async function GET() {
   }
 
   const categorias = await prisma.categoria.findMany({
-    orderBy: { nombre: "asc" },
-    include: { _count: { select: { productos: true } } },
+    orderBy: {
+      nombre: "asc",
+    },
+    select: {
+      id: true,
+      nombre: true,
+      slug: true,
+      _count: {
+        select: {
+          productos: true,
+        },
+      },
+    },
   });
+
   return NextResponse.json(categorias);
 }
 
@@ -38,22 +50,42 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { nombre } = await req.json();
+  const body = await req.json();
 
-  const nombreLimpio =
-    String(nombre || "").trim();
+  const nombre =
+    typeof body.nombre === "string"
+      ? body.nombre.trim()
+      : "";
 
-  if (!nombreLimpio) {
+  if (nombre.length < 2) {
     return NextResponse.json(
-      { error: "Nombre requerido" },
+      { error: "Ingresa un nombre válido" },
       { status: 400 }
+    );
+  }
+
+  const slug = slugify(nombre);
+
+  const existente = await prisma.categoria.findUnique({
+    where: {
+      slug,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (existente) {
+    return NextResponse.json(
+      { error: "Ya existe una categoría con ese nombre" },
+      { status: 409 }
     );
   }
 
   const categoria = await prisma.categoria.create({
     data: {
-      nombre: nombreLimpio,
-      slug: slugify(nombreLimpio),
+      nombre,
+      slug,
     },
   });
 
