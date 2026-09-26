@@ -29,6 +29,19 @@ function fechaHora(valor: Date | null) {
   }).format(valor);
 }
 
+function fechaSolo(valor: Date | null) {
+  if (!valor) {
+    return "Sin fecha";
+  }
+
+  return new Intl.DateTimeFormat("es-BO", {
+    timeZone: "UTC",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(valor);
+}
+
 function nombreEstado(
   estado: string
 ) {
@@ -88,12 +101,6 @@ export default async function DetalleCompraPage({
             producto: true,
           },
         },
-
-        movimientoInventarios: {
-          orderBy: {
-            createdAt: "desc",
-          },
-        },
       },
     });
 
@@ -129,6 +136,7 @@ export default async function DetalleCompraPage({
             codigo={compra.codigo}
             proveedor={compra.proveedor.nombre}
             estado={compra.estado}
+            fechaCompra={fechaSolo(compra.fechaCompra)}
             fechaRegistro={fechaHora(compra.createdAt)}
             fechaRecepcion={fechaHora(compra.recibidaAt)}
             total={Number(compra.total)}
@@ -203,12 +211,25 @@ export default async function DetalleCompraPage({
 
       <div className="admin-card p-5">
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
 
           <div>
 
             <p className="text-xs text-[#77737D]">
-              Fecha y hora de registro
+              Fecha de compra
+            </p>
+
+            <p className="mt-1 font-medium">
+              {fechaSolo(compra.fechaCompra)}
+            </p>
+
+          </div>
+
+
+          <div>
+
+            <p className="text-xs text-[#77737D]">
+              Registrada en el sistema
             </p>
 
             <p className="mt-1 font-medium">
@@ -221,7 +242,7 @@ export default async function DetalleCompraPage({
           <div>
 
             <p className="text-xs text-[#77737D]">
-              Fecha y hora de recepción
+              Recepción
             </p>
 
             <p className="mt-1 font-medium">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { CalendarDays } from "lucide-react";
 
 import RegistroRapidoProveedor from "@/components/admin/RegistroRapidoProveedor";
 
@@ -27,6 +28,23 @@ export default function NuevaCompraPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
 
   const [proveedorId, setProveedorId] = useState("");
+
+  const hoy = useMemo(() => {
+    const partes = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/La_Paz",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(new Date());
+
+    const year = partes.find((p) => p.type === "year")?.value;
+    const month = partes.find((p) => p.type === "month")?.value;
+    const day = partes.find((p) => p.type === "day")?.value;
+
+    return `${year}-${month}-${day}`;
+  }, []);
+
+  const [fechaCompra, setFechaCompra] = useState(hoy);
 
   const [
     mostrarNuevoProveedor,
@@ -132,6 +150,7 @@ export default function NuevaCompraPage() {
           },
           body: JSON.stringify({
             proveedorId,
+            fechaCompra,
             detalles,
           }),
         }
@@ -176,7 +195,7 @@ export default function NuevaCompraPage() {
         </h1>
 
         <p className="text-sm text-[#77737D]">
-          Registra compras a proveedores y aumenta automáticamente el inventario.
+          Registra la compra y confirma la recepción cuando llegue la mercadería.
         </p>
       </div>
 
@@ -211,45 +230,84 @@ export default function NuevaCompraPage() {
         </div>
 
 
-        <select
-          value={
-            proveedorId
-          }
-          onChange={(e) =>
-            setProveedorId(
-              e.target.value
-            )
-          }
-          className="admin-input w-full"
-        >
+        <div className="grid gap-4 md:grid-cols-2">
 
-          <option value="">
-            Seleccionar proveedor
-          </option>
+          <div>
 
-          {proveedores
-            .filter(
-              (p) =>
-                p.activo
-            )
-            .map(
-              (p) => (
+            <select
+              value={
+                proveedorId
+              }
+              onChange={(e) =>
+                setProveedorId(
+                  e.target.value
+                )
+              }
+              className="admin-input w-full"
+            >
 
-                <option
-                  key={
-                    p.id
-                  }
-                  value={
-                    p.id
-                  }
-                >
-                  {p.nombre}
-                </option>
+              <option value="">
+                Seleccionar proveedor
+              </option>
 
-              )
-            )}
+              {proveedores
+                .filter(
+                  (p) =>
+                    p.activo
+                )
+                .map(
+                  (p) => (
 
-        </select>
+                    <option
+                      key={
+                        p.id
+                      }
+                      value={
+                        p.id
+                      }
+                    >
+                      {p.nombre}
+                    </option>
+
+                  )
+                )}
+
+            </select>
+
+          </div>
+
+
+          <div>
+
+            <label className="mb-1.5 block text-xs font-medium text-[#77737D]">
+              Fecha de compra
+            </label>
+
+            <div className="relative">
+
+              <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#77737D]" />
+
+              <input
+                type="date"
+                value={fechaCompra}
+                max={hoy}
+                onChange={(e) =>
+                  setFechaCompra(
+                    e.target.value
+                  )
+                }
+                className="admin-input w-full pl-10"
+              />
+
+            </div>
+
+            <p className="mt-1 text-xs text-[#77737D]">
+              Fecha real en que se realizó la compra.
+            </p>
+
+          </div>
+
+        </div>
 
 
         {proveedores.length === 0 && (

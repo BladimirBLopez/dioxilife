@@ -410,6 +410,7 @@ model Compra {
 
   detalles DetalleCompra[]
 
+  fechaCompra           DateTime               @db.Date
   createdAt             DateTime               @default(now())
   recibidaAt            DateTime?
   updatedAt             DateTime               @updatedAt

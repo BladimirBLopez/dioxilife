@@ -15,6 +15,7 @@ type Props = {
   codigo: string;
   proveedor: string;
   estado: string;
+  fechaCompra: string;
   fechaRegistro: string;
   fechaRecepcion: string;
   total: number;
@@ -44,6 +45,7 @@ export default function ExportarCompraPDF({
   codigo,
   proveedor,
   estado,
+  fechaCompra,
   fechaRegistro,
   fechaRecepcion,
   total,
@@ -68,11 +70,12 @@ export default function ExportarCompraPDF({
 
     doc.text(`Proveedor: ${proveedor}`, 14, 39);
     doc.text(`Estado: ${nombreEstado(estado)}`, 14, 45);
-    doc.text(`Registro: ${fechaRegistro}`, 14, 51);
-    doc.text(`Recepción: ${fechaRecepcion}`, 14, 57);
+    doc.text(`Fecha de compra: ${fechaCompra}`, 14, 51);
+    doc.text(`Registro en sistema: ${fechaRegistro}`, 14, 57);
+    doc.text(`Recepción: ${fechaRecepcion}`, 14, 63);
 
     autoTable(doc, {
-      startY: 67,
+      startY: 73,
 
       head: [[
         "Producto",
