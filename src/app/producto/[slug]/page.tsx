@@ -6,6 +6,7 @@ import AgregarCarritoButton from "@/components/AgregarCarritoButton";
 import ResenaForm from "@/components/ResenaForm";
 import InformacionProductoPublica from "@/components/InformacionProductoPublica";
 import SiteHeader from "@/components/SiteHeader";
+import ProductoGaleria from "@/components/ProductoGaleria";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,16 @@ export default async function ProductoDetalle({
           videoUrl: true,
         },
       },
+      imagenes: {
+        orderBy: [
+          { orden: "asc" },
+          { createdAt: "asc" },
+        ],
+        select: {
+          id: true,
+          url: true,
+        },
+      },
     },
   });
 
@@ -64,29 +75,12 @@ export default async function ProductoDetalle({
         </div>
 
         <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.05)] md:flex">
-          <div className="relative aspect-square bg-[#FAFAFB] md:w-1/2 md:border-r border-gray-100">
-            {producto.enPromocion && (
-              <span className="absolute left-4 top-4 z-10 rounded-full bg-brand-pink px-3 py-1.5 text-xs font-bold tracking-wide text-white shadow-sm">
-                OFERTA
-              </span>
-            )}
-            {producto.imagenUrl ? (
-              <Image
-                src={producto.imagenUrl}
-                alt={producto.nombre}
-                fill
-                className="object-contain p-6 sm:p-8"
-                priority
-              />
-            ) : (
-              <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-[#A3A0A7]">
-                <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white shadow-sm">
-                  <span className="text-3xl">◻</span>
-                </div>
-                <span className="text-sm">Imagen próximamente</span>
-              </div>
-            )}
-          </div>
+          <ProductoGaleria
+            nombre={producto.nombre}
+            imagenPrincipal={producto.imagenUrl}
+            imagenes={producto.imagenes}
+            enPromocion={producto.enPromocion}
+          />
 
           <div className="flex flex-col p-6 sm:p-8 md:w-1/2">
             <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-brand-pink">
