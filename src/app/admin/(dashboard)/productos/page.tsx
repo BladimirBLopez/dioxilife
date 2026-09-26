@@ -206,6 +206,13 @@ export default function ProductosPage() {
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [imagenSubiendo, setImagenSubiendo] = useState(false);
+
+  const [imagenesAdicionales, setImagenesAdicionales] =
+    useState<string[]>([]);
+
+  const [imagenesAdicionalesSubiendo, setImagenesAdicionalesSubiendo] =
+    useState(false);
+
   const [modalAbierto, setModalAbierto] = useState(false);
   const [confirmarSalir, setConfirmarSalir] = useState(false);
 
@@ -271,7 +278,10 @@ export default function ProductosPage() {
   }, []);
 
   function hayCambiosSinGuardar() {
-    return JSON.stringify(form) !== JSON.stringify(formInicial);
+    return (
+      JSON.stringify(form) !== JSON.stringify(formInicial) ||
+      imagenesAdicionales.length > 0
+    );
   }
 
   function pedirCerrarModal() {
@@ -285,12 +295,14 @@ export default function ProductosPage() {
   function cerrarSinGuardar() {
     setConfirmarSalir(false);
     setModalAbierto(false);
+    setImagenesAdicionales([]);
   }
 
   function abrirNuevo() {
     setEditandoId(null);
     setForm(vacio);
     setFormInicial(vacio);
+    setImagenesAdicionales([]);
     setModalAbierto(true);
   }
 
@@ -600,6 +612,7 @@ export default function ProductosPage() {
     setEditandoId(p.id);
     setForm(datos);
     setFormInicial(datos);
+    setImagenesAdicionales([]);
     setModalAbierto(true);
   }
 
@@ -638,8 +651,8 @@ export default function ProductosPage() {
       }
     }
 
-    if (imagenSubiendo) {
-      alert("Espera a que termine de subir la imagen antes de guardar");
+    if (imagenSubiendo || imagenesAdicionalesSubiendo) {
+      alert("Espera a que terminen de subir las imágenes antes de guardar");
       return;
     }
     setLoading(true);
@@ -673,17 +686,55 @@ export default function ProductosPage() {
             body: JSON.stringify(body),
           });
 
+      const data = await res.json().catch(() => null);
+
       if (!res.ok) {
-        const data = await res.json().catch(() => null);
         alert(data?.error || "Ocurrió un error al guardar el producto");
         setLoading(false);
         return;
       }
 
+      let imagenesFallidas = 0;
+
+      if (
+        !editandoId &&
+        data?.id &&
+        imagenesAdicionales.length > 0
+      ) {
+        for (const url of imagenesAdicionales) {
+          try {
+            const respuestaImagen = await fetch(
+              `/api/admin/productos/${data.id}/imagenes`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ url }),
+              }
+            );
+
+            if (!respuestaImagen.ok) {
+              imagenesFallidas += 1;
+            }
+          } catch {
+            imagenesFallidas += 1;
+          }
+        }
+      }
+
       setModalAbierto(false);
       setForm(vacio);
       setEditandoId(null);
+      setImagenesAdicionales([]);
+
       await cargar();
+
+      if (imagenesFallidas > 0) {
+        alert(
+          `El producto fue creado, pero ${imagenesFallidas} imagen(es) adicional(es) no pudieron guardarse. Puedes agregarlas desde Galería.`
+        );
+      }
     } catch {
       alert("No se pudo conectar con el servidor");
     } finally {
@@ -1057,26 +1108,102 @@ export default function ProductosPage() {
             </div>
 
             <div>
-              <label className="admin-label">Imagen</label>
+              <label className="admin-label">
+                Imagen principal
+              </label>
+
               <CloudinaryUpload
                 value={form.imagenUrl}
-                onChange={(url) => setForm({ ...form, imagenUrl: url })}
+                onChange={(url) =>
+                  setForm({
+                    ...form,
+                    imagenUrl: url,
+                  })
+                }
                 onUploadingChange={setImagenSubiendo}
+                soloImagen
               />
             </div>
 
+            {!editandoId && (
+              <div className="border-t pt-4">
+                <label className="admin-label">
+                  Imágenes adicionales
+                </label>
+
+                <p className="mb-3 text-xs text-[#8A8790]">
+                  Puedes agregar varias fotografías. La imagen principal
+                  seguirá siendo la que aparece primero en la tienda.
+                </p>
+
+                <CloudinaryUpload
+                  value=""
+                  onChange={(url) => {
+                    setImagenesAdicionales((anteriores) =>
+                      anteriores.includes(url)
+                        ? anteriores
+                        : [...anteriores, url]
+                    );
+                  }}
+                  onUploadingChange={setImagenesAdicionalesSubiendo}
+                  soloImagen
+                />
+
+                {imagenesAdicionales.length > 0 && (
+                  <div className="mt-4 grid grid-cols-3 gap-3">
+                    {imagenesAdicionales.map((url, index) => (
+                      <div
+                        key={url}
+                        className="overflow-hidden rounded-xl border bg-white"
+                      >
+                        <div className="relative aspect-square bg-[#F7F7F9]">
+                          <img
+                            src={url}
+                            alt={`Imagen adicional ${index + 1}`}
+                            className="h-full w-full object-contain p-1"
+                          />
+
+                          <span className="absolute left-1.5 top-1.5 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-white">
+                            {index + 2}
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setImagenesAdicionales((anteriores) =>
+                              anteriores.filter(
+                                (imagen) => imagen !== url
+                              )
+                            )
+                          }
+                          className="w-full border-t px-2 py-2 text-xs font-semibold text-red-600 hover:bg-red-50"
+                        >
+                          Quitar
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <button
               type="submit"
-              disabled={loading || imagenSubiendo}
+              disabled={
+                loading ||
+                imagenSubiendo ||
+                imagenesAdicionalesSubiendo
+              }
               className="admin-btn-primary w-full"
             >
-              {imagenSubiendo
-                ? "Esperando imagen..."
+              {imagenSubiendo || imagenesAdicionalesSubiendo
+                ? "Esperando imágenes..."
                 : loading
-                ? "Guardando..."
-                : editandoId
-                ? "Guardar cambios"
-                : "Crear producto"}
+                  ? "Guardando..."
+                  : editandoId
+                    ? "Guardar cambios"
+                    : "Crear producto"}
             </button>
           </form>
         </Modal>
