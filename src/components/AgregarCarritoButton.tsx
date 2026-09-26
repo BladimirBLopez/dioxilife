@@ -1,5 +1,6 @@
 "use client";
 
+import { ShoppingCart } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 
 export default function AgregarCarritoButton({
@@ -19,11 +20,19 @@ export default function AgregarCarritoButton({
 
   return (
     <button
+      type="button"
       onClick={() =>
-        addItem({ id, nombre, precio, mostrarPrecio, imagenUrl })
+        addItem({
+          id,
+          nombre,
+          precio,
+          mostrarPrecio,
+          imagenUrl,
+        })
       }
-      className="block w-full text-center text-xs font-semibold text-white bg-brand-pink rounded py-1.5 hover:opacity-90"
+      className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-pink px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 active:scale-[0.99]"
     >
+      <ShoppingCart className="h-4 w-4" />
       Agregar al carrito
     </button>
   );

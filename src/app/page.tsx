@@ -211,12 +211,12 @@ export default async function Home({
             {productos.map((p) => (
               <div
                 key={p.id}
-                className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col"
+                className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-[0_4px_18px_rgba(0,0,0,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.07)] flex flex-col"
               >
                 <Link href={`/producto/${p.slug}`} className="flex flex-col flex-1">
-                  <div className="aspect-square bg-white relative border-b">
+                  <div className="relative aspect-square border-b border-gray-100 bg-[#FAFAFB]">
                     {p.enPromocion && (
-                      <span className="absolute top-1.5 left-1.5 z-10 bg-brand-pink text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      <span className="absolute left-2 top-2 z-10 rounded-full bg-brand-pink px-2.5 py-1 text-[10px] font-bold tracking-wide text-white shadow-sm">
                         OFERTA
                       </span>
                     )}
@@ -225,19 +225,22 @@ export default async function Home({
                         src={p.imagenUrl}
                         alt={p.nombre}
                         fill
-                        className="object-cover"
+                        className="object-contain p-4 transition duration-300 group-hover:scale-[1.03]"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-brand-gray text-xs">
-                        Sin imagen
+                      <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-center text-[#A3A0A7]">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm">
+                          <span className="text-2xl">◻</span>
+                        </div>
+                        <span className="text-xs">Imagen próximamente</span>
                       </div>
                     )}
                   </div>
-                  <div className="p-3 pb-2 flex flex-col flex-1">
-                    <span className="text-[11px] uppercase tracking-wide text-brand-pink font-semibold">
+                  <div className="flex flex-1 flex-col p-4 pb-3">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-brand-pink">
                       {p.categoria.nombre}
                     </span>
-                    <h3 className="text-sm font-medium mt-0.5 line-clamp-2">
+                    <h3 className="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-[#1F1B24]">
                       {p.nombre}
                     </h3>
                     {p.mostrarPrecio && (
@@ -260,7 +263,7 @@ export default async function Home({
                     )}
                   </div>
                 </Link>
-                <div className="px-3 pb-3">
+                <div className="px-4 pb-4">
                   <AgregarCarritoButton
                     id={p.id}
                     nombre={p.nombre}
