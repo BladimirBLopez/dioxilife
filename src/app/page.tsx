@@ -10,7 +10,11 @@ import ResenaForm from "@/components/ResenaForm";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = Promise<{ categoria?: string; promo?: string }>;
+type SearchParams = Promise<{
+  categoria?: string;
+  promo?: string;
+  ver?: string;
+}>;
 
 const NOMBRE_DEPARTAMENTO: Record<string, string> = {
   LA_PAZ: "La Paz",
@@ -29,8 +33,9 @@ export default async function Home({
 }: {
   searchParams: SearchParams;
 }) {
-  const { categoria, promo } = await searchParams;
+  const { categoria, promo, ver } = await searchParams;
   const soloPromociones = promo === "1";
+  const verTodos = ver === "todos";
 
   const [categorias, productos, resenas, sucursales, banner, promoCount] =
     await Promise.all([
@@ -71,7 +76,7 @@ export default async function Home({
           },
         },
         orderBy: { createdAt: "desc" },
-        take: 9,
+        take: 3,
       }),
       prisma.sucursal.findMany({
         where: { activo: true },
@@ -89,6 +94,20 @@ export default async function Home({
   const categoriasConProductos = categorias.filter(
     (c) => c._count.productos > 0
   );
+
+  const productosVisibles =
+    categoria || soloPromociones || verTodos
+      ? productos
+      : productos.slice(0, 8);
+
+  const tituloProductos = soloPromociones
+    ? "Promociones"
+    : categoria
+    ? categoriasConProductos.find((c) => c.slug === categoria)?.nombre ||
+      "Productos"
+    : verTodos
+    ? "Todos los productos"
+    : "Productos destacados";
 
   const sucursalesPorDepartamento = sucursales.reduce<
     Record<string, typeof sucursales>
@@ -196,7 +215,26 @@ export default async function Home({
       )}
 
       {/* Grid de productos */}
-      <main id="productos" className="flex-1 max-w-6xl mx-auto w-full px-4 pb-4">
+      <main
+        id="productos"
+        className="flex-1 max-w-6xl mx-auto w-full px-4 pb-8"
+      >
+        {productos.length > 0 && (
+          <div className="mb-5 mt-2 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-[#1F1B24] sm:text-2xl">
+                {tituloProductos}
+              </h2>
+
+              {!categoria && !soloPromociones && !verTodos && (
+                <p className="mt-1 text-sm text-brand-gray">
+                  Una selección de nuestros productos.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
         {productos.length === 0 ? (
           <div className="text-center py-20 text-brand-gray">
             <p className="text-lg font-medium">
@@ -208,7 +246,7 @@ export default async function Home({
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-2">
-            {productos.map((p) => (
+            {productosVisibles.map((p) => (
               <div
                 key={p.id}
                 className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-[0_4px_18px_rgba(0,0,0,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.07)] flex flex-col"
@@ -280,6 +318,20 @@ export default async function Home({
             ))}
           </div>
         )}
+
+        {!categoria &&
+          !soloPromociones &&
+          !verTodos &&
+          productos.length > productosVisibles.length && (
+            <div className="mt-7 flex justify-center">
+              <Link
+                href="/?ver=todos#productos"
+                className="inline-flex items-center justify-center rounded-xl border border-brand-pink px-5 py-2.5 text-sm font-semibold text-brand-pink transition hover:bg-brand-pink hover:text-white"
+              >
+                Ver todos los productos
+              </Link>
+            </div>
+          )}
       </main>
 
       {/* Testimonios de clientes (moderadas) */}
