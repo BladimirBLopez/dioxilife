@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Media from "./Media";
 import Modal from "./Modal";
 import { esVideo } from "@/lib/media";
@@ -29,6 +29,34 @@ export default function AplicacionesCdsGrid({
 }) {
   const [seleccionada, setSeleccionada] = useState<Aplicacion | null>(null);
   const [expandido, setExpandido] = useState(false);
+  const [busqueda, setBusqueda] = useState("");
+  const [soloConProtocolo, setSoloConProtocolo] = useState(false);
+
+  const aplicacionesFiltradas = useMemo(() => {
+    const normalizar = (texto: string) =>
+      texto
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+
+    const termino = normalizar(busqueda);
+
+    return [...aplicaciones]
+      .filter((a) => {
+        const coincideBusqueda =
+          !termino ||
+          normalizar(a.nombre).includes(termino);
+
+        const coincideProtocolo =
+          !soloConProtocolo || a.protocolos.length > 0;
+
+        return coincideBusqueda && coincideProtocolo;
+      })
+      .sort((a, b) =>
+        a.nombre.localeCompare(b.nombre, "es", { sensitivity: "base" })
+      );
+  }, [aplicaciones, busqueda, soloConProtocolo]);
 
   function abrir(a: Aplicacion) {
     setSeleccionada(a);
@@ -39,8 +67,73 @@ export default function AplicacionesCdsGrid({
 
   return (
     <>
-      <div className="space-y-2">
-        {aplicaciones.map((a) => (
+      <div className="mb-5 space-y-3">
+        <div className="relative">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+
+          <input
+            type="search"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            placeholder="Buscar dolencia..."
+            className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-4 text-sm text-[#1F1B24] outline-none transition focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/10"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setSoloConProtocolo(false)}
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+              !soloConProtocolo
+                ? "bg-brand-pink text-white"
+                : "border border-gray-200 bg-white text-brand-gray"
+            }`}
+          >
+            Todas
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSoloConProtocolo(true)}
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+              soloConProtocolo
+                ? "bg-brand-pink text-white"
+                : "border border-gray-200 bg-white text-brand-gray"
+            }`}
+          >
+            Con protocolo
+          </button>
+
+          <span className="ml-auto text-xs text-brand-gray">
+            {aplicacionesFiltradas.length} resultado(s)
+          </span>
+        </div>
+      </div>
+
+      {aplicacionesFiltradas.length === 0 ? (
+        <div className="rounded-xl bg-white px-4 py-10 text-center shadow-sm">
+          <p className="text-sm font-medium text-[#1F1B24]">
+            No encontramos esa dolencia
+          </p>
+          <p className="mt-1 text-xs text-brand-gray">
+            Prueba con otro nombre o cambia el filtro.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+        {aplicacionesFiltradas.map((a) => (
           <button
             key={a.id}
             onClick={() => abrir(a)}
@@ -73,7 +166,8 @@ export default function AplicacionesCdsGrid({
             </svg>
           </button>
         ))}
-      </div>
+        </div>
+      )}
 
       {seleccionada && (
         <Modal title={seleccionada.nombre} onClose={() => setSeleccionada(null)}>
