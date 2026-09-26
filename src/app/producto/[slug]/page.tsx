@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import AgregarCarritoButton from "@/components/AgregarCarritoButton";
 import ResenaForm from "@/components/ResenaForm";
 import InformacionProductoPublica from "@/components/InformacionProductoPublica";
+import SiteHeader from "@/components/SiteHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -49,20 +50,23 @@ export default async function ProductoDetalle({
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <header className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="text-sm text-brand-blue font-medium">
-            ← Volver a la tienda
-          </Link>
-          <Image src="/logo.png" alt="DioxiLife Bolivia" width={200} height={164} className="w-14 h-auto" />
-        </div>
-      </header>
+      <SiteHeader />
 
-      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-8">
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden md:flex">
-          <div className="md:w-1/2 aspect-square bg-white relative border-b md:border-b-0 md:border-r">
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-6 sm:py-8">
+        <div className="mb-4">
+          <Link
+            href="/#productos"
+            className="inline-flex items-center gap-1 text-sm font-medium text-brand-gray transition hover:text-brand-pink"
+          >
+            <span aria-hidden="true">←</span>
+            Volver a productos
+          </Link>
+        </div>
+
+        <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.05)] md:flex">
+          <div className="relative aspect-square bg-[#FAFAFB] md:w-1/2 md:border-r border-gray-100">
             {producto.enPromocion && (
-              <span className="absolute top-2 left-2 z-10 bg-brand-pink text-white text-xs font-bold px-2.5 py-1 rounded-full">
+              <span className="absolute left-4 top-4 z-10 rounded-full bg-brand-pink px-3 py-1.5 text-xs font-bold tracking-wide text-white shadow-sm">
                 OFERTA
               </span>
             )}
@@ -71,21 +75,24 @@ export default async function ProductoDetalle({
                 src={producto.imagenUrl}
                 alt={producto.nombre}
                 fill
-                className="object-contain p-4"
+                className="object-contain p-6 sm:p-8"
                 priority
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-brand-gray text-sm">
-                Sin imagen
+              <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-[#A3A0A7]">
+                <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white shadow-sm">
+                  <span className="text-3xl">◻</span>
+                </div>
+                <span className="text-sm">Imagen próximamente</span>
               </div>
             )}
           </div>
 
-          <div className="p-6 md:w-1/2 flex flex-col">
-            <span className="text-xs uppercase tracking-wide text-brand-pink font-semibold">
+          <div className="flex flex-col p-6 sm:p-8 md:w-1/2">
+            <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-brand-pink">
               {producto.categoria.nombre}
             </span>
-            <h1 className="text-2xl font-bold mt-1">{producto.nombre}</h1>
+            <h1 className="mt-2 text-2xl font-bold leading-tight text-[#1F1B24] sm:text-3xl">{producto.nombre}</h1>
 
             {resenas.length > 0 && (
               <p className="text-xs text-yellow-500 mt-1">
@@ -121,12 +128,12 @@ export default async function ProductoDetalle({
             )}
 
             {producto.descripcion && (
-              <p className="text-brand-gray mt-4 whitespace-pre-line">
+              <p className="mt-5 whitespace-pre-line text-sm leading-6 text-brand-gray sm:text-base">
                 {producto.descripcion}
               </p>
             )}
 
-            <div className="mt-6">
+            <div className="mt-7">
               <AgregarCarritoButton
                 id={producto.id}
                 nombre={producto.nombre}
