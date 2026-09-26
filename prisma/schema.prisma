@@ -46,6 +46,7 @@ model Producto {
   categoria             Categoria              @relation(fields: [categoriaId], references: [id])
   protocolos            Protocolo[]
   informacionProducto   InformacionProducto[]
+  imagenes              ImagenProducto[]
   resenas               Resena[]
   movimientosInventario MovimientoInventario[]
   stockActual           Int                    @default(0)
@@ -56,6 +57,17 @@ model Producto {
   updatedAt             DateTime               @updatedAt
   detallePedidos        DetallePedido[]
   detalleCompras        DetalleCompra[]
+}
+
+model ImagenProducto {
+  id         String   @id @default(cuid())
+  productoId String
+  producto   Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  url        String
+  orden      Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([productoId])
 }
 
 model Protocolo {

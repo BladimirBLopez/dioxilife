@@ -27,6 +27,13 @@ type InformacionProducto = {
   activo: boolean;
 };
 
+type ImagenProducto = {
+  id: string;
+  productoId: string;
+  url: string;
+  orden: number;
+};
+
 type Producto = {
   id: string;
   nombre: string;
@@ -64,12 +71,14 @@ function TarjetaProducto({
   index,
   onEditar,
   onInformacion,
+  onGaleria,
   onCambiarEstado,
 }: {
   producto: Producto;
   index: number;
   onEditar: (p: Producto) => void;
   onInformacion: (p: Producto) => void;
+  onGaleria: (p: Producto) => void;
   onCambiarEstado: (p: Producto) => void;
 }) {
   const { ref, handleRef, isDragging } = useSortable({
@@ -166,6 +175,14 @@ function TarjetaProducto({
 
           <button
             type="button"
+            onClick={() => onGaleria(producto)}
+            className="font-medium text-brand-pink hover:underline"
+          >
+            Galería
+          </button>
+
+          <button
+            type="button"
             onClick={() => onCambiarEstado(producto)}
             className={
               producto.activo
@@ -194,6 +211,27 @@ export default function ProductosPage() {
 
   const [productoInformacion, setProductoInformacion] =
     useState<Producto | null>(null);
+
+  const [productoGaleria, setProductoGaleria] =
+    useState<Producto | null>(null);
+
+  const [imagenesGaleria, setImagenesGaleria] =
+    useState<ImagenProducto[]>([]);
+
+  const [nuevaImagenGaleria, setNuevaImagenGaleria] =
+    useState("");
+
+  const [cargandoGaleria, setCargandoGaleria] =
+    useState(false);
+
+  const [guardandoGaleria, setGuardandoGaleria] =
+    useState(false);
+
+  const [galeriaSubiendo, setGaleriaSubiendo] =
+    useState(false);
+
+  const [errorGaleria, setErrorGaleria] =
+    useState("");
 
   const [informaciones, setInformaciones] =
     useState<InformacionProducto[]>([]);
@@ -254,6 +292,133 @@ export default function ProductosPage() {
     setForm(vacio);
     setFormInicial(vacio);
     setModalAbierto(true);
+  }
+
+  async function abrirGaleria(producto: Producto) {
+    setProductoGaleria(producto);
+    setNuevaImagenGaleria("");
+    setErrorGaleria("");
+    setCargandoGaleria(true);
+
+    try {
+      const res = await fetch(
+        `/api/admin/productos/${producto.id}/imagenes`
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setImagenesGaleria([]);
+        setErrorGaleria(
+          data.error || "No se pudo cargar la galería."
+        );
+        return;
+      }
+
+      setImagenesGaleria(data);
+    } catch {
+      setImagenesGaleria([]);
+      setErrorGaleria(
+        "No se pudo conectar con el servidor."
+      );
+    } finally {
+      setCargandoGaleria(false);
+    }
+  }
+
+  async function agregarImagenGaleria() {
+    if (!productoGaleria) return;
+
+    const url = nuevaImagenGaleria.trim();
+
+    if (!url) {
+      setErrorGaleria(
+        "Primero sube una imagen."
+      );
+      return;
+    }
+
+    setGuardandoGaleria(true);
+    setErrorGaleria("");
+
+    try {
+      const res = await fetch(
+        `/api/admin/productos/${productoGaleria.id}/imagenes`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorGaleria(
+          data.error || "No se pudo agregar la imagen."
+        );
+        return;
+      }
+
+      setImagenesGaleria((anteriores) => [
+        ...anteriores,
+        data,
+      ]);
+
+      setNuevaImagenGaleria("");
+    } catch {
+      setErrorGaleria(
+        "No se pudo conectar con el servidor."
+      );
+    } finally {
+      setGuardandoGaleria(false);
+    }
+  }
+
+  async function eliminarImagenGaleria(
+    imagen: ImagenProducto
+  ) {
+    if (!productoGaleria) return;
+
+    const confirmar = window.confirm(
+      "¿Seguro que deseas quitar esta imagen de la galería?"
+    );
+
+    if (!confirmar) return;
+
+    setErrorGaleria("");
+
+    try {
+      const res = await fetch(
+        `/api/admin/productos/${productoGaleria.id}/imagenes/${imagen.id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorGaleria(
+          data.error || "No se pudo eliminar la imagen."
+        );
+        return;
+      }
+
+      setImagenesGaleria((anteriores) =>
+        anteriores.filter(
+          (item) => item.id !== imagen.id
+        )
+      );
+    } catch {
+      setErrorGaleria(
+        "No se pudo conectar con el servidor."
+      );
+    }
   }
 
   async function abrirInformacion(producto: Producto) {
@@ -626,6 +791,7 @@ export default function ProductosPage() {
               index={i}
               onEditar={abrirEditar}
               onInformacion={abrirInformacion}
+              onGaleria={abrirGaleria}
               onCambiarEstado={cambiarEstado}
             />
           ))}
@@ -913,6 +1079,120 @@ export default function ProductosPage() {
                 : "Crear producto"}
             </button>
           </form>
+        </Modal>
+      )}
+
+      {productoGaleria && (
+        <Modal
+          title={`Galería: ${productoGaleria.nombre}`}
+          onClose={() => {
+            setProductoGaleria(null);
+            setImagenesGaleria([]);
+            setNuevaImagenGaleria("");
+            setErrorGaleria("");
+          }}
+        >
+          <div className="space-y-5">
+            <div>
+              <p className="text-sm font-semibold text-[#1F1B24]">
+                Imagen principal
+              </p>
+
+              <p className="mt-1 text-xs text-[#8A8790]">
+                La imagen principal se administra desde Editar producto.
+                Las imágenes que agregues aquí aparecerán como galería.
+              </p>
+
+              {productoGaleria.imagenUrl && (
+                <div className="mt-3 w-24 h-24 overflow-hidden rounded-xl bg-[#F7F7F9] border">
+                  <img
+                    src={productoGaleria.imagenUrl}
+                    alt={productoGaleria.nombre}
+                    className="w-full h-full object-contain p-1"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="border-t pt-4">
+              <label className="admin-label">
+                Nueva imagen
+              </label>
+
+              <CloudinaryUpload
+                value={nuevaImagenGaleria}
+                onChange={setNuevaImagenGaleria}
+                onUploadingChange={setGaleriaSubiendo}
+                soloImagen
+              />
+
+              <button
+                type="button"
+                onClick={agregarImagenGaleria}
+                disabled={
+                  guardandoGaleria ||
+                  galeriaSubiendo ||
+                  !nuevaImagenGaleria
+                }
+                className="admin-btn-primary w-full mt-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {galeriaSubiendo
+                  ? "Subiendo imagen..."
+                  : guardandoGaleria
+                    ? "Agregando..."
+                    : "Agregar a la galería"}
+              </button>
+
+              {errorGaleria && (
+                <p className="mt-2 text-sm text-red-600">
+                  {errorGaleria}
+                </p>
+              )}
+            </div>
+
+            <div className="border-t pt-4">
+              <h3 className="font-semibold text-[#1F1B24]">
+                Imágenes adicionales
+              </h3>
+
+              {cargandoGaleria ? (
+                <p className="mt-3 text-sm text-[#8A8790]">
+                  Cargando...
+                </p>
+              ) : imagenesGaleria.length === 0 ? (
+                <p className="mt-3 text-sm text-[#8A8790]">
+                  Este producto todavía no tiene imágenes adicionales.
+                </p>
+              ) : (
+                <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {imagenesGaleria.map((imagen) => (
+                    <div
+                      key={imagen.id}
+                      className="overflow-hidden rounded-xl border bg-white"
+                    >
+                      <div className="aspect-square bg-[#F7F7F9]">
+                        <img
+                          src={imagen.url}
+                          alt={`Galería de ${productoGaleria.nombre}`}
+                          className="w-full h-full object-contain p-2"
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          eliminarImagenGaleria(imagen)
+                        }
+                        className="w-full border-t px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </Modal>
       )}
 

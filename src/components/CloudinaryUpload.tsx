@@ -11,10 +11,12 @@ export default function CloudinaryUpload({
   value,
   onChange,
   onUploadingChange,
+  soloImagen = false,
 }: {
   value: string;
   onChange: (url: string) => void;
   onUploadingChange?: (subiendo: boolean) => void;
+  soloImagen?: boolean;
 }) {
   const [subiendo, setSubiendo] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -25,6 +27,12 @@ export default function CloudinaryUpload({
     if (!file) return;
 
     const esVideoArchivo = file.type.startsWith("video/");
+
+    if (soloImagen && esVideoArchivo) {
+      alert("En esta sección solo se permiten imágenes.");
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
 
     if (esVideoArchivo && file.size > MAX_VIDEO_MB * 1024 * 1024) {
       alert(`El video pesa demasiado. El máximo permitido es ${MAX_VIDEO_MB}MB.`);
@@ -94,7 +102,7 @@ export default function CloudinaryUpload({
         <input
           ref={inputRef}
           type="file"
-          accept="image/*,video/*"
+          accept={soloImagen ? "image/*" : "image/*,video/*"}
           onChange={handleFile}
           className="hidden"
           id={`cloudinary-file-input-${id}`}
@@ -107,10 +115,21 @@ export default function CloudinaryUpload({
               : "bg-brand-pink hover:opacity-90"
           }`}
         >
-          {subiendo ? "Subiendo..." : value ? "Cambiar archivo" : "Subir imagen o video"}
+          {subiendo
+            ? "Subiendo..."
+            : value
+              ? soloImagen
+                ? "Cambiar imagen"
+                : "Cambiar archivo"
+              : soloImagen
+                ? "Subir imagen"
+                : "Subir imagen o video"}
         </label>
+
         <p className="text-[11px] text-gray-400 mt-1">
-          JPG, PNG o video (MP4, MOV) hasta {MAX_VIDEO_MB}MB
+          {soloImagen
+            ? "JPG, PNG, WEBP u otros formatos de imagen"
+            : `JPG, PNG o video (MP4, MOV) hasta ${MAX_VIDEO_MB}MB`}
         </p>
         {subiendo && (
           <p className="text-[11px] text-brand-pink font-medium mt-1">
