@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, X } from "lucide-react";
+import { DayPicker } from "react-day-picker";
+import { format, parseISO } from "date-fns";
+import { es } from "date-fns/locale";
+import "react-day-picker/style.css";
 
 import RegistroRapidoProveedor from "@/components/admin/RegistroRapidoProveedor";
 
@@ -45,6 +49,11 @@ export default function NuevaCompraPage() {
   }, []);
 
   const [fechaCompra, setFechaCompra] = useState(hoy);
+
+  const [
+    mostrarCalendario,
+    setMostrarCalendario,
+  ] = useState(false);
 
   const [
     mostrarNuevoProveedor,
@@ -207,6 +216,111 @@ export default function NuevaCompraPage() {
       )}
 
 
+      {mostrarCalendario && (
+
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() =>
+            setMostrarCalendario(false)
+          }
+        >
+
+          <div
+            className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+
+            <div className="mb-4 flex items-center justify-between">
+
+              <div>
+
+                <p className="text-sm font-semibold text-[#1F1B24]">
+                  Fecha de compra
+                </p>
+
+                <p className="text-xs text-[#77737D]">
+                  Selecciona cuándo realizaste la compra.
+                </p>
+
+              </div>
+
+
+              <button
+                type="button"
+                onClick={() =>
+                  setMostrarCalendario(false)
+                }
+                className="rounded-lg p-2 text-[#77737D] transition hover:bg-[#F5F5F7]"
+                aria-label="Cerrar calendario"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+            </div>
+
+
+            <div className="flex justify-center">
+
+              <DayPicker
+                mode="single"
+                locale={es}
+                selected={
+                  parseISO(fechaCompra)
+                }
+                defaultMonth={
+                  parseISO(fechaCompra)
+                }
+                endMonth={
+                  parseISO(hoy)
+                }
+                disabled={{
+                  after: parseISO(hoy),
+                }}
+                onSelect={(fecha) => {
+                  if (!fecha) {
+                    return;
+                  }
+
+                  setFechaCompra(
+                    format(
+                      fecha,
+                      "yyyy-MM-dd"
+                    )
+                  );
+
+                  setMostrarCalendario(
+                    false
+                  );
+                }}
+              />
+
+            </div>
+
+
+            <div className="mt-4 border-t pt-4">
+
+              <button
+                type="button"
+                onClick={() => {
+                  setFechaCompra(hoy);
+                  setMostrarCalendario(false);
+                }}
+                className="w-full rounded-xl border px-4 py-2.5 text-sm font-semibold transition hover:bg-[#F8F8FA]"
+              >
+                Usar fecha de hoy
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
+
+
       <div className="admin-card p-5 space-y-4">
 
         <div className="flex items-center justify-between gap-3">
@@ -283,23 +397,22 @@ export default function NuevaCompraPage() {
               Fecha de compra
             </label>
 
-            <div className="relative">
+            <button
+              type="button"
+              onClick={() =>
+                setMostrarCalendario(true)
+              }
+              className="admin-input flex w-full items-center justify-between text-left"
+            >
+              <span className="font-medium text-[#1F1B24]">
+                {format(
+                  parseISO(fechaCompra),
+                  "dd/MM/yyyy"
+                )}
+              </span>
 
-              <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#77737D]" />
-
-              <input
-                type="date"
-                value={fechaCompra}
-                max={hoy}
-                onChange={(e) =>
-                  setFechaCompra(
-                    e.target.value
-                  )
-                }
-                className="admin-input w-full pl-10"
-              />
-
-            </div>
+              <CalendarDays className="h-5 w-5 shrink-0 text-brand-pink" />
+            </button>
 
             <p className="mt-1 text-xs text-[#77737D]">
               Fecha real en que se realizó la compra.
