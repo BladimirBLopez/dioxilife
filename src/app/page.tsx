@@ -334,6 +334,39 @@ export default async function Home({
           )}
       </main>
 
+      {/* Distribuidores */}
+      <section className="px-4 py-8">
+        <div className="mx-auto max-w-6xl overflow-hidden rounded-3xl bg-[#10182D] px-6 py-8 text-white sm:px-8">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="max-w-xl">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/55">
+                Red DioxiLife
+              </p>
+
+              <h2 className="mt-2 text-xl font-bold sm:text-2xl">
+                ¿Quieres ser distribuidor?
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-white/70">
+                Conoce los requisitos y beneficios para formar parte
+                de la red DioxiLife Bolivia.
+              </p>
+            </div>
+
+            <a
+              href={`https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(
+                "Hola, quiero información para ser distribuidor de DioxiLife Bolivia.\n\nNombre:\nCiudad:\n¿Quién me recomendó DioxiLife?:"
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex shrink-0 items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-bold text-[#10182D] transition hover:opacity-90"
+            >
+              Quiero ser distribuidor
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Testimonios de clientes (moderadas) */}
       <section id="resenas" className="bg-white border-t py-10 px-4">
         <div className="max-w-6xl mx-auto">

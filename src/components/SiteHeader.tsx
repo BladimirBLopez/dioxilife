@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import CartDrawer from "./CartDrawer";
+import { NUMERO_WHATSAPP } from "@/lib/constants";
 
 const LINKS_BASE = [
   { href: "/", label: "Inicio" },
@@ -17,6 +18,13 @@ export default function SiteHeader({
   mostrarSucursales?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+
+  const mensajeDistribuidor = encodeURIComponent(
+    "Hola, quiero información para ser distribuidor de DioxiLife Bolivia.\n\nNombre:\nCiudad:\n¿Quién me recomendó DioxiLife?:"
+  );
+
+  const enlaceDistribuidor =
+    `https://wa.me/${NUMERO_WHATSAPP}?text=${mensajeDistribuidor}`;
 
   const LINKS = mostrarSucursales
     ? [...LINKS_BASE, { href: "/#sucursales", label: "Sucursales" }]
@@ -50,6 +58,15 @@ export default function SiteHeader({
         </nav>
 
         <div className="flex items-center gap-2">
+          <a
+            href={enlaceDistribuidor}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden md:inline-flex items-center justify-center rounded-xl bg-brand-pink px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+          >
+            Ser distribuidor
+          </a>
+
           <CartDrawer />
 
           <button
@@ -84,17 +101,27 @@ export default function SiteHeader({
           open ? "max-h-96 shadow-[0_8px_16px_rgba(0,0,0,0.06)]" : "max-h-0"
         }`}
       >
-        <div className="flex flex-col px-2 pb-2">
+        <div className="flex flex-col px-2 pb-3">
           {LINKS.map((l) => (
             <a
               key={l.href}
               href={l.href}
               onClick={() => setOpen(false)}
-              className="mx-2 px-3 py-3 text-sm font-medium text-[#1F1B24] rounded-lg hover:bg-brand-pink/5 active:bg-brand-pink/10 transition-colors border-b border-gray-100 last:border-b-0"
+              className="mx-2 px-3 py-3 text-sm font-medium text-[#1F1B24] rounded-lg hover:bg-brand-pink/5 active:bg-brand-pink/10 transition-colors border-b border-gray-100"
             >
               {l.label}
             </a>
           ))}
+
+          <a
+            href={enlaceDistribuidor}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setOpen(false)}
+            className="mx-2 mt-2 flex items-center justify-center rounded-xl bg-brand-pink px-4 py-3 text-sm font-semibold text-white"
+          >
+            Ser distribuidor
+          </a>
         </div>
       </nav>
     </header>
