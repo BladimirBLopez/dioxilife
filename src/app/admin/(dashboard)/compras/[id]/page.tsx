@@ -325,49 +325,6 @@ export default async function DetalleCompraPage({
       </div>
 
 
-      {compra.movimientoInventarios.length > 0 && (
-
-        <div className="admin-card p-5">
-
-          <h2 className="mb-4 font-semibold">
-            Movimientos generados
-          </h2>
-
-
-          <div className="space-y-3">
-
-            {compra.movimientoInventarios.map(
-              (movimiento) => (
-
-                <div
-                  key={movimiento.id}
-                  className="rounded-xl border p-3 text-sm"
-                >
-
-                  <p className="font-medium">
-                    Entrada de inventario
-                  </p>
-
-                  <p>
-                    Stock: {movimiento.stockAnterior}
-                    {" → "}
-                    {movimiento.stockNuevo}
-                  </p>
-
-                  <p className="mt-1 text-xs text-[#77737D]">
-                    {movimiento.motivo}
-                  </p>
-
-                </div>
-
-              )
-            )}
-
-          </div>
-
-        </div>
-
-      )}
 
 
     </div>
