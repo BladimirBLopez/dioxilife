@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { nombre, descripcion, imagenUrl } = await req.json();
+  const { nombre, descripcion, tratamiento, imagenUrl } = await req.json();
 
   if (!nombre) {
     return NextResponse.json(
@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
     data: {
       nombre,
       descripcion: descripcion || null,
+      tratamiento: tratamiento || null,
       imagenUrl: imagenUrl || null,
     },
   });

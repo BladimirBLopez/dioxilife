@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { titulo, contenido, imagenUrl, productoId } = await req.json();
+  const { titulo, contenido, imagenUrl, videoUrl, productoId } = await req.json();
 
   if (!titulo || !contenido || !productoId) {
     return NextResponse.json(
@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
       titulo,
       contenido,
       imagenUrl: imagenUrl || null,
+      videoUrl: videoUrl || null,
       productoId,
     },
   });

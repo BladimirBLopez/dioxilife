@@ -12,11 +12,13 @@ export default function CloudinaryUpload({
   onChange,
   onUploadingChange,
   soloImagen = false,
+  soloVideo = false,
 }: {
   value: string;
   onChange: (url: string) => void;
   onUploadingChange?: (subiendo: boolean) => void;
   soloImagen?: boolean;
+  soloVideo?: boolean;
 }) {
   const [subiendo, setSubiendo] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -30,6 +32,12 @@ export default function CloudinaryUpload({
 
     if (soloImagen && esVideoArchivo) {
       alert("En esta sección solo se permiten imágenes.");
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
+
+    if (soloVideo && !esVideoArchivo) {
+      alert("En esta sección solo se permiten videos.");
       if (inputRef.current) inputRef.current.value = "";
       return;
     }
@@ -93,7 +101,7 @@ export default function CloudinaryUpload({
           )
         ) : (
           <span className="text-[10px] text-gray-400 text-center px-1">
-            Sin imagen
+            {soloVideo ? "Sin video" : "Sin imagen"}
           </span>
         )}
       </div>
@@ -102,7 +110,13 @@ export default function CloudinaryUpload({
         <input
           ref={inputRef}
           type="file"
-          accept={soloImagen ? "image/*" : "image/*,video/*"}
+          accept={
+            soloImagen
+              ? "image/*"
+              : soloVideo
+                ? "video/*"
+                : "image/*,video/*"
+          }
           onChange={handleFile}
           className="hidden"
           id={`cloudinary-file-input-${id}`}
@@ -120,16 +134,22 @@ export default function CloudinaryUpload({
             : value
               ? soloImagen
                 ? "Cambiar imagen"
-                : "Cambiar archivo"
+                : soloVideo
+                  ? "Cambiar video"
+                  : "Cambiar archivo"
               : soloImagen
                 ? "Subir imagen"
-                : "Subir imagen o video"}
+                : soloVideo
+                  ? "Subir video"
+                  : "Subir imagen o video"}
         </label>
 
         <p className="text-[11px] text-gray-400 mt-1">
           {soloImagen
             ? "JPG, PNG, WEBP u otros formatos de imagen"
-            : `JPG, PNG o video (MP4, MOV) hasta ${MAX_VIDEO_MB}MB`}
+            : soloVideo
+              ? `Video (MP4, MOV) hasta ${MAX_VIDEO_MB}MB`
+              : `JPG, PNG o video (MP4, MOV) hasta ${MAX_VIDEO_MB}MB`}
         </p>
         {subiendo && (
           <p className="text-[11px] text-brand-pink font-medium mt-1">

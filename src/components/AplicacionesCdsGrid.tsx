@@ -9,6 +9,7 @@ type Aplicacion = {
   id: string;
   nombre: string;
   descripcion: string | null;
+  tratamiento: string | null;
   imagenUrl: string | null;
 };
 
@@ -102,6 +103,17 @@ export default function AplicacionesCdsGrid({
                 </button>
               )}
             </>
+          )}
+
+          {seleccionada.tratamiento && (
+            <div className="mt-5 border-t pt-4">
+              <h4 className="text-sm font-semibold text-[#1F1B24] mb-2">
+                Tratamiento
+              </h4>
+              <p className="text-sm text-brand-gray whitespace-pre-line">
+                {seleccionada.tratamiento}
+              </p>
+            </div>
           )}
         </Modal>
       )}

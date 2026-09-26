@@ -12,6 +12,7 @@ type Protocolo = {
   titulo: string;
   contenido: string;
   imagenUrl: string | null;
+  videoUrl: string | null;
   productoId: string;
   producto: Producto;
   activo: boolean;
@@ -21,6 +22,7 @@ const vacio = {
   titulo: "",
   contenido: "",
   imagenUrl: "",
+  videoUrl: "",
   productoId: "",
 };
 
@@ -78,6 +80,7 @@ export default function ProtocolosPage() {
       titulo: p.titulo,
       contenido: p.contenido,
       imagenUrl: p.imagenUrl || "",
+      videoUrl: p.videoUrl || "",
       productoId: p.productoId,
     };
     setEditandoId(p.id);
@@ -217,11 +220,22 @@ export default function ProtocolosPage() {
             </div>
 
             <div>
-              <label className="admin-label">Imagen o video (opcional)</label>
+              <label className="admin-label">Imagen del protocolo (opcional)</label>
               <CloudinaryUpload
                 value={form.imagenUrl}
                 onChange={(url) => setForm({ ...form, imagenUrl: url })}
                 onUploadingChange={setSubiendoArchivo}
+                soloImagen
+              />
+            </div>
+
+            <div>
+              <label className="admin-label">Video del protocolo (opcional)</label>
+              <CloudinaryUpload
+                value={form.videoUrl}
+                onChange={(url) => setForm({ ...form, videoUrl: url })}
+                onUploadingChange={setSubiendoArchivo}
+                soloVideo
               />
             </div>
 

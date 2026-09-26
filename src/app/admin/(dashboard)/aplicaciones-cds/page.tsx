@@ -9,6 +9,7 @@ type AplicacionCds = {
   id: string;
   nombre: string;
   descripcion: string | null;
+  tratamiento: string | null;
   imagenUrl: string | null;
   activo: boolean;
 };
@@ -16,6 +17,7 @@ type AplicacionCds = {
 const vacio = {
   nombre: "",
   descripcion: "",
+  tratamiento: "",
   imagenUrl: "",
 };
 
@@ -67,6 +69,7 @@ export default function AplicacionesCdsPage() {
     const datos = {
       nombre: a.nombre,
       descripcion: a.descripcion || "",
+      tratamiento: a.tratamiento || "",
       imagenUrl: a.imagenUrl || "",
     };
     setEditandoId(a.id);
@@ -222,7 +225,20 @@ export default function AplicacionesCdsPage() {
             </div>
 
             <div>
-              <label className="admin-label">Imagen</label>
+              <label className="admin-label">Tratamiento</label>
+              <textarea
+                value={form.tratamiento}
+                onChange={(e) =>
+                  setForm({ ...form, tratamiento: e.target.value })
+                }
+                className="admin-input"
+                rows={5}
+                placeholder="Escribe aquí el tratamiento o protocolo recomendado..."
+              />
+            </div>
+
+            <div>
+              <label className="admin-label">Imagen de la dolencia</label>
               <CloudinaryUpload
                 value={form.imagenUrl}
                 onChange={(url) => setForm({ ...form, imagenUrl: url })}

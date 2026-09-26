@@ -10,6 +10,7 @@ type Protocolo = {
   titulo: string;
   contenido: string;
   imagenUrl: string | null;
+  videoUrl: string | null;
 };
 
 export default function ProtocolosAcordeon({
@@ -91,6 +92,7 @@ export default function ProtocolosAcordeon({
           >
             {seleccionado.contenido}
           </p>
+
           {esLargo && (
             <button
               onClick={() => setExpandido(!expandido)}
@@ -98,6 +100,24 @@ export default function ProtocolosAcordeon({
             >
               {expandido ? "Ver menos" : "Ver más"}
             </button>
+          )}
+
+          {seleccionado.videoUrl && (
+            <div className="mt-5 border-t pt-4">
+              <h4 className="text-sm font-semibold text-[#1F1B24] mb-2">
+                Video
+              </h4>
+
+              <div className="bg-gray-100 relative rounded-lg overflow-hidden aspect-video">
+                <Media
+                  src={seleccionado.videoUrl}
+                  alt={`Video de ${seleccionado.titulo}`}
+                  fill
+                  className="object-contain"
+                  variant="full"
+                />
+              </div>
+            </div>
           )}
         </Modal>
       )}

@@ -16,13 +16,14 @@ export async function PUT(
   }
 
   const { id } = await params;
-  const { nombre, descripcion, imagenUrl, activo } = await req.json();
+  const { nombre, descripcion, tratamiento, imagenUrl, activo } = await req.json();
 
   const aplicacion = await prisma.aplicacionCds.update({
     where: { id },
     data: {
       nombre,
       descripcion: descripcion || null,
+      tratamiento: tratamiento || null,
       imagenUrl: imagenUrl || null,
       activo,
     },

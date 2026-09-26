@@ -75,6 +75,7 @@ model Protocolo {
   titulo     String
   contenido  String
   imagenUrl  String?
+  videoUrl   String?
   productoId String
   producto   Producto @relation(fields: [productoId], references: [id])
   activo     Boolean  @default(true)
@@ -113,6 +114,7 @@ model AplicacionCds {
   id          String   @id @default(cuid())
   nombre      String
   descripcion String?
+  tratamiento String?
   imagenUrl   String?
   activo      Boolean  @default(true)
   createdAt   DateTime @default(now())

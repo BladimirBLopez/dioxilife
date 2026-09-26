@@ -16,7 +16,7 @@ export async function PUT(
   }
 
   const { id } = await params;
-  const { titulo, contenido, imagenUrl, productoId, activo } =
+  const { titulo, contenido, imagenUrl, videoUrl, productoId, activo } =
     await req.json();
 
   const protocolo = await prisma.protocolo.update({
@@ -25,6 +25,7 @@ export async function PUT(
       titulo,
       contenido,
       imagenUrl: imagenUrl || null,
+      videoUrl: videoUrl || null,
       productoId,
       activo,
     },
