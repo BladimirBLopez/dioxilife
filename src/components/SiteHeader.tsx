@@ -9,6 +9,7 @@ import { NUMERO_WHATSAPP } from "@/lib/constants";
 const LINKS_BASE = [
   { href: "/", label: "Inicio" },
   { href: "/#productos", label: "Productos" },
+  { href: "/aplicaciones-cds", label: "Aplicaciones CDS" },
   { href: "/protocolos", label: "Protocolos" },
 ];
 
