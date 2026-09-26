@@ -71,16 +71,16 @@ model ImagenProducto {
 }
 
 model Protocolo {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   titulo     String
   contenido  String
   imagenUrl  String?
   videoUrl   String?
-  productoId String
-  producto   Producto @relation(fields: [productoId], references: [id])
-  activo     Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  productoId String?
+  producto   Producto? @relation(fields: [productoId], references: [id])
+  activo     Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
 
 enum TipoInformacion {

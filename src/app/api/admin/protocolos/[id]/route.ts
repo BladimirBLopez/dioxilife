@@ -26,7 +26,7 @@ export async function PUT(
       contenido,
       imagenUrl: imagenUrl || null,
       videoUrl: videoUrl || null,
-      productoId,
+      productoId: productoId || null,
       activo,
     },
   });

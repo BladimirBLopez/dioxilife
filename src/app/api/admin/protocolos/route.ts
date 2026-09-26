@@ -31,9 +31,9 @@ export async function POST(req: NextRequest) {
 
   const { titulo, contenido, imagenUrl, videoUrl, productoId } = await req.json();
 
-  if (!titulo || !contenido || !productoId) {
+  if (!titulo || !contenido) {
     return NextResponse.json(
-      { error: "Título, contenido y producto son requeridos" },
+      { error: "Título y contenido son requeridos" },
       { status: 400 }
     );
   }
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
       contenido,
       imagenUrl: imagenUrl || null,
       videoUrl: videoUrl || null,
-      productoId,
+      productoId: productoId || null,
     },
   });
 

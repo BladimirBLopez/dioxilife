@@ -13,8 +13,8 @@ type Protocolo = {
   contenido: string;
   imagenUrl: string | null;
   videoUrl: string | null;
-  productoId: string;
-  producto: Producto;
+  productoId: string | null;
+  producto: Producto | null;
   activo: boolean;
 };
 
@@ -81,7 +81,7 @@ export default function ProtocolosPage() {
       contenido: p.contenido,
       imagenUrl: p.imagenUrl || "",
       videoUrl: p.videoUrl || "",
-      productoId: p.productoId,
+      productoId: p.productoId || "",
     };
     setEditandoId(p.id);
     setForm(datos);
@@ -164,9 +164,11 @@ export default function ProtocolosPage() {
             )}
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm text-[#1F1B24]">{p.titulo}</p>
-              <p className="text-xs text-brand-pink font-medium mt-0.5">
-                {p.producto.nombre}
-              </p>
+              {p.producto && (
+                <p className="text-xs text-brand-pink font-medium mt-0.5">
+                  {p.producto.nombre}
+                </p>
+              )}
               <p className="text-sm text-[#6B6870] line-clamp-2 mt-1">
                 {p.contenido}
               </p>
@@ -240,16 +242,15 @@ export default function ProtocolosPage() {
             </div>
 
             <div>
-              <label className="admin-label">Producto</label>
+              <label className="admin-label">Producto relacionado (opcional)</label>
               <select
                 value={form.productoId}
                 onChange={(e) =>
                   setForm({ ...form, productoId: e.target.value })
                 }
                 className="admin-input"
-                required
               >
-                <option value="">Seleccionar...</option>
+                <option value="">Sin producto relacionado</option>
                 {productos.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.nombre}
