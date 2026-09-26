@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Media from "./Media";
 import Modal from "./Modal";
 import { esVideo } from "@/lib/media";
@@ -15,8 +15,10 @@ type Protocolo = {
 
 export default function ProtocolosAcordeon({
   protocolos,
+  protocoloInicialId,
 }: {
   protocolos: Protocolo[];
+  protocoloInicialId?: string;
 }) {
   const [seleccionado, setSeleccionado] = useState<Protocolo | null>(null);
   const [expandido, setExpandido] = useState(false);
@@ -25,6 +27,17 @@ export default function ProtocolosAcordeon({
     setSeleccionado(p);
     setExpandido(false);
   }
+
+  useEffect(() => {
+    if (!protocoloInicialId) return;
+
+    const protocolo = protocolos.find((p) => p.id === protocoloInicialId);
+
+    if (protocolo) {
+      setSeleccionado(protocolo);
+      setExpandido(false);
+    }
+  }, [protocoloInicialId, protocolos]);
 
   const esLargo = (seleccionado?.contenido.length || 0) > 220;
 

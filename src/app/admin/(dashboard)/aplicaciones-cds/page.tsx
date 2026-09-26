@@ -5,6 +5,12 @@ import CloudinaryUpload from "@/components/CloudinaryUpload";
 import Modal from "@/components/Modal";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
+type Protocolo = {
+  id: string;
+  titulo: string;
+  activo: boolean;
+};
+
 type AplicacionCds = {
   id: string;
   nombre: string;
@@ -12,6 +18,9 @@ type AplicacionCds = {
   tratamiento: string | null;
   imagenUrl: string | null;
   activo: boolean;
+  protocolos: {
+    protocolo: Protocolo;
+  }[];
 };
 
 const vacio = {
@@ -19,10 +28,12 @@ const vacio = {
   descripcion: "",
   tratamiento: "",
   imagenUrl: "",
+  protocoloIds: [] as string[],
 };
 
 export default function AplicacionesCdsPage() {
   const [aplicaciones, setAplicaciones] = useState<AplicacionCds[]>([]);
+  const [protocolos, setProtocolos] = useState<Protocolo[]>([]);
   const [form, setForm] = useState(vacio);
   const [formInicial, setFormInicial] = useState(vacio);
   const [editandoId, setEditandoId] = useState<string | null>(null);
@@ -33,8 +44,22 @@ export default function AplicacionesCdsPage() {
   const [borrarId, setBorrarId] = useState<string | null>(null);
 
   async function cargar() {
-    const res = await fetch("/api/admin/aplicaciones-cds");
-    setAplicaciones(await res.json());
+    const [resAplicaciones, resProtocolos] = await Promise.all([
+      fetch("/api/admin/aplicaciones-cds"),
+      fetch("/api/admin/protocolos"),
+    ]);
+
+    const [dataAplicaciones, dataProtocolos] = await Promise.all([
+      resAplicaciones.json(),
+      resProtocolos.json(),
+    ]);
+
+    setAplicaciones(dataAplicaciones);
+    setProtocolos(
+      Array.isArray(dataProtocolos)
+        ? dataProtocolos.filter((p: Protocolo) => p.activo)
+        : []
+    );
   }
 
   useEffect(() => {
@@ -71,6 +96,7 @@ export default function AplicacionesCdsPage() {
       descripcion: a.descripcion || "",
       tratamiento: a.tratamiento || "",
       imagenUrl: a.imagenUrl || "",
+      protocoloIds: a.protocolos.map((rel) => rel.protocolo.id),
     };
     setEditandoId(a.id);
     setForm(datos);
@@ -235,6 +261,52 @@ export default function AplicacionesCdsPage() {
                 rows={5}
                 placeholder="Escribe aquí el tratamiento o protocolo recomendado..."
               />
+            </div>
+
+            <div>
+              <label className="admin-label">Protocolos relacionados</label>
+
+              {protocolos.length === 0 ? (
+                <p className="text-sm text-[#8A8790]">
+                  No hay protocolos disponibles.
+                </p>
+              ) : (
+                <div className="max-h-56 overflow-y-auto rounded-lg border border-gray-200 p-2 space-y-1">
+                  {protocolos.map((p) => {
+                    const seleccionado = form.protocoloIds.includes(p.id);
+
+                    return (
+                      <label
+                        key={p.id}
+                        className="flex items-start gap-2 rounded-lg px-2 py-2 hover:bg-gray-50 cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={seleccionado}
+                          onChange={() =>
+                            setForm({
+                              ...form,
+                              protocoloIds: seleccionado
+                                ? form.protocoloIds.filter((id) => id !== p.id)
+                                : [...form.protocoloIds, p.id],
+                            })
+                          }
+                          className="mt-0.5"
+                        />
+                        <span className="text-sm text-[#1F1B24]">
+                          {p.titulo}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+
+              {form.protocoloIds.length > 0 && (
+                <p className="text-xs text-[#8A8790] mt-1">
+                  {form.protocoloIds.length} protocolo(s) seleccionado(s)
+                </p>
+              )}
             </div>
 
             <div>

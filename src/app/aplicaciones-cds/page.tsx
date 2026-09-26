@@ -10,6 +10,27 @@ export default async function AplicacionesCdsPage() {
     prisma.aplicacionCds.findMany({
       where: { activo: true },
       orderBy: { createdAt: "desc" },
+      include: {
+        protocolos: {
+          where: {
+            protocolo: {
+              activo: true,
+            },
+          },
+          orderBy: { orden: "asc" },
+          include: {
+            protocolo: {
+              select: {
+                id: true,
+                titulo: true,
+                contenido: true,
+                imagenUrl: true,
+                videoUrl: true,
+              },
+            },
+          },
+        },
+      },
     }),
     prisma.sucursal.count({ where: { activo: true } }),
   ]);

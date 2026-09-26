@@ -16,7 +16,26 @@ export async function PUT(
   }
 
   const { id } = await params;
-  const { nombre, descripcion, tratamiento, imagenUrl, activo } = await req.json();
+  const {
+    nombre,
+    descripcion,
+    tratamiento,
+    imagenUrl,
+    activo,
+    protocoloIds = [],
+  } = await req.json();
+
+  const ids = Array.isArray(protocoloIds)
+    ? [
+        ...new Set(
+          protocoloIds.filter(
+            (protocoloId: unknown): protocoloId is string =>
+              typeof protocoloId === "string" &&
+              protocoloId.trim().length > 0
+          )
+        ),
+      ]
+    : [];
 
   const aplicacion = await prisma.aplicacionCds.update({
     where: { id },
@@ -26,6 +45,13 @@ export async function PUT(
       tratamiento: tratamiento || null,
       imagenUrl: imagenUrl || null,
       activo,
+      protocolos: {
+        deleteMany: {},
+        create: ids.map((protocoloId, orden) => ({
+          protocoloId,
+          orden,
+        })),
+      },
     },
   });
 

@@ -11,6 +11,15 @@ type Aplicacion = {
   descripcion: string | null;
   tratamiento: string | null;
   imagenUrl: string | null;
+  protocolos: {
+    protocolo: {
+      id: string;
+      titulo: string;
+      contenido: string;
+      imagenUrl: string | null;
+      videoUrl: string | null;
+    };
+  }[];
 };
 
 export default function AplicacionesCdsGrid({
@@ -113,6 +122,29 @@ export default function AplicacionesCdsGrid({
               <p className="text-sm text-brand-gray whitespace-pre-line">
                 {seleccionada.tratamiento}
               </p>
+            </div>
+          )}
+
+          {seleccionada.protocolos.length > 0 && (
+            <div className="mt-5 border-t pt-4">
+              <h4 className="text-sm font-semibold text-[#1F1B24] mb-3">
+                Protocolos relacionados
+              </h4>
+
+              <div className="space-y-2">
+                {seleccionada.protocolos.map(({ protocolo }) => (
+                  <a
+                    key={protocolo.id}
+                    href={`/protocolos?protocolo=${protocolo.id}`}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 px-3 py-2.5 text-sm font-medium text-[#1F1B24] hover:border-brand-pink hover:bg-brand-pink/5 transition-colors"
+                  >
+                    <span>{protocolo.titulo}</span>
+                    <span className="text-xs font-semibold text-brand-pink whitespace-nowrap">
+                      Ver protocolo
+                    </span>
+                  </a>
+                ))}
+              </div>
             </div>
           )}
         </Modal>

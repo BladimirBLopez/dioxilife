@@ -5,7 +5,12 @@ import ProtocolosAcordeon from "@/components/ProtocolosAcordeon";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProtocolosPage() {
+export default async function ProtocolosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ protocolo?: string }>;
+}) {
+  const { protocolo } = await searchParams;
   const [protocolos, totalSucursales] = await Promise.all([
     prisma.protocolo.findMany({
       where: { activo: true },
@@ -30,7 +35,10 @@ export default async function ProtocolosPage() {
             <p className="text-sm mt-1">Vuelve pronto.</p>
           </div>
         ) : (
-          <ProtocolosAcordeon protocolos={protocolos} />
+          <ProtocolosAcordeon
+            protocolos={protocolos}
+            protocoloInicialId={protocolo}
+          />
         )}
       </main>
 
