@@ -30,33 +30,34 @@ model Categoria {
 }
 
 model Producto {
-  id                    String                 @id @default(cuid())
-  nombre                String
-  slug                  String                 @unique
-  descripcion           String?
-  precio                Decimal
-  mostrarPrecio         Boolean                @default(false)
-  enPromocion           Boolean                @default(false)
-  precioPromocion       Decimal?
-  valorComisionable     Decimal                @default(0)
-  puntosVolumen         Decimal                @default(0)
-  generaComision        Boolean                @default(false)
-  imagenUrl             String?
-  categoriaId           String
-  categoria             Categoria              @relation(fields: [categoriaId], references: [id])
-  protocolos            Protocolo[]
-  informacionProducto   InformacionProducto[]
-  imagenes              ImagenProducto[]
-  resenas               Resena[]
-  movimientosInventario MovimientoInventario[]
-  stockActual           Int                    @default(0)
-  stockMinimo           Int                    @default(5)
-  orden                 Int                    @default(0)
-  activo                Boolean                @default(true)
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  detallePedidos        DetallePedido[]
-  detalleCompras        DetalleCompra[]
+  id                     String                 @id @default(cuid())
+  nombre                 String
+  slug                   String                 @unique
+  descripcion            String?
+  precio                 Decimal
+  mostrarPrecio          Boolean                @default(false)
+  enPromocion            Boolean                @default(false)
+  precioPromocion        Decimal?
+  valorComisionable      Decimal                @default(0)
+  puntosVolumen          Decimal                @default(0)
+  generaComision         Boolean                @default(false)
+  imagenUrl              String?
+  categoriaId            String
+  categoria              Categoria              @relation(fields: [categoriaId], references: [id])
+  protocolos             Protocolo[]
+  protocolosRelacionados ProductoProtocolo[]
+  informacionProducto    InformacionProducto[]
+  imagenes               ImagenProducto[]
+  resenas                Resena[]
+  movimientosInventario  MovimientoInventario[]
+  stockActual            Int                    @default(0)
+  stockMinimo            Int                    @default(5)
+  orden                  Int                    @default(0)
+  activo                 Boolean                @default(true)
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  detallePedidos         DetallePedido[]
+  detalleCompras         DetalleCompra[]
 }
 
 model ImagenProducto {
@@ -71,17 +72,30 @@ model ImagenProducto {
 }
 
 model Protocolo {
-  id           String                @id @default(cuid())
-  titulo       String
-  contenido    String
-  imagenUrl    String?
-  videoUrl     String?
-  productoId   String?
-  producto     Producto?             @relation(fields: [productoId], references: [id])
-  aplicaciones AplicacionProtocolo[]
-  activo       Boolean               @default(true)
-  createdAt    DateTime              @default(now())
-  updatedAt    DateTime              @updatedAt
+  id                    String                @id @default(cuid())
+  titulo                String
+  contenido             String
+  imagenUrl             String?
+  videoUrl              String?
+  productoId            String?
+  producto              Producto?             @relation(fields: [productoId], references: [id])
+  productosRelacionados ProductoProtocolo[]
+  aplicaciones          AplicacionProtocolo[]
+  activo                Boolean               @default(true)
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+}
+
+model ProductoProtocolo {
+  productoId  String
+  protocoloId String
+  orden       Int       @default(0)
+  producto    Producto  @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  protocolo   Protocolo @relation(fields: [protocoloId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@id([productoId, protocoloId])
+  @@index([protocoloId])
 }
 
 enum TipoInformacion {

@@ -15,6 +15,9 @@ type Protocolo = {
   videoUrl: string | null;
   productoId: string | null;
   producto: Producto | null;
+  productosRelacionados: {
+    producto: Producto;
+  }[];
   activo: boolean;
 };
 
@@ -23,7 +26,7 @@ const vacio = {
   contenido: "",
   imagenUrl: "",
   videoUrl: "",
-  productoId: "",
+  productoIds: [] as string[],
 };
 
 export default function ProtocolosPage() {
@@ -81,7 +84,9 @@ export default function ProtocolosPage() {
       contenido: p.contenido,
       imagenUrl: p.imagenUrl || "",
       videoUrl: p.videoUrl || "",
-      productoId: p.productoId || "",
+      productoIds: p.productosRelacionados.map(
+        ({ producto }) => producto.id
+      ),
     };
     setEditandoId(p.id);
     setForm(datos);
@@ -91,13 +96,17 @@ export default function ProtocolosPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.titulo || !form.contenido || !form.productoId) {
-      alert("Título, contenido y producto son obligatorios");
+    if (!form.titulo || !form.contenido) {
+      alert("Título y contenido son obligatorios");
       return;
     }
     setLoading(true);
 
-    const body = { ...form, activo: true };
+    const body = {
+      ...form,
+      productoId: null,
+      activo: true,
+    };
 
     if (editandoId) {
       await fetch(`/api/admin/protocolos/${editandoId}`, {
@@ -164,9 +173,11 @@ export default function ProtocolosPage() {
             )}
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm text-[#1F1B24]">{p.titulo}</p>
-              {p.producto && (
-                <p className="text-xs text-brand-pink font-medium mt-0.5">
-                  {p.producto.nombre}
+              {p.productosRelacionados.length > 0 && (
+                <p className="mt-0.5 text-xs font-medium text-brand-pink">
+                  {p.productosRelacionados.length} producto
+                  {p.productosRelacionados.length === 1 ? "" : "s"} relacionado
+                  {p.productosRelacionados.length === 1 ? "" : "s"}
                 </p>
               )}
               <p className="text-sm text-[#6B6870] line-clamp-2 mt-1">
@@ -242,21 +253,60 @@ export default function ProtocolosPage() {
             </div>
 
             <div>
-              <label className="admin-label">Producto relacionado (opcional)</label>
-              <select
-                value={form.productoId}
-                onChange={(e) =>
-                  setForm({ ...form, productoId: e.target.value })
-                }
-                className="admin-input"
-              >
-                <option value="">Sin producto relacionado</option>
-                {productos.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nombre}
-                  </option>
-                ))}
-              </select>
+              <label className="admin-label">
+                Productos relacionados (opcional)
+              </label>
+
+              <p className="mb-2 text-xs text-[#8A8790]">
+                Selecciona únicamente los productos que correspondan a este protocolo.
+              </p>
+
+              <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border border-gray-200 bg-white p-3">
+                {productos.length === 0 ? (
+                  <p className="text-sm text-[#8A8790]">
+                    No hay productos disponibles.
+                  </p>
+                ) : (
+                  productos.map((p) => {
+                    const seleccionado = form.productoIds.includes(p.id);
+
+                    return (
+                      <label
+                        key={p.id}
+                        className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-sm transition ${
+                          seleccionado
+                            ? "border-brand-pink bg-brand-pink/5"
+                            : "border-gray-100 hover:bg-gray-50"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={seleccionado}
+                          onChange={() => {
+                            setForm((actual) => ({
+                              ...actual,
+                              productoIds: seleccionado
+                                ? actual.productoIds.filter((id) => id !== p.id)
+                                : [...actual.productoIds, p.id],
+                            }));
+                          }}
+                          className="h-4 w-4 accent-pink-600"
+                        />
+
+                        <span className="min-w-0 flex-1 text-[#1F1B24]">
+                          {p.nombre}
+                        </span>
+                      </label>
+                    );
+                  })
+                )}
+              </div>
+
+              <p className="mt-2 text-xs text-[#8A8790]">
+                {form.productoIds.length} producto
+                {form.productoIds.length === 1 ? "" : "s"} seleccionado
+                {form.productoIds.length === 1 ? "" : "s"}
+              </p>
             </div>
 
             <button
