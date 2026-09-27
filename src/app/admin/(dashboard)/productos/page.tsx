@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DragDropProvider, type DragEndEvent } from "@dnd-kit/react";
 import { useSortable, isSortable } from "@dnd-kit/react/sortable";
 import CloudinaryUpload from "@/components/CloudinaryUpload";
@@ -253,6 +253,8 @@ export default function ProductosPage() {
 
   const [editandoInformacionId, setEditandoInformacionId] =
     useState<string | null>(null);
+
+  const formularioInformacionRef = useRef<HTMLFormElement | null>(null);
 
   const [nuevaInformacion, setNuevaInformacion] =
     useState({
@@ -535,6 +537,13 @@ export default function ProductosPage() {
       contenido: info.contenido || "",
       imagenUrl: info.imagenUrl || "",
       videoUrl: info.videoUrl || "",
+    });
+
+    requestAnimationFrame(() => {
+      formularioInformacionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     });
   }
 
@@ -1342,7 +1351,11 @@ export default function ProductosPage() {
         >
           <div className="space-y-5">
 
-            <form onSubmit={guardarInformacion} className="space-y-4">
+            <form
+              ref={formularioInformacionRef}
+              onSubmit={guardarInformacion}
+              className="space-y-4 scroll-mt-4"
+            >
               <div>
                 <label className="admin-label">
                   Tipo de información
