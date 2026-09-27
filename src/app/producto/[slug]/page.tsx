@@ -78,6 +78,30 @@ export default async function ProductoDetalle({
     orderBy: { createdAt: "desc" },
   });
 
+  const productosRelacionados = await prisma.producto.findMany({
+    where: {
+      activo: true,
+      categoriaId: producto.categoriaId,
+      id: {
+        not: producto.id,
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: 4,
+    select: {
+      id: true,
+      nombre: true,
+      slug: true,
+      imagenUrl: true,
+      precio: true,
+      precioPromocion: true,
+      enPromocion: true,
+      mostrarPrecio: true,
+    },
+  });
+
   const protocolosRelacionados = Array.from(
     new Map(
       [
@@ -327,6 +351,89 @@ export default async function ProductoDetalle({
                   <span className="shrink-0 text-lg text-brand-gray/50 transition group-hover:translate-x-0.5 group-hover:text-brand-pink">
                     ›
                   </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {productosRelacionados.length > 0 && (
+          <section className="mt-10">
+            <div className="mb-4 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
+                  También puedes ver
+                </p>
+                <h2 className="mt-1 text-xl font-bold text-[#1F1B24]">
+                  Productos relacionados
+                </h2>
+              </div>
+
+              <Link
+                href="/#productos"
+                className="shrink-0 text-sm font-semibold text-brand-pink"
+              >
+                Ver todos →
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {productosRelacionados.map((relacionado) => (
+                <Link
+                  key={relacionado.id}
+                  href={`/producto/${relacionado.slug}`}
+                  className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-[0_3px_14px_rgba(0,0,0,0.035)] transition hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.06)]"
+                >
+                  <div className="relative aspect-square bg-gray-50">
+                    {relacionado.imagenUrl ? (
+                      <Image
+                        src={relacionado.imagenUrl}
+                        alt={relacionado.nombre}
+                        fill
+                        className="object-contain p-3 transition duration-300 group-hover:scale-[1.03]"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center p-4 text-center text-xs text-brand-gray">
+                        Sin imagen
+                      </div>
+                    )}
+
+                    {relacionado.enPromocion && (
+                      <span className="absolute left-2 top-2 rounded-full bg-brand-pink px-2 py-1 text-[10px] font-bold text-white">
+                        PROMO
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="p-3">
+                    <h3 className="line-clamp-2 min-h-10 text-sm font-semibold leading-5 text-[#1F1B24]">
+                      {relacionado.nombre}
+                    </h3>
+
+                    {relacionado.mostrarPrecio && (
+                      <div className="mt-2">
+                        {relacionado.enPromocion &&
+                        relacionado.precioPromocion ? (
+                          <div>
+                            <p className="text-xs text-gray-400 line-through">
+                              Bs {formatearPrecio(relacionado.precio)}
+                            </p>
+                            <p className="text-base font-bold text-brand-pink">
+                              Bs {formatearPrecio(relacionado.precioPromocion)}
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-base font-bold text-brand-blue">
+                            Bs {formatearPrecio(relacionado.precio)}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    <p className="mt-2 text-xs font-semibold text-brand-pink">
+                      Ver producto →
+                    </p>
+                  </div>
                 </Link>
               ))}
             </div>
