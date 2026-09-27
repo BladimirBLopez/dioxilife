@@ -221,12 +221,14 @@ export default async function Home({
               href="#productos"
               className="group flex min-h-[88px] items-center gap-3 rounded-2xl border border-pink-100 bg-pink-50/80 p-3.5 transition hover:-translate-y-0.5 hover:shadow-sm"
             >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-pink text-white">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
-                  <circle cx="9" cy="20" r="1" />
-                  <circle cx="19" cy="20" r="1" />
-                  <path d="M3 4h2l2.4 10.5a2 2 0 0 0 2 1.5h7.7a2 2 0 0 0 2-1.6L21 7H6" />
-                </svg>
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#E9E4F2] bg-white p-1.5 shadow-sm">
+                <Image
+                  src="/logo.png"
+                  alt="DioxiLife Bolivia"
+                  width={44}
+                  height={44}
+                  className="h-full w-full object-contain"
+                />
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold text-[#1F1B24]">Productos</p>
@@ -243,12 +245,14 @@ export default async function Home({
               href="/aplicaciones-cds"
               className="group flex min-h-[88px] items-center gap-3 rounded-2xl border border-sky-100 bg-sky-50/80 p-3.5 transition hover:-translate-y-0.5 hover:shadow-sm"
             >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-400 text-white">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
-                  <path d="M9 3h6" />
-                  <path d="M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6A2 2 0 0 0 19 18l-5-9V3" />
-                  <path d="M8 15h8" />
-                </svg>
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#E9E4F2] bg-white p-1.5 shadow-sm">
+                <Image
+                  src="/logo.png"
+                  alt="DioxiLife Bolivia"
+                  width={44}
+                  height={44}
+                  className="h-full w-full object-contain"
+                />
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold text-[#1F1B24]">
@@ -267,12 +271,14 @@ export default async function Home({
               href="/protocolos"
               className="group flex min-h-[88px] items-center gap-3 rounded-2xl border border-violet-100 bg-violet-50/80 p-3.5 transition hover:-translate-y-0.5 hover:shadow-sm"
             >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-violet-500 text-white">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
-                  <rect x="5" y="4" width="14" height="17" rx="2" />
-                  <path d="M9 4.5V3h6v1.5" />
-                  <path d="M9 10h6M9 14h6M9 18h4" />
-                </svg>
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#E9E4F2] bg-white p-1.5 shadow-sm">
+                <Image
+                  src="/logo.png"
+                  alt="DioxiLife Bolivia"
+                  width={44}
+                  height={44}
+                  className="h-full w-full object-contain"
+                />
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold text-[#1F1B24]">Protocolos</p>
@@ -289,10 +295,14 @@ export default async function Home({
               href="#resenas"
               className="group flex min-h-[88px] items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/80 p-3.5 transition hover:-translate-y-0.5 hover:shadow-sm"
             >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
-                  <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z" />
-                </svg>
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#E9E4F2] bg-white p-1.5 shadow-sm">
+                <Image
+                  src="/logo.png"
+                  alt="DioxiLife Bolivia"
+                  width={44}
+                  height={44}
+                  className="h-full w-full object-contain"
+                />
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold text-[#1F1B24]">Testimonios</p>
@@ -336,12 +346,14 @@ export default async function Home({
               rel="noopener noreferrer"
               className="group flex min-h-[88px] items-center gap-3 rounded-2xl border border-purple-100 bg-purple-50/80 p-3.5 transition hover:-translate-y-0.5 hover:shadow-sm"
             >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-purple-500 text-white">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
-                  <path d="m8 11 2 2a2 2 0 0 0 3 0l2-2" />
-                  <path d="m4 9 4-4 4 2 4-2 4 4" />
-                  <path d="m5 10 5 7a3 3 0 0 0 4 0l5-7" />
-                </svg>
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#E9E4F2] bg-white p-1.5 shadow-sm">
+                <Image
+                  src="/logo.png"
+                  alt="DioxiLife Bolivia"
+                  width={44}
+                  height={44}
+                  className="h-full w-full object-contain"
+                />
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold text-[#1F1B24]">
