@@ -218,10 +218,14 @@ export default async function Home({
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <a
               href="#productos"
-              className="group flex min-h-24 items-center gap-3 rounded-2xl border border-pink-100 bg-pink-50/70 p-4 transition hover:-translate-y-0.5 hover:shadow-sm"
+              className="group flex min-h-[88px] items-center gap-3 rounded-2xl border border-pink-100 bg-pink-50/80 p-3.5 transition hover:-translate-y-0.5 hover:shadow-sm"
             >
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-pink text-white">
-                🛒
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+                  <circle cx="9" cy="20" r="1" />
+                  <circle cx="19" cy="20" r="1" />
+                  <path d="M3 4h2l2.4 10.5a2 2 0 0 0 2 1.5h7.7a2 2 0 0 0 2-1.6L21 7H6" />
+                </svg>
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold text-[#1F1B24]">Productos</p>
@@ -229,14 +233,21 @@ export default async function Home({
                   CDS, kits y más
                 </p>
               </div>
+              <span className="ml-auto shrink-0 text-lg text-brand-gray/60 transition group-hover:translate-x-0.5 group-hover:text-brand-pink">
+                ›
+              </span>
             </a>
 
             <Link
               href="/aplicaciones-cds"
-              className="group flex min-h-24 items-center gap-3 rounded-2xl border border-sky-100 bg-sky-50/70 p-4 transition hover:-translate-y-0.5 hover:shadow-sm"
+              className="group flex min-h-[88px] items-center gap-3 rounded-2xl border border-sky-100 bg-sky-50/80 p-3.5 transition hover:-translate-y-0.5 hover:shadow-sm"
             >
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-400 text-white">
-                ⚗️
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+                  <path d="M9 3h6" />
+                  <path d="M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6A2 2 0 0 0 19 18l-5-9V3" />
+                  <path d="M8 15h8" />
+                </svg>
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold text-[#1F1B24]">
@@ -246,14 +257,21 @@ export default async function Home({
                   Dolencias y casos
                 </p>
               </div>
+              <span className="ml-auto shrink-0 text-lg text-brand-gray/60 transition group-hover:translate-x-0.5 group-hover:text-brand-pink">
+                ›
+              </span>
             </Link>
 
             <Link
               href="/protocolos"
-              className="group flex min-h-24 items-center gap-3 rounded-2xl border border-violet-100 bg-violet-50/70 p-4 transition hover:-translate-y-0.5 hover:shadow-sm"
+              className="group flex min-h-[88px] items-center gap-3 rounded-2xl border border-violet-100 bg-violet-50/80 p-3.5 transition hover:-translate-y-0.5 hover:shadow-sm"
             >
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-violet-500 text-white">
-                📋
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+                  <rect x="5" y="4" width="14" height="17" rx="2" />
+                  <path d="M9 4.5V3h6v1.5" />
+                  <path d="M9 10h6M9 14h6M9 18h4" />
+                </svg>
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold text-[#1F1B24]">Protocolos</p>
@@ -261,14 +279,19 @@ export default async function Home({
                   Guías y procedimientos
                 </p>
               </div>
+              <span className="ml-auto shrink-0 text-lg text-brand-gray/60 transition group-hover:translate-x-0.5 group-hover:text-brand-pink">
+                ›
+              </span>
             </Link>
 
             <a
               href="#resenas"
-              className="group flex min-h-24 items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4 transition hover:-translate-y-0.5 hover:shadow-sm"
+              className="group flex min-h-[88px] items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/80 p-3.5 transition hover:-translate-y-0.5 hover:shadow-sm"
             >
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
-                ⭐
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+                  <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z" />
+                </svg>
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold text-[#1F1B24]">Testimonios</p>
@@ -276,15 +299,21 @@ export default async function Home({
                   Historias de clientes
                 </p>
               </div>
+              <span className="ml-auto shrink-0 text-lg text-brand-gray/60 transition group-hover:translate-x-0.5 group-hover:text-brand-pink">
+                ›
+              </span>
             </a>
 
             {sucursales.length > 0 && (
               <a
                 href="#sucursales"
-                className="group flex min-h-24 items-center gap-3 rounded-2xl border border-orange-100 bg-orange-50/70 p-4 transition hover:-translate-y-0.5 hover:shadow-sm"
+                className="group flex min-h-[88px] items-center gap-3 rounded-2xl border border-orange-100 bg-orange-50/80 p-3.5 transition hover:-translate-y-0.5 hover:shadow-sm"
               >
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white">
-                  📍
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+                    <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
+                    <circle cx="12" cy="10" r="2.5" />
+                  </svg>
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-[#1F1B24]">Sucursales</p>
@@ -292,6 +321,9 @@ export default async function Home({
                     Encuentra la más cercana
                   </p>
                 </div>
+              <span className="ml-auto shrink-0 text-lg text-brand-gray/60 transition group-hover:translate-x-0.5 group-hover:text-brand-pink">
+                ›
+              </span>
               </a>
             )}
 
@@ -301,10 +333,14 @@ export default async function Home({
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex min-h-24 items-center gap-3 rounded-2xl border border-purple-100 bg-purple-50/70 p-4 transition hover:-translate-y-0.5 hover:shadow-sm"
+              className="group flex min-h-[88px] items-center gap-3 rounded-2xl border border-purple-100 bg-purple-50/80 p-3.5 transition hover:-translate-y-0.5 hover:shadow-sm"
             >
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-purple-500 text-white">
-                🤝
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+                  <path d="m8 11 2 2a2 2 0 0 0 3 0l2-2" />
+                  <path d="m4 9 4-4 4 2 4-2 4 4" />
+                  <path d="m5 10 5 7a3 3 0 0 0 4 0l5-7" />
+                </svg>
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold text-[#1F1B24]">
@@ -314,6 +350,9 @@ export default async function Home({
                   Únete a la red
                 </p>
               </div>
+              <span className="ml-auto shrink-0 text-lg text-brand-gray/60 transition group-hover:translate-x-0.5 group-hover:text-brand-pink">
+                ›
+              </span>
             </a>
           </div>
         </div>
@@ -407,10 +446,10 @@ export default async function Home({
             {productosVisibles.map((p) => (
               <div
                 key={p.id}
-                className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-[0_4px_18px_rgba(0,0,0,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.07)] flex flex-col"
+                className="group flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(0,0,0,0.07)]"
               >
                 <Link href={`/producto/${p.slug}`} className="flex flex-col flex-1">
-                  <div className="relative aspect-square border-b border-gray-100 bg-[#FAFAFB]">
+                  <div className="relative aspect-square border-b border-gray-100 bg-[#FBFBFC]">
                     {p.enPromocion && (
                       <span className="absolute left-2 top-2 z-10 rounded-full bg-brand-pink px-2.5 py-1 text-[10px] font-bold tracking-wide text-white shadow-sm">
                         OFERTA
@@ -421,7 +460,7 @@ export default async function Home({
                         src={p.imagenUrl}
                         alt={p.nombre}
                         fill
-                        className="object-contain p-4 transition duration-300 group-hover:scale-[1.03]"
+                        className="object-contain p-5 transition duration-300 group-hover:scale-[1.03]"
                       />
                     ) : (
                       <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-center text-[#A3A0A7]">
@@ -432,26 +471,26 @@ export default async function Home({
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-1 flex-col p-4 pb-3">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-brand-pink">
+                  <div className="flex flex-1 flex-col p-3.5 pb-3">
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-brand-pink">
                       {p.categoria.nombre}
                     </span>
-                    <h3 className="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-[#1F1B24]">
+                    <h3 className="mt-1.5 line-clamp-2 text-sm font-semibold leading-snug text-[#1F1B24]">
                       {p.nombre}
                     </h3>
                     {p.mostrarPrecio && (
-                      <div className="mt-auto pt-2">
+                      <div className="mt-auto pt-3">
                         {p.enPromocion && p.precioPromocion ? (
                           <>
                             <p className="text-xs text-gray-400 line-through">
                               Bs {Number(p.precio).toFixed(2)}
                             </p>
-                            <p className="text-brand-pink font-bold">
+                            <p className="text-base font-bold text-brand-pink">
                               Bs {Number(p.precioPromocion).toFixed(2)}
                             </p>
                           </>
                         ) : (
-                          <p className="text-brand-blue font-bold">
+                          <p className="text-base font-bold text-brand-blue">
                             Bs {Number(p.precio).toFixed(2)}
                           </p>
                         )}
@@ -459,7 +498,7 @@ export default async function Home({
                     )}
                   </div>
                 </Link>
-                <div className="px-4 pb-4">
+                <div className="px-3.5 pb-3.5">
                   <AgregarCarritoButton
                     id={p.id}
                     nombre={p.nombre}
