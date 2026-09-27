@@ -33,6 +33,7 @@ export default function AplicacionesCdsGrid({
   const [expandido, setExpandido] = useState(false);
   const [busqueda, setBusqueda] = useState("");
   const [soloConProtocolo, setSoloConProtocolo] = useState(false);
+  const [letra, setLetra] = useState("");
 
   useEffect(() => {
     if (!aplicacionInicialId) return;
@@ -66,12 +67,16 @@ export default function AplicacionesCdsGrid({
         const coincideProtocolo =
           !soloConProtocolo || a.protocolos.length > 0;
 
-        return coincideBusqueda && coincideProtocolo;
+        const coincideLetra =
+          !letra ||
+          normalizar(a.nombre).startsWith(normalizar(letra));
+
+        return coincideBusqueda && coincideProtocolo && coincideLetra;
       })
       .sort((a, b) =>
         a.nombre.localeCompare(b.nombre, "es", { sensitivity: "base" })
       );
-  }, [aplicaciones, busqueda, soloConProtocolo]);
+  }, [aplicaciones, busqueda, soloConProtocolo, letra]);
 
   function abrir(a: Aplicacion) {
     setSeleccionada(a);
@@ -135,6 +140,35 @@ export default function AplicacionesCdsGrid({
             {aplicacionesFiltradas.length} resultado(s)
           </span>
         </div>
+
+        <div className="flex gap-1.5 overflow-x-auto pb-1">
+          <button
+            type="button"
+            onClick={() => setLetra("")}
+            className={`shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
+              !letra
+                ? "bg-brand-blue text-white"
+                : "border border-gray-200 bg-white text-brand-gray"
+            }`}
+          >
+            Todas
+          </button>
+
+          {"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((l) => (
+            <button
+              key={l}
+              type="button"
+              onClick={() => setLetra(l)}
+              className={`h-8 w-8 shrink-0 rounded-lg text-xs font-semibold transition ${
+                letra === l
+                  ? "bg-brand-blue text-white"
+                  : "border border-gray-200 bg-white text-brand-gray"
+              }`}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
       </div>
 
       {aplicacionesFiltradas.length === 0 ? (
@@ -147,40 +181,52 @@ export default function AplicacionesCdsGrid({
           </p>
         </div>
       ) : (
-        <div className="space-y-2">
-        {aplicacionesFiltradas.map((a) => (
-          <button
-            key={a.id}
-            onClick={() => abrir(a)}
-            className="w-full flex items-center gap-3 bg-white rounded-xl shadow-sm p-2.5 text-left hover:bg-gray-50 transition-colors"
-          >
-            <div className="w-14 h-14 shrink-0 relative rounded-lg overflow-hidden bg-gray-100">
-              {a.imagenUrl && (
-                <Media
-                  src={a.imagenUrl}
-                  alt={a.nombre}
-                  fill
-                  className="object-cover"
-                  variant="thumb"
-                />
-              )}
-            </div>
-            <h3 className="flex-1 text-sm font-medium text-[#1F1B24]">
-              {a.nombre}
-            </h3>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-4 h-4 shrink-0 text-brand-gray"
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {aplicacionesFiltradas.map((a) => (
+            <button
+              key={a.id}
+              onClick={() => abrir(a)}
+              className="group overflow-hidden rounded-2xl border border-gray-100 bg-white text-left shadow-[0_3px_14px_rgba(0,0,0,0.035)] transition hover:-translate-y-0.5 hover:shadow-[0_6px_18px_rgba(0,0,0,0.06)]"
             >
-              <path d="m9 6 6 6-6 6" />
-            </svg>
-          </button>
-        ))}
+              <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+                {a.imagenUrl ? (
+                  <Media
+                    src={a.imagenUrl}
+                    alt={a.nombre}
+                    fill
+                    className="object-cover transition duration-300 group-hover:scale-[1.03]"
+                    variant="thumb"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-pink/10 text-brand-pink">
+                      +
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-3">
+                <div className="flex items-start gap-2">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-[#1F1B24]">
+                      {a.nombre}
+                    </h3>
+
+                    {a.protocolos.length > 0 && (
+                      <span className="mt-2 inline-flex rounded-full bg-brand-pink/10 px-2 py-1 text-[10px] font-semibold text-brand-pink">
+                        Con protocolo
+                      </span>
+                    )}
+                  </div>
+
+                  <span className="shrink-0 text-lg text-brand-gray/50 transition group-hover:translate-x-0.5 group-hover:text-brand-pink">
+                    ›
+                  </span>
+                </div>
+              </div>
+            </button>
+          ))}
         </div>
       )}
 

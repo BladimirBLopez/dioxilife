@@ -49,10 +49,10 @@ export default async function AplicacionesCdsPage({
     <div className="min-h-screen flex flex-col bg-gray-50">
       <SiteHeader mostrarSucursales={totalSucursales > 0} />
 
-      <section className="bg-gradient-to-r from-brand-pink to-brand-blue text-white text-center py-10 px-4">
+      <section className="bg-gradient-to-r from-brand-pink to-brand-blue px-4 py-6 text-center text-white sm:py-7">
         <h1 className="text-2xl font-bold">Aplicaciones del CDS</h1>
-        <p className="text-white/90 mt-1">
-          Conoce para qué se puede usar el dióxido de cloro
+        <p className="mx-auto mt-1 max-w-xl text-sm text-white/85 sm:text-base">
+          Consulta las aplicaciones registradas y su información relacionada.
         </p>
       </section>
 
