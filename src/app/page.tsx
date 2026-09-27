@@ -37,8 +37,16 @@ export default async function Home({
   const soloPromociones = promo === "1";
   const verTodos = ver === "todos";
 
-  const [categorias, productos, resenas, sucursales, banner, promoCount] =
-    await Promise.all([
+  const [
+    categorias,
+    productos,
+    aplicacionesDestacadas,
+    protocolosDestacados,
+    resenas,
+    sucursales,
+    banner,
+    promoCount,
+  ] = await Promise.all([
       prisma.categoria.findMany({
         orderBy: { nombre: "asc" },
         include: { _count: { select: { productos: true } } },
@@ -54,6 +62,26 @@ export default async function Home({
         },
         include: { categoria: true },
         orderBy: { orden: "asc" },
+      }),
+      prisma.aplicacionCds.findMany({
+        where: { activo: true },
+        orderBy: { createdAt: "desc" },
+        take: 4,
+        select: {
+          id: true,
+          nombre: true,
+          imagenUrl: true,
+        },
+      }),
+      prisma.protocolo.findMany({
+        where: { activo: true },
+        orderBy: { createdAt: "desc" },
+        take: 3,
+        select: {
+          id: true,
+          titulo: true,
+          imagenUrl: true,
+        },
       }),
       prisma.resena.findMany({
         where: {
@@ -173,46 +201,123 @@ export default async function Home({
         </section>
       )}
 
-      {/* Categorías */}
-      {(categoriasConProductos.length > 0 || promoCount > 0) && (
-        <nav className="max-w-6xl mx-auto w-full px-4 py-4 flex gap-2 overflow-x-auto">
-          <a
-            href="/"
-            className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border ${
-              !categoria && !soloPromociones
-                ? "bg-brand-pink text-white border-brand-pink"
-                : "bg-white text-brand-gray border-gray-300"
-            }`}
-          >
-            Todos
-          </a>
-          {promoCount > 0 && (
+      {/* Accesos rápidos */}
+      <section className="px-4 pt-6 pb-2">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-bold text-[#1F1B24] sm:text-2xl">
+                Explora <span className="text-brand-pink">DioxiLife</span>
+              </h2>
+              <p className="mt-1 text-sm text-brand-gray">
+                Todo lo que necesitas en un solo lugar.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <a
-              href="/?promo=1"
-              className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border ${
-                soloPromociones
-                  ? "bg-brand-pink text-white border-brand-pink"
-                  : "bg-white text-brand-gray border-gray-300"
-              }`}
+              href="#productos"
+              className="group flex min-h-24 items-center gap-3 rounded-2xl border border-pink-100 bg-pink-50/70 p-4 transition hover:-translate-y-0.5 hover:shadow-sm"
             >
-              🔥 Promociones
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-pink text-white">
+                🛒
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-[#1F1B24]">Productos</p>
+                <p className="mt-0.5 text-xs text-brand-gray">
+                  CDS, kits y más
+                </p>
+              </div>
             </a>
-          )}
-          {categoriasConProductos.map((c) => (
+
+            <Link
+              href="/aplicaciones-cds"
+              className="group flex min-h-24 items-center gap-3 rounded-2xl border border-sky-100 bg-sky-50/70 p-4 transition hover:-translate-y-0.5 hover:shadow-sm"
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-400 text-white">
+                ⚗️
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-[#1F1B24]">
+                  Aplicaciones CDS
+                </p>
+                <p className="mt-0.5 text-xs text-brand-gray">
+                  Dolencias y casos
+                </p>
+              </div>
+            </Link>
+
+            <Link
+              href="/protocolos"
+              className="group flex min-h-24 items-center gap-3 rounded-2xl border border-violet-100 bg-violet-50/70 p-4 transition hover:-translate-y-0.5 hover:shadow-sm"
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-violet-500 text-white">
+                📋
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-[#1F1B24]">Protocolos</p>
+                <p className="mt-0.5 text-xs text-brand-gray">
+                  Guías y procedimientos
+                </p>
+              </div>
+            </Link>
+
             <a
-              key={c.id}
-              href={`/?categoria=${c.slug}`}
-              className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border ${
-                categoria === c.slug && !soloPromociones
-                  ? "bg-brand-pink text-white border-brand-pink"
-                  : "bg-white text-brand-gray border-gray-300"
-              }`}
+              href="#resenas"
+              className="group flex min-h-24 items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4 transition hover:-translate-y-0.5 hover:shadow-sm"
             >
-              {c.nombre} ({c._count.productos})
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
+                ⭐
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-[#1F1B24]">Testimonios</p>
+                <p className="mt-0.5 text-xs text-brand-gray">
+                  Historias de clientes
+                </p>
+              </div>
             </a>
-          ))}
-        </nav>
-      )}
+
+            {sucursales.length > 0 && (
+              <a
+                href="#sucursales"
+                className="group flex min-h-24 items-center gap-3 rounded-2xl border border-orange-100 bg-orange-50/70 p-4 transition hover:-translate-y-0.5 hover:shadow-sm"
+              >
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white">
+                  📍
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-[#1F1B24]">Sucursales</p>
+                  <p className="mt-0.5 text-xs text-brand-gray">
+                    Encuentra la más cercana
+                  </p>
+                </div>
+              </a>
+            )}
+
+            <a
+              href={`https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(
+                "Hola, quiero información para ser distribuidor de DioxiLife Bolivia.\n\nNombre:\nCiudad:\n¿Quién me recomendó DioxiLife?:"
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex min-h-24 items-center gap-3 rounded-2xl border border-purple-100 bg-purple-50/70 p-4 transition hover:-translate-y-0.5 hover:shadow-sm"
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-purple-500 text-white">
+                🤝
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-[#1F1B24]">
+                  Ser distribuidor
+                </p>
+                <p className="mt-0.5 text-xs text-brand-gray">
+                  Únete a la red
+                </p>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
 
       {/* Grid de productos */}
       <main
@@ -220,19 +325,72 @@ export default async function Home({
         className="flex-1 max-w-6xl mx-auto w-full px-4 pb-8"
       >
         {productos.length > 0 && (
-          <div className="mb-5 mt-2 flex items-end justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-bold text-[#1F1B24] sm:text-2xl">
-                {tituloProductos}
-              </h2>
+          <>
+            <div className="mb-4 mt-5 flex items-end justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-[#1F1B24] sm:text-2xl">
+                  {tituloProductos}
+                </h2>
+
+                {!categoria && !soloPromociones && !verTodos && (
+                  <p className="mt-1 text-sm text-brand-gray">
+                    Una selección de nuestros productos.
+                  </p>
+                )}
+              </div>
 
               {!categoria && !soloPromociones && !verTodos && (
-                <p className="mt-1 text-sm text-brand-gray">
-                  Una selección de nuestros productos.
-                </p>
+                <Link
+                  href="/?ver=todos#productos"
+                  className="shrink-0 text-sm font-semibold text-brand-pink"
+                >
+                  Ver todos →
+                </Link>
               )}
             </div>
-          </div>
+
+            {(categoriasConProductos.length > 0 || promoCount > 0) && (
+              <nav className="mb-5 flex gap-2 overflow-x-auto pb-1">
+                <a
+                  href="/#productos"
+                  className={`shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium ${
+                    !categoria && !soloPromociones
+                      ? "border-brand-pink bg-brand-pink text-white"
+                      : "border-gray-300 bg-white text-brand-gray"
+                  }`}
+                >
+                  Todos
+                </a>
+
+                {promoCount > 0 && (
+                  <a
+                    href="/?promo=1#productos"
+                    className={`shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium ${
+                      soloPromociones
+                        ? "border-brand-pink bg-brand-pink text-white"
+                        : "border-gray-300 bg-white text-brand-gray"
+                    }`}
+                  >
+                    Promociones
+                  </a>
+                )}
+
+                {categoriasConProductos.map((c) => (
+                  <a
+                    key={c.id}
+                    href={`/?categoria=${c.slug}#productos`}
+                    className={`shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium ${
+                      categoria === c.slug && !soloPromociones
+                        ? "border-brand-pink bg-brand-pink text-white"
+                        : "border-gray-300 bg-white text-brand-gray"
+                    }`}
+                  >
+                    {c.nombre}
+                  </a>
+                ))}
+              </nav>
+            )}
+          </>
         )}
 
         {productos.length === 0 ? (
@@ -319,20 +477,126 @@ export default async function Home({
           </div>
         )}
 
-        {!categoria &&
-          !soloPromociones &&
-          !verTodos &&
-          productos.length > productosVisibles.length && (
-            <div className="mt-7 flex justify-center">
+
+      </main>
+
+      {/* Aplicaciones CDS destacadas */}
+      {aplicacionesDestacadas.length > 0 && (
+        <section className="bg-white px-4 py-8">
+          <div className="mx-auto max-w-6xl">
+            <div className="mb-5 flex items-end justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-[#1F1B24] sm:text-2xl">
+                  Aplicaciones CDS
+                </h2>
+                <p className="mt-1 text-sm text-brand-gray">
+                  Consulta las aplicaciones disponibles.
+                </p>
+              </div>
+
               <Link
-                href="/?ver=todos#productos"
-                className="inline-flex items-center justify-center rounded-xl border border-brand-pink px-5 py-2.5 text-sm font-semibold text-brand-pink transition hover:bg-brand-pink hover:text-white"
+                href="/aplicaciones-cds"
+                className="shrink-0 text-sm font-semibold text-brand-pink"
               >
-                Ver todos los productos
+                Ver todas →
               </Link>
             </div>
-          )}
-      </main>
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {aplicacionesDestacadas.map((a) => (
+                <Link
+                  key={a.id}
+                  href="/aplicaciones-cds"
+                  className="group overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 transition hover:-translate-y-0.5 hover:shadow-sm"
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+                    {a.imagenUrl ? (
+                      <Image
+                        src={a.imagenUrl}
+                        alt={a.nombre}
+                        fill
+                        className="object-cover transition duration-300 group-hover:scale-[1.03]"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-2xl text-gray-300">
+                        +
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 p-3">
+                    <p className="text-sm font-semibold text-[#1F1B24]">
+                      {a.nombre}
+                    </p>
+                    <span className="text-brand-pink">›</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Protocolos destacados */}
+      {protocolosDestacados.length > 0 && (
+        <section className="px-4 py-8">
+          <div className="mx-auto max-w-6xl">
+            <div className="mb-5 flex items-end justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-[#1F1B24] sm:text-2xl">
+                  Protocolos
+                </h2>
+                <p className="mt-1 text-sm text-brand-gray">
+                  Consulta las guías y procedimientos disponibles.
+                </p>
+              </div>
+
+              <Link
+                href="/protocolos"
+                className="shrink-0 text-sm font-semibold text-brand-pink"
+              >
+                Ver todos →
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {protocolosDestacados.map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/protocolos?protocolo=${p.id}`}
+                  className="group flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-3 shadow-[0_4px_16px_rgba(0,0,0,0.03)] transition hover:-translate-y-0.5 hover:shadow-sm"
+                >
+                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-violet-50">
+                    {p.imagenUrl ? (
+                      <Image
+                        src={p.imagenUrl}
+                        alt={p.titulo}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-xl">
+                        📋
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="line-clamp-2 text-sm font-semibold text-[#1F1B24]">
+                      {p.titulo}
+                    </p>
+                    <p className="mt-1 text-xs font-medium text-brand-pink">
+                      Ver protocolo
+                    </p>
+                  </div>
+
+                  <span className="text-brand-pink">›</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Distribuidores */}
       <section className="px-4 py-8">
