@@ -120,7 +120,7 @@ export default async function ProductoDetalle({
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-[#F5F3FA]">
       <SiteHeader />
 
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 pt-6 pb-28 md:py-8">
@@ -134,7 +134,7 @@ export default async function ProductoDetalle({
           </Link>
         </div>
 
-        <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.05)] md:flex">
+        <div className="overflow-hidden rounded-3xl border border-[#E9E4F2] bg-white shadow-[0_10px_30px_rgba(70,42,120,0.07)] md:flex">
           <ProductoGaleria
             nombre={producto.nombre}
             imagenPrincipal={producto.imagenUrl}
@@ -142,8 +142,8 @@ export default async function ProductoDetalle({
             enPromocion={producto.enPromocion}
           />
 
-          <div className="flex flex-col p-6 sm:p-8 md:w-1/2">
-            <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-brand-pink">
+          <div className="flex flex-col bg-gradient-to-br from-white via-white to-[#FBF8FF] p-6 sm:p-8 md:w-1/2">
+            <span className="w-fit rounded-full bg-brand-pink/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-brand-pink">
               {producto.categoria.nombre}
             </span>
             <h1 className="mt-2 text-2xl font-bold leading-tight text-[#1F1B24] sm:text-3xl">{producto.nombre}</h1>
@@ -174,7 +174,7 @@ export default async function ProductoDetalle({
                     </p>
                   </div>
                 ) : (
-                  <p className="text-brand-blue font-bold text-2xl">
+                  <p className="text-3xl font-extrabold tracking-tight text-brand-blue">
                     Bs {formatearPrecio(producto.precio)}
                   </p>
                 )}
@@ -182,7 +182,7 @@ export default async function ProductoDetalle({
             )}
 
             {producto.descripcion && (
-              <p className="mt-5 whitespace-pre-line text-sm leading-6 text-brand-gray sm:text-base">
+              <p className="mt-5 max-w-xl whitespace-pre-line text-sm leading-7 text-brand-gray sm:text-base">
                 {producto.descripcion}
               </p>
             )}
@@ -200,7 +200,25 @@ export default async function ProductoDetalle({
                 imagenUrl={producto.imagenUrl}
               />
 
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                <div className="rounded-xl border border-[#ECE8F5] bg-[#F8F6FF] px-2 py-3 text-center">
+                  <p className="text-[11px] font-semibold text-[#1F1B24]">
+                    Envíos disponibles
+                  </p>
+                </div>
 
+                <div className="rounded-xl border border-[#ECE8F5] bg-[#F8F6FF] px-2 py-3 text-center">
+                  <p className="text-[11px] font-semibold text-[#1F1B24]">
+                    Pago seguro
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-[#ECE8F5] bg-[#F8F6FF] px-2 py-3 text-center">
+                  <p className="text-[11px] font-semibold text-[#1F1B24]">
+                    Asesoría WhatsApp
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
