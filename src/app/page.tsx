@@ -506,7 +506,7 @@ export default async function Home({
               {aplicacionesDestacadas.map((a) => (
                 <Link
                   key={a.id}
-                  href="/aplicaciones-cds"
+                  href={`/aplicaciones-cds?aplicacion=${a.id}`}
                   className="group overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 transition hover:-translate-y-0.5 hover:shadow-sm"
                 >
                   <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">

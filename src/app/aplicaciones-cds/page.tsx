@@ -5,7 +5,17 @@ import AplicacionesCdsGrid from "@/components/AplicacionesCdsGrid";
 
 export const dynamic = "force-dynamic";
 
-export default async function AplicacionesCdsPage() {
+type SearchParams = Promise<{
+  aplicacion?: string;
+}>;
+
+export default async function AplicacionesCdsPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const { aplicacion } = await searchParams;
+
   const [aplicaciones, totalSucursales] = await Promise.all([
     prisma.aplicacionCds.findMany({
       where: { activo: true },
@@ -53,7 +63,10 @@ export default async function AplicacionesCdsPage() {
             <p className="text-sm mt-1">Vuelve pronto.</p>
           </div>
         ) : (
-          <AplicacionesCdsGrid aplicaciones={aplicaciones} />
+          <AplicacionesCdsGrid
+            aplicaciones={aplicaciones}
+            aplicacionInicialId={aplicacion}
+          />
         )}
       </main>
 

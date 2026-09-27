@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Media from "./Media";
 import Modal from "./Modal";
 import { esVideo } from "@/lib/media";
@@ -24,13 +24,28 @@ type Aplicacion = {
 
 export default function AplicacionesCdsGrid({
   aplicaciones,
+  aplicacionInicialId,
 }: {
   aplicaciones: Aplicacion[];
+  aplicacionInicialId?: string;
 }) {
   const [seleccionada, setSeleccionada] = useState<Aplicacion | null>(null);
   const [expandido, setExpandido] = useState(false);
   const [busqueda, setBusqueda] = useState("");
   const [soloConProtocolo, setSoloConProtocolo] = useState(false);
+
+  useEffect(() => {
+    if (!aplicacionInicialId) return;
+
+    const aplicacion = aplicaciones.find(
+      (item) => item.id === aplicacionInicialId
+    );
+
+    if (aplicacion) {
+      setSeleccionada(aplicacion);
+      setExpandido(false);
+    }
+  }, [aplicacionInicialId, aplicaciones]);
 
   const aplicacionesFiltradas = useMemo(() => {
     const normalizar = (texto: string) =>
