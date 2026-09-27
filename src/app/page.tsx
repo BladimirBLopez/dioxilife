@@ -7,6 +7,7 @@ import BotonWhatsapp from "@/components/BotonWhatsapp";
 import SeccionSucursales from "@/components/SeccionSucursales";
 import AgregarCarritoButton from "@/components/AgregarCarritoButton";
 import ResenaForm from "@/components/ResenaForm";
+import { formatearPrecio } from "@/lib/precio";
 
 export const dynamic = "force-dynamic";
 
@@ -483,15 +484,15 @@ export default async function Home({
                         {p.enPromocion && p.precioPromocion ? (
                           <>
                             <p className="text-xs text-gray-400 line-through">
-                              Bs {Number(p.precio).toFixed(2)}
+                              Bs {formatearPrecio(p.precio)}
                             </p>
                             <p className="text-base font-bold text-brand-pink">
-                              Bs {Number(p.precioPromocion).toFixed(2)}
+                              Bs {formatearPrecio(p.precioPromocion)}
                             </p>
                           </>
                         ) : (
                           <p className="text-base font-bold text-brand-blue">
-                            Bs {Number(p.precio).toFixed(2)}
+                            Bs {formatearPrecio(p.precio)}
                           </p>
                         )}
                       </div>

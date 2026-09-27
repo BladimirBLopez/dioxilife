@@ -7,6 +7,7 @@ import ResenaForm from "@/components/ResenaForm";
 import InformacionProductoPublica from "@/components/InformacionProductoPublica";
 import SiteHeader from "@/components/SiteHeader";
 import ProductoGaleria from "@/components/ProductoGaleria";
+import { formatearPrecio } from "@/lib/precio";
 
 export const dynamic = "force-dynamic";
 
@@ -107,15 +108,15 @@ export default async function ProductoDetalle({
                 {producto.enPromocion && producto.precioPromocion ? (
                   <div className="flex items-baseline gap-2">
                     <p className="text-gray-400 line-through text-lg">
-                      Bs {Number(producto.precio).toFixed(2)}
+                      Bs {formatearPrecio(producto.precio)}
                     </p>
                     <p className="text-brand-pink font-bold text-2xl">
-                      Bs {Number(producto.precioPromocion).toFixed(2)}
+                      Bs {formatearPrecio(producto.precioPromocion)}
                     </p>
                   </div>
                 ) : (
                   <p className="text-brand-blue font-bold text-2xl">
-                    Bs {Number(producto.precio).toFixed(2)}
+                    Bs {formatearPrecio(producto.precio)}
                   </p>
                 )}
               </div>

@@ -5,6 +5,7 @@ import Image from "next/image";
 import Modal from "./Modal";
 import { useCart } from "@/lib/cart-context";
 import { NUMERO_WHATSAPP } from "@/lib/constants";
+import { formatearPrecio } from "@/lib/precio";
 
 type PedidoCreado = {
   codigo: string;
@@ -161,7 +162,7 @@ export default function CartDrawer() {
   function armarMensaje(pedido: PedidoCreado) {
     const lineas = pedido.detalles.map((detalle) => {
       const precioTexto = detalle.mostrarPrecio
-        ? `Bs ${Number(detalle.subtotal).toFixed(2)}`
+        ? `Bs ${formatearPrecio(detalle.subtotal)}`
         : "a consultar";
 
       return `${detalle.cantidad}x ${detalle.nombreProducto} - ${precioTexto}`;
@@ -174,7 +175,7 @@ export default function CartDrawer() {
     const total = Number(pedido.total);
 
     if (total > 0) {
-      mensaje += `\n\nTotal registrado: Bs ${total.toFixed(2)}`;
+      mensaje += `\n\nTotal registrado: Bs ${formatearPrecio(total)}`;
 
       if (pedido.requiereCotizacion) {
         mensaje += " (más productos a consultar)";
@@ -328,7 +329,7 @@ export default function CartDrawer() {
                     </p>
                     <p className="text-xs text-brand-gray mt-0.5">
                       {i.mostrarPrecio
-                        ? `Bs ${i.precio.toFixed(2)} c/u`
+                        ? `Bs ${formatearPrecio(i.precio)} c/u`
                         : "A consultar"}
                     </p>
                   </div>
@@ -370,7 +371,7 @@ export default function CartDrawer() {
               <div className="border-t border-gray-100 pt-3">
                 {totalPrecio > 0 && (
                   <p className="text-sm font-semibold text-right text-[#1F1B24]">
-                    Total: Bs {totalPrecio.toFixed(2)}
+                    Total: Bs {formatearPrecio(totalPrecio)}
                     {tieneItemsAConsultar && (
                       <span className="block text-xs font-normal text-brand-gray">
                         + productos a consultar
