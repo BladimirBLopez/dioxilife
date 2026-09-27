@@ -91,7 +91,7 @@ export default function InformacionProductoPublica({
   return (
     <div className="mt-8 space-y-6">
       {destacadas.length > 0 && (
-        <section className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_4px_18px_rgba(0,0,0,0.035)] sm:p-6">
+        <section className="rounded-3xl border border-[#F0DDEA] bg-[#FFF7FC] p-5 shadow-[0_6px_20px_rgba(145,76,125,0.06)] sm:p-6">
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
             Información destacada
           </p>
@@ -132,7 +132,7 @@ export default function InformacionProductoPublica({
       )}
 
       {ingredientes.length > 0 && (
-        <section className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_4px_18px_rgba(0,0,0,0.035)] sm:p-6">
+        <section className="rounded-3xl border border-[#E9E4F2] bg-white p-5 shadow-[0_6px_20px_rgba(70,42,120,0.05)] sm:p-6">
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
             Composición e ingredientes
           </p>
@@ -167,7 +167,7 @@ export default function InformacionProductoPublica({
       )}
 
       {preguntas.length > 0 && (
-        <section className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_4px_18px_rgba(0,0,0,0.035)] sm:p-6">
+        <section className="rounded-3xl border border-[#E9E4F2] bg-white p-5 shadow-[0_6px_20px_rgba(70,42,120,0.05)] sm:p-6">
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
             Preguntas frecuentes
           </p>
@@ -216,7 +216,7 @@ export default function InformacionProductoPublica({
       )}
 
       {videos.length > 0 && (
-        <section className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_4px_18px_rgba(0,0,0,0.035)] sm:p-6">
+        <section className="rounded-3xl border border-[#E9E4F2] bg-[#F8F6FF] p-5 shadow-[0_6px_20px_rgba(70,42,120,0.05)] sm:p-6">
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
             Videos
           </p>
@@ -280,7 +280,7 @@ export default function InformacionProductoPublica({
       )}
 
       {documentos.length > 0 && (
-        <section className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_4px_18px_rgba(0,0,0,0.035)] sm:p-6">
+        <section className="rounded-3xl border border-[#E9E4F2] bg-white p-5 shadow-[0_6px_20px_rgba(70,42,120,0.05)] sm:p-6">
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
             Documentación
           </p>
