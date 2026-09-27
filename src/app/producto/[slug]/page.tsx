@@ -8,6 +8,7 @@ import InformacionProductoPublica from "@/components/InformacionProductoPublica"
 import SiteHeader from "@/components/SiteHeader";
 import ProductoGaleria from "@/components/ProductoGaleria";
 import { formatearPrecio } from "@/lib/precio";
+import { NUMERO_WHATSAPP } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -88,6 +89,18 @@ export default async function ProductoDetalle({
         })),
       ].map((protocolo) => [protocolo.id, protocolo])
     ).values()
+  );
+
+  const presentacion =
+    producto.nombre.match(/\b\d+(?:[.,]\d+)?\s*(?:ml|mg|g|kg|l)\b/i)?.[0] ||
+    null;
+
+  const concentracion =
+    producto.nombre.match(/\b\d+(?:[.,]\d+)?\s*(?:ppm|%)\b/i)?.[0] ||
+    null;
+
+  const mensajeWhatsapp = encodeURIComponent(
+    `Hola, quiero información sobre ${producto.nombre}.`
   );
 
   return (
@@ -178,6 +191,83 @@ export default async function ProductoDetalle({
             </div>
           </div>
         </div>
+
+        <section className="mt-8">
+          <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_4px_18px_rgba(0,0,0,0.035)] sm:p-6">
+            <div className="mb-5">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
+                Detalles
+              </p>
+              <h2 className="mt-1 text-xl font-bold text-[#1F1B24]">
+                Información del producto
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-2xl bg-gray-50 p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
+                  Categoría
+                </p>
+                <p className="mt-1 text-sm font-bold text-[#1F1B24]">
+                  {producto.categoria.nombre}
+                </p>
+              </div>
+
+              {presentacion && (
+                <div className="rounded-2xl bg-gray-50 p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
+                    Presentación
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-[#1F1B24]">
+                    {presentacion}
+                  </p>
+                </div>
+              )}
+
+              {concentracion && (
+                <div className="rounded-2xl bg-gray-50 p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
+                    Concentración
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-[#1F1B24]">
+                    {concentracion}
+                  </p>
+                </div>
+              )}
+
+              <div className="rounded-2xl bg-gray-50 p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
+                  Protocolos
+                </p>
+                <p className="mt-1 text-sm font-bold text-[#1F1B24]">
+                  {protocolosRelacionados.length > 0
+                    ? `${protocolosRelacionados.length} relacionado${
+                        protocolosRelacionados.length === 1 ? "" : "s"
+                      }`
+                    : "Sin relación"}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+              <a
+                href={`https://wa.me/${NUMERO_WHATSAPP}?text=${mensajeWhatsapp}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#25D366]/30 bg-[#25D366]/10 px-4 py-3 text-sm font-semibold text-[#128C4A] transition hover:bg-[#25D366]/15"
+              >
+                Consultar por WhatsApp
+              </a>
+
+              <Link
+                href="/#productos"
+                className="inline-flex flex-1 items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-[#1F1B24] transition hover:bg-gray-50"
+              >
+                Ver más productos
+              </Link>
+            </div>
+          </div>
+        </section>
 
         {protocolosRelacionados.length > 0 && (
           <section className="mt-10">
