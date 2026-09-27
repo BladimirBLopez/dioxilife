@@ -1383,7 +1383,7 @@ export default function ProductosPage() {
                   className="admin-input"
                   placeholder={
                     nuevaInformacion.tipo === "FAQ"
-                      ? "Ej.: ¿Cómo se consume?"
+                      ? "Ej.: ¿Cómo se almacena?"
                       : "Ej.: Información principal del producto"
                   }
                   required
