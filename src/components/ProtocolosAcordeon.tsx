@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import Media from "./Media";
 import Modal from "./Modal";
 import { esVideo } from "@/lib/media";
@@ -11,6 +12,14 @@ type Protocolo = {
   contenido: string;
   imagenUrl: string | null;
   videoUrl: string | null;
+  productosRelacionados: {
+    producto: {
+      id: string;
+      nombre: string;
+      slug: string;
+      imagenUrl: string | null;
+    };
+  }[];
 };
 
 export default function ProtocolosAcordeon({
@@ -113,6 +122,54 @@ export default function ProtocolosAcordeon({
             >
               {expandido ? "Ver menos" : "Ver más"}
             </button>
+          )}
+
+          {seleccionado.productosRelacionados.length > 0 && (
+            <div className="mt-5 border-t pt-4">
+              <div className="mb-3">
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-brand-pink">
+                  Catálogo
+                </p>
+                <h4 className="mt-1 text-sm font-semibold text-[#1F1B24]">
+                  Productos relacionados
+                </h4>
+              </div>
+
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {seleccionado.productosRelacionados.map(({ producto }) => (
+                  <Link
+                    key={producto.id}
+                    href={`/producto/${producto.slug}`}
+                    className="group flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-2.5 transition hover:bg-white hover:shadow-sm"
+                  >
+                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white">
+                      {producto.imagenUrl ? (
+                        <Media
+                          src={producto.imagenUrl}
+                          alt={producto.nombre}
+                          fill
+                          className="object-contain p-1"
+                          variant="thumb"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-[10px] text-brand-gray">
+                          Sin imagen
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-2 text-sm font-medium leading-snug text-[#1F1B24]">
+                        {producto.nombre}
+                      </p>
+                      <p className="mt-1 text-xs font-semibold text-brand-pink">
+                        Ver producto →
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
           )}
 
           {seleccionado.videoUrl && (

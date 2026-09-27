@@ -15,6 +15,28 @@ export default async function ProtocolosPage({
     prisma.protocolo.findMany({
       where: { activo: true },
       orderBy: { createdAt: "desc" },
+      include: {
+        productosRelacionados: {
+          where: {
+            producto: {
+              activo: true,
+            },
+          },
+          orderBy: {
+            orden: "asc",
+          },
+          include: {
+            producto: {
+              select: {
+                id: true,
+                nombre: true,
+                slug: true,
+                imagenUrl: true,
+              },
+            },
+          },
+        },
+      },
     }),
     prisma.sucursal.count({ where: { activo: true } }),
   ]);
