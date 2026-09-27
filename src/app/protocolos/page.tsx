@@ -36,6 +36,25 @@ export default async function ProtocolosPage({
             },
           },
         },
+        aplicaciones: {
+          where: {
+            aplicacion: {
+              activo: true,
+            },
+          },
+          orderBy: {
+            orden: "asc",
+          },
+          include: {
+            aplicacion: {
+              select: {
+                id: true,
+                nombre: true,
+                imagenUrl: true,
+              },
+            },
+          },
+        },
       },
     }),
     prisma.sucursal.count({ where: { activo: true } }),
