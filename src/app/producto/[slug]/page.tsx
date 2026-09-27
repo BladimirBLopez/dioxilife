@@ -131,7 +131,7 @@ export default async function ProductoDetalle({
     <div className="min-h-screen flex flex-col bg-gray-50">
       <SiteHeader />
 
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-6 sm:py-8">
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 pt-6 pb-28 md:py-8">
         <div className="mb-4">
           <Link
             href="/#productos"
@@ -470,6 +470,31 @@ export default async function ProductoDetalle({
           <ResenaForm productoId={producto.id} />
         </section>
       </main>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 px-3 py-3 shadow-[0_-6px_24px_rgba(0,0,0,0.08)] backdrop-blur md:hidden">
+        <div className="mx-auto grid max-w-6xl grid-cols-[0.9fr_1.4fr] gap-2">
+          <a
+            href={`https://wa.me/${NUMERO_WHATSAPP}?text=${mensajeWhatsapp}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex min-h-11 items-center justify-center rounded-xl border border-[#25D366]/40 bg-[#25D366]/10 px-3 text-sm font-bold text-[#128C4A]"
+          >
+            WhatsApp
+          </a>
+
+          <AgregarCarritoButton
+            id={producto.id}
+            nombre={producto.nombre}
+            precio={
+              producto.enPromocion && producto.precioPromocion
+                ? Number(producto.precioPromocion)
+                : Number(producto.precio)
+            }
+            mostrarPrecio={producto.mostrarPrecio}
+            imagenUrl={producto.imagenUrl}
+          />
+        </div>
+      </div>
 
       <footer className="bg-white border-t py-4 text-center text-xs text-brand-gray">
         © {new Date().getFullYear()} DioxiLife Bolivia
