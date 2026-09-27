@@ -224,16 +224,7 @@ export default async function ProductoDetalle({
               </h2>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-2xl bg-gray-50 p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
-                  Categoría
-                </p>
-                <p className="mt-1 text-sm font-bold text-[#1F1B24]">
-                  {producto.categoria.nombre}
-                </p>
-              </div>
-
+            <div className="grid grid-cols-2 gap-3">
               {presentacion && (
                 <div className="rounded-2xl bg-gray-50 p-4">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
@@ -255,19 +246,6 @@ export default async function ProductoDetalle({
                   </p>
                 </div>
               )}
-
-              <div className="rounded-2xl bg-gray-50 p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
-                  Protocolos
-                </p>
-                <p className="mt-1 text-sm font-bold text-[#1F1B24]">
-                  {protocolosRelacionados.length > 0
-                    ? `${protocolosRelacionados.length} relacionado${
-                        protocolosRelacionados.length === 1 ? "" : "s"
-                      }`
-                    : "Sin relación"}
-                </p>
-              </div>
             </div>
 
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
