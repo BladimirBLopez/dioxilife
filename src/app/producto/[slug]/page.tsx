@@ -208,10 +208,7 @@ export default async function ProductoDetalle({
                 imagenUrl={producto.imagenUrl}
               />
 
-              <InformacionProductoPublica
-                nombreProducto={producto.nombre}
-                informaciones={producto.informacionProducto}
-              />
+
             </div>
           </div>
         </div>
@@ -292,6 +289,11 @@ export default async function ProductoDetalle({
             </div>
           </div>
         </section>
+
+        <InformacionProductoPublica
+          nombreProducto={producto.nombre}
+          informaciones={producto.informacionProducto}
+        />
 
         {protocolosRelacionados.length > 0 && (
           <section className="mt-10">

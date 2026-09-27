@@ -1,6 +1,6 @@
 "use client";
 
-import Modal from "@/components/Modal";
+import { useState } from "react";
 
 type TipoInformacion =
   | "BENEFICIO"
@@ -22,23 +22,6 @@ type Props = {
   nombreProducto: string;
   informaciones: Informacion[];
 };
-
-import { useState } from "react";
-
-function nombreTipo(tipo: TipoInformacion) {
-  switch (tipo) {
-    case "BENEFICIO":
-      return "Información destacada";
-    case "VIDEO":
-      return "Videos";
-    case "INGREDIENTE":
-      return "Ingredientes";
-    case "FAQ":
-      return "Preguntas frecuentes";
-    case "DOCUMENTO":
-      return "Información adicional";
-  }
-}
 
 function obtenerYoutubeEmbed(url: string) {
   try {
@@ -79,111 +62,268 @@ export default function InformacionProductoPublica({
   nombreProducto,
   informaciones,
 }: Props) {
-  const [abierto, setAbierto] = useState(false);
+  const [faqAbierta, setFaqAbierta] = useState<string | null>(null);
 
   if (informaciones.length === 0) {
     return null;
   }
 
-  const tipos: TipoInformacion[] = [
-    "BENEFICIO",
-    "INGREDIENTE",
-    "VIDEO",
-    "FAQ",
-    "DOCUMENTO",
-  ];
+  const destacadas = informaciones.filter(
+    (info) => info.tipo === "BENEFICIO"
+  );
+
+  const ingredientes = informaciones.filter(
+    (info) => info.tipo === "INGREDIENTE"
+  );
+
+  const preguntas = informaciones.filter(
+    (info) => info.tipo === "FAQ"
+  );
+
+  const videos = informaciones.filter(
+    (info) => info.tipo === "VIDEO"
+  );
+
+  const documentos = informaciones.filter(
+    (info) => info.tipo === "DOCUMENTO"
+  );
 
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => setAbierto(true)}
-        className="w-full mt-3 rounded-xl border-2 border-brand-blue text-brand-blue font-semibold py-3 px-4 hover:bg-brand-blue/5 transition-colors"
-      >
-        Conoce más del producto
-      </button>
+    <div className="mt-8 space-y-6">
+      {destacadas.length > 0 && (
+        <section className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_4px_18px_rgba(0,0,0,0.035)] sm:p-6">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
+            Información destacada
+          </p>
 
-      {abierto && (
-        <Modal
-          title={`Conoce más: ${nombreProducto}`}
-          onClose={() => setAbierto(false)}
-        >
-          <div className="space-y-6">
-            {tipos.map((tipo) => {
-              const items = informaciones.filter(
-                (info) => info.tipo === tipo
-              );
+          <div className="mt-4 space-y-3">
+            {destacadas.map((info) => (
+              <div
+                key={info.id}
+                className="flex items-start gap-3"
+              >
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-pink text-[11px] font-bold text-white">
+                  ✓
+                </span>
 
-              if (items.length === 0) return null;
-
-              return (
-                <section key={tipo}>
-                  <h3 className="text-base font-bold text-brand-blue mb-3">
-                    {nombreTipo(tipo)}
+                <div className="min-w-0">
+                  <h3 className="text-sm font-semibold text-[#1F1B24]">
+                    {info.titulo}
                   </h3>
 
-                  <div className="space-y-3">
-                    {items.map((info) => {
-                      const youtube =
-                        info.videoUrl && tipo === "VIDEO"
-                          ? obtenerYoutubeEmbed(info.videoUrl)
-                          : null;
+                  {info.contenido && (
+                    <p className="mt-1 whitespace-pre-line text-sm leading-6 text-brand-gray">
+                      {info.contenido}
+                    </p>
+                  )}
 
-                      return (
-                        <div
-                          key={info.id}
-                          className="rounded-xl border border-gray-100 bg-gray-50 p-4"
-                        >
-                          <h4 className="font-semibold text-[#1F1B24]">
-                            {info.titulo}
-                          </h4>
+                  {info.imagenUrl && (
+                    <img
+                      src={info.imagenUrl}
+                      alt={info.titulo}
+                      className="mt-3 max-h-56 w-full rounded-xl bg-gray-50 object-contain"
+                    />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
-                          {info.contenido && (
-                            <p className="text-sm text-brand-gray mt-2 whitespace-pre-line">
-                              {info.contenido}
-                            </p>
-                          )}
+      {ingredientes.length > 0 && (
+        <section className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_4px_18px_rgba(0,0,0,0.035)] sm:p-6">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
+            Composición e ingredientes
+          </p>
 
-                          {info.imagenUrl && (
-                            <img
-                              src={info.imagenUrl}
-                              alt={info.titulo}
-                              className="w-full max-h-56 object-contain rounded-xl mt-3 bg-white"
-                            />
-                          )}
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {ingredientes.map((info) => (
+              <div
+                key={info.id}
+                className="rounded-2xl bg-gray-50 p-4"
+              >
+                <h3 className="text-sm font-semibold text-[#1F1B24]">
+                  {info.titulo}
+                </h3>
 
-                          {youtube && (
-                            <div className="mt-3 aspect-video rounded-xl overflow-hidden bg-black">
-                              <iframe
-                                src={youtube}
-                                title={info.titulo}
-                                className="w-full h-full"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                              />
-                            </div>
-                          )}
+                {info.contenido && (
+                  <p className="mt-1 whitespace-pre-line text-sm leading-6 text-brand-gray">
+                    {info.contenido}
+                  </p>
+                )}
 
-                          {info.videoUrl && !youtube && (
-                            <a
-                              href={info.videoUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-block mt-3 text-sm text-brand-pink font-semibold hover:underline"
-                            >
-                              Ver video
-                            </a>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </section>
+                {info.imagenUrl && (
+                  <img
+                    src={info.imagenUrl}
+                    alt={info.titulo}
+                    className="mt-3 max-h-44 w-full rounded-xl bg-white object-contain"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {preguntas.length > 0 && (
+        <section className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_4px_18px_rgba(0,0,0,0.035)] sm:p-6">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
+            Preguntas frecuentes
+          </p>
+
+          <div className="mt-4 space-y-2">
+            {preguntas.map((info) => {
+              const abierta = faqAbierta === info.id;
+
+              return (
+                <div
+                  key={info.id}
+                  className="overflow-hidden rounded-xl border border-gray-100"
+                >
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFaqAbierta(abierta ? null : info.id)
+                    }
+                    className="flex w-full items-center justify-between gap-3 bg-white px-4 py-3 text-left"
+                  >
+                    <span className="text-sm font-semibold text-[#1F1B24]">
+                      {info.titulo}
+                    </span>
+
+                    <span
+                      className={`text-xl leading-none text-brand-pink transition-transform ${
+                        abierta ? "rotate-45" : ""
+                      }`}
+                    >
+                      +
+                    </span>
+                  </button>
+
+                  {abierta && info.contenido && (
+                    <div className="border-t border-gray-100 bg-gray-50 px-4 py-3">
+                      <p className="whitespace-pre-line text-sm leading-6 text-brand-gray">
+                        {info.contenido}
+                      </p>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
-        </Modal>
+        </section>
       )}
-    </>
+
+      {videos.length > 0 && (
+        <section className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_4px_18px_rgba(0,0,0,0.035)] sm:p-6">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
+            Videos
+          </p>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {videos.map((info) => {
+              const youtube = info.videoUrl
+                ? obtenerYoutubeEmbed(info.videoUrl)
+                : null;
+
+              return (
+                <div
+                  key={info.id}
+                  className="overflow-hidden rounded-2xl border border-gray-100"
+                >
+                  {youtube ? (
+                    <div className="aspect-video bg-black">
+                      <iframe
+                        src={youtube}
+                        title={`${info.titulo} - ${nombreProducto}`}
+                        className="h-full w-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  ) : info.imagenUrl ? (
+                    <img
+                      src={info.imagenUrl}
+                      alt={info.titulo}
+                      className="aspect-video w-full bg-gray-50 object-contain"
+                    />
+                  ) : null}
+
+                  <div className="p-4">
+                    <h3 className="text-sm font-semibold text-[#1F1B24]">
+                      {info.titulo}
+                    </h3>
+
+                    {info.contenido && (
+                      <p className="mt-1 text-sm leading-6 text-brand-gray">
+                        {info.contenido}
+                      </p>
+                    )}
+
+                    {info.videoUrl && !youtube && (
+                      <a
+                        href={info.videoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-block text-sm font-semibold text-brand-pink"
+                      >
+                        Ver video →
+                      </a>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {documentos.length > 0 && (
+        <section className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_4px_18px_rgba(0,0,0,0.035)] sm:p-6">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
+            Documentación
+          </p>
+
+          <div className="mt-4 space-y-3">
+            {documentos.map((info) => (
+              <div
+                key={info.id}
+                className="rounded-2xl bg-gray-50 p-4"
+              >
+                <h3 className="text-sm font-semibold text-[#1F1B24]">
+                  {info.titulo}
+                </h3>
+
+                {info.contenido && (
+                  <p className="mt-1 whitespace-pre-line text-sm leading-6 text-brand-gray">
+                    {info.contenido}
+                  </p>
+                )}
+
+                {info.imagenUrl && (
+                  <img
+                    src={info.imagenUrl}
+                    alt={info.titulo}
+                    className="mt-3 max-h-56 w-full rounded-xl bg-white object-contain"
+                  />
+                )}
+
+                {info.videoUrl && (
+                  <a
+                    href={info.videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-block text-sm font-semibold text-brand-pink"
+                  >
+                    Ver documento →
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
   );
 }
