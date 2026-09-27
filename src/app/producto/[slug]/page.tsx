@@ -187,7 +187,7 @@ export default async function ProductoDetalle({
               </p>
             )}
 
-            <div className="mt-7">
+            <div className="mt-7 hidden md:block">
               <AgregarCarritoButton
                 id={producto.id}
                 nombre={producto.nombre}
