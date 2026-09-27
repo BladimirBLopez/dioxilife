@@ -1358,7 +1358,7 @@ export default function ProductosPage() {
                   }
                   className="admin-input"
                 >
-                  <option value="BENEFICIO">Beneficio</option>
+                  <option value="BENEFICIO">Información destacada</option>
                   <option value="VIDEO">Video</option>
                   <option value="INGREDIENTE">Ingrediente</option>
                   <option value="FAQ">Pregunta frecuente</option>
@@ -1384,7 +1384,7 @@ export default function ProductosPage() {
                   placeholder={
                     nuevaInformacion.tipo === "FAQ"
                       ? "Ej.: ¿Cómo se consume?"
-                      : "Ej.: Beneficios principales"
+                      : "Ej.: Información principal del producto"
                   }
                   required
                 />
@@ -1501,7 +1501,7 @@ export default function ProductosPage() {
                         <div>
                           <span className="text-[10px] font-bold text-brand-pink">
                             {info.tipo === "BENEFICIO"
-                              ? "BENEFICIO"
+                              ? "INFORMACIÓN DESTACADA"
                               : info.tipo === "VIDEO"
                                 ? "VIDEO"
                                 : info.tipo === "INGREDIENTE"

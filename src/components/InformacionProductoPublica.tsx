@@ -28,7 +28,7 @@ import { useState } from "react";
 function nombreTipo(tipo: TipoInformacion) {
   switch (tipo) {
     case "BENEFICIO":
-      return "Beneficios";
+      return "Información destacada";
     case "VIDEO":
       return "Videos";
     case "INGREDIENTE":
