@@ -26,6 +26,23 @@ export default async function ProductoDetalle({
         where: { activo: true },
         orderBy: { createdAt: "asc" },
       },
+      protocolosRelacionados: {
+        where: {
+          protocolo: {
+            activo: true,
+          },
+        },
+        orderBy: { orden: "asc" },
+        include: {
+          protocolo: {
+            select: {
+              id: true,
+              titulo: true,
+              imagenUrl: true,
+            },
+          },
+        },
+      },
       informacionProducto: {
         where: { activo: true },
         orderBy: { orden: "asc" },
@@ -59,6 +76,19 @@ export default async function ProductoDetalle({
     where: { productoId: producto.id, aprobado: true },
     orderBy: { createdAt: "desc" },
   });
+
+  const protocolosRelacionados = Array.from(
+    new Map(
+      [
+        ...producto.protocolosRelacionados.map(({ protocolo }) => protocolo),
+        ...producto.protocolos.map((protocolo) => ({
+          id: protocolo.id,
+          titulo: protocolo.titulo,
+          imagenUrl: protocolo.imagenUrl,
+        })),
+      ].map((protocolo) => [protocolo.id, protocolo])
+    ).values()
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -149,34 +179,65 @@ export default async function ProductoDetalle({
           </div>
         </div>
 
-        {producto.protocolos.length > 0 && (
+        {protocolosRelacionados.length > 0 && (
           <section className="mt-10">
-            <h2 className="text-xl font-bold text-brand-blue mb-4">
-              Modo de uso / Protocolos
-            </h2>
-            <div className="space-y-4">
-              {producto.protocolos.map((prot) => (
-                <div
+            <div className="mb-4">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
+                Contenido relacionado
+              </p>
+              <h2 className="mt-1 text-xl font-bold text-[#1F1B24]">
+                Protocolos relacionados
+              </h2>
+              <p className="mt-1 text-sm text-brand-gray">
+                Consulta los protocolos asociados a este producto.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {protocolosRelacionados.map((prot) => (
+                <Link
                   key={prot.id}
-                  className="bg-white rounded-xl shadow-sm p-4 flex gap-4"
+                  href={`/protocolos?protocolo=${prot.id}`}
+                  className="group flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3.5 shadow-[0_3px_14px_rgba(0,0,0,0.035)] transition hover:-translate-y-0.5 hover:shadow-[0_6px_18px_rgba(0,0,0,0.06)]"
                 >
-                  {prot.imagenUrl && (
-                    <div className="w-20 h-20 shrink-0 relative rounded-lg overflow-hidden bg-gray-100">
+                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-violet-50">
+                    {prot.imagenUrl ? (
                       <Image
                         src={prot.imagenUrl}
                         alt={prot.titulo}
                         fill
-                        className="object-cover"
+                        className="object-cover transition duration-300 group-hover:scale-[1.03]"
                       />
-                    </div>
-                  )}
-                  <div>
-                    <h3 className="font-semibold">{prot.titulo}</h3>
-                    <p className="text-sm text-brand-gray whitespace-pre-line mt-1">
-                      {prot.contenido}
+                    ) : (
+                      <div className="flex h-full items-center justify-center">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="h-6 w-6 text-violet-500"
+                        >
+                          <rect x="5" y="4" width="14" height="17" rx="2" />
+                          <path d="M9 4.5V3h6v1.5" />
+                          <path d="M9 10h6M9 14h6M9 18h4" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="line-clamp-2 text-sm font-semibold leading-snug text-[#1F1B24]">
+                      {prot.titulo}
+                    </p>
+                    <p className="mt-1 text-xs font-semibold text-brand-pink">
+                      Ver protocolo
                     </p>
                   </div>
-                </div>
+
+                  <span className="shrink-0 text-lg text-brand-gray/50 transition group-hover:translate-x-0.5 group-hover:text-brand-pink">
+                    ›
+                  </span>
+                </Link>
               ))}
             </div>
           </section>
