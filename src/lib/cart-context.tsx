@@ -111,7 +111,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       {children}
 
       {toast && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-brand-blue text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg toast-carrito">
+        <div className="fixed left-1/2 top-20 z-50 flex -translate-x-1/2 items-center gap-2 rounded-2xl border border-white/10 bg-[#24108C]/95 px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(36,16,140,0.25)] backdrop-blur toast-carrito">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="w-4 h-4 shrink-0">
             <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>

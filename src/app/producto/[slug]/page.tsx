@@ -408,28 +408,41 @@ export default async function ProductoDetalle({
         </section>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 px-3 py-3 shadow-[0_-6px_24px_rgba(0,0,0,0.08)] backdrop-blur md:hidden">
-        <div className="mx-auto grid max-w-6xl grid-cols-[0.9fr_1.4fr] gap-2">
-          <a
-            href={`https://wa.me/${NUMERO_WHATSAPP}?text=${mensajeWhatsapp}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex min-h-11 items-center justify-center rounded-xl border border-[#25D366]/40 bg-[#25D366]/10 px-3 text-sm font-bold text-[#128C4A]"
-          >
-            WhatsApp
-          </a>
+      <div className="fixed inset-x-0 bottom-0 z-40 px-3 pb-3 md:hidden">
+        <div className="mx-auto max-w-md rounded-2xl border border-gray-200/80 bg-white/95 p-2 shadow-[0_-4px_24px_rgba(0,0,0,0.10)] backdrop-blur-xl">
+          <div className="grid grid-cols-[0.9fr_1.4fr] gap-2">
+            <a
+              href={`https://wa.me/${NUMERO_WHATSAPP}?text=${mensajeWhatsapp}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#25D366]/25 bg-[#25D366]/10 px-3 text-sm font-bold text-[#128C4A] transition active:scale-[0.98]"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="h-4 w-4"
+              >
+                <path d="M21 11.5a8.4 8.4 0 0 1-9 8.5 9.4 9.4 0 0 1-4-.9L3 20l1-4.3a8.5 8.5 0 1 1 17-4.2Z" />
+              </svg>
+              WhatsApp
+            </a>
 
-          <AgregarCarritoButton
-            id={producto.id}
-            nombre={producto.nombre}
-            precio={
-              producto.enPromocion && producto.precioPromocion
-                ? Number(producto.precioPromocion)
-                : Number(producto.precio)
-            }
-            mostrarPrecio={producto.mostrarPrecio}
-            imagenUrl={producto.imagenUrl}
-          />
+            <div className="[&_button]:min-h-12 [&_button]:rounded-xl [&_button]:text-sm [&_button]:font-bold">
+              <AgregarCarritoButton
+                id={producto.id}
+                nombre={producto.nombre}
+                precio={
+                  producto.enPromocion && producto.precioPromocion
+                    ? Number(producto.precioPromocion)
+                    : Number(producto.precio)
+                }
+                mostrarPrecio={producto.mostrarPrecio}
+                imagenUrl={producto.imagenUrl}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
