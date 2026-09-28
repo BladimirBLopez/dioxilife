@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import SiteHeader from "@/components/SiteHeader";
 import BotonWhatsapp from "@/components/BotonWhatsapp";
+import CompartirExperienciaTestimonios from "@/components/CompartirExperienciaTestimonios";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,13 @@ export default async function TestimoniosPage({
 }) {
   const { aplicacion } = await searchParams;
 
-  const [aplicaciones, resenas, totalSucursales] = await Promise.all([
+  const [
+    aplicaciones,
+    aplicacionesFormulario,
+    productos,
+    resenas,
+    totalSucursales,
+  ] = await Promise.all([
     prisma.aplicacionCds.findMany({
       where: {
         activo: true,
@@ -45,6 +52,32 @@ export default async function TestimoniosPage({
             },
           },
         },
+      },
+    }),
+
+    prisma.aplicacionCds.findMany({
+      where: {
+        activo: true,
+      },
+      orderBy: {
+        nombre: "asc",
+      },
+      select: {
+        id: true,
+        nombre: true,
+      },
+    }),
+
+    prisma.producto.findMany({
+      where: {
+        activo: true,
+      },
+      orderBy: {
+        nombre: "asc",
+      },
+      select: {
+        id: true,
+        nombre: true,
       },
     }),
 
@@ -109,6 +142,14 @@ export default async function TestimoniosPage({
       </section>
 
       <main className="mx-auto w-full max-w-6xl px-4 py-8">
+        {aplicacionesFormulario.length > 0 && (
+          <CompartirExperienciaTestimonios
+            aplicaciones={aplicacionesFormulario}
+            productos={productos}
+            aplicacionInicialId={aplicacion}
+          />
+        )}
+
         {aplicaciones.length > 0 && (
           <section>
             <div className="mb-4">
@@ -219,11 +260,6 @@ export default async function TestimoniosPage({
                     <div className="min-w-0">
                       <p className="truncate text-sm font-bold text-[#1F1B24]">
                         {r.nombreCliente}
-                      </p>
-                      <p className="mt-0.5 text-xs text-yellow-500">
-                        {r.calificacion !== null
-                          ? "★".repeat(r.calificacion)
-                          : null}
                       </p>
                     </div>
                   </div>
