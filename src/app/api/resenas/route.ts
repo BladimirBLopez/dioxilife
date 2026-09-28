@@ -96,15 +96,40 @@ export async function POST(req: NextRequest) {
   }
 
   const ipHash = obtenerIpHash(req);
+  const hace24Horas = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
   const yaExiste = await prisma.resena.findFirst({
-    where: { ipHash },
-    select: { id: true },
+    where:
+      tipo === "EXPERIENCIA"
+        ? {
+            ipHash,
+            tipo: "EXPERIENCIA",
+            aplicacionId,
+            createdAt: {
+              gte: hace24Horas,
+            },
+          }
+        : {
+            ipHash,
+            tipo: "PRODUCTO",
+            productoId: productoId || null,
+            createdAt: {
+              gte: hace24Horas,
+            },
+          },
+    select: {
+      id: true,
+    },
   });
 
   if (yaExiste) {
     return NextResponse.json(
-      { error: "Ya registramos un testimonio enviado desde este dispositivo. ¡Gracias por tu opinión!" },
+      {
+        error:
+          tipo === "EXPERIENCIA"
+            ? "Ya recibimos una experiencia para esta aplicación durante las últimas 24 horas. Gracias por compartirla."
+            : "Ya recibimos una reseña para este producto durante las últimas 24 horas. Gracias por tu opinión.",
+      },
       { status: 409 }
     );
   }

@@ -16,7 +16,7 @@ export default async function AplicacionesCdsPage({
 }) {
   const { aplicacion } = await searchParams;
 
-  const [aplicaciones, totalSucursales] = await Promise.all([
+  const [aplicaciones, productos, totalSucursales] = await Promise.all([
     prisma.aplicacionCds.findMany({
       where: { activo: true },
       orderBy: { createdAt: "desc" },
@@ -65,6 +65,18 @@ export default async function AplicacionesCdsPage({
         },
       },
     }),
+    prisma.producto.findMany({
+      where: {
+        activo: true,
+      },
+      orderBy: {
+        nombre: "asc",
+      },
+      select: {
+        id: true,
+        nombre: true,
+      },
+    }),
     prisma.sucursal.count({ where: { activo: true } }),
   ]);
 
@@ -88,6 +100,7 @@ export default async function AplicacionesCdsPage({
         ) : (
           <AplicacionesCdsGrid
             aplicaciones={aplicaciones}
+            productos={productos}
             aplicacionInicialId={aplicacion}
           />
         )}

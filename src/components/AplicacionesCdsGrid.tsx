@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Media from "./Media";
 import Modal from "./Modal";
+import ExperienciaForm from "./ExperienciaForm";
 import { esVideo } from "@/lib/media";
 
 type Aplicacion = {
@@ -36,9 +37,14 @@ type Aplicacion = {
 
 export default function AplicacionesCdsGrid({
   aplicaciones,
+  productos,
   aplicacionInicialId,
 }: {
   aplicaciones: Aplicacion[];
+  productos: {
+    id: string;
+    nombre: string;
+  }[];
   aplicacionInicialId?: string;
 }) {
   const [seleccionada, setSeleccionada] = useState<Aplicacion | null>(null);
@@ -46,6 +52,8 @@ export default function AplicacionesCdsGrid({
   const [busqueda, setBusqueda] = useState("");
   const [soloConProtocolo, setSoloConProtocolo] = useState(false);
   const [letra, setLetra] = useState("");
+  const [mostrarFormularioExperiencia, setMostrarFormularioExperiencia] =
+    useState(false);
 
   useEffect(() => {
     if (!aplicacionInicialId) return;
@@ -93,6 +101,7 @@ export default function AplicacionesCdsGrid({
   function abrir(a: Aplicacion) {
     setSeleccionada(a);
     setExpandido(false);
+    setMostrarFormularioExperiencia(false);
   }
 
   const esLarga = (seleccionada?.descripcion?.length || 0) > 220;
@@ -378,6 +387,35 @@ export default function AplicacionesCdsGrid({
               </div>
             </div>
           )}
+
+          <div className="mt-5 border-t border-[#EEEAF5] pt-4">
+            {!mostrarFormularioExperiencia ? (
+              <div className="rounded-2xl border border-[#E9E4F2] bg-gradient-to-br from-[#FFF7FC] to-[#F8F6FF] p-4 text-center">
+                <p className="text-sm font-bold text-[#1F1B24]">
+                  ¿También quieres compartir tu experiencia?
+                </p>
+                <p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-brand-gray">
+                  Tu experiencia puede ayudar a otras personas a conocer
+                  diferentes vivencias de nuestra comunidad.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => setMostrarFormularioExperiencia(true)}
+                  className="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-brand-pink px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 sm:w-auto"
+                >
+                  Compartir mi experiencia
+                </button>
+              </div>
+            ) : (
+              <ExperienciaForm
+                aplicacionId={seleccionada.id}
+                aplicacionNombre={seleccionada.nombre}
+                productos={productos}
+                onCancelar={() => setMostrarFormularioExperiencia(false)}
+              />
+            )}
+          </div>
         </Modal>
       )}
     </>

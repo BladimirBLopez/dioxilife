@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-const CLAVE_LOCALSTORAGE = "dioxilife_resena_enviada";
+import { useState } from "react";
 
 export default function ResenaForm({
   productoId,
@@ -17,16 +15,7 @@ export default function ResenaForm({
   const [sitioWeb, setSitioWeb] = useState(""); // honeypot
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
-  const [yaEnvioAntes, setYaEnvioAntes] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      if (localStorage.getItem(CLAVE_LOCALSTORAGE) === "1") {
-        setYaEnvioAntes(true);
-      }
-    }
-  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,17 +52,11 @@ export default function ResenaForm({
       const data = await res.json().catch(() => null);
 
       if (!res.ok) {
-        if (res.status === 409) {
-          localStorage.setItem(CLAVE_LOCALSTORAGE, "1");
-          setYaEnvioAntes(true);
-        } else {
-          setError(data?.error || "No se pudo enviar tu testimonio");
-        }
+        setError(data?.error || "No se pudo enviar tu reseña");
         setEnviando(false);
         return;
       }
 
-      localStorage.setItem(CLAVE_LOCALSTORAGE, "1");
       setEnviado(true);
     } catch {
       setError("No se pudo conectar con el servidor");
@@ -82,12 +65,10 @@ export default function ResenaForm({
     }
   }
 
-  if (yaEnvioAntes || enviado) {
+  if (enviado) {
     return (
-      <div className="bg-green-50 border border-green-200 text-green-800 rounded-xl p-4 text-sm text-center">
-        {enviado
-          ? "¡Gracias por tu testimonio! Se publicará apenas la revisemos."
-          : "Ya registramos una testimonio tuya. ¡Gracias por compartir tu opinión!"}
+      <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-center text-sm text-green-800">
+        ¡Gracias por tu reseña! Se publicará después de revisarla.
       </div>
     );
   }
