@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import AccionesPedido from "../AccionesPedido";
+import SeguimientoPedido from "@/components/admin/seguimiento/SeguimientoPedido";
 
 function dinero(valor: unknown) {
   return new Intl.NumberFormat("es-BO", {
@@ -140,12 +141,58 @@ export default async function DetallePedidoPage({
             subtotalPV: true,
           },
         },
+
+        seguimientos: {
+          orderBy: {
+            createdAt: "desc",
+          },
+
+          select: {
+            id: true,
+            estado: true,
+            fechaInicioPrevista: true,
+            fechaInicio: true,
+            fechaFinalizado: true,
+            ultimoAccesoAt: true,
+            observacionInterna: true,
+
+            plan: {
+              select: {
+                id: true,
+                nombre: true,
+                duracionDias: true,
+              },
+            },
+          },
+        },
       },
     });
 
   if (!pedido) {
     notFound();
   }
+
+  const planesSeguimiento =
+    await prisma.planSeguimiento.findMany({
+      where: {
+        estado: "ACTIVO",
+        actividades: {
+          some: {
+            activo: true,
+          },
+        },
+      },
+
+      orderBy: {
+        nombre: "asc",
+      },
+
+      select: {
+        id: true,
+        nombre: true,
+        duracionDias: true,
+      },
+    });
 
   return (
     <div className="space-y-6">
@@ -583,6 +630,14 @@ export default async function DetallePedidoPage({
         </div>
 
       </div>
+
+
+      <SeguimientoPedido
+        pedidoId={pedido.id}
+        estadoPedido={pedido.estado}
+        planes={planesSeguimiento}
+        seguimientos={pedido.seguimientos}
+      />
 
 
       <div className="rounded-xl bg-white p-5 shadow">
