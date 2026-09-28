@@ -724,16 +724,25 @@ export default async function Home({
       {/* Testimonios de clientes */}
       <section id="resenas" className="bg-white px-4 py-10">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-6">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
-              Testimonios
-            </p>
-            <h2 className="mt-1 text-xl font-bold text-[#1F1B24] sm:text-2xl">
-              Historias DioxiLife
-            </h2>
-            <p className="mt-1 text-sm text-brand-gray">
-              Experiencias compartidas por nuestra comunidad.
-            </p>
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
+                Testimonios
+              </p>
+              <h2 className="mt-1 text-xl font-bold text-[#1F1B24] sm:text-2xl">
+                Historias DioxiLife
+              </h2>
+              <p className="mt-1 text-sm text-brand-gray">
+                Experiencias compartidas por nuestra comunidad.
+              </p>
+            </div>
+
+            <Link
+              href="/testimonios"
+              className="hidden shrink-0 text-sm font-semibold text-brand-pink transition hover:opacity-80 sm:inline-flex"
+            >
+              Ver todos →
+            </Link>
           </div>
 
           {resenas.length > 0 ? (
