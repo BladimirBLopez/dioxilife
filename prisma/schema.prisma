@@ -176,8 +176,10 @@ model SeguimientoCliente {
 
   estado EstadoSeguimientoCliente @default(PENDIENTE)
 
-  fechaInicio     DateTime?
-  fechaFinalizado DateTime?
+  fechaInicioPrevista DateTime? @db.Date
+  fechaInicio         DateTime?
+  fechaFinalizado     DateTime?
+  observacionInterna  String?
 
   progresos ProgresoActividad[]
 
