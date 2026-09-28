@@ -20,6 +20,18 @@ type Aplicacion = {
       videoUrl: string | null;
     };
   }[];
+  resenas: {
+    id: string;
+    nombreCliente: string;
+    calificacion: number;
+    comentario: string;
+    imagenUrl: string | null;
+    tiempoUso: string | null;
+    producto: {
+      nombre: string;
+      slug: string;
+    } | null;
+  }[];
 };
 
 export default function AplicacionesCdsGrid({
@@ -298,6 +310,68 @@ export default function AplicacionesCdsGrid({
                       Ver protocolo
                     </span>
                   </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {seleccionada.resenas.length > 0 && (
+            <div className="mt-5 border-t pt-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h4 className="text-sm font-semibold text-[#1F1B24]">
+                  Testimonios relacionados
+                </h4>
+                <span className="rounded-full bg-brand-pink/10 px-2 py-1 text-[10px] font-bold text-brand-pink">
+                  {seleccionada.resenas.length}
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                {seleccionada.resenas.map((r) => (
+                  <div
+                    key={r.id}
+                    className="rounded-2xl border border-[#E9E4F2] bg-[#FAF9FC] p-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      {r.imagenUrl ? (
+                        <img
+                          src={r.imagenUrl}
+                          alt={r.nombreCliente}
+                          className="h-10 w-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-pink/10 text-sm font-bold text-brand-pink">
+                          {r.nombreCliente.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-[#1F1B24]">
+                          {r.nombreCliente}
+                        </p>
+                        <p className="text-xs text-yellow-500">
+                          {"★".repeat(r.calificacion)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="mt-3 text-sm leading-6 text-brand-gray">
+                      “{r.comentario}”
+                    </p>
+
+                    {r.producto && (
+                      <a
+                        href={`/producto/${r.producto.slug}`}
+                        className="mt-3 inline-flex text-xs font-semibold text-brand-pink"
+                      >
+                        Producto relacionado: {r.producto.nombre} →
+                      </a>
+                    )}
+
+                    <p className="mt-2 text-[10px] text-[#8A8790]">
+                      Experiencia personal compartida por un cliente.
+                    </p>
+                  </div>
                 ))}
               </div>
             </div>

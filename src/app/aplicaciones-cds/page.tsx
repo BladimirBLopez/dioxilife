@@ -40,6 +40,28 @@ export default async function AplicacionesCdsPage({
             },
           },
         },
+        resenas: {
+          where: {
+            aprobado: true,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+          select: {
+            id: true,
+            nombreCliente: true,
+            calificacion: true,
+            comentario: true,
+            imagenUrl: true,
+            tiempoUso: true,
+            producto: {
+              select: {
+                nombre: true,
+                slug: true,
+              },
+            },
+          },
+        },
       },
     }),
     prisma.sucursal.count({ where: { activo: true } }),
