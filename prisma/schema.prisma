@@ -81,6 +81,7 @@ model Protocolo {
   producto              Producto?             @relation(fields: [productoId], references: [id])
   productosRelacionados ProductoProtocolo[]
   aplicaciones          AplicacionProtocolo[]
+  planesSeguimiento     PlanSeguimiento[]
   activo                Boolean               @default(true)
   createdAt             DateTime              @default(now())
   updatedAt             DateTime              @updatedAt
@@ -96,6 +97,119 @@ model ProductoProtocolo {
 
   @@id([productoId, protocoloId])
   @@index([protocoloId])
+}
+
+enum EstadoPlanSeguimiento {
+  BORRADOR
+  ACTIVO
+  INACTIVO
+}
+
+enum EstadoSeguimientoCliente {
+  PENDIENTE
+  ACTIVO
+  PAUSADO
+  COMPLETADO
+  CANCELADO
+}
+
+model PlanSeguimiento {
+  id           String                @id @default(cuid())
+  nombre       String
+  descripcion  String?
+  duracionDias Int
+  estado       EstadoPlanSeguimiento @default(BORRADOR)
+
+  protocoloId String?
+  protocolo   Protocolo? @relation(fields: [protocoloId], references: [id], onDelete: SetNull)
+
+  actividades  ActividadPlan[]
+  seguimientos SeguimientoCliente[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([protocoloId])
+  @@index([estado])
+}
+
+model ActividadPlan {
+  id String @id @default(cuid())
+
+  planId String
+  plan   PlanSeguimiento @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  titulo      String
+  descripcion String?
+  momento     String?
+  hora        String?
+
+  diaInicio Int     @default(1)
+  diaFin    Int?
+  orden     Int     @default(0)
+  activo    Boolean @default(true)
+
+  progresos ProgresoActividad[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([planId])
+  @@index([diaInicio])
+}
+
+model SeguimientoCliente {
+  id String @id @default(cuid())
+
+  pedidoId String
+  pedido   Pedido @relation(fields: [pedidoId], references: [id], onDelete: Restrict)
+
+  planId String
+  plan   PlanSeguimiento @relation(fields: [planId], references: [id], onDelete: Restrict)
+
+  nombreCliente   String?
+  telefonoCliente String?
+
+  tokenAccesoHash String    @unique
+  tokenCreadoAt   DateTime  @default(now())
+  ultimoAccesoAt  DateTime?
+
+  estado EstadoSeguimientoCliente @default(PENDIENTE)
+
+  fechaInicio     DateTime?
+  fechaFinalizado DateTime?
+
+  progresos ProgresoActividad[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pedidoId])
+  @@index([planId])
+  @@index([estado])
+}
+
+model ProgresoActividad {
+  id String @id @default(cuid())
+
+  seguimientoId String
+  seguimiento   SeguimientoCliente @relation(fields: [seguimientoId], references: [id], onDelete: Cascade)
+
+  actividadId String
+  actividad   ActividadPlan @relation(fields: [actividadId], references: [id], onDelete: Restrict)
+
+  diaPlan Int
+
+  completado   Boolean   @default(false)
+  completadoAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([seguimientoId, actividadId, diaPlan])
+  @@index([seguimientoId])
+  @@index([actividadId])
+  @@index([diaPlan])
 }
 
 enum TipoInformacion {
@@ -346,6 +460,7 @@ model Pedido {
   detalles              DetallePedido[]
   comisiones            ComisionMultinivel[]   @relation("ComisionesPedido")
   movimientosInventario MovimientoInventario[]
+  seguimientos          SeguimientoCliente[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
