@@ -201,6 +201,22 @@ const grupos: NavGroup[] = [
   },
 
   {
+    titulo: "Seguimiento",
+    items: [
+      {
+        href: "/admin/seguimiento/planes",
+        label: "Planes",
+        icon: (
+          <>
+            <rect x="4" y="3" width="16" height="18" rx="2" />
+            <path d="M8 7h8M8 11h8M8 15h5" />
+          </>
+        ),
+      },
+    ],
+  },
+
+  {
     titulo: "Contenido",
     items: [
       {
