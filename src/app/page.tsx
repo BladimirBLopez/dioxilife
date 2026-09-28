@@ -6,7 +6,6 @@ import SiteHeader from "@/components/SiteHeader";
 import BotonWhatsapp from "@/components/BotonWhatsapp";
 import SeccionSucursales from "@/components/SeccionSucursales";
 import AgregarCarritoButton from "@/components/AgregarCarritoButton";
-import ResenaForm from "@/components/ResenaForm";
 import { formatearPrecio } from "@/lib/precio";
 
 export const dynamic = "force-dynamic";
@@ -88,15 +87,20 @@ export default async function Home({
         where: {
           aprobado: true,
           destacado: true,
+          tipo: "EXPERIENCIA",
         },
-
         select: {
           id: true,
           nombreCliente: true,
-          calificacion: true,
           comentario: true,
           imagenUrl: true,
           tiempoUso: true,
+          aplicacion: {
+            select: {
+              id: true,
+              nombre: true,
+            },
+          },
           producto: {
             select: {
               nombre: true,
@@ -771,11 +775,11 @@ export default async function Home({
                       <p className="truncate text-sm font-semibold text-[#1F1B24]">
                         {r.nombreCliente}
                       </p>
-                      <p className="mt-0.5 text-xs text-yellow-500">
-                        {r.calificacion !== null
-                          ? "★".repeat(r.calificacion)
-                          : null}
-                      </p>
+                      {r.aplicacion && (
+                        <p className="mt-1 inline-flex rounded-full bg-[#F8F6FF] px-2 py-0.5 text-[10px] font-semibold text-violet-700">
+                          {r.aplicacion.nombre}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -802,8 +806,20 @@ export default async function Home({
             </div>
           )}
 
-          <div className="mx-auto max-w-md">
-            <ResenaForm />
+          <div className="flex flex-col items-center justify-center gap-2 sm:flex-row">
+            <Link
+              href="/testimonios"
+              className="inline-flex w-full items-center justify-center rounded-xl border border-[#DDD8E8] bg-white px-5 py-2.5 text-sm font-semibold text-[#1F1B24] transition hover:border-brand-pink hover:text-brand-pink sm:w-auto"
+            >
+              Ver todas las experiencias
+            </Link>
+
+            <Link
+              href="/testimonios?compartir=1"
+              className="inline-flex w-full items-center justify-center rounded-xl bg-brand-pink px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 sm:w-auto"
+            >
+              Compartir mi experiencia
+            </Link>
           </div>
         </div>
       </section>

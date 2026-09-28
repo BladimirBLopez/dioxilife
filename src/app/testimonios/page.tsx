@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<{
   aplicacion?: string;
+  compartir?: string;
 }>;
 
 export default async function TestimoniosPage({
@@ -16,7 +17,7 @@ export default async function TestimoniosPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const { aplicacion } = await searchParams;
+  const { aplicacion, compartir } = await searchParams;
 
   const [
     aplicaciones,
@@ -147,6 +148,7 @@ export default async function TestimoniosPage({
             aplicaciones={aplicacionesFormulario}
             productos={productos}
             aplicacionInicialId={aplicacion}
+            abrirInicialmente={compartir === "1"}
           />
         )}
 

@@ -17,15 +17,17 @@ export default function CompartirExperienciaTestimonios({
   aplicaciones,
   productos,
   aplicacionInicialId,
+  abrirInicialmente = false,
 }: {
   aplicaciones: AplicacionOpcion[];
   productos: ProductoOpcion[];
   aplicacionInicialId?: string;
+  abrirInicialmente?: boolean;
 }) {
   const aplicacionInicial =
     aplicaciones.find((a) => a.id === aplicacionInicialId)?.id || "";
 
-  const [abierto, setAbierto] = useState(false);
+  const [abierto, setAbierto] = useState(abrirInicialmente);
   const [aplicacionId, setAplicacionId] = useState(aplicacionInicial);
 
   const aplicacionSeleccionada = aplicaciones.find(
