@@ -71,6 +71,7 @@ export async function PUT(
     comentario,
     imagenUrl,
     productoId,
+    aplicacionId,
     aprobado,
   } = body;
 
@@ -88,6 +89,8 @@ export async function PUT(
           imagenUrl || null,
         productoId:
           productoId || null,
+        aplicacionId:
+          aplicacionId || null,
         aprobado:
           Boolean(aprobado),
       },

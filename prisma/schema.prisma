@@ -132,6 +132,7 @@ model AplicacionCds {
   tratamiento String?
   imagenUrl   String?
   protocolos  AplicacionProtocolo[]
+  resenas     Resena[]
   activo      Boolean               @default(true)
   createdAt   DateTime              @default(now())
 }
@@ -149,18 +150,22 @@ model AplicacionProtocolo {
 }
 
 model Resena {
-  id            String    @id @default(cuid())
+  id            String         @id @default(cuid())
   nombreCliente String
   calificacion  Int
   comentario    String
   imagenUrl     String?
   ipHash        String?
   productoId    String?
-  producto      Producto? @relation(fields: [productoId], references: [id], onDelete: Cascade)
-  aprobado      Boolean   @default(false)
+  producto      Producto?      @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  aplicacionId  String?
+  aplicacion    AplicacionCds? @relation(fields: [aplicacionId], references: [id], onDelete: SetNull)
+  aprobado      Boolean        @default(false)
   tiempoUso     String?
-  destacado     Boolean   @default(false)
-  createdAt     DateTime  @default(now())
+  destacado     Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+
+  @@index([aplicacionId])
 }
 
 model Sucursal {

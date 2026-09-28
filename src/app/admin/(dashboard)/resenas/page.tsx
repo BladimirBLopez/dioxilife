@@ -6,6 +6,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import CloudinaryUpload from "@/components/CloudinaryUpload";
 
 type Producto = { id: string; nombre: string };
+type Aplicacion = { id: string; nombre: string };
 
 type Resena = {
   id: string;
@@ -15,6 +16,8 @@ type Resena = {
   imagenUrl: string | null;
   productoId: string | null;
   producto: { nombre: string } | null;
+  aplicacionId: string | null;
+  aplicacion: { nombre: string } | null;
   aprobado: boolean;
   tiempoUso: string | null;
   destacado: boolean;
@@ -29,11 +32,13 @@ const vacio = {
   comentario: "",
   imagenUrl: "",
   productoId: "",
+  aplicacionId: "",
 };
 
 export default function ResenasPage() {
   const [resenas, setResenas] = useState<Resena[]>([]);
   const [productos, setProductos] = useState<Producto[]>([]);
+  const [aplicaciones, setAplicaciones] = useState<Aplicacion[]>([]);
   const [cargando, setCargando] = useState(true);
   const [filtro, setFiltro] = useState<Filtro>("pendientes");
   const [borrarId, setBorrarId] = useState<string | null>(null);
@@ -49,12 +54,14 @@ export default function ResenasPage() {
 
   async function cargar() {
     setCargando(true);
-    const [resR, resP] = await Promise.all([
+    const [resR, resP, resA] = await Promise.all([
       fetch("/api/admin/resenas"),
       fetch("/api/admin/productos"),
+      fetch("/api/admin/aplicaciones-cds"),
     ]);
     if (resR.ok) setResenas(await resR.json());
     if (resP.ok) setProductos(await resP.json());
+    if (resA.ok) setAplicaciones(await resA.json());
     setCargando(false);
   }
 
@@ -151,6 +158,7 @@ export default function ResenasPage() {
       comentario: r.comentario,
       imagenUrl: r.imagenUrl || "",
       productoId: r.productoId || "",
+      aplicacionId: r.aplicacionId || "",
     };
     setEditandoId(r.id);
     setForm(datos);
@@ -176,6 +184,7 @@ export default function ResenasPage() {
       comentario: form.comentario,
       imagenUrl: form.imagenUrl || null,
       productoId: form.productoId || null,
+      aplicacionId: form.aplicacionId || null,
       aprobado: true,
     };
 
@@ -304,6 +313,12 @@ export default function ResenasPage() {
                 <p className="text-xs text-brand-pink font-medium mt-0.5">
                   {r.producto ? r.producto.nombre : "Testimonio general de la tienda"}
                 </p>
+
+                {r.aplicacion && (
+                  <p className="mt-1 inline-flex rounded-full bg-violet-50 px-2 py-1 text-[11px] font-semibold text-violet-700">
+                    Aplicación: {r.aplicacion.nombre}
+                  </p>
+                )}
                 <p className="text-sm text-[#6B6870] mt-1 whitespace-pre-line">
                   {r.comentario}
                 </p>
@@ -430,6 +445,29 @@ export default function ResenasPage() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <label className="admin-label">
+                Aplicación CDS relacionada (opcional)
+              </label>
+              <select
+                value={form.aplicacionId}
+                onChange={(e) =>
+                  setForm({ ...form, aplicacionId: e.target.value })
+                }
+                className="admin-input"
+              >
+                <option value="">Sin aplicación relacionada</option>
+                {aplicaciones.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.nombre}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-[#8A8790]">
+                Permite clasificar el testimonio por Aplicación CDS.
+              </p>
             </div>
 
             <div>

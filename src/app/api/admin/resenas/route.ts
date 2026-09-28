@@ -19,6 +19,11 @@ export async function GET() {
           nombre: true,
         },
       },
+      aplicacion: {
+        select: {
+          nombre: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",
@@ -44,6 +49,7 @@ export async function POST(req: NextRequest) {
     comentario,
     imagenUrl,
     productoId,
+    aplicacionId,
   } = await req.json();
 
   if (!nombreCliente || !comentario) {
@@ -67,6 +73,8 @@ export async function POST(req: NextRequest) {
           imagenUrl || null,
         productoId:
           productoId || null,
+        aplicacionId:
+          aplicacionId || null,
         aprobado: true,
       },
     });
