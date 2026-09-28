@@ -86,6 +86,16 @@ export async function POST(
     );
   }
 
+  if (plan._count.seguimientos > 0) {
+    return NextResponse.json(
+      {
+        error:
+          "Este plan ya fue asignado a clientes. No se pueden agregar actividades; crea una nueva versión del plan.",
+      },
+      { status: 409 }
+    );
+  }
+
   const {
     titulo,
     descripcion,

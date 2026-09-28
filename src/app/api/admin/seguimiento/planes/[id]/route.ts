@@ -23,6 +23,16 @@ export async function PUT(
     },
     select: {
       id: true,
+      nombre: true,
+      descripcion: true,
+      duracionDias: true,
+      protocoloId: true,
+      estado: true,
+      _count: {
+        select: {
+          seguimientos: true,
+        },
+      },
     },
   });
 
@@ -83,17 +93,40 @@ export async function PUT(
       ? estado
       : "BORRADOR";
 
+  const descripcionLimpia = descripcion
+    ? String(descripcion).trim().slice(0, 1500)
+    : null;
+
+  const protocoloNormalizado =
+    protocoloId || null;
+
+  if (existente._count.seguimientos > 0) {
+    const cambioContenido =
+      nombreLimpio !== existente.nombre ||
+      descripcionLimpia !== existente.descripcion ||
+      dias !== existente.duracionDias ||
+      protocoloNormalizado !== existente.protocoloId;
+
+    if (cambioContenido) {
+      return NextResponse.json(
+        {
+          error:
+            "Este plan ya fue asignado a clientes. Su contenido no puede modificarse; crea una nueva versión del plan.",
+        },
+        { status: 409 }
+      );
+    }
+  }
+
   const plan = await prisma.planSeguimiento.update({
     where: {
       id,
     },
     data: {
       nombre: nombreLimpio,
-      descripcion: descripcion
-        ? String(descripcion).trim().slice(0, 1500)
-        : null,
+      descripcion: descripcionLimpia,
       duracionDias: dias,
-      protocoloId: protocoloId || null,
+      protocoloId: protocoloNormalizado,
       estado: estadoValido,
     },
     include: {

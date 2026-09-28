@@ -43,6 +43,16 @@ export async function PUT(
     );
   }
 
+  if (plan._count.seguimientos > 0) {
+    return NextResponse.json(
+      {
+        error:
+          "Este plan ya fue asignado a clientes. Sus actividades no pueden modificarse; crea una nueva versión del plan.",
+      },
+      { status: 409 }
+    );
+  }
+
   const actividad = await prisma.actividadPlan.findFirst({
     where: {
       id: actividadId,
@@ -178,6 +188,15 @@ export async function DELETE(
           progresos: true,
         },
       },
+      plan: {
+        select: {
+          _count: {
+            select: {
+              seguimientos: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -185,6 +204,16 @@ export async function DELETE(
     return NextResponse.json(
       { error: "Actividad no encontrada" },
       { status: 404 }
+    );
+  }
+
+  if (actividad.plan._count.seguimientos > 0) {
+    return NextResponse.json(
+      {
+        error:
+          "Este plan ya fue asignado a clientes. Sus actividades no pueden eliminarse; crea una nueva versión del plan.",
+      },
+      { status: 409 }
     );
   }
 
