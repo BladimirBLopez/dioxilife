@@ -23,7 +23,7 @@ type Aplicacion = {
   resenas: {
     id: string;
     nombreCliente: string;
-    calificacion: number;
+    calificacion: number | null;
     comentario: string;
     imagenUrl: string | null;
     tiempoUso: string | null;
@@ -350,7 +350,9 @@ export default function AplicacionesCdsGrid({
                           {r.nombreCliente}
                         </p>
                         <p className="text-xs text-yellow-500">
-                          {"★".repeat(r.calificacion)}
+                          {r.calificacion !== null
+                            ? "★".repeat(r.calificacion)
+                            : null}
                         </p>
                       </div>
                     </div>

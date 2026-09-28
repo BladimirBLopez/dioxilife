@@ -43,6 +43,7 @@ export default async function AplicacionesCdsPage({
         resenas: {
           where: {
             aprobado: true,
+            tipo: "EXPERIENCIA",
           },
           orderBy: {
             createdAt: "desc",

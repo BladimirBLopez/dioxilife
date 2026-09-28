@@ -149,10 +149,16 @@ model AplicacionProtocolo {
   @@index([protocoloId])
 }
 
+enum TipoResena {
+  PRODUCTO
+  EXPERIENCIA
+}
+
 model Resena {
   id            String         @id @default(cuid())
+  tipo          TipoResena     @default(PRODUCTO)
   nombreCliente String
-  calificacion  Int
+  calificacion  Int?
   comentario    String
   imagenUrl     String?
   ipHash        String?

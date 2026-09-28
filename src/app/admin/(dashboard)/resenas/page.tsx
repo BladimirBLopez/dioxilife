@@ -10,8 +10,9 @@ type Aplicacion = { id: string; nombre: string };
 
 type Resena = {
   id: string;
+  tipo: "PRODUCTO" | "EXPERIENCIA";
   nombreCliente: string;
-  calificacion: number;
+  calificacion: number | null;
   comentario: string;
   imagenUrl: string | null;
   productoId: string | null;
@@ -27,6 +28,7 @@ type Resena = {
 type Filtro = "pendientes" | "aprobadas" | "todas";
 
 const vacio = {
+  tipo: "PRODUCTO" as "PRODUCTO" | "EXPERIENCIA",
   nombreCliente: "",
   calificacion: "5",
   comentario: "",
@@ -153,8 +155,9 @@ export default function ResenasPage() {
 
   function abrirEditar(r: Resena) {
     const datos = {
+      tipo: r.tipo,
       nombreCliente: r.nombreCliente,
-      calificacion: String(r.calificacion),
+      calificacion: r.calificacion !== null ? String(r.calificacion) : "",
       comentario: r.comentario,
       imagenUrl: r.imagenUrl || "",
       productoId: r.productoId || "",
@@ -176,11 +179,19 @@ export default function ResenasPage() {
       alert("Espera a que termine de subir la imagen antes de guardar");
       return;
     }
+
+    if (form.tipo === "EXPERIENCIA" && !form.aplicacionId) {
+      alert("Selecciona la Aplicación CDS relacionada");
+      return;
+    }
+
     setGuardando(true);
 
     const body = {
+      tipo: form.tipo,
       nombreCliente: form.nombreCliente,
-      calificacion: Number(form.calificacion),
+      calificacion:
+        form.tipo === "PRODUCTO" ? Number(form.calificacion) : null,
       comentario: form.comentario,
       imagenUrl: form.imagenUrl || null,
       productoId: form.productoId || null,
@@ -295,8 +306,22 @@ export default function ResenasPage() {
                   <p className="font-medium text-sm text-[#1F1B24]">
                     {r.nombreCliente}
                   </p>
-                  <span className="text-xs text-yellow-500">
-                    {"⭐".repeat(r.calificacion)}
+                  {r.tipo === "PRODUCTO" && r.calificacion !== null && (
+                    <span className="text-xs text-yellow-500">
+                      {"⭐".repeat(r.calificacion)}
+                    </span>
+                  )}
+
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                      r.tipo === "EXPERIENCIA"
+                        ? "bg-violet-100 text-violet-700"
+                        : "bg-blue-50 text-blue-700"
+                    }`}
+                  >
+                    {r.tipo === "EXPERIENCIA"
+                      ? "EXPERIENCIA"
+                      : "RESEÑA DE PRODUCTO"}
                   </span>
                   {!r.aprobado && (
                     <span className="text-[10px] font-bold text-white bg-orange-500 px-1.5 py-0.5 rounded-full">
@@ -385,6 +410,30 @@ export default function ResenasPage() {
         >
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
+              <label className="admin-label">Tipo de registro</label>
+              <select
+                value={form.tipo}
+                onChange={(e) => {
+                  const tipo = e.target.value as "PRODUCTO" | "EXPERIENCIA";
+                  setForm({
+                    ...form,
+                    tipo,
+                    calificacion:
+                      tipo === "PRODUCTO"
+                        ? form.calificacion || "5"
+                        : "",
+                    aplicacionId:
+                      tipo === "PRODUCTO" ? "" : form.aplicacionId,
+                  });
+                }}
+                className="admin-input"
+              >
+                <option value="PRODUCTO">Reseña de producto</option>
+                <option value="EXPERIENCIA">Experiencia personal</option>
+              </select>
+            </div>
+
+            <div>
               <label className="admin-label">Nombre del cliente</label>
               <input
                 type="text"
@@ -397,22 +446,24 @@ export default function ResenasPage() {
               />
             </div>
 
-            <div>
-              <label className="admin-label">Calificación (1-5)</label>
-              <select
-                value={form.calificacion}
-                onChange={(e) =>
-                  setForm({ ...form, calificacion: e.target.value })
-                }
-                className="admin-input"
-              >
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-              </select>
-            </div>
+            {form.tipo === "PRODUCTO" && (
+              <div>
+                <label className="admin-label">Calificación (1-5)</label>
+                <select
+                  value={form.calificacion}
+                  onChange={(e) =>
+                    setForm({ ...form, calificacion: e.target.value })
+                  }
+                  className="admin-input"
+                >
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                </select>
+              </div>
+            )}
 
             <div>
               <label className="admin-label">Comentario</label>
@@ -447,9 +498,10 @@ export default function ResenasPage() {
               </select>
             </div>
 
+            {form.tipo === "EXPERIENCIA" && (
             <div>
               <label className="admin-label">
-                Aplicación CDS relacionada (opcional)
+                Aplicación CDS relacionada
               </label>
               <select
                 value={form.aplicacionId}
@@ -466,9 +518,10 @@ export default function ResenasPage() {
                 ))}
               </select>
               <p className="mt-1 text-xs text-[#8A8790]">
-                Permite clasificar el testimonio por Aplicación CDS.
+                Define dónde se mostrará públicamente esta experiencia.
               </p>
             </div>
+            )}
 
             <div>
               <label className="admin-label">Foto (opcional)</label>

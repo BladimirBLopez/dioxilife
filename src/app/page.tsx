@@ -772,7 +772,9 @@ export default async function Home({
                         {r.nombreCliente}
                       </p>
                       <p className="mt-0.5 text-xs text-yellow-500">
-                        {"★".repeat(r.calificacion)}
+                        {r.calificacion !== null
+                          ? "★".repeat(r.calificacion)
+                          : null}
                       </p>
                     </div>
                   </div>

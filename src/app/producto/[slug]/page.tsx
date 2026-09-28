@@ -74,7 +74,11 @@ export default async function ProductoDetalle({
   }
 
   const resenas = await prisma.resena.findMany({
-    where: { productoId: producto.id, aprobado: true },
+    where: {
+      productoId: producto.id,
+      aprobado: true,
+      tipo: "PRODUCTO",
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -148,16 +152,21 @@ export default async function ProductoDetalle({
             </span>
             <h1 className="mt-2 text-2xl font-bold leading-tight text-[#1F1B24] sm:text-3xl">{producto.nombre}</h1>
 
-            {resenas.length > 0 && (
+            {resenas.filter((r) => r.calificacion !== null).length > 0 && (
               <p className="text-xs text-yellow-500 mt-1">
                 {"⭐".repeat(
                   Math.round(
-                    resenas.reduce((acc, r) => acc + r.calificacion, 0) /
-                      resenas.length
+                    resenas
+                      .filter((r) => r.calificacion !== null)
+                      .reduce((acc, r) => acc + (r.calificacion ?? 0), 0) /
+                      resenas.filter((r) => r.calificacion !== null).length
                   )
                 )}{" "}
                 <span className="text-[#6B6870]">
-                  ({resenas.length} testimonio{resenas.length === 1 ? "" : "s"})
+                  ({resenas.filter((r) => r.calificacion !== null).length} reseña
+                  {resenas.filter((r) => r.calificacion !== null).length === 1
+                    ? ""
+                    : "s"})
                 </span>
               </p>
             )}
@@ -400,7 +409,9 @@ export default async function ProductoDetalle({
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-sm">{r.nombreCliente}</p>
                       <span className="text-xs text-yellow-500">
-                        {"⭐".repeat(r.calificacion)}
+                        {r.calificacion !== null
+                          ? "⭐".repeat(r.calificacion)
+                          : null}
                       </span>
                     </div>
                     <p className="text-sm text-brand-gray mt-1 whitespace-pre-line">

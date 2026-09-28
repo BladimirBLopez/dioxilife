@@ -11,8 +11,16 @@ function obtenerIpHash(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { nombreCliente, calificacion, tiempoUso, comentario, productoId, sitioWeb } =
-    await req.json();
+  const {
+    nombreCliente,
+    calificacion,
+    tiempoUso,
+    comentario,
+    productoId,
+    aplicacionId,
+    tipo: tipoRecibido,
+    sitioWeb,
+  } = await req.json();
 
   // Campo trampa: si viene lleno, es un bot. Respondemos "éxito" sin guardar nada.
   if (sitioWeb) {
@@ -22,7 +30,11 @@ export async function POST(req: NextRequest) {
   const nombre = String(nombreCliente || "").trim().slice(0, 80);
   const texto = String(comentario || "").trim().slice(0, 1000);
   const uso = tiempoUso ? String(tiempoUso).trim().slice(0, 50) : null;
-  const estrellas = Number(calificacion);
+  const tipo =
+    tipoRecibido === "EXPERIENCIA" ? "EXPERIENCIA" : "PRODUCTO";
+
+  const estrellas =
+    tipo === "PRODUCTO" ? Number(calificacion) : null;
 
   if (!nombre || nombre.length < 2) {
     return NextResponse.json(
@@ -36,9 +48,19 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
-  if (!Number.isInteger(estrellas) || estrellas < 1 || estrellas > 5) {
+  if (
+    tipo === "PRODUCTO" &&
+    (!Number.isInteger(estrellas) || estrellas! < 1 || estrellas! > 5)
+  ) {
     return NextResponse.json(
       { error: "La calificación debe ser de 1 a 5 estrellas" },
+      { status: 400 }
+    );
+  }
+
+  if (tipo === "EXPERIENCIA" && !aplicacionId) {
+    return NextResponse.json(
+      { error: "Selecciona la aplicación relacionada con tu experiencia" },
       { status: 400 }
     );
   }
@@ -51,6 +73,23 @@ export async function POST(req: NextRequest) {
     if (!producto) {
       return NextResponse.json(
         { error: "Producto no encontrado" },
+        { status: 404 }
+      );
+    }
+  }
+
+  if (aplicacionId) {
+    const aplicacion = await prisma.aplicacionCds.findUnique({
+      where: { id: aplicacionId },
+      select: {
+        id: true,
+        activo: true,
+      },
+    });
+
+    if (!aplicacion || !aplicacion.activo) {
+      return NextResponse.json(
+        { error: "Aplicación CDS no encontrada" },
         { status: 404 }
       );
     }
@@ -72,11 +111,14 @@ export async function POST(req: NextRequest) {
 
   await prisma.resena.create({
     data: {
+      tipo,
       nombreCliente: nombre,
       comentario: texto,
       calificacion: estrellas,
       tiempoUso: uso,
       productoId: productoId || null,
+      aplicacionId:
+        tipo === "EXPERIENCIA" ? aplicacionId || null : null,
       ipHash,
       aprobado: false,
     },

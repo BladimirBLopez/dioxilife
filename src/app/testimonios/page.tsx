@@ -24,6 +24,7 @@ export default async function TestimoniosPage({
         resenas: {
           some: {
             aprobado: true,
+            tipo: "EXPERIENCIA",
           },
         },
       },
@@ -39,6 +40,7 @@ export default async function TestimoniosPage({
             resenas: {
               where: {
                 aprobado: true,
+                tipo: "EXPERIENCIA",
               },
             },
           },
@@ -49,6 +51,7 @@ export default async function TestimoniosPage({
     prisma.resena.findMany({
       where: {
         aprobado: true,
+        tipo: "EXPERIENCIA",
         ...(aplicacion
           ? {
               aplicacionId: aplicacion,
@@ -218,7 +221,9 @@ export default async function TestimoniosPage({
                         {r.nombreCliente}
                       </p>
                       <p className="mt-0.5 text-xs text-yellow-500">
-                        {"★".repeat(r.calificacion)}
+                        {r.calificacion !== null
+                          ? "★".repeat(r.calificacion)
+                          : null}
                       </p>
                     </div>
                   </div>

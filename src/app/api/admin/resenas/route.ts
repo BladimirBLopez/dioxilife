@@ -44,6 +44,7 @@ export async function POST(req: NextRequest) {
   }
 
   const {
+    tipo: tipoRecibido,
     nombreCliente,
     calificacion,
     comentario,
@@ -62,19 +63,30 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const tipo =
+    tipoRecibido === "EXPERIENCIA" ? "EXPERIENCIA" : "PRODUCTO";
+
+  if (tipo === "EXPERIENCIA" && !aplicacionId) {
+    return NextResponse.json(
+      { error: "La Aplicación CDS es requerida para una experiencia" },
+      { status: 400 }
+    );
+  }
+
   const resena =
     await prisma.resena.create({
       data: {
+        tipo,
         nombreCliente,
         calificacion:
-          Number(calificacion) || 5,
+          tipo === "PRODUCTO" ? Number(calificacion) || 5 : null,
         comentario,
         imagenUrl:
           imagenUrl || null,
         productoId:
           productoId || null,
         aplicacionId:
-          aplicacionId || null,
+          tipo === "EXPERIENCIA" ? aplicacionId || null : null,
         aprobado: true,
       },
     });
