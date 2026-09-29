@@ -213,6 +213,18 @@ const grupos: NavGroup[] = [
           </>
         ),
       },
+
+      {
+        href: "/admin/seguimiento/clientes",
+        label: "Clientes",
+        icon: (
+          <>
+            <circle cx="9" cy="8" r="3" />
+            <path d="M3 20c0-3.5 2.5-6 6-6s6 2.5 6 6" />
+            <path d="M16 8h5M18.5 5.5v5" />
+          </>
+        ),
+      },
     ],
   },
 
