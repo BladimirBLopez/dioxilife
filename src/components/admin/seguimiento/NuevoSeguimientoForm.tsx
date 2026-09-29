@@ -5,8 +5,11 @@ import {
   useState,
 } from "react";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+
+import { abrirWhatsApp } from "@/lib/whatsapp-cliente";
 
 type Plan = {
   id: string;
@@ -59,6 +62,15 @@ export default function NuevoSeguimientoForm({
     enlaceTemporal,
     setEnlaceTemporal,
   ] = useState<string | null>(null);
+
+  const [creado, setCreado] =
+    useState<{
+      id: string;
+      token: string;
+    } | null>(null);
+
+  const [enviando, setEnviando] =
+    useState(false);
 
   async function crear(
     e: FormEvent
@@ -162,6 +174,11 @@ export default function NuevoSeguimientoForm({
 
       setEnlaceTemporal(url);
 
+      setCreado({
+        id: data.seguimiento.id,
+        token: data.token,
+      });
+
       toast.success(
         "Seguimiento creado correctamente",
         {
@@ -184,6 +201,65 @@ export default function NuevoSeguimientoForm({
 
     } finally {
       setProcesando(false);
+    }
+  }
+
+  async function enviarWhatsApp() {
+    if (!creado || enviando) {
+      return;
+    }
+
+    setEnviando(true);
+
+    try {
+      const res =
+        await fetch(
+          `/api/admin/seguimiento/clientes/${creado.id}/enviar-whatsapp`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                token: creado.token,
+              }),
+          }
+        );
+
+      const data =
+        await res
+          .json()
+          .catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(
+          data?.error ||
+          "No se pudo preparar el WhatsApp."
+        );
+      }
+
+      abrirWhatsApp(
+        data.telefono,
+        data.mensaje
+      );
+
+      toast.success(
+        "WhatsApp listo y registrado"
+      );
+
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Error enviando WhatsApp"
+      );
+
+    } finally {
+      setEnviando(false);
     }
   }
 
@@ -429,18 +505,44 @@ export default function NuevoSeguimientoForm({
             </p>
 
             <p className="mt-2 text-xs leading-5 text-green-700">
-              Copia este enlace antes de salir de la página.
+              Envíalo por WhatsApp o cópialo antes de salir de la página.
             </p>
 
-            <button
-              type="button"
-              onClick={() =>
-                void copiarEnlace()
-              }
-              className="mt-4 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700"
-            >
-              Copiar enlace
-            </button>
+            <div className="mt-4 flex flex-wrap gap-2">
+
+              <button
+                type="button"
+                disabled={enviando}
+                onClick={() =>
+                  void enviarWhatsApp()
+                }
+                className="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
+              >
+                {enviando
+                  ? "Preparando..."
+                  : "📱 Enviar por WhatsApp"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  void copiarEnlace()
+                }
+                className="rounded-xl border border-green-300 bg-white px-4 py-2.5 text-sm font-semibold text-green-700 transition hover:bg-green-100"
+              >
+                Copiar enlace
+              </button>
+
+            </div>
+
+            {creado && (
+              <Link
+                href={`/admin/seguimiento/clientes/${creado.id}`}
+                className="mt-3 inline-block text-xs font-semibold text-green-800 underline"
+              >
+                Ver seguimiento del cliente →
+              </Link>
+            )}
 
           </div>
         )}

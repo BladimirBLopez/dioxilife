@@ -19,6 +19,21 @@ function hashToken(token: string) {
 }
 
 
+function construirMensaje(
+  nombre: string | null,
+  url: string
+) {
+  return `Hola ${nombre || "cliente"} 👋
+
+Te compartimos tu seguimiento personalizado DioxiLife.
+
+Ingresa aquí:
+${url}
+
+Sigue las indicaciones de tu agenda diaria.`;
+}
+
+
 export async function POST(
   req: NextRequest,
   {
@@ -55,6 +70,17 @@ export async function POST(
     req.nextUrl.searchParams.get("nuevo") === "1";
 
 
+  // Token opcional: lo envía el formulario de creación,
+  // que es el único momento en que el token existe en claro.
+  const body =
+    await req.json().catch(() => null);
+
+  const tokenRecibido =
+    typeof body?.token === "string"
+      ? body.token
+      : null;
+
+
   const seguimiento =
     await prisma.seguimientoCliente.findUnique({
       where:{
@@ -65,6 +91,7 @@ export async function POST(
         id:true,
         nombreCliente:true,
         telefonoCliente:true,
+        tokenAccesoHash:true,
         tokenCreadoAt:true,
       },
     });
@@ -96,13 +123,33 @@ export async function POST(
   }
 
 
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    req.nextUrl.origin;
+
+
   let mensaje: string | null = null;
   let reutilizado = false;
 
 
-  // Si el último envío sigue siendo válido (el token no cambió
-  // después de ese envío), se reutiliza su mensaje y su enlace.
-  if (!forzarNuevo) {
+  // 1) Token recién creado (formulario): se valida contra el hash
+  //    y se usa tal cual, sin regenerar.
+  if (
+    tokenRecibido &&
+    hashToken(tokenRecibido) ===
+      seguimiento.tokenAccesoHash
+  ) {
+    mensaje =
+      construirMensaje(
+        seguimiento.nombreCliente,
+        `${baseUrl}/seguimiento/${tokenRecibido}`
+      );
+  }
+
+
+  // 2) Si el último envío sigue siendo válido (el token no cambió
+  //    después de ese envío), se reutiliza su mensaje y su enlace.
+  if (!mensaje && !forzarNuevo) {
 
     const ultimo =
       await prisma.seguimientoEnvioWhatsApp.findFirst({
@@ -136,6 +183,7 @@ export async function POST(
   }
 
 
+  // 3) En cualquier otro caso se genera un enlace nuevo.
   if (!mensaje) {
 
     const token =
@@ -158,19 +206,11 @@ export async function POST(
     });
 
 
-    const url =
-      `${process.env.NEXT_PUBLIC_APP_URL}/seguimiento/${token}`;
-
-
     mensaje =
-`Hola ${seguimiento.nombreCliente || "cliente"} 👋
-
-Te compartimos tu seguimiento personalizado DioxiLife.
-
-Ingresa aquí:
-${url}
-
-Sigue las indicaciones de tu agenda diaria.`;
+      construirMensaje(
+        seguimiento.nombreCliente,
+        `${baseUrl}/seguimiento/${token}`
+      );
   }
 
 

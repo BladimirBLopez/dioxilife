@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
+import { abrirWhatsApp } from "@/lib/whatsapp-cliente";
+
 type UltimoEnvio = {
   fechaEnvio: Date | string;
   enviadoPorUsuario: string | null;
@@ -64,22 +66,9 @@ export default function AccionesSeguimientoCliente({
       }
 
 
-      const digitos =
-        String(data.telefono).replace(/\D/g, "");
-
-
-      const numero =
-        digitos.startsWith("591") &&
-        digitos.length > 8
-          ? digitos
-          : `591${digitos}`;
-
-
-      window.open(
-        `https://wa.me/${numero}?text=${encodeURIComponent(
-          data.mensaje
-        )}`,
-        "_blank"
+      abrirWhatsApp(
+        data.telefono,
+        data.mensaje
       );
 
 
