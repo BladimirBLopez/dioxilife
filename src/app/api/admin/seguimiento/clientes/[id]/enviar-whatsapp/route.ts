@@ -20,7 +20,7 @@ function hashToken(token: string) {
 
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   {
     params,
   }: {
@@ -51,6 +51,10 @@ export async function POST(
     await params;
 
 
+  const forzarNuevo =
+    req.nextUrl.searchParams.get("nuevo") === "1";
+
+
   const seguimiento =
     await prisma.seguimientoCliente.findUnique({
       where:{
@@ -61,7 +65,7 @@ export async function POST(
         id:true,
         nombreCliente:true,
         telefonoCliente:true,
-        estado:true,
+        tokenCreadoAt:true,
       },
     });
 
@@ -92,31 +96,73 @@ export async function POST(
   }
 
 
-  const token =
-    randomBytes(32)
-      .toString("hex");
+  let mensaje: string | null = null;
+  let reutilizado = false;
 
 
-  await prisma.seguimientoCliente.update({
-    where:{
-      id,
-    },
+  // Si el último envío sigue siendo válido (el token no cambió
+  // después de ese envío), se reutiliza su mensaje y su enlace.
+  if (!forzarNuevo) {
 
-    data:{
-      tokenAccesoHash:
-        hashToken(token),
+    const ultimo =
+      await prisma.seguimientoEnvioWhatsApp.findFirst({
+        where:{
+          seguimientoId:
+            seguimiento.id,
+        },
 
-      tokenCreadoAt:
-        new Date(),
-    },
-  });
+        orderBy:{
+          fechaEnvio:"desc",
+        },
+
+        select:{
+          mensaje:true,
+          fechaEnvio:true,
+        },
+      });
 
 
-  const url =
-    `${process.env.NEXT_PUBLIC_APP_URL}/seguimiento/${token}`;
+    if (
+      ultimo &&
+      seguimiento.tokenCreadoAt <=
+        ultimo.fechaEnvio
+    ) {
+      mensaje =
+        ultimo.mensaje;
+
+      reutilizado =
+        true;
+    }
+  }
 
 
-  const mensaje =
+  if (!mensaje) {
+
+    const token =
+      randomBytes(32)
+        .toString("hex");
+
+
+    await prisma.seguimientoCliente.update({
+      where:{
+        id,
+      },
+
+      data:{
+        tokenAccesoHash:
+          hashToken(token),
+
+        tokenCreadoAt:
+          new Date(),
+      },
+    });
+
+
+    const url =
+      `${process.env.NEXT_PUBLIC_APP_URL}/seguimiento/${token}`;
+
+
+    mensaje =
 `Hola ${seguimiento.nombreCliente || "cliente"} 👋
 
 Te compartimos tu seguimiento personalizado DioxiLife.
@@ -125,6 +171,7 @@ Ingresa aquí:
 ${url}
 
 Sigue las indicaciones de tu agenda diaria.`;
+  }
 
 
   await prisma.seguimientoEnvioWhatsApp.create({
@@ -152,6 +199,6 @@ Sigue las indicaciones de tu agenda diaria.`;
 
     mensaje,
 
-    url,
+    reutilizado,
   });
 }

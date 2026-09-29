@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 type UltimoEnvio = {
@@ -15,12 +16,25 @@ export default function AccionesSeguimientoCliente({
   seguimientoId: string;
   ultimoEnvio: UltimoEnvio;
 }) {
+  const router = useRouter();
+
   const [procesando, setProcesando] =
     useState(false);
 
 
-  async function enviarWhatsApp() {
+  async function enviarWhatsApp(
+    nuevoEnlace: boolean
+  ) {
     if (procesando) {
+      return;
+    }
+
+    if (
+      nuevoEnlace &&
+      !window.confirm(
+        "Se generará un enlace nuevo y el anterior dejará de funcionar para el cliente. ¿Continuar?"
+      )
+    ) {
       return;
     }
 
@@ -29,7 +43,9 @@ export default function AccionesSeguimientoCliente({
     try {
       const res =
         await fetch(
-          `/api/admin/seguimiento/clientes/${seguimientoId}/enviar-whatsapp`,
+          `/api/admin/seguimiento/clientes/${seguimientoId}/enviar-whatsapp${
+            nuevoEnlace ? "?nuevo=1" : ""
+          }`,
           {
             method: "POST",
           }
@@ -48,25 +64,33 @@ export default function AccionesSeguimientoCliente({
       }
 
 
+      const digitos =
+        String(data.telefono).replace(/\D/g, "");
+
+
       const numero =
-        data.telefono.replace(/\D/g, "");
-
-
-      const enlace =
-        `https://wa.me/591${numero}?text=${encodeURIComponent(
-          data.mensaje
-        )}`;
+        digitos.startsWith("591") &&
+        digitos.length > 8
+          ? digitos
+          : `591${digitos}`;
 
 
       window.open(
-        enlace,
+        `https://wa.me/${numero}?text=${encodeURIComponent(
+          data.mensaje
+        )}`,
         "_blank"
       );
 
 
       toast.success(
-        "WhatsApp preparado correctamente"
+        data.reutilizado
+          ? "WhatsApp listo (enlace vigente reutilizado)"
+          : "WhatsApp listo con enlace nuevo"
       );
+
+
+      router.refresh();
 
 
     } catch (error) {
@@ -88,18 +112,36 @@ export default function AccionesSeguimientoCliente({
   return (
     <div className="space-y-3">
 
-      <button
-        type="button"
-        disabled={procesando}
-        onClick={() =>
-          void enviarWhatsApp()
-        }
-        className="inline-flex items-center rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
-      >
-        {procesando
-          ? "Preparando..."
-          : "📱 Enviar WhatsApp seguimiento"}
-      </button>
+      <div className="flex flex-wrap gap-2">
+
+        <button
+          type="button"
+          disabled={procesando}
+          onClick={() =>
+            void enviarWhatsApp(false)
+          }
+          className="inline-flex items-center rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
+        >
+          {procesando
+            ? "Preparando..."
+            : "📱 Enviar WhatsApp"}
+        </button>
+
+
+        {ultimoEnvio && (
+          <button
+            type="button"
+            disabled={procesando}
+            onClick={() =>
+              void enviarWhatsApp(true)
+            }
+            className="inline-flex items-center rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+          >
+            🔄 Generar enlace nuevo
+          </button>
+        )}
+
+      </div>
 
 
       {ultimoEnvio && (
@@ -133,18 +175,6 @@ export default function AccionesSeguimientoCliente({
             </p>
 
           </div>
-
-
-          <button
-            type="button"
-            disabled={procesando}
-            onClick={() =>
-              void enviarWhatsApp()
-            }
-            className="mt-3 rounded-xl border border-green-300 bg-white px-3 py-2 text-xs font-semibold text-green-700 hover:bg-green-100 disabled:opacity-50"
-          >
-            📱 Enviar nuevamente
-          </button>
 
         </div>
       )}
