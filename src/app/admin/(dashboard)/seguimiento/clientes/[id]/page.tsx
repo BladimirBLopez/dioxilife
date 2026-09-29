@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import AgendaCliente from "@/components/admin/seguimiento/AgendaCliente";
 
 function estiloEstado(estado: string) {
   switch (estado) {
@@ -351,108 +352,26 @@ export default async function SeguimientoClientePage({
       )}
 
 
-      <div className="rounded-xl bg-white shadow">
-
-        <div className="border-b border-gray-100 p-5">
-
-          <h2 className="text-lg font-semibold text-gray-900">
-            Agenda individual
-          </h2>
-
-          <p className="mt-1 text-sm text-gray-500">
-            Estas actividades pertenecen exclusivamente a este cliente.
-          </p>
-
-        </div>
-
-
-        {seguimiento.actividades.length === 0 ? (
-
-          <div className="p-6 text-sm text-gray-500">
-            Esta agenda no tiene actividades.
-          </div>
-
-        ) : (
-
-          <div className="divide-y">
-
-            {seguimiento.actividades.map(
-              (actividad) => (
-
-                <div
-                  key={actividad.id}
-                  className="p-5"
-                >
-
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-
-                    <div>
-
-                      <div className="flex flex-wrap items-center gap-2">
-
-                        <span className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-semibold text-violet-700">
-                          Día {actividad.diaInicio}
-                          {actividad.diaFin &&
-                          actividad.diaFin !==
-                            actividad.diaInicio
-                            ? ` al ${actividad.diaFin}`
-                            : ""}
-                        </span>
-
-                        {actividad.hora && (
-                          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
-                            {actividad.hora}
-                          </span>
-                        )}
-
-                        {actividad.momento && (
-                          <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
-                            {actividad.momento}
-                          </span>
-                        )}
-
-                        {!actividad.activo && (
-                          <span className="rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700">
-                            Inactiva
-                          </span>
-                        )}
-
-                      </div>
-
-
-                      <h3 className="mt-3 font-semibold text-gray-900">
-                        {actividad.titulo}
-                      </h3>
-
-
-                      {actividad.descripcion && (
-                        <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-gray-600">
-                          {actividad.descripcion}
-                        </p>
-                      )}
-
-                    </div>
-
-
-                    <div className="text-sm text-gray-500">
-                      {actividad._count.progresos} progreso
-                      {actividad._count.progresos === 1
-                        ? ""
-                        : "s"}
-                    </div>
-
-                  </div>
-
-                </div>
-
-              )
-            )}
-
-          </div>
-
+      <AgendaCliente
+        seguimientoId={seguimiento.id}
+        duracionDias={seguimiento.duracionDias}
+        estado={seguimiento.estado}
+        actividades={seguimiento.actividades.map(
+          (actividad) => ({
+            id: actividad.id,
+            titulo: actividad.titulo,
+            descripcion: actividad.descripcion,
+            momento: actividad.momento,
+            hora: actividad.hora,
+            diaInicio: actividad.diaInicio,
+            diaFin: actividad.diaFin,
+            orden: actividad.orden,
+            activo: actividad.activo,
+            cantidadProgresos:
+              actividad._count.progresos,
+          })
         )}
-
-      </div>
+      />
 
     </div>
   );
