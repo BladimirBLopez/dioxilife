@@ -53,8 +53,9 @@ export async function POST(req: NextRequest) {
 
   const telefonoManual =
     typeof body.telefonoCliente === "string"
-      ? body.telefonoCliente.trim().slice(0, 40)
+      ? body.telefonoCliente.replace(/\D/g, "")
       : "";
+
 
   const referenciaCompra =
     typeof body.referenciaCompra === "string"
@@ -68,6 +69,19 @@ export async function POST(req: NextRequest) {
 
   const fechaInicioPrevista =
     body.fechaInicioPrevista;
+
+  if (
+    telefonoManual &&
+    !/^[0-9]{8}$/.test(telefonoManual)
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "El WhatsApp debe contener exactamente 8 números.",
+      },
+      { status: 400 }
+    );
+  }
 
   if (!planId) {
     return NextResponse.json(

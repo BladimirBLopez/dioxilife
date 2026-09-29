@@ -81,6 +81,14 @@ export default function NuevoSeguimientoForm({
       return;
     }
 
+    if (!/^[0-9]{8}$/.test(telefonoCliente)) {
+      toast.error(
+        "El WhatsApp debe tener exactamente 8 números."
+      );
+
+      return;
+    }
+
     setProcesando(true);
 
     const toastId =
@@ -108,7 +116,7 @@ export default function NuevoSeguimientoForm({
                   nombreCliente.trim(),
 
                 telefonoCliente:
-                  telefonoCliente.trim(),
+                  telefonoCliente.replace(/\D/g, ""),
 
                 origen,
 
@@ -236,15 +244,17 @@ export default function NuevoSeguimientoForm({
             </label>
 
             <input
+              type="tel"
+              inputMode="numeric"
               value={telefonoCliente}
               onChange={(e) =>
                 setTelefonoCliente(
-                  e.target.value
+                  e.target.value.replace(/\D/g, "")
                 )
               }
               className="admin-input"
               placeholder="Ej. 71234567"
-              maxLength={40}
+              maxLength={8}
               required
             />
           </div>

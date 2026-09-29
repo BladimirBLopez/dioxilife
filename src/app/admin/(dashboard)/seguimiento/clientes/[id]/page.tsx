@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import AgendaCliente from "@/components/admin/seguimiento/AgendaCliente";
+import AccionesSeguimientoCliente from "@/components/admin/seguimiento/AccionesSeguimientoCliente";
 
 function estiloEstado(estado: string) {
   switch (estado) {
@@ -277,6 +278,14 @@ export default async function SeguimientoClientePage({
                 {seguimiento.telefonoCliente ||
                   "No registrado"}
               </p>
+
+              <div className="mt-4">
+                <AccionesSeguimientoCliente
+                  seguimientoId={seguimiento.id}
+                  telefono={seguimiento.telefonoCliente}
+                  nombreCliente={seguimiento.nombreCliente}
+                />
+              </div>
             </div>
 
           </div>

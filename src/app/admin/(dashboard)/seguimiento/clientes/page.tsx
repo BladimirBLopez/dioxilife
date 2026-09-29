@@ -132,9 +132,22 @@ export default async function SeguimientosClientesPage() {
                       </p>
 
                       {seguimiento.telefonoCliente && (
-                        <p className="mt-1 text-xs text-gray-500">
-                          {seguimiento.telefonoCliente}
-                        </p>
+                        <div className="mt-2 space-y-2">
+
+                          <p className="text-xs text-gray-500">
+                            {seguimiento.telefonoCliente}
+                          </p>
+
+                          <a
+                            href={`https://wa.me/591${seguimiento.telefonoCliente.replace(/\D/g, "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700"
+                          >
+                            WhatsApp
+                          </a>
+
+                        </div>
                       )}
                     </td>
 
