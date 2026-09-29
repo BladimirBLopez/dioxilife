@@ -97,6 +97,8 @@ export async function GET(
 
           select: {
             id: true,
+            tipo: true,
+            recordatorio: true,
             titulo: true,
             descripcion: true,
             momento: true,

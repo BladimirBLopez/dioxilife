@@ -128,16 +128,32 @@ model PlanSeguimiento {
   @@index([estado])
 }
 
+enum TipoActividadSeguimiento {
+  TAREA
+  INFORMACION
+  CONTROL
+}
+
+enum RecordatorioActividad {
+  NINGUNO
+  A_LA_HORA
+  MIN_15_ANTES
+  MIN_30_ANTES
+  MIN_60_ANTES
+}
+
 model ActividadPlan {
   id String @id @default(cuid())
 
   planId String
   plan   PlanSeguimiento @relation(fields: [planId], references: [id], onDelete: Cascade)
 
-  titulo      String
-  descripcion String?
-  momento     String?
-  hora        String?
+  tipo         TipoActividadSeguimiento @default(TAREA)
+  recordatorio RecordatorioActividad    @default(NINGUNO)
+  titulo       String
+  descripcion  String?
+  momento      String?
+  hora         String?
 
   diaInicio Int     @default(1)
   diaFin    Int?
@@ -204,10 +220,12 @@ model ActividadSeguimiento {
   seguimientoId String
   seguimiento   SeguimientoCliente @relation(fields: [seguimientoId], references: [id], onDelete: Cascade)
 
-  titulo      String
-  descripcion String?
-  momento     String?
-  hora        String?
+  tipo         TipoActividadSeguimiento @default(TAREA)
+  recordatorio RecordatorioActividad    @default(NINGUNO)
+  titulo       String
+  descripcion  String?
+  momento      String?
+  hora         String?
 
   diaInicio Int     @default(1)
   diaFin    Int?

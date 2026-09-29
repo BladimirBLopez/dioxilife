@@ -277,6 +277,8 @@ export async function POST(req: NextRequest) {
           ],
 
           select: {
+            tipo: true,
+            recordatorio: true,
             titulo: true,
             descripcion: true,
             momento: true,
@@ -372,6 +374,12 @@ export async function POST(req: NextRequest) {
           create:
             plan.actividades.map(
               (actividad) => ({
+                tipo:
+                  actividad.tipo,
+
+                recordatorio:
+                  actividad.recordatorio,
+
                 titulo:
                   actividad.titulo,
 

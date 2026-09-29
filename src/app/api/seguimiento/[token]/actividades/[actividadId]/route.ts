@@ -126,6 +126,7 @@ export async function PUT(
 
       select: {
         id: true,
+        tipo: true,
         diaInicio:
           true,
         diaFin:
@@ -141,6 +142,21 @@ export async function PUT(
       },
       {
         status: 404,
+      }
+    );
+  }
+
+  if (
+    actividad.tipo !==
+    "TAREA"
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Esta actividad no se puede marcar como realizada.",
+      },
+      {
+        status: 409,
       }
     );
   }

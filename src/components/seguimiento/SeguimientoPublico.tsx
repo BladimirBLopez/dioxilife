@@ -44,8 +44,18 @@ type Progreso = {
 };
 
 
+type RecordatorioActividad =
+  | "NINGUNO"
+  | "A_LA_HORA"
+  | "MIN_15_ANTES"
+  | "MIN_30_ANTES"
+  | "MIN_60_ANTES";
+
+
 type Actividad = {
   id: string;
+  tipo: "TAREA" | "INFORMACION" | "CONTROL";
+  recordatorio: RecordatorioActividad;
   titulo: string;
   descripcion: string | null;
   momento: string | null;
@@ -137,6 +147,73 @@ function actividadCorrespondeDia(
 }
 
 
+function textoRecordatorio(
+  recordatorio: RecordatorioActividad
+) {
+  switch (recordatorio) {
+    case "A_LA_HORA":
+      return "A la hora";
+    case "MIN_15_ANTES":
+      return "15 min antes";
+    case "MIN_30_ANTES":
+      return "30 min antes";
+    case "MIN_60_ANTES":
+      return "1 hora antes";
+    default:
+      return null;
+  }
+}
+
+
+const ORDEN_MOMENTOS: Record<string, number> = {
+  "Ayunas": 10,
+  "Desayuno": 20,
+  "Mañana": 25,
+  "Media mañana": 30,
+  "Almuerzo": 40,
+  "Mediodía": 45,
+  "Tarde": 50,
+  "Cena": 60,
+  "Noche": 70,
+  "Antes de dormir": 80,
+};
+
+
+function ordenarActividadesAgenda(
+  a: Actividad,
+  b: Actividad
+) {
+  const momentoA =
+    a.momento
+      ? ORDEN_MOMENTOS[a.momento] ?? 90
+      : 90;
+
+  const momentoB =
+    b.momento
+      ? ORDEN_MOMENTOS[b.momento] ?? 90
+      : 90;
+
+  if (momentoA !== momentoB) {
+    return momentoA - momentoB;
+  }
+
+  const horaA =
+    a.hora || "99:99";
+
+  const horaB =
+    b.hora || "99:99";
+
+  const porHora =
+    horaA.localeCompare(horaB);
+
+  if (porHora !== 0) {
+    return porHora;
+  }
+
+  return a.orden - b.orden;
+}
+
+
 function actividadCompletadaEnDia(
   actividad: Actividad,
   dia: number
@@ -158,6 +235,13 @@ function cantidadTotalTareas(
       total,
       actividad
     ) => {
+      if (
+        actividad.tipo !==
+        "TAREA"
+      ) {
+        return total;
+      }
+
       const fin =
         Math.min(
           actividad.diaFin ??
@@ -193,11 +277,13 @@ function cantidadCompletadas(
       total,
       actividad
     ) =>
-      total +
-      actividad.progresos.filter(
-        (progreso) =>
-          progreso.completado
-      ).length,
+      actividad.tipo === "TAREA"
+        ? total +
+          actividad.progresos.filter(
+            (progreso) =>
+              progreso.completado
+          ).length
+        : total,
     0
   );
 }
@@ -322,17 +408,32 @@ export default function SeguimientoPublico({
           return [];
         }
 
-        return seguimiento.actividades.filter(
-          (actividad) =>
-            actividadCorrespondeDia(
-              actividad,
-              seguimiento.diaActual as number
-            )
-        );
+        return seguimiento.actividades
+          .filter(
+            (actividad) =>
+              actividadCorrespondeDia(
+                actividad,
+                seguimiento.diaActual as number
+              )
+          )
+          .sort(
+            ordenarActividadesAgenda
+          );
       },
       [
         seguimiento,
       ]
+    );
+
+
+  const tareasHoy =
+    useMemo(
+      () =>
+        actividadesHoy.filter(
+          (actividad) =>
+            actividad.tipo === "TAREA"
+        ),
+      [actividadesHoy]
     );
 
 
@@ -346,7 +447,7 @@ export default function SeguimientoPublico({
           return 0;
         }
 
-        return actividadesHoy.filter(
+        return tareasHoy.filter(
           (actividad) =>
             actividadCompletadaEnDia(
               actividad,
@@ -355,18 +456,18 @@ export default function SeguimientoPublico({
         ).length;
       },
       [
-        actividadesHoy,
+        tareasHoy,
         seguimiento,
       ]
     );
 
 
   const porcentajeHoy =
-    actividadesHoy.length > 0
+    tareasHoy.length > 0
       ? Math.round(
           (
             completadasHoy /
-            actividadesHoy.length
+            tareasHoy.length
           ) * 100
         )
       : 0;
@@ -903,7 +1004,7 @@ export default function SeguimientoPublico({
               </span>
 
               <span>
-                {completadasHoy} de {actividadesHoy.length}
+                {completadasHoy} de {tareasHoy.length}
               </span>
             </div>
 
@@ -1018,6 +1119,22 @@ export default function SeguimientoPublico({
 
                               <div className="flex flex-wrap items-center gap-2">
 
+                                <span
+                                  className={`rounded-lg px-2 py-1 text-xs font-bold ${
+                                    actividad.tipo === "TAREA"
+                                      ? "bg-emerald-50 text-emerald-700"
+                                      : actividad.tipo === "INFORMACION"
+                                      ? "bg-blue-50 text-blue-700"
+                                      : "bg-amber-50 text-amber-700"
+                                  }`}
+                                >
+                                  {actividad.tipo === "TAREA"
+                                    ? "Tarea"
+                                    : actividad.tipo === "INFORMACION"
+                                    ? "Información"
+                                    : "Control"}
+                                </span>
+
                                 {actividad.hora && (
                                   <span className="rounded-lg bg-[#F4F2F8] px-2 py-1 text-xs font-bold text-brand-blue">
                                     {actividad.hora}
@@ -1027,6 +1144,14 @@ export default function SeguimientoPublico({
                                 {actividad.momento && (
                                   <span className="text-xs font-medium text-brand-gray">
                                     {actividad.momento}
+                                  </span>
+                                )}
+
+                                {actividad.recordatorio !== "NINGUNO" && (
+                                  <span className="rounded-lg bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
+                                    🔔 {textoRecordatorio(
+                                      actividad.recordatorio
+                                    )}
                                   </span>
                                 )}
 
@@ -1053,34 +1178,48 @@ export default function SeguimientoPublico({
                           </div>
 
 
-                          <button
-                            type="button"
-                            onClick={() =>
-                              cambiarEstadoActividad(
-                                actividad
-                              )
-                            }
-                            disabled={
-                              actualizando
-                            }
-                            className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                              completada
-                                ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
-                                : "bg-brand-pink text-white hover:opacity-90"
-                            }`}
-                          >
-                            {actualizando ? (
-                              <LoaderCircle className="h-5 w-5 animate-spin" />
-                            ) : completada ? (
-                              <CheckCircle2 className="h-5 w-5" />
-                            ) : (
-                              <Circle className="h-5 w-5" />
-                            )}
+                          {actividad.tipo === "TAREA" && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                cambiarEstadoActividad(
+                                  actividad
+                                )
+                              }
+                              disabled={
+                                actualizando
+                              }
+                              className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                                completada
+                                  ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                                  : "bg-brand-pink text-white hover:opacity-90"
+                              }`}
+                            >
+                              {actualizando ? (
+                                <LoaderCircle className="h-5 w-5 animate-spin" />
+                              ) : completada ? (
+                                <CheckCircle2 className="h-5 w-5" />
+                              ) : (
+                                <Circle className="h-5 w-5" />
+                              )}
 
-                            {completada
-                              ? "Realizada"
-                              : "Marcar como realizada"}
-                          </button>
+                              {completada
+                                ? "Realizada"
+                                : "Marcar como realizada"}
+                            </button>
+                          )}
+
+                          {actividad.tipo === "INFORMACION" && (
+                            <div className="mt-4 rounded-xl bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
+                              Información del día
+                            </div>
+                          )}
+
+                          {actividad.tipo === "CONTROL" && (
+                            <div className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
+                              Control programado
+                            </div>
+                          )}
 
                         </div>
                       </article>
@@ -1123,16 +1262,26 @@ export default function SeguimientoPublico({
                 (dia) => {
 
                   const actividadesDia =
-                    seguimiento.actividades.filter(
+                    seguimiento.actividades
+                      .filter(
+                        (actividad) =>
+                          actividadCorrespondeDia(
+                            actividad,
+                            dia
+                          )
+                      )
+                      .sort(
+                        ordenarActividadesAgenda
+                      );
+
+                  const tareasDia =
+                    actividadesDia.filter(
                       (actividad) =>
-                        actividadCorrespondeDia(
-                          actividad,
-                          dia
-                        )
+                        actividad.tipo === "TAREA"
                     );
 
                   const completadasDia =
-                    actividadesDia.filter(
+                    tareasDia.filter(
                       (actividad) =>
                         actividadCompletadaEnDia(
                           actividad,
@@ -1190,15 +1339,15 @@ export default function SeguimientoPublico({
                         </div>
 
 
-                        {actividadesDia.length >
+                        {tareasDia.length >
                           0 && (
                           <span className={`text-xs font-bold ${
                             completadasDia ===
-                            actividadesDia.length
+                            tareasDia.length
                               ? "text-emerald-600"
                               : "text-brand-gray"
                           }`}>
-                            {completadasDia}/{actividadesDia.length}
+                            {completadasDia}/{tareasDia.length}
                           </span>
                         )}
 
@@ -1225,10 +1374,16 @@ export default function SeguimientoPublico({
                                   }
                                   className="flex items-start gap-2 text-sm"
                                 >
-                                  {hecha ? (
-                                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                  {actividad.tipo === "TAREA" ? (
+                                    hecha ? (
+                                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                    ) : (
+                                      <Circle className="mt-0.5 h-4 w-4 shrink-0 text-slate-300" />
+                                    )
+                                  ) : actividad.tipo === "INFORMACION" ? (
+                                    <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
                                   ) : (
-                                    <Circle className="mt-0.5 h-4 w-4 shrink-0 text-slate-300" />
+                                    <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
                                   )}
 
                                   <span className={
@@ -1240,6 +1395,14 @@ export default function SeguimientoPublico({
                                       ? `${actividad.hora} · `
                                       : ""}
                                     {actividad.titulo}
+
+                                    {actividad.recordatorio !== "NINGUNO" && (
+                                      <span className="ml-2 text-xs font-medium text-amber-600">
+                                        · 🔔 {textoRecordatorio(
+                                          actividad.recordatorio
+                                        )}
+                                      </span>
+                                    )}
                                   </span>
                                 </div>
                               );

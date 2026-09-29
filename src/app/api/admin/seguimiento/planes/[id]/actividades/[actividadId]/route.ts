@@ -56,6 +56,8 @@ export async function PUT(
   }
 
   const {
+    tipo,
+    recordatorio,
     titulo,
     descripcion,
     momento,
@@ -65,6 +67,20 @@ export async function PUT(
     orden,
     activo,
   } = await req.json();
+
+  const tipoActividad =
+    tipo === "INFORMACION" ||
+    tipo === "CONTROL"
+      ? tipo
+      : "TAREA";
+
+  const recordatorioActividad =
+    recordatorio === "A_LA_HORA" ||
+    recordatorio === "MIN_15_ANTES" ||
+    recordatorio === "MIN_30_ANTES" ||
+    recordatorio === "MIN_60_ANTES"
+      ? recordatorio
+      : "NINGUNO";
 
   const tituloLimpio = String(titulo || "").trim();
   const inicio = Number(diaInicio);
@@ -117,6 +133,8 @@ export async function PUT(
       id: actividadId,
     },
     data: {
+      tipo: tipoActividad,
+      recordatorio: recordatorioActividad,
       titulo: tituloLimpio,
       descripcion: descripcion
         ? String(descripcion).trim().slice(0, 1500)

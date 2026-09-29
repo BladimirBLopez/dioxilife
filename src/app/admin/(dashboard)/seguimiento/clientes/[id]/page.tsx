@@ -96,6 +96,8 @@ export default async function SeguimientoClientePage({
 
           select: {
             id: true,
+            tipo: true,
+            recordatorio: true,
             titulo: true,
             descripcion: true,
             momento: true,
@@ -393,6 +395,8 @@ export default async function SeguimientoClientePage({
         actividades={seguimiento.actividades.map(
           (actividad) => ({
             id: actividad.id,
+            tipo: actividad.tipo,
+            recordatorio: actividad.recordatorio,
             titulo: actividad.titulo,
             descripcion: actividad.descripcion,
             momento: actividad.momento,

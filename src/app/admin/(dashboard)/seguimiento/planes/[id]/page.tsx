@@ -6,8 +6,22 @@ import { useParams } from "next/navigation";
 import Modal from "@/components/Modal";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
+type TipoActividad =
+  | "TAREA"
+  | "INFORMACION"
+  | "CONTROL";
+
+type RecordatorioActividad =
+  | "NINGUNO"
+  | "A_LA_HORA"
+  | "MIN_15_ANTES"
+  | "MIN_30_ANTES"
+  | "MIN_60_ANTES";
+
 type Actividad = {
   id: string;
+  tipo: TipoActividad;
+  recordatorio: RecordatorioActividad;
   titulo: string;
   descripcion: string | null;
   momento: string | null;
@@ -31,6 +45,8 @@ type Plan = {
 };
 
 const vacio = {
+  tipo: "TAREA" as TipoActividad,
+  recordatorio: "NINGUNO" as RecordatorioActividad,
   titulo: "",
   descripcion: "",
   momento: "",
@@ -105,6 +121,8 @@ export default function PlanActividadesPage() {
 
   function abrirEditar(a: Actividad) {
     const datos = {
+      tipo: a.tipo,
+      recordatorio: a.recordatorio,
       titulo: a.titulo,
       descripcion: a.descripcion || "",
       momento: a.momento || "",
@@ -164,6 +182,8 @@ export default function PlanActividadesPage() {
     setGuardando(true);
 
     const body = {
+      tipo: form.tipo,
+      recordatorio: form.recordatorio,
       titulo: form.titulo.trim(),
       descripcion: form.descripcion.trim() || null,
       momento: form.momento.trim() || null,
@@ -371,6 +391,22 @@ export default function PlanActividadesPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`rounded-lg px-2 py-1 text-xs font-semibold ${
+                          a.tipo === "TAREA"
+                            ? "bg-emerald-50 text-emerald-700"
+                            : a.tipo === "INFORMACION"
+                            ? "bg-blue-50 text-blue-700"
+                            : "bg-amber-50 text-amber-700"
+                        }`}
+                      >
+                        {a.tipo === "TAREA"
+                          ? "Tarea"
+                          : a.tipo === "INFORMACION"
+                          ? "Información"
+                          : "Control"}
+                      </span>
+
                       {a.hora && (
                         <span className="rounded-lg bg-[#F8F6FF] px-2 py-1 text-xs font-semibold text-brand-pink">
                           {a.hora}
@@ -447,6 +483,88 @@ export default function PlanActividadesPage() {
           >
             <div>
               <label className="admin-label">
+                Tipo de actividad
+              </label>
+
+              <select
+                value={form.tipo}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    tipo: e.target.value as TipoActividad,
+                  })
+                }
+                className="admin-input"
+              >
+                <option value="TAREA">
+                  Tarea
+                </option>
+
+                <option value="INFORMACION">
+                  Información
+                </option>
+
+                <option value="CONTROL">
+                  Control
+                </option>
+              </select>
+
+              <p className="mt-1 text-xs text-[#8A8790]">
+                {form.tipo === "TAREA"
+                  ? "El cliente podrá marcar esta actividad como realizada."
+                  : form.tipo === "INFORMACION"
+                  ? "Se mostrará como información y no contará como tarea pendiente."
+                  : "Se usará para registrar un dato o control del cliente."}
+              </p>
+            </div>
+
+            <div>
+              <label className="admin-label">
+                Recordatorio
+              </label>
+
+              <select
+                value={form.recordatorio}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    recordatorio:
+                      e.target.value as RecordatorioActividad,
+                  })
+                }
+                className="admin-input"
+              >
+                <option value="NINGUNO">
+                  Sin recordatorio
+                </option>
+
+                <option value="A_LA_HORA">
+                  A la hora indicada
+                </option>
+
+                <option value="MIN_15_ANTES">
+                  15 minutos antes
+                </option>
+
+                <option value="MIN_30_ANTES">
+                  30 minutos antes
+                </option>
+
+                <option value="MIN_60_ANTES">
+                  1 hora antes
+                </option>
+              </select>
+
+              {form.recordatorio !== "NINGUNO" &&
+                !form.hora && (
+                  <p className="mt-1 text-xs text-amber-600">
+                    Define una hora para poder usar este recordatorio.
+                  </p>
+                )}
+            </div>
+
+            <div>
+              <label className="admin-label">
                 Título
               </label>
 
@@ -503,14 +621,26 @@ export default function PlanActividadesPage() {
                   <option value="">
                     Sin especificar
                   </option>
-                  <option value="Mañana">
-                    Mañana
+                  <option value="Ayunas">
+                    Ayunas
                   </option>
-                  <option value="Mediodía">
-                    Mediodía
+                  <option value="Desayuno">
+                    Desayuno
+                  </option>
+                  <option value="Media mañana">
+                    Media mañana
+                  </option>
+                  <option value="Almuerzo">
+                    Almuerzo
                   </option>
                   <option value="Tarde">
                     Tarde
+                  </option>
+                  <option value="Cena">
+                    Cena
+                  </option>
+                  <option value="Antes de dormir">
+                    Antes de dormir
                   </option>
                   <option value="Noche">
                     Noche

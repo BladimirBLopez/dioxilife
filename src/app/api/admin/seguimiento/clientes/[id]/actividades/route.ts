@@ -120,6 +120,8 @@ export async function POST(
   }
 
   const {
+    tipo,
+    recordatorio,
     titulo,
     descripcion,
     momento,
@@ -128,6 +130,20 @@ export async function POST(
     diaFin,
     orden,
   } = await req.json();
+
+  const tipoActividad =
+    tipo === "INFORMACION" ||
+    tipo === "CONTROL"
+      ? tipo
+      : "TAREA";
+
+  const recordatorioActividad =
+    recordatorio === "A_LA_HORA" ||
+    recordatorio === "MIN_15_ANTES" ||
+    recordatorio === "MIN_30_ANTES" ||
+    recordatorio === "MIN_60_ANTES"
+      ? recordatorio
+      : "NINGUNO";
 
   const tituloLimpio =
     String(titulo || "").trim();
@@ -187,6 +203,10 @@ export async function POST(
     await prisma.actividadSeguimiento.create({
       data: {
         seguimientoId: id,
+
+        tipo: tipoActividad,
+
+        recordatorio: recordatorioActividad,
 
         titulo: tituloLimpio,
 

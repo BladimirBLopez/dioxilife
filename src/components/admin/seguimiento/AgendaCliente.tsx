@@ -6,8 +6,17 @@ import { toast } from "sonner";
 import Modal from "@/components/Modal";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
+type RecordatorioActividad =
+  | "NINGUNO"
+  | "A_LA_HORA"
+  | "MIN_15_ANTES"
+  | "MIN_30_ANTES"
+  | "MIN_60_ANTES";
+
 type Actividad = {
   id: string;
+  tipo: "TAREA" | "INFORMACION" | "CONTROL";
+  recordatorio: RecordatorioActividad;
   titulo: string;
   descripcion: string | null;
   momento: string | null;
@@ -27,6 +36,8 @@ type Props = {
 };
 
 const vacio = {
+  tipo: "TAREA" as "TAREA" | "INFORMACION" | "CONTROL",
+  recordatorio: "NINGUNO" as RecordatorioActividad,
   titulo: "",
   descripcion: "",
   momento: "",
@@ -74,6 +85,8 @@ export default function AgendaCliente({
     setActividadEditando(actividad);
 
     setForm({
+      tipo: actividad.tipo,
+      recordatorio: actividad.recordatorio,
       titulo: actividad.titulo,
       descripcion: actividad.descripcion || "",
       momento: actividad.momento || "",
@@ -130,6 +143,8 @@ export default function AgendaCliente({
         },
 
         body: JSON.stringify({
+          tipo: form.tipo,
+          recordatorio: form.recordatorio,
           titulo,
           descripcion:
             form.descripcion.trim() || null,
@@ -225,6 +240,12 @@ export default function AgendaCliente({
           },
 
           body: JSON.stringify({
+            tipo:
+              actividad.tipo,
+
+            recordatorio:
+              actividad.recordatorio,
+
             titulo:
               actividad.titulo,
             descripcion:
@@ -412,6 +433,22 @@ export default function AgendaCliente({
 
                       <div className="flex flex-wrap items-center gap-2">
 
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                            actividad.tipo === "TAREA"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : actividad.tipo === "INFORMACION"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-amber-100 text-amber-700"
+                          }`}
+                        >
+                          {actividad.tipo === "TAREA"
+                            ? "Tarea"
+                            : actividad.tipo === "INFORMACION"
+                            ? "Información"
+                            : "Control"}
+                        </span>
+
                         <span className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-semibold text-violet-700">
                           Día {actividad.diaInicio}
                           {actividad.diaFin &&
@@ -548,6 +585,93 @@ export default function AgendaCliente({
 
             <div>
               <label className="admin-label">
+                Tipo de actividad
+              </label>
+
+              <select
+                value={form.tipo}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    tipo: e.target.value as
+                      | "TAREA"
+                      | "INFORMACION"
+                      | "CONTROL",
+                  })
+                }
+                className="admin-input"
+              >
+                <option value="TAREA">
+                  Tarea
+                </option>
+
+                <option value="INFORMACION">
+                  Información
+                </option>
+
+                <option value="CONTROL">
+                  Control
+                </option>
+              </select>
+
+              <p className="mt-1 text-xs text-gray-500">
+                {form.tipo === "TAREA"
+                  ? "El cliente podrá marcarla como realizada."
+                  : form.tipo === "INFORMACION"
+                  ? "Solo se mostrará como información."
+                  : "Permitirá registrar un dato en una siguiente etapa."}
+              </p>
+            </div>
+
+
+            <div>
+              <label className="admin-label">
+                Recordatorio
+              </label>
+
+              <select
+                value={form.recordatorio}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    recordatorio:
+                      e.target.value as RecordatorioActividad,
+                  })
+                }
+                className="admin-input"
+              >
+                <option value="NINGUNO">
+                  Sin recordatorio
+                </option>
+
+                <option value="A_LA_HORA">
+                  A la hora indicada
+                </option>
+
+                <option value="MIN_15_ANTES">
+                  15 minutos antes
+                </option>
+
+                <option value="MIN_30_ANTES">
+                  30 minutos antes
+                </option>
+
+                <option value="MIN_60_ANTES">
+                  1 hora antes
+                </option>
+              </select>
+
+              {form.recordatorio !== "NINGUNO" &&
+                !form.hora && (
+                  <p className="mt-1 text-xs text-amber-600">
+                    Define una hora para poder usar este recordatorio.
+                  </p>
+                )}
+            </div>
+
+
+            <div>
+              <label className="admin-label">
                 Título
               </label>
 
@@ -663,7 +787,7 @@ export default function AgendaCliente({
                   Momento
                 </label>
 
-                <input
+                <select
                   value={form.momento}
                   onChange={(e) =>
                     setForm({
@@ -672,10 +796,44 @@ export default function AgendaCliente({
                         e.target.value,
                     })
                   }
-                  maxLength={60}
                   className="admin-input"
-                  placeholder="Ej. Mañana"
-                />
+                >
+                  <option value="">
+                    Sin especificar
+                  </option>
+
+                  <option value="Ayunas">
+                    Ayunas
+                  </option>
+
+                  <option value="Desayuno">
+                    Desayuno
+                  </option>
+
+                  <option value="Media mañana">
+                    Media mañana
+                  </option>
+
+                  <option value="Almuerzo">
+                    Almuerzo
+                  </option>
+
+                  <option value="Tarde">
+                    Tarde
+                  </option>
+
+                  <option value="Cena">
+                    Cena
+                  </option>
+
+                  <option value="Antes de dormir">
+                    Antes de dormir
+                  </option>
+
+                  <option value="Noche">
+                    Noche
+                  </option>
+                </select>
               </div>
 
             </div>
