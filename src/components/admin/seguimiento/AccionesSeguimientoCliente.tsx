@@ -27,9 +27,11 @@ export default function AccionesSeguimientoCliente({
   async function enviarWhatsApp(
     nuevoEnlace: boolean
   ) {
+
     if (procesando) {
       return;
     }
+
 
     if (
       nuevoEnlace &&
@@ -40,9 +42,12 @@ export default function AccionesSeguimientoCliente({
       return;
     }
 
+
     setProcesando(true);
 
+
     try {
+
       const res =
         await fetch(
           `/api/admin/seguimiento/clientes/${seguimientoId}/enviar-whatsapp${
@@ -95,13 +100,15 @@ export default function AccionesSeguimientoCliente({
       setProcesando(false);
 
     }
+
   }
 
 
   return (
-    <div className="flex w-full flex-col gap-3 sm:w-auto">
 
-      <div className="flex flex-wrap gap-2">
+    <div className="flex w-full max-w-full flex-col gap-3 overflow-hidden">
+
+      <div className="flex w-full max-w-full flex-col gap-2 sm:flex-row">
 
         <button
           type="button"
@@ -109,32 +116,75 @@ export default function AccionesSeguimientoCliente({
           onClick={() =>
             void enviarWhatsApp(false)
           }
-          className="flex w-full items-center justify-center rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50 sm:w-auto"
+          className="
+            flex
+            w-full
+            max-w-full
+            items-center
+            justify-center
+            rounded-xl
+            bg-green-600
+            px-4
+            py-3
+            text-sm
+            font-semibold
+            text-white
+            transition
+            hover:bg-green-700
+            disabled:opacity-50
+            sm:w-auto
+          "
         >
+
           {procesando
             ? "Preparando..."
             : "📱 Enviar WhatsApp"}
+
         </button>
 
 
         {ultimoEnvio && (
+
           <button
             type="button"
             disabled={procesando}
             onClick={() =>
               void enviarWhatsApp(true)
             }
-            className="inline-flex items-center rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+            className="
+              flex
+              w-full
+              max-w-full
+              items-center
+              justify-center
+              rounded-xl
+              border
+              border-gray-300
+              bg-white
+              px-4
+              py-3
+              text-sm
+              font-semibold
+              text-gray-700
+              transition
+              hover:bg-gray-50
+              disabled:opacity-50
+              sm:w-auto
+            "
           >
+
             🔄 Generar enlace nuevo
+
           </button>
+
         )}
 
       </div>
 
 
       {ultimoEnvio && (
-        <div className="rounded-xl border border-green-200 bg-green-50 p-3">
+
+        <div className="w-full max-w-full overflow-hidden rounded-xl border border-green-200 bg-green-50 p-3">
 
           <p className="text-xs font-bold text-green-800">
             Último contacto WhatsApp
@@ -143,7 +193,7 @@ export default function AccionesSeguimientoCliente({
 
           <div className="mt-2 space-y-1">
 
-            <p className="text-xs text-green-700">
+            <p className="break-words text-xs text-green-700">
               ✅{" "}
               {new Date(
                 ultimoEnvio.fechaEnvio
@@ -157,7 +207,7 @@ export default function AccionesSeguimientoCliente({
             </p>
 
 
-            <p className="text-xs text-green-700">
+            <p className="break-words text-xs text-green-700">
               👤 Enviado por:{" "}
               {ultimoEnvio.enviadoPorUsuario ||
                 "Sistema"}
@@ -166,8 +216,10 @@ export default function AccionesSeguimientoCliente({
           </div>
 
         </div>
+
       )}
 
     </div>
+
   );
 }

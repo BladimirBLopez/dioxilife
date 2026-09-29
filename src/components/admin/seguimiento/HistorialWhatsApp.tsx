@@ -13,12 +13,15 @@ export default function HistorialWhatsApp({
 }: {
   envios: EnvioWhatsApp[];
 }) {
+
   return (
+
     <div className="mt-5 w-full max-w-full overflow-hidden border-t pt-5">
 
       <h3 className="text-sm font-semibold text-gray-900">
         Historial WhatsApp
       </h3>
+
 
       {envios.length === 0 ? (
 
@@ -28,35 +31,37 @@ export default function HistorialWhatsApp({
 
       ) : (
 
-        <div className="mt-3 w-full max-w-full space-y-3 overflow-hidden">
+        <div className="mt-3 w-full max-w-full space-y-3">
 
-          {envios.map((envio) => (
+          {envios.map((envio)=>(
 
             <div
               key={envio.id}
               className="w-full max-w-full overflow-hidden rounded-lg border bg-gray-50 p-3"
             >
 
-              <p className="break-words text-xs font-semibold text-gray-700">
+              <p className="text-xs font-semibold text-gray-700">
                 📱 {envio.telefono}
               </p>
 
+
               <p className="mt-1 text-xs text-gray-500">
-                {new Date(
-                  envio.fechaEnvio
-                ).toLocaleString(
-                  "es-BO",
-                  {
-                    timeZone:
+                {new Date(envio.fechaEnvio)
+                  .toLocaleString(
+                    "es-BO",
+                    {
+                      timeZone:
                       "America/La_Paz",
-                  }
-                )}
+                    }
+                  )}
               </p>
+
 
               <p className="mt-1 text-xs text-gray-500">
                 Enviado por:{" "}
                 {envio.enviadoPorUsuario || "Sistema"}
               </p>
+
 
               <details className="mt-3">
 
@@ -64,15 +69,17 @@ export default function HistorialWhatsApp({
                   ▼ Ver mensaje
                 </summary>
 
+
                 <div className="mt-3 w-full max-w-full overflow-hidden rounded-xl bg-white p-3">
 
-                  <p className="whitespace-pre-line break-words text-xs text-gray-700">
+                  <p className="whitespace-pre-line break-all text-xs text-gray-700">
                     {envio.mensaje}
                   </p>
 
                 </div>
 
               </details>
+
 
             </div>
 
@@ -83,5 +90,6 @@ export default function HistorialWhatsApp({
       )}
 
     </div>
+
   );
 }
