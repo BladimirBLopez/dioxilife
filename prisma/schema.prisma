@@ -203,8 +203,9 @@ model SeguimientoCliente {
   fechaFinalizado     DateTime?
   observacionInterna  String?
 
-  actividades ActividadSeguimiento[]
-  progresos   ProgresoActividad[]
+  actividades       ActividadSeguimiento[]
+  progresos         ProgresoActividad[]
+  suscripcionesPush SuscripcionPush[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -239,6 +240,29 @@ model ActividadSeguimiento {
 
   @@index([seguimientoId])
   @@index([diaInicio])
+}
+
+model SuscripcionPush {
+  id String @id @default(cuid())
+
+  seguimientoId String
+  seguimiento   SeguimientoCliente @relation(fields: [seguimientoId], references: [id], onDelete: Cascade)
+
+  endpoint String
+  p256dh   String
+  auth     String
+
+  activa Boolean @default(true)
+
+  ultimaEntregaAt DateTime?
+  ultimoErrorAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([seguimientoId, endpoint])
+  @@index([seguimientoId])
+  @@index([activa])
 }
 
 model ProgresoActividad {

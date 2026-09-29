@@ -11,6 +11,8 @@ import Image from "next/image";
 
 import {
   Ban,
+  Bell,
+  BellOff,
   CalendarDays,
   Check,
   CheckCircle2,
@@ -89,6 +91,49 @@ type Pestana =
   | "hoy"
   | "calendario"
   | "plan";
+
+
+type EstadoRecordatorios =
+  | "COMPROBANDO"
+  | "NO_COMPATIBLE"
+  | "BLOQUEADOS"
+  | "INACTIVOS"
+  | "ACTIVOS";
+
+
+function convertirClaveVapid(
+  base64String: string
+) {
+  const padding =
+    "=".repeat(
+      (4 -
+        (
+          base64String.length %
+          4
+        )) %
+        4
+    );
+
+  const base64 =
+    (
+      base64String +
+      padding
+    )
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+
+  const rawData =
+    window.atob(
+      base64
+    );
+
+  return Uint8Array.from(
+    [...rawData].map(
+      (char) =>
+        char.charCodeAt(0)
+    )
+  );
+}
 
 
 function primerNombre(
@@ -336,6 +381,20 @@ export default function SeguimientoPublico({
       "hoy"
     );
 
+  const [
+    estadoRecordatorios,
+    setEstadoRecordatorios,
+  ] =
+    useState<EstadoRecordatorios>(
+      "COMPROBANDO"
+    );
+
+  const [
+    cambiandoRecordatorios,
+    setCambiandoRecordatorios,
+  ] =
+    useState(false);
+
 
   const cargarSeguimiento =
     useCallback(
@@ -396,6 +455,331 @@ export default function SeguimientoPublico({
       cargarSeguimiento,
     ]
   );
+
+
+  useEffect(
+    () => {
+      let cancelado =
+        false;
+
+      async function comprobarRecordatorios() {
+        if (
+          !("serviceWorker" in navigator) ||
+          !("PushManager" in window) ||
+          !("Notification" in window)
+        ) {
+          if (!cancelado) {
+            setEstadoRecordatorios(
+              "NO_COMPATIBLE"
+            );
+          }
+
+          return;
+        }
+
+        if (
+          Notification.permission ===
+          "denied"
+        ) {
+          if (!cancelado) {
+            setEstadoRecordatorios(
+              "BLOQUEADOS"
+            );
+          }
+
+          return;
+        }
+
+        try {
+          const registro =
+            await navigator.serviceWorker.ready;
+
+          const suscripcion =
+            await registro.pushManager.getSubscription();
+
+          if (!suscripcion) {
+            if (!cancelado) {
+              setEstadoRecordatorios(
+                "INACTIVOS"
+              );
+            }
+
+            return;
+          }
+
+          const respuesta =
+            await fetch(
+              `/api/seguimiento/${encodeURIComponent(token)}/push`,
+              {
+                method:
+                  "POST",
+
+                headers: {
+                  "Content-Type":
+                    "application/json",
+                },
+
+                body:
+                  JSON.stringify(
+                    suscripcion.toJSON()
+                  ),
+              }
+            );
+
+          if (!respuesta.ok) {
+            if (!cancelado) {
+              setEstadoRecordatorios(
+                "INACTIVOS"
+              );
+            }
+
+            return;
+          }
+
+          if (!cancelado) {
+            setEstadoRecordatorios(
+              "ACTIVOS"
+            );
+          }
+
+        } catch {
+          if (!cancelado) {
+            setEstadoRecordatorios(
+              "INACTIVOS"
+            );
+          }
+        }
+      }
+
+      comprobarRecordatorios();
+
+      return () => {
+        cancelado =
+          true;
+      };
+    },
+    [token]
+  );
+
+
+  async function activarRecordatorios() {
+    if (
+      cambiandoRecordatorios
+    ) {
+      return;
+    }
+
+    const clavePublica =
+      process.env
+        .NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+
+    if (!clavePublica) {
+      toast.error(
+        "Los recordatorios todavía no están disponibles."
+      );
+
+      return;
+    }
+
+    if (
+      !("serviceWorker" in navigator) ||
+      !("PushManager" in window) ||
+      !("Notification" in window)
+    ) {
+      setEstadoRecordatorios(
+        "NO_COMPATIBLE"
+      );
+
+      toast.error(
+        "Este navegador no admite recordatorios."
+      );
+
+      return;
+    }
+
+    setCambiandoRecordatorios(
+      true
+    );
+
+    try {
+      let permiso =
+        Notification.permission;
+
+      if (
+        permiso ===
+        "default"
+      ) {
+        permiso =
+          await Notification.requestPermission();
+      }
+
+      if (
+        permiso !==
+        "granted"
+      ) {
+        setEstadoRecordatorios(
+          permiso === "denied"
+            ? "BLOQUEADOS"
+            : "INACTIVOS"
+        );
+
+        throw new Error(
+          permiso === "denied"
+            ? "Las notificaciones están bloqueadas en este navegador."
+            : "No se concedió permiso para las notificaciones."
+        );
+      }
+
+      const registro =
+        await navigator.serviceWorker.ready;
+
+      let suscripcion =
+        await registro.pushManager.getSubscription();
+
+      if (!suscripcion) {
+        suscripcion =
+          await registro.pushManager.subscribe({
+            userVisibleOnly:
+              true,
+
+            applicationServerKey:
+              convertirClaveVapid(
+                clavePublica
+              ),
+          });
+      }
+
+      const respuesta =
+        await fetch(
+          `/api/seguimiento/${encodeURIComponent(token)}/push`,
+          {
+            method:
+              "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify(
+                suscripcion.toJSON()
+              ),
+          }
+        );
+
+      const data =
+        await respuesta.json();
+
+      if (!respuesta.ok) {
+        throw new Error(
+          data.error ||
+            "No se pudieron activar los recordatorios."
+        );
+      }
+
+      setEstadoRecordatorios(
+        "ACTIVOS"
+      );
+
+      toast.success(
+        "Recordatorios activados en este dispositivo."
+      );
+
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "No se pudieron activar los recordatorios."
+      );
+
+    } finally {
+      setCambiandoRecordatorios(
+        false
+      );
+    }
+  }
+
+
+  async function desactivarRecordatorios() {
+    if (
+      cambiandoRecordatorios
+    ) {
+      return;
+    }
+
+    setCambiandoRecordatorios(
+      true
+    );
+
+    try {
+      const registro =
+        await navigator.serviceWorker.ready;
+
+      const suscripcion =
+        await registro.pushManager.getSubscription();
+
+      if (!suscripcion) {
+        setEstadoRecordatorios(
+          "INACTIVOS"
+        );
+
+        return;
+      }
+
+      const respuesta =
+        await fetch(
+          `/api/seguimiento/${encodeURIComponent(token)}/push`,
+          {
+            method:
+              "DELETE",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                endpoint:
+                  suscripcion.endpoint,
+              }),
+          }
+        );
+
+      const data =
+        await respuesta.json();
+
+      if (!respuesta.ok) {
+        throw new Error(
+          data.error ||
+            "No se pudieron desactivar los recordatorios."
+        );
+      }
+
+      await suscripcion.unsubscribe();
+
+      setEstadoRecordatorios(
+        "INACTIVOS"
+      );
+
+      toast.success(
+        "Recordatorios desactivados en este dispositivo."
+      );
+
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "No se pudieron desactivar los recordatorios."
+      );
+
+    } finally {
+      setCambiandoRecordatorios(
+        false
+      );
+    }
+  }
 
 
   const actividadesHoy =
@@ -1023,6 +1407,105 @@ export default function SeguimientoPublico({
             </p>
 
           </div>
+        </section>
+
+
+        <section className="mt-4 rounded-2xl border border-[#E9E4F2] bg-white p-4 shadow-sm">
+
+          <div className="flex items-start gap-3">
+
+            <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+              estadoRecordatorios === "ACTIVOS"
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-[#F8F6FF] text-brand-blue"
+            }`}>
+              {estadoRecordatorios === "ACTIVOS" ? (
+                <Bell className="h-5 w-5" />
+              ) : (
+                <BellOff className="h-5 w-5" />
+              )}
+            </div>
+
+
+            <div className="min-w-0 flex-1">
+
+              <div className="flex flex-wrap items-center justify-between gap-2">
+
+                <h2 className="font-bold text-[#1F1B24]">
+                  Recordatorios
+                </h2>
+
+                {estadoRecordatorios === "ACTIVOS" && (
+                  <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
+                    Activados
+                  </span>
+                )}
+
+              </div>
+
+
+              <p className="mt-1 text-sm leading-6 text-brand-gray">
+                {estadoRecordatorios === "ACTIVOS"
+                  ? "Recibirás avisos de las actividades que tengan un recordatorio programado."
+                  : estadoRecordatorios === "BLOQUEADOS"
+                  ? "Las notificaciones están bloqueadas en la configuración de este navegador."
+                  : estadoRecordatorios === "NO_COMPATIBLE"
+                  ? "Este navegador no admite notificaciones de seguimiento."
+                  : "Activa avisos en este dispositivo para tus actividades programadas."}
+              </p>
+
+
+              {estadoRecordatorios === "INACTIVOS" && (
+                <button
+                  type="button"
+                  onClick={
+                    activarRecordatorios
+                  }
+                  disabled={
+                    cambiandoRecordatorios
+                  }
+                  className="mt-3 inline-flex items-center justify-center gap-2 rounded-xl bg-brand-blue px-4 py-2.5 text-sm font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {cambiandoRecordatorios ? (
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Bell className="h-4 w-4" />
+                  )}
+
+                  Activar recordatorios
+                </button>
+              )}
+
+
+              {estadoRecordatorios === "ACTIVOS" && (
+                <button
+                  type="button"
+                  onClick={
+                    desactivarRecordatorios
+                  }
+                  disabled={
+                    cambiandoRecordatorios
+                  }
+                  className="mt-3 text-sm font-semibold text-brand-gray underline decoration-[#CEC7DB] underline-offset-4 transition hover:text-[#1F1B24] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {cambiandoRecordatorios
+                    ? "Desactivando..."
+                    : "Desactivar en este dispositivo"}
+                </button>
+              )}
+
+
+              {estadoRecordatorios === "COMPROBANDO" && (
+                <div className="mt-3 flex items-center gap-2 text-xs font-medium text-brand-gray">
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                  Comprobando este dispositivo...
+                </div>
+              )}
+
+            </div>
+
+          </div>
+
         </section>
 
 
