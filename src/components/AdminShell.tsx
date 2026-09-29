@@ -355,7 +355,7 @@ export default function AdminShell({
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F6FA] lg:flex">
+    <div className="min-h-screen w-full overflow-x-hidden bg-[#F4F6FA] lg:flex">
 
       {open && (
         <button
@@ -416,7 +416,7 @@ export default function AdminShell({
                 {inicial}
               </div>
 
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 w-full flex-1 overflow-x-hidden">
 
                 <p className="truncate text-sm font-semibold">
                   {admin.usuario}
@@ -571,7 +571,7 @@ export default function AdminShell({
       </aside>
 
 
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 w-full flex-1 overflow-x-hidden">
 
         <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
 
@@ -597,7 +597,7 @@ export default function AdminShell({
             </button>
 
 
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 w-full flex-1 overflow-x-hidden">
 
               <p className="truncate text-sm font-bold text-slate-900">
                 Centro de control
@@ -642,7 +642,7 @@ export default function AdminShell({
         </header>
 
 
-        <main className="p-4 md:p-6 xl:p-8">
+        <main className="w-full max-w-full overflow-x-hidden p-4 md:p-6 xl:p-8">
           {children}
         </main>
 
