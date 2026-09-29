@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import AgendaCliente from "@/components/admin/seguimiento/AgendaCliente";
 import AccionesSeguimientoCliente from "@/components/admin/seguimiento/AccionesSeguimientoCliente";
+import HistorialWhatsApp from "@/components/admin/seguimiento/HistorialWhatsApp";
 
 function estiloEstado(estado: string) {
   switch (estado) {
@@ -73,6 +74,22 @@ export default async function SeguimientoClientePage({
         referenciaCompra: true,
 
         createdAt: true,
+
+        enviosWhatsApp: {
+          orderBy: {
+            fechaEnvio: "desc",
+          },
+
+          select: {
+            id: true,
+            telefono: true,
+            mensaje: true,
+            fechaEnvio: true,
+            enviadoPorUsuario: true,
+          },
+
+          take: 5,
+        },
 
         pedido: {
           select: {
@@ -282,8 +299,13 @@ export default async function SeguimientoClientePage({
               <div className="mt-4">
                 <AccionesSeguimientoCliente
                   seguimientoId={seguimiento.id}
-                  telefono={seguimiento.telefonoCliente}
-                  nombreCliente={seguimiento.nombreCliente}
+                  ultimoEnvio={
+                    seguimiento.enviosWhatsApp[0] || null
+                  }
+                />
+
+                <HistorialWhatsApp
+                  envios={seguimiento.enviosWhatsApp}
                 />
               </div>
             </div>

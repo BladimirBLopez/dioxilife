@@ -3,43 +3,33 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
+type UltimoEnvio = {
+  fechaEnvio: Date | string;
+  enviadoPorUsuario: string | null;
+} | null;
+
 export default function AccionesSeguimientoCliente({
   seguimientoId,
-  telefono,
-  nombreCliente,
+  ultimoEnvio,
 }: {
   seguimientoId: string;
-  telefono: string | null;
-  nombreCliente: string | null;
+  ultimoEnvio: UltimoEnvio;
 }) {
-  const [enlaceTemporal, setEnlaceTemporal] =
-    useState<string | null>(null);
-
   const [procesando, setProcesando] =
     useState(false);
 
 
-  async function regenerarEnlace() {
+  async function enviarWhatsApp() {
     if (procesando) {
       return;
     }
-
-    const confirmar =
-      window.confirm(
-        "Se generará un nuevo enlace privado. El enlace anterior dejará de funcionar. ¿Continuar?"
-      );
-
-    if (!confirmar) {
-      return;
-    }
-
 
     setProcesando(true);
 
     try {
       const res =
         await fetch(
-          `/api/admin/seguimiento/clientes/${seguimientoId}/regenerar`,
+          `/api/admin/seguimiento/clientes/${seguimientoId}/enviar-whatsapp`,
           {
             method: "POST",
           }
@@ -53,20 +43,29 @@ export default function AccionesSeguimientoCliente({
       if (!res.ok) {
         throw new Error(
           data?.error ||
-          "No se pudo generar el enlace."
+          "No se pudo preparar el WhatsApp."
         );
       }
 
 
-      const url =
-        `${window.location.origin}/seguimiento/${data.token}`;
+      const numero =
+        data.telefono.replace(/\D/g, "");
 
 
-      setEnlaceTemporal(url);
+      const enlace =
+        `https://wa.me/591${numero}?text=${encodeURIComponent(
+          data.mensaje
+        )}`;
+
+
+      window.open(
+        enlace,
+        "_blank"
+      );
 
 
       toast.success(
-        "Nuevo enlace privado generado"
+        "WhatsApp preparado correctamente"
       );
 
 
@@ -75,7 +74,7 @@ export default function AccionesSeguimientoCliente({
       toast.error(
         error instanceof Error
           ? error.message
-          : "Error generando enlace"
+          : "Error enviando WhatsApp"
       );
 
     } finally {
@@ -86,94 +85,68 @@ export default function AccionesSeguimientoCliente({
   }
 
 
-  async function copiarEnlace() {
-
-    if (!enlaceTemporal) {
-      return;
-    }
-
-
-    await navigator.clipboard.writeText(
-      enlaceTemporal
-    );
-
-
-    toast.success(
-      "Enlace privado copiado"
-    );
-
-  }
-
-
-  function abrirWhatsapp() {
-
-    if (!telefono) {
-      return;
-    }
-
-
-    const numero =
-      telefono.replace(/\D/g, "");
-
-
-    const mensaje =
-      `Hola ${nombreCliente || ""}, te compartimos tu enlace privado de seguimiento Dioxilife: ${enlaceTemporal || ""}`;
-
-
-    window.open(
-      `https://wa.me/591${numero}?text=${encodeURIComponent(mensaje)}`,
-      "_blank"
-    );
-
-  }
-
-
   return (
-    <div className="flex flex-wrap gap-3">
-
-      {telefono && (
-        <button
-          type="button"
-          onClick={abrirWhatsapp}
-          className="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
-        >
-          WhatsApp
-        </button>
-      )}
-
+    <div className="space-y-3">
 
       <button
         type="button"
         disabled={procesando}
-        onClick={() => void regenerarEnlace()}
-        className="rounded-xl border border-violet-300 bg-white px-4 py-2 text-sm font-semibold text-violet-700 hover:bg-violet-50 disabled:opacity-50"
+        onClick={() =>
+          void enviarWhatsApp()
+        }
+        className="inline-flex items-center rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
       >
         {procesando
-          ? "Generando..."
-          : "Generar enlace privado"}
+          ? "Preparando..."
+          : "📱 Enviar WhatsApp seguimiento"}
       </button>
 
 
-      {enlaceTemporal && (
-        <>
+      {ultimoEnvio && (
+        <div className="rounded-xl border border-green-200 bg-green-50 p-3">
+
+          <p className="text-xs font-bold text-green-800">
+            Último contacto WhatsApp
+          </p>
+
+
+          <div className="mt-2 space-y-1">
+
+            <p className="text-xs text-green-700">
+              ✅{" "}
+              {new Date(
+                ultimoEnvio.fechaEnvio
+              ).toLocaleString(
+                "es-BO",
+                {
+                  timeZone:
+                    "America/La_Paz",
+                }
+              )}
+            </p>
+
+
+            <p className="text-xs text-green-700">
+              👤 Enviado por:{" "}
+              {ultimoEnvio.enviadoPorUsuario ||
+                "Sistema"}
+            </p>
+
+          </div>
+
+
           <button
             type="button"
-            onClick={() => void copiarEnlace()}
-            className="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+            disabled={procesando}
+            onClick={() =>
+              void enviarWhatsApp()
+            }
+            className="mt-3 rounded-xl border border-green-300 bg-white px-3 py-2 text-xs font-semibold text-green-700 hover:bg-green-100 disabled:opacity-50"
           >
-            Copiar enlace
+            📱 Enviar nuevamente
           </button>
 
-
-          <a
-            href={enlaceTemporal}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-          >
-            Abrir enlace
-          </a>
-        </>
+        </div>
       )}
 
     </div>

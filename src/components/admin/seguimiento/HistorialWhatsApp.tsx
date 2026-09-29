@@ -1,0 +1,87 @@
+"use client";
+
+type EnvioWhatsApp = {
+  id: string;
+  telefono: string;
+  mensaje: string;
+  fechaEnvio: Date;
+  enviadoPorUsuario: string | null;
+};
+
+export default function HistorialWhatsApp({
+  envios,
+}: {
+  envios: EnvioWhatsApp[];
+}) {
+  return (
+    <div className="mt-5 border-t pt-5">
+
+      <h3 className="text-sm font-semibold text-gray-900">
+        Historial WhatsApp
+      </h3>
+
+
+      {envios.length === 0 ? (
+
+        <p className="mt-3 text-xs text-gray-500">
+          No existen envíos registrados.
+        </p>
+
+      ) : (
+
+        <div className="mt-3 space-y-3">
+
+          {envios.map((envio) => (
+
+            <div
+              key={envio.id}
+              className="rounded-lg border bg-gray-50 p-3"
+            >
+
+              <p className="text-xs font-semibold text-gray-700">
+                📱 {envio.telefono}
+              </p>
+
+
+              <p className="mt-1 text-xs text-gray-500">
+                {new Date(
+                  envio.fechaEnvio
+                ).toLocaleString(
+                  "es-BO",
+                  {
+                    timeZone:
+                      "America/La_Paz",
+                  }
+                )}
+              </p>
+
+
+              <p className="mt-1 text-xs text-gray-500">
+                Enviado por:{" "}
+                {envio.enviadoPorUsuario || "Sistema"}
+              </p>
+
+
+              <details className="mt-2">
+
+                <summary className="cursor-pointer text-xs font-medium text-green-700">
+                  Ver mensaje
+                </summary>
+
+                <p className="mt-2 whitespace-pre-line text-xs text-gray-700">
+                  {envio.mensaje}
+                </p>
+
+              </details>
+
+            </div>
+
+          ))}
+
+        </div>
+
+      )}
+
+    </div>
+  );
+}

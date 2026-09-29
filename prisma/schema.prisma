@@ -206,6 +206,7 @@ model SeguimientoCliente {
   actividades       ActividadSeguimiento[]
   progresos         ProgresoActividad[]
   suscripcionesPush SuscripcionPush[]
+  enviosWhatsApp    SeguimientoEnvioWhatsApp[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -213,6 +214,24 @@ model SeguimientoCliente {
   @@index([pedidoId])
   @@index([planId])
   @@index([estado])
+}
+
+model SeguimientoEnvioWhatsApp {
+  id String @id @default(cuid())
+
+  seguimientoId String
+  seguimiento   SeguimientoCliente @relation(fields: [seguimientoId], references: [id], onDelete: Cascade)
+
+  telefono String
+  mensaje  String
+
+  enviadoPorId      String?
+  enviadoPorUsuario String?
+
+  fechaEnvio DateTime @default(now())
+
+  @@index([seguimientoId])
+  @@index([fechaEnvio])
 }
 
 model ActividadSeguimiento {
