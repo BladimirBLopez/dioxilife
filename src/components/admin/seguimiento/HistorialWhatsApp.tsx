@@ -28,16 +28,16 @@ export default function HistorialWhatsApp({
 
       ) : (
 
-        <div className="mt-3 w-full max-w-full space-y-3">
+        <div className="mt-3 w-full max-w-full space-y-3 overflow-hidden">
 
           {envios.map((envio) => (
 
             <div
               key={envio.id}
-              className="w-full max-w-full overflow-hidden rounded-xl border bg-gray-50 p-3"
+              className="w-full max-w-full overflow-hidden rounded-lg border bg-gray-50 p-3"
             >
 
-              <p className="break-all text-xs font-semibold text-gray-700">
+              <p className="break-words text-xs font-semibold text-gray-700">
                 📱 {envio.telefono}
               </p>
 
@@ -53,22 +53,20 @@ export default function HistorialWhatsApp({
                 )}
               </p>
 
-              <p className="mt-1 break-words text-xs text-gray-500">
+              <p className="mt-1 text-xs text-gray-500">
                 Enviado por:{" "}
                 {envio.enviadoPorUsuario || "Sistema"}
               </p>
 
-
               <details className="mt-3">
 
                 <summary className="cursor-pointer text-xs font-medium text-green-700">
-                  Ver mensaje
+                  ▼ Ver mensaje
                 </summary>
 
+                <div className="mt-3 w-full max-w-full overflow-hidden rounded-xl bg-white p-3">
 
-                <div className="mt-2 overflow-hidden rounded-lg bg-white p-3">
-
-                  <p className="whitespace-pre-line break-words text-xs leading-5 text-gray-700">
+                  <p className="whitespace-pre-line break-words text-xs text-gray-700">
                     {envio.mensaje}
                   </p>
 

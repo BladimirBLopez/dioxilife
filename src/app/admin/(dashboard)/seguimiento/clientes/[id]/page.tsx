@@ -150,7 +150,7 @@ export default async function SeguimientoClientePage({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="w-full max-w-full overflow-hidden space-y-6">
 
       <div>
 

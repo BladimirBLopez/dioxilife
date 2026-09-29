@@ -99,7 +99,7 @@ export default function AccionesSeguimientoCliente({
 
 
   return (
-    <div className="space-y-3">
+    <div className="flex w-full flex-col gap-3 sm:w-auto">
 
       <div className="flex flex-wrap gap-2">
 
@@ -109,7 +109,7 @@ export default function AccionesSeguimientoCliente({
           onClick={() =>
             void enviarWhatsApp(false)
           }
-          className="inline-flex items-center rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
+          className="flex w-full items-center justify-center rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50 sm:w-auto"
         >
           {procesando
             ? "Preparando..."
