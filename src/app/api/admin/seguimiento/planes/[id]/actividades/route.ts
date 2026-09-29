@@ -65,11 +65,6 @@ export async function POST(
     select: {
       id: true,
       duracionDias: true,
-      _count: {
-        select: {
-          seguimientos: true,
-        },
-      },
     },
   });
 
@@ -77,16 +72,6 @@ export async function POST(
     return NextResponse.json(
       { error: "Plan no encontrado" },
       { status: 404 }
-    );
-  }
-
-  if (plan._count.seguimientos > 0) {
-    return NextResponse.json(
-      {
-        error:
-          "Este plan ya fue asignado a clientes. No se pueden agregar actividades; crea una nueva versión del plan.",
-      },
-      { status: 409 }
     );
   }
 

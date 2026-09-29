@@ -28,11 +28,6 @@ export async function PUT(
     where: { id },
     select: {
       duracionDias: true,
-      _count: {
-        select: {
-          seguimientos: true,
-        },
-      },
     },
   });
 
@@ -40,16 +35,6 @@ export async function PUT(
     return NextResponse.json(
       { error: "Plan no encontrado" },
       { status: 404 }
-    );
-  }
-
-  if (plan._count.seguimientos > 0) {
-    return NextResponse.json(
-      {
-        error:
-          "Este plan ya fue asignado a clientes. Sus actividades no pueden modificarse; crea una nueva versión del plan.",
-      },
-      { status: 409 }
     );
   }
 
@@ -183,20 +168,6 @@ export async function DELETE(
     },
     select: {
       id: true,
-      _count: {
-        select: {
-          progresos: true,
-        },
-      },
-      plan: {
-        select: {
-          _count: {
-            select: {
-              seguimientos: true,
-            },
-          },
-        },
-      },
     },
   });
 
@@ -204,26 +175,6 @@ export async function DELETE(
     return NextResponse.json(
       { error: "Actividad no encontrada" },
       { status: 404 }
-    );
-  }
-
-  if (actividad.plan._count.seguimientos > 0) {
-    return NextResponse.json(
-      {
-        error:
-          "Este plan ya fue asignado a clientes. Sus actividades no pueden eliminarse; crea una nueva versión del plan.",
-      },
-      { status: 409 }
-    );
-  }
-
-  if (actividad._count.progresos > 0) {
-    return NextResponse.json(
-      {
-        error:
-          "Esta actividad ya tiene progreso registrado y no puede eliminarse. Puedes desactivarla.",
-      },
-      { status: 409 }
     );
   }
 

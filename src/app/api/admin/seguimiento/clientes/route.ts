@@ -103,13 +103,24 @@ export async function POST(req: NextRequest) {
         nombre: true,
         estado: true,
         duracionDias: true,
-        _count: {
+        actividades: {
+          where: {
+            activo: true,
+          },
+          orderBy: [
+            { diaInicio: "asc" },
+            { orden: "asc" },
+            { createdAt: "asc" },
+          ],
           select: {
-            actividades: {
-              where: {
-                activo: true,
-              },
-            },
+            titulo: true,
+            descripcion: true,
+            momento: true,
+            hora: true,
+            diaInicio: true,
+            diaFin: true,
+            orden: true,
+            activo: true,
           },
         },
       },
@@ -132,7 +143,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (plan._count.actividades === 0) {
+  if (plan.actividades.length === 0) {
     return NextResponse.json(
       {
         error:
@@ -189,6 +200,12 @@ export async function POST(req: NextRequest) {
         telefonoCliente:
           pedido.telefonoCliente || null,
 
+        nombrePlan:
+          plan.nombre,
+
+        duracionDias:
+          plan.duracionDias,
+
         tokenAccesoHash:
           hashToken(token),
 
@@ -206,6 +223,28 @@ export async function POST(req: NextRequest) {
           observacion || null,
 
         estado: "PENDIENTE",
+
+        actividades: {
+          create: plan.actividades.map(
+            (actividad) => ({
+              titulo: actividad.titulo,
+              descripcion:
+                actividad.descripcion,
+              momento:
+                actividad.momento,
+              hora:
+                actividad.hora,
+              diaInicio:
+                actividad.diaInicio,
+              diaFin:
+                actividad.diaFin,
+              orden:
+                actividad.orden,
+              activo:
+                actividad.activo,
+            })
+          ),
+        },
       },
 
       select: {
@@ -214,6 +253,8 @@ export async function POST(req: NextRequest) {
         fechaInicioPrevista: true,
         observacionInterna: true,
         tokenCreadoAt: true,
+        nombrePlan: true,
+        duracionDias: true,
 
         plan: {
           select: {

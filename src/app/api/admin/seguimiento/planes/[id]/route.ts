@@ -27,11 +27,6 @@ export async function PUT(
       descripcion: true,
       duracionDias: true,
       estado: true,
-      _count: {
-        select: {
-          seguimientos: true,
-        },
-      },
     },
   });
 
@@ -76,23 +71,6 @@ export async function PUT(
   const descripcionLimpia = descripcion
     ? String(descripcion).trim().slice(0, 1500)
     : null;
-
-  if (existente._count.seguimientos > 0) {
-    const cambioContenido =
-      nombreLimpio !== existente.nombre ||
-      descripcionLimpia !== existente.descripcion ||
-      dias !== existente.duracionDias;
-
-    if (cambioContenido) {
-      return NextResponse.json(
-        {
-          error:
-            "Este plan ya fue asignado a clientes. Su contenido no puede modificarse; crea una nueva versión del plan.",
-        },
-        { status: 409 }
-      );
-    }
-  }
 
   const plan = await prisma.planSeguimiento.update({
     where: {

@@ -144,8 +144,6 @@ model ActividadPlan {
   orden     Int     @default(0)
   activo    Boolean @default(true)
 
-  progresos ProgresoActividad[]
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -165,6 +163,9 @@ model SeguimientoCliente {
   nombreCliente   String?
   telefonoCliente String?
 
+  nombrePlan   String
+  duracionDias Int
+
   tokenAccesoHash String    @unique
   tokenCreadoAt   DateTime  @default(now())
   ultimoAccesoAt  DateTime?
@@ -176,7 +177,8 @@ model SeguimientoCliente {
   fechaFinalizado     DateTime?
   observacionInterna  String?
 
-  progresos ProgresoActividad[]
+  actividades ActividadSeguimiento[]
+  progresos   ProgresoActividad[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -186,14 +188,39 @@ model SeguimientoCliente {
   @@index([estado])
 }
 
+model ActividadSeguimiento {
+  id String @id @default(cuid())
+
+  seguimientoId String
+  seguimiento   SeguimientoCliente @relation(fields: [seguimientoId], references: [id], onDelete: Cascade)
+
+  titulo      String
+  descripcion String?
+  momento     String?
+  hora        String?
+
+  diaInicio Int     @default(1)
+  diaFin    Int?
+  orden     Int     @default(0)
+  activo    Boolean @default(true)
+
+  progresos ProgresoActividad[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([seguimientoId])
+  @@index([diaInicio])
+}
+
 model ProgresoActividad {
   id String @id @default(cuid())
 
   seguimientoId String
   seguimiento   SeguimientoCliente @relation(fields: [seguimientoId], references: [id], onDelete: Cascade)
 
-  actividadId String
-  actividad   ActividadPlan @relation(fields: [actividadId], references: [id], onDelete: Restrict)
+  actividadSeguimientoId String
+  actividadSeguimiento   ActividadSeguimiento @relation(fields: [actividadSeguimientoId], references: [id], onDelete: Cascade)
 
   diaPlan Int
 
@@ -203,9 +230,9 @@ model ProgresoActividad {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([seguimientoId, actividadId, diaPlan])
+  @@unique([seguimientoId, actividadSeguimientoId, diaPlan])
   @@index([seguimientoId])
-  @@index([actividadId])
+  @@index([actividadSeguimientoId])
   @@index([diaPlan])
 }
 
