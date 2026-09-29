@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -25,6 +26,9 @@ type Seguimiento = {
   fechaFinalizado: string | Date | null;
   ultimoAccesoAt: string | Date | null;
   observacionInterna: string | null;
+
+  nombrePlan: string;
+  duracionDias: number;
 
   plan: {
     id: string;
@@ -318,11 +322,11 @@ export default function SeguimientoPedido({
                 </p>
 
                 <p className="mt-1 font-semibold text-gray-900">
-                  {vigente.plan.nombre}
+                  {vigente.nombrePlan}
                 </p>
 
                 <p className="mt-1 text-sm text-gray-600">
-                  {vigente.plan.duracionDias} días
+                  {vigente.duracionDias} días
                 </p>
               </div>
 
@@ -364,6 +368,17 @@ export default function SeguimientoPedido({
               </div>
             )}
 
+
+            <div className="mt-4 flex flex-wrap gap-2 border-t border-violet-100 pt-4">
+
+              <Link
+                href={`/admin/seguimiento/clientes/${vigente.id}`}
+                className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-700"
+              >
+                Administrar agenda
+              </Link>
+
+            </div>
 
             <div className="mt-4 border-t border-violet-100 pt-4">
 

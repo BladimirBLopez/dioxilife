@@ -70,6 +70,12 @@ export async function POST(req: NextRequest) {
       estado: true,
       nombreCliente: true,
       telefonoCliente: true,
+      miembro: {
+        select: {
+          nombres: true,
+          apellidos: true,
+        },
+      },
     },
   });
 
@@ -195,7 +201,14 @@ export async function POST(req: NextRequest) {
         planId,
 
         nombreCliente:
-          pedido.nombreCliente || null,
+          pedido.nombreCliente ||
+          (pedido.miembro
+            ? `${pedido.miembro.nombres}${
+                pedido.miembro.apellidos
+                  ? ` ${pedido.miembro.apellidos}`
+                  : ""
+              }`
+            : null),
 
         telefonoCliente:
           pedido.telefonoCliente || null,

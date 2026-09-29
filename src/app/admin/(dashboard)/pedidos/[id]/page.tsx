@@ -155,6 +155,8 @@ export default async function DetallePedidoPage({
             fechaFinalizado: true,
             ultimoAccesoAt: true,
             observacionInterna: true,
+            nombrePlan: true,
+            duracionDias: true,
 
             plan: {
               select: {
