@@ -4,22 +4,12 @@ import { useEffect, useState } from "react";
 import Modal from "@/components/Modal";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
-type Protocolo = {
-  id: string;
-  titulo: string;
-};
-
 type Plan = {
   id: string;
   nombre: string;
   descripcion: string | null;
   duracionDias: number;
   estado: "BORRADOR" | "ACTIVO" | "INACTIVO";
-  protocoloId: string | null;
-  protocolo: {
-    id: string;
-    titulo: string;
-  } | null;
   _count: {
     actividades: number;
     seguimientos: number;
@@ -30,13 +20,11 @@ const vacio = {
   nombre: "",
   descripcion: "",
   duracionDias: "30",
-  protocoloId: "",
   estado: "BORRADOR" as "BORRADOR" | "ACTIVO" | "INACTIVO",
 };
 
 export default function PlanesSeguimientoPage() {
   const [planes, setPlanes] = useState<Plan[]>([]);
-  const [protocolos, setProtocolos] = useState<Protocolo[]>([]);
   const [cargando, setCargando] = useState(true);
 
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -51,24 +39,11 @@ export default function PlanesSeguimientoPage() {
   async function cargar() {
     setCargando(true);
 
-    const [resPlanes, resProtocolos] = await Promise.all([
-      fetch("/api/admin/seguimiento/planes"),
-      fetch("/api/admin/protocolos"),
-    ]);
+    const resPlanes =
+      await fetch("/api/admin/seguimiento/planes");
 
     if (resPlanes.ok) {
       setPlanes(await resPlanes.json());
-    }
-
-    if (resProtocolos.ok) {
-      const datos = await resProtocolos.json();
-
-      setProtocolos(
-        datos.map((p: Protocolo) => ({
-          id: p.id,
-          titulo: p.titulo,
-        }))
-      );
     }
 
     setCargando(false);
@@ -107,7 +82,6 @@ export default function PlanesSeguimientoPage() {
       nombre: plan.nombre,
       descripcion: plan.descripcion || "",
       duracionDias: String(plan.duracionDias),
-      protocoloId: plan.protocoloId || "",
       estado: plan.estado,
     };
 
@@ -138,7 +112,6 @@ export default function PlanesSeguimientoPage() {
       nombre: form.nombre.trim(),
       descripcion: form.descripcion.trim() || null,
       duracionDias: dias,
-      protocoloId: form.protocoloId || null,
       estado: form.estado,
     };
 
@@ -305,16 +278,6 @@ export default function PlanesSeguimientoPage() {
                 </div>
               </div>
 
-              <div className="mt-4">
-                <p className="text-xs text-[#8A8790]">
-                  Protocolo relacionado
-                </p>
-
-                <p className="mt-1 text-sm font-medium text-[#1F1B24]">
-                  {plan.protocolo?.titulo || "Sin protocolo relacionado"}
-                </p>
-              </div>
-
               <div className="mt-4 flex flex-wrap gap-4 border-t border-gray-100 pt-4 text-sm">
                 <button
                   type="button"
@@ -421,36 +384,6 @@ export default function PlanesSeguimientoPage() {
                   días
                 </span>
               </div>
-            </div>
-
-            <div>
-              <label className="admin-label">
-                Protocolo relacionado
-              </label>
-
-              <select
-                value={form.protocoloId}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    protocoloId: e.target.value,
-                  })
-                }
-                className="admin-input"
-              >
-                <option value="">
-                  Sin protocolo relacionado
-                </option>
-
-                {protocolos.map((protocolo) => (
-                  <option
-                    key={protocolo.id}
-                    value={protocolo.id}
-                  >
-                    {protocolo.titulo}
-                  </option>
-                ))}
-              </select>
             </div>
 
             <div>

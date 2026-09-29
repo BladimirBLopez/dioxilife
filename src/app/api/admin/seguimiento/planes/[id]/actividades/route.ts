@@ -20,12 +20,6 @@ export async function GET(
   const plan = await prisma.planSeguimiento.findUnique({
     where: { id },
     include: {
-      protocolo: {
-        select: {
-          id: true,
-          titulo: true,
-        },
-      },
       actividades: {
         orderBy: [
           { diaInicio: "asc" },

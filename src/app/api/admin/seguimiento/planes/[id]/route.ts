@@ -26,7 +26,6 @@ export async function PUT(
       nombre: true,
       descripcion: true,
       duracionDias: true,
-      protocoloId: true,
       estado: true,
       _count: {
         select: {
@@ -47,7 +46,6 @@ export async function PUT(
     nombre,
     descripcion,
     duracionDias,
-    protocoloId,
     estado,
   } = await req.json();
 
@@ -68,24 +66,6 @@ export async function PUT(
     );
   }
 
-  if (protocoloId) {
-    const protocolo = await prisma.protocolo.findUnique({
-      where: {
-        id: protocoloId,
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (!protocolo) {
-      return NextResponse.json(
-        { error: "Protocolo no encontrado" },
-        { status: 404 }
-      );
-    }
-  }
-
   const estadoValido =
     estado === "ACTIVO" ||
     estado === "INACTIVO" ||
@@ -97,15 +77,11 @@ export async function PUT(
     ? String(descripcion).trim().slice(0, 1500)
     : null;
 
-  const protocoloNormalizado =
-    protocoloId || null;
-
   if (existente._count.seguimientos > 0) {
     const cambioContenido =
       nombreLimpio !== existente.nombre ||
       descripcionLimpia !== existente.descripcion ||
-      dias !== existente.duracionDias ||
-      protocoloNormalizado !== existente.protocoloId;
+      dias !== existente.duracionDias;
 
     if (cambioContenido) {
       return NextResponse.json(
@@ -126,16 +102,9 @@ export async function PUT(
       nombre: nombreLimpio,
       descripcion: descripcionLimpia,
       duracionDias: dias,
-      protocoloId: protocoloNormalizado,
       estado: estadoValido,
     },
     include: {
-      protocolo: {
-        select: {
-          id: true,
-          titulo: true,
-        },
-      },
       _count: {
         select: {
           actividades: true,

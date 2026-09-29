@@ -17,12 +17,6 @@ export async function GET() {
       createdAt: "desc",
     },
     include: {
-      protocolo: {
-        select: {
-          id: true,
-          titulo: true,
-        },
-      },
       _count: {
         select: {
           actividades: true,
@@ -49,7 +43,6 @@ export async function POST(req: NextRequest) {
     nombre,
     descripcion,
     duracionDias,
-    protocoloId,
     estado,
   } = await req.json();
 
@@ -70,24 +63,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (protocoloId) {
-    const protocolo = await prisma.protocolo.findUnique({
-      where: {
-        id: protocoloId,
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (!protocolo) {
-      return NextResponse.json(
-        { error: "Protocolo no encontrado" },
-        { status: 404 }
-      );
-    }
-  }
-
   const estadoValido =
     estado === "ACTIVO" || estado === "INACTIVO"
       ? estado
@@ -100,16 +75,9 @@ export async function POST(req: NextRequest) {
         ? String(descripcion).trim().slice(0, 1500)
         : null,
       duracionDias: dias,
-      protocoloId: protocoloId || null,
       estado: estadoValido,
     },
     include: {
-      protocolo: {
-        select: {
-          id: true,
-          titulo: true,
-        },
-      },
       _count: {
         select: {
           actividades: true,

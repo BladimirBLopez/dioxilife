@@ -24,10 +24,6 @@ type Plan = {
   descripcion: string | null;
   duracionDias: number;
   estado: "BORRADOR" | "ACTIVO" | "INACTIVO";
-  protocolo: {
-    id: string;
-    titulo: string;
-  } | null;
   actividades: Actividad[];
   _count: {
     seguimientos: number;
@@ -307,14 +303,6 @@ export default function PlanActividadesPage() {
                 Duración:{" "}
                 <strong className="text-[#1F1B24]">
                   {plan.duracionDias} días
-                </strong>
-              </span>
-
-              <span className="text-[#6B6870]">
-                Protocolo:{" "}
-                <strong className="text-[#1F1B24]">
-                  {plan.protocolo?.titulo ||
-                    "Sin protocolo relacionado"}
                 </strong>
               </span>
 

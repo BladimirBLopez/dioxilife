@@ -81,7 +81,6 @@ model Protocolo {
   producto              Producto?             @relation(fields: [productoId], references: [id])
   productosRelacionados ProductoProtocolo[]
   aplicaciones          AplicacionProtocolo[]
-  planesSeguimiento     PlanSeguimiento[]
   activo                Boolean               @default(true)
   createdAt             DateTime              @default(now())
   updatedAt             DateTime              @updatedAt
@@ -120,16 +119,12 @@ model PlanSeguimiento {
   duracionDias Int
   estado       EstadoPlanSeguimiento @default(BORRADOR)
 
-  protocoloId String?
-  protocolo   Protocolo? @relation(fields: [protocoloId], references: [id], onDelete: SetNull)
-
   actividades  ActividadPlan[]
   seguimientos SeguimientoCliente[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([protocoloId])
   @@index([estado])
 }
 
