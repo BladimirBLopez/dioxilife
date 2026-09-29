@@ -45,6 +45,8 @@ export default async function SeguimientosClientesPage() {
         duracionDias: true,
         estado: true,
         fechaInicioPrevista: true,
+        origen: true,
+        referenciaCompra: true,
 
         pedido: {
           select: {
@@ -64,14 +66,25 @@ export default async function SeguimientosClientesPage() {
   return (
     <div className="space-y-6">
 
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">
-          Seguimiento de clientes
-        </h1>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 
-        <p className="mt-1 text-sm text-gray-500">
-          Agendas individuales asignadas a cada cliente.
-        </p>
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">
+            Seguimiento de clientes
+          </h1>
+
+          <p className="mt-1 text-sm text-gray-500">
+            Agendas individuales asignadas a cada cliente.
+          </p>
+        </div>
+
+        <Link
+          href="/admin/seguimiento/clientes/nuevo"
+          className="inline-flex w-fit items-center justify-center rounded-xl bg-brand-pink px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
+        >
+          + Nuevo seguimiento
+        </Link>
+
       </div>
 
       {seguimientos.length === 0 ? (
@@ -82,7 +95,7 @@ export default async function SeguimientosClientesPage() {
           </p>
 
           <p className="mt-2 text-sm text-gray-500">
-            Aparecerán aquí cuando se asigne un seguimiento desde un pedido pagado.
+            Aparecerán aquí los seguimientos creados desde pedidos o registrados manualmente.
           </p>
         </div>
 
@@ -136,12 +149,34 @@ export default async function SeguimientosClientesPage() {
                     </td>
 
                     <td className="px-4 py-4">
-                      <Link
-                        href={`/admin/pedidos/${seguimiento.pedido.id}`}
-                        className="font-mono font-semibold text-blue-600 hover:underline"
-                      >
-                        {seguimiento.pedido.codigo}
-                      </Link>
+                      {seguimiento.pedido ? (
+                        <Link
+                          href={`/admin/pedidos/${seguimiento.pedido.id}`}
+                          className="font-mono font-semibold text-blue-600 hover:underline"
+                        >
+                          {seguimiento.pedido.codigo}
+                        </Link>
+                      ) : (
+                        <div>
+                          <p className="font-medium text-gray-700">
+                            {seguimiento.origen === "WHATSAPP"
+                              ? "WhatsApp"
+                              : seguimiento.origen === "LLAMADA"
+                              ? "Llamada"
+                              : seguimiento.origen === "TIENDA"
+                              ? "Tienda"
+                              : seguimiento.origen === "PEDIDO_WEB"
+                              ? "Pedido web"
+                              : "Otro"}
+                          </p>
+
+                          {seguimiento.referenciaCompra && (
+                            <p className="mt-1 max-w-[220px] truncate text-xs text-gray-500">
+                              {seguimiento.referenciaCompra}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </td>
 
                     <td className="px-4 py-4">

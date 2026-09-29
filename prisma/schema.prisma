@@ -151,17 +151,27 @@ model ActividadPlan {
   @@index([diaInicio])
 }
 
+enum OrigenSeguimiento {
+  PEDIDO_WEB
+  WHATSAPP
+  LLAMADA
+  TIENDA
+  OTRO
+}
+
 model SeguimientoCliente {
   id String @id @default(cuid())
 
-  pedidoId String
-  pedido   Pedido @relation(fields: [pedidoId], references: [id], onDelete: Restrict)
+  pedidoId String?
+  pedido   Pedido? @relation(fields: [pedidoId], references: [id], onDelete: SetNull)
 
   planId String
   plan   PlanSeguimiento @relation(fields: [planId], references: [id], onDelete: Restrict)
 
-  nombreCliente   String?
-  telefonoCliente String?
+  nombreCliente    String?
+  telefonoCliente  String?
+  origen           OrigenSeguimiento @default(WHATSAPP)
+  referenciaCompra String?
 
   nombrePlan   String
   duracionDias Int

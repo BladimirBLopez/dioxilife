@@ -68,6 +68,8 @@ export default async function SeguimientoClientePage({
 
         ultimoAccesoAt: true,
         observacionInterna: true,
+        origen: true,
+        referenciaCompra: true,
 
         createdAt: true,
 
@@ -283,21 +285,53 @@ export default async function SeguimientoClientePage({
         <div className="rounded-xl bg-white p-5 shadow">
 
           <h2 className="text-lg font-semibold text-gray-900">
-            Pedido de origen
+            Origen
           </h2>
 
           <div className="mt-4">
 
-            <Link
-              href={`/admin/pedidos/${seguimiento.pedido.id}`}
-              className="font-mono font-semibold text-blue-600 hover:underline"
-            >
-              {seguimiento.pedido.codigo}
-            </Link>
-
-            <p className="mt-2 text-sm text-gray-500">
-              Estado: {seguimiento.pedido.estado}
+            <p className="font-semibold text-gray-900">
+              {seguimiento.origen === "WHATSAPP"
+                ? "WhatsApp"
+                : seguimiento.origen === "LLAMADA"
+                ? "Llamada"
+                : seguimiento.origen === "TIENDA"
+                ? "Tienda"
+                : seguimiento.origen === "PEDIDO_WEB"
+                ? "Pedido web"
+                : "Otro"}
             </p>
+
+            {seguimiento.pedido ? (
+              <>
+                <Link
+                  href={`/admin/pedidos/${seguimiento.pedido.id}`}
+                  className="mt-2 inline-block font-mono font-semibold text-blue-600 hover:underline"
+                >
+                  {seguimiento.pedido.codigo}
+                </Link>
+
+                <p className="mt-2 text-sm text-gray-500">
+                  Estado: {seguimiento.pedido.estado}
+                </p>
+              </>
+            ) : (
+              <p className="mt-2 text-sm text-gray-500">
+                Sin pedido vinculado
+              </p>
+            )}
+
+            {seguimiento.referenciaCompra && (
+              <div className="mt-4">
+                <p className="text-xs text-gray-500">
+                  Referencia de compra
+                </p>
+
+                <p className="mt-1 whitespace-pre-wrap text-sm text-gray-800">
+                  {seguimiento.referenciaCompra}
+                </p>
+              </div>
+            )}
 
           </div>
 

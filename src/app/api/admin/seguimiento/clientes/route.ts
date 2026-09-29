@@ -16,6 +16,13 @@ function fechaValida(valor: unknown) {
   );
 }
 
+const ORIGENES_MANUALES = [
+  "WHATSAPP",
+  "LLAMADA",
+  "TIENDA",
+  "OTRO",
+] as const;
+
 export async function POST(req: NextRequest) {
   const admin = await obtenerAdminActual();
 
@@ -26,23 +33,47 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const {
-    pedidoId,
-    planId,
-    fechaInicioPrevista,
-    observacionInterna,
-  } = await req.json();
+  const body = await req.json();
 
-  if (
-    typeof pedidoId !== "string" ||
-    !pedidoId.trim() ||
-    typeof planId !== "string" ||
-    !planId.trim()
-  ) {
+  const pedidoId =
+    typeof body.pedidoId === "string" &&
+    body.pedidoId.trim()
+      ? body.pedidoId.trim()
+      : null;
+
+  const planId =
+    typeof body.planId === "string"
+      ? body.planId.trim()
+      : "";
+
+  const nombreManual =
+    typeof body.nombreCliente === "string"
+      ? body.nombreCliente.trim().slice(0, 120)
+      : "";
+
+  const telefonoManual =
+    typeof body.telefonoCliente === "string"
+      ? body.telefonoCliente.trim().slice(0, 40)
+      : "";
+
+  const referenciaCompra =
+    typeof body.referenciaCompra === "string"
+      ? body.referenciaCompra.trim().slice(0, 500)
+      : "";
+
+  const observacion =
+    typeof body.observacionInterna === "string"
+      ? body.observacionInterna.trim().slice(0, 1500)
+      : "";
+
+  const fechaInicioPrevista =
+    body.fechaInicioPrevista;
+
+  if (!planId) {
     return NextResponse.json(
       {
         error:
-          "Pedido y plan de seguimiento son obligatorios.",
+          "El plan de seguimiento es obligatorio.",
       },
       { status: 400 }
     );
@@ -61,42 +92,159 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const pedido = await prisma.pedido.findUnique({
-    where: {
-      id: pedidoId,
-    },
-    select: {
-      id: true,
-      estado: true,
-      nombreCliente: true,
-      telefonoCliente: true,
-      miembro: {
-        select: {
-          nombres: true,
-          apellidos: true,
+  let nombreCliente: string | null =
+    null;
+
+  let telefonoCliente: string | null =
+    null;
+
+  let origen:
+    | "PEDIDO_WEB"
+    | "WHATSAPP"
+    | "LLAMADA"
+    | "TIENDA"
+    | "OTRO";
+
+  if (pedidoId) {
+    const pedido =
+      await prisma.pedido.findUnique({
+        where: {
+          id: pedidoId,
         },
-      },
-    },
-  });
 
-  if (!pedido) {
-    return NextResponse.json(
-      { error: "Pedido no encontrado." },
-      { status: 404 }
-    );
-  }
+        select: {
+          id: true,
+          estado: true,
+          nombreCliente: true,
+          telefonoCliente: true,
 
-  if (
-    pedido.estado !== "PAGADO" &&
-    pedido.estado !== "COMPLETADO"
-  ) {
-    return NextResponse.json(
-      {
-        error:
-          "El seguimiento solo puede asignarse después de aprobar el pago.",
-      },
-      { status: 409 }
-    );
+          miembro: {
+            select: {
+              nombres: true,
+              apellidos: true,
+            },
+          },
+        },
+      });
+
+    if (!pedido) {
+      return NextResponse.json(
+        {
+          error:
+            "Pedido no encontrado.",
+        },
+        { status: 404 }
+      );
+    }
+
+    if (
+      pedido.estado !== "PAGADO" &&
+      pedido.estado !== "COMPLETADO"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "El seguimiento desde un pedido solo puede crearse después de aprobar el pago.",
+        },
+        { status: 409 }
+      );
+    }
+
+    const seguimientoVigente =
+      await prisma.seguimientoCliente.findFirst({
+        where: {
+          pedidoId,
+
+          estado: {
+            in: [
+              "PENDIENTE",
+              "ACTIVO",
+              "PAUSADO",
+            ],
+          },
+        },
+
+        select: {
+          id: true,
+        },
+      });
+
+    if (seguimientoVigente) {
+      return NextResponse.json(
+        {
+          error:
+            "Este pedido ya tiene un seguimiento vigente.",
+        },
+        { status: 409 }
+      );
+    }
+
+    nombreCliente =
+      pedido.nombreCliente ||
+      (pedido.miembro
+        ? `${pedido.miembro.nombres}${
+            pedido.miembro.apellidos
+              ? ` ${pedido.miembro.apellidos}`
+              : ""
+          }`
+        : null);
+
+    telefonoCliente =
+      pedido.telefonoCliente ||
+      null;
+
+    origen =
+      "PEDIDO_WEB";
+  } else {
+    if (!nombreManual) {
+      return NextResponse.json(
+        {
+          error:
+            "El nombre del cliente es obligatorio.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!telefonoManual) {
+      return NextResponse.json(
+        {
+          error:
+            "El WhatsApp del cliente es obligatorio.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const origenSolicitado =
+      typeof body.origen === "string"
+        ? body.origen
+        : "WHATSAPP";
+
+    if (
+      !ORIGENES_MANUALES.includes(
+        origenSolicitado as
+          (typeof ORIGENES_MANUALES)[number]
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "El origen del seguimiento no es válido.",
+        },
+        { status: 400 }
+      );
+    }
+
+    nombreCliente =
+      nombreManual;
+
+    telefonoCliente =
+      telefonoManual;
+
+    origen =
+      origenSolicitado as
+        (typeof ORIGENES_MANUALES)[number];
   }
 
   const plan =
@@ -104,20 +252,30 @@ export async function POST(req: NextRequest) {
       where: {
         id: planId,
       },
+
       select: {
         id: true,
         nombre: true,
         estado: true,
         duracionDias: true,
+
         actividades: {
           where: {
             activo: true,
           },
+
           orderBy: [
-            { diaInicio: "asc" },
-            { orden: "asc" },
-            { createdAt: "asc" },
+            {
+              diaInicio: "asc",
+            },
+            {
+              orden: "asc",
+            },
+            {
+              createdAt: "asc",
+            },
           ],
+
           select: {
             titulo: true,
             descripcion: true,
@@ -134,12 +292,17 @@ export async function POST(req: NextRequest) {
 
   if (!plan) {
     return NextResponse.json(
-      { error: "Plan no encontrado." },
+      {
+        error:
+          "Plan no encontrado.",
+      },
       { status: 404 }
     );
   }
 
-  if (plan.estado !== "ACTIVO") {
+  if (
+    plan.estado !== "ACTIVO"
+  ) {
     return NextResponse.json(
       {
         error:
@@ -149,7 +312,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (plan.actividades.length === 0) {
+  if (
+    plan.actividades.length === 0
+  ) {
     return NextResponse.json(
       {
         error:
@@ -159,40 +324,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const seguimientoVigente =
-    await prisma.seguimientoCliente.findFirst({
-      where: {
-        pedidoId,
-        estado: {
-          in: [
-            "PENDIENTE",
-            "ACTIVO",
-            "PAUSADO",
-          ],
-        },
-      },
-      select: {
-        id: true,
-      },
-    });
-
-  if (seguimientoVigente) {
-    return NextResponse.json(
-      {
-        error:
-          "Este pedido ya tiene un seguimiento vigente.",
-      },
-      { status: 409 }
-    );
-  }
-
   const token =
     randomBytes(32).toString("hex");
-
-  const observacion =
-    typeof observacionInterna === "string"
-      ? observacionInterna.trim().slice(0, 1500)
-      : "";
 
   const seguimiento =
     await prisma.seguimientoCliente.create({
@@ -200,18 +333,14 @@ export async function POST(req: NextRequest) {
         pedidoId,
         planId,
 
-        nombreCliente:
-          pedido.nombreCliente ||
-          (pedido.miembro
-            ? `${pedido.miembro.nombres}${
-                pedido.miembro.apellidos
-                  ? ` ${pedido.miembro.apellidos}`
-                  : ""
-              }`
-            : null),
+        nombreCliente,
+        telefonoCliente,
 
-        telefonoCliente:
-          pedido.telefonoCliente || null,
+        origen,
+
+        referenciaCompra:
+          referenciaCompra ||
+          null,
 
         nombrePlan:
           plan.nombre,
@@ -233,36 +362,52 @@ export async function POST(req: NextRequest) {
             : null,
 
         observacionInterna:
-          observacion || null,
+          observacion ||
+          null,
 
-        estado: "PENDIENTE",
+        estado:
+          "PENDIENTE",
 
         actividades: {
-          create: plan.actividades.map(
-            (actividad) => ({
-              titulo: actividad.titulo,
-              descripcion:
-                actividad.descripcion,
-              momento:
-                actividad.momento,
-              hora:
-                actividad.hora,
-              diaInicio:
-                actividad.diaInicio,
-              diaFin:
-                actividad.diaFin,
-              orden:
-                actividad.orden,
-              activo:
-                actividad.activo,
-            })
-          ),
+          create:
+            plan.actividades.map(
+              (actividad) => ({
+                titulo:
+                  actividad.titulo,
+
+                descripcion:
+                  actividad.descripcion,
+
+                momento:
+                  actividad.momento,
+
+                hora:
+                  actividad.hora,
+
+                diaInicio:
+                  actividad.diaInicio,
+
+                diaFin:
+                  actividad.diaFin,
+
+                orden:
+                  actividad.orden,
+
+                activo:
+                  actividad.activo,
+              })
+            ),
         },
       },
 
       select: {
         id: true,
         estado: true,
+        nombreCliente: true,
+        telefonoCliente: true,
+        origen: true,
+        referenciaCompra: true,
+        pedidoId: true,
         fechaInicioPrevista: true,
         observacionInterna: true,
         tokenCreadoAt: true,
