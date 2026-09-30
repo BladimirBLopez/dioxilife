@@ -75,8 +75,57 @@ type ActividadBasica = {
   nombre:
     NombreActividad;
   hora: string;
-  instrucciones: string;
+  instrucciones: string[];
 };
+
+function textoAInstrucciones(
+  texto:
+    | string
+    | null
+    | undefined
+) {
+  if (!texto?.trim()) {
+    return [""];
+  }
+
+  const instrucciones =
+    texto
+      .split(/\r?\n/)
+      .map(
+        (linea) =>
+          linea.trim()
+      )
+      .filter(Boolean);
+
+  return instrucciones.length
+    ? instrucciones
+    : [""];
+}
+
+function limpiarInstruccion(
+  valor: string
+) {
+  return valor
+    .replace(/\r?\n/g, " ")
+    .trim();
+}
+
+function instruccionesATexto(
+  instrucciones: string[]
+) {
+  return instrucciones
+    .map(limpiarInstruccion)
+    .filter(Boolean)
+    .join("\n");
+}
+
+function totalCaracteres(
+  instrucciones: string[]
+) {
+  return instruccionesATexto(
+    instrucciones
+  ).length;
+}
 
 const SECCIONES: Array<{
   nombre:
@@ -162,9 +211,10 @@ function construirActividadesBasicas(
               seccion.horaInicial,
 
         instrucciones:
-          encontrada
-            ?.descripcion ??
-          "",
+          textoAInstrucciones(
+            encontrada
+              ?.descripcion
+          ),
       };
     }
   );
@@ -289,6 +339,96 @@ export default function PlanActividadesPage() {
     );
   }
 
+  function actualizarInstruccion(
+    nombre: NombreActividad,
+    indice: number,
+    valor: string
+  ) {
+    setActividades(
+      (actuales) =>
+        actuales.map(
+          (actividad) => {
+            if (
+              actividad.nombre !==
+              nombre
+            ) {
+              return actividad;
+            }
+
+            const instrucciones = [
+              ...actividad.instrucciones,
+            ];
+
+            instrucciones[indice] =
+              valor.replace(
+                /\r?\n/g,
+                " "
+              );
+
+            return {
+              ...actividad,
+              instrucciones,
+            };
+          }
+        )
+    );
+  }
+
+  function agregarInstruccion(
+    nombre: NombreActividad
+  ) {
+    setActividades(
+      (actuales) =>
+        actuales.map(
+          (actividad) =>
+            actividad.nombre ===
+            nombre
+              ? {
+                  ...actividad,
+                  instrucciones: [
+                    ...actividad.instrucciones,
+                    "",
+                  ],
+                }
+              : actividad
+        )
+    );
+  }
+
+  function eliminarInstruccion(
+    nombre: NombreActividad,
+    indice: number
+  ) {
+    setActividades(
+      (actuales) =>
+        actuales.map(
+          (actividad) => {
+            if (
+              actividad.nombre !==
+                nombre ||
+              actividad.instrucciones
+                .length <= 1
+            ) {
+              return actividad;
+            }
+
+            return {
+              ...actividad,
+              instrucciones:
+                actividad.instrucciones.filter(
+                  (
+                    _item,
+                    posicion
+                  ) =>
+                    posicion !==
+                    indice
+                ),
+            };
+          }
+        )
+    );
+  }
+
   const hayCambios =
     JSON.stringify(
       actividades
@@ -358,6 +498,22 @@ export default function PlanActividadesPage() {
       return;
     }
 
+    const actividadDemasiadoLarga =
+      actividades.find(
+        (actividad) =>
+          totalCaracteres(
+            actividad.instrucciones
+          ) > 5000
+      );
+
+    if (actividadDemasiadoLarga) {
+      toast.error(
+        `Las instrucciones de ${actividadDemasiadoLarga.nombre} superan los 5000 caracteres.`
+      );
+
+      return;
+    }
+
     setGuardando(
       true
     );
@@ -400,7 +556,9 @@ export default function PlanActividadesPage() {
                           : actividad.hora,
 
                       instrucciones:
-                        actividad.instrucciones,
+                        instruccionesATexto(
+                          actividad.instrucciones
+                        ),
                     })
                   ),
               }),
@@ -679,40 +837,83 @@ export default function PlanActividadesPage() {
                       Instrucciones
                     </label>
 
-                    <textarea
-                      value={
-                        actividad.instrucciones
-                      }
-                      onChange={(e) =>
-                        actualizarActividad(
-                          actividad.nombre,
-                          {
-                            instrucciones:
-                              e.target
-                                .value,
-                          }
+                    <div className="space-y-3">
+                      {actividad.instrucciones.map(
+                        (
+                          instruccion,
+                          indice
+                        ) => (
+                          <div
+                            key={indice}
+                            className="flex items-start gap-2"
+                          >
+                            <span className="mt-3 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#F8F6FF] text-xs font-bold text-brand-pink">
+                              {indice + 1}
+                            </span>
+
+                            <textarea
+                              value={
+                                instruccion
+                              }
+                              onChange={(e) =>
+                                actualizarInstruccion(
+                                  actividad.nombre,
+                                  indice,
+                                  e.target.value
+                                )
+                              }
+                              className="admin-input min-h-20 flex-1"
+                              rows={2}
+                              maxLength={5000}
+                              placeholder={`Instrucción ${indice + 1}...`}
+                            />
+
+                            {actividad.instrucciones.length >
+                              1 && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  eliminarInstruccion(
+                                    actividad.nombre,
+                                    indice
+                                  )
+                                }
+                                className="mt-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-lg font-bold text-red-500 transition hover:bg-red-100"
+                                aria-label={`Eliminar instrucción ${indice + 1}`}
+                              >
+                                ×
+                              </button>
+                            )}
+                          </div>
                         )
-                      }
-                      className="admin-input min-h-32"
-                      rows={6}
-                      maxLength={
-                        5000
-                      }
-                      placeholder={`Escribe aquí todas las instrucciones de ${actividad.nombre.toLowerCase()}...`}
-                    />
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          agregarInstruccion(
+                            actividad.nombre
+                          )
+                        }
+                        className="inline-flex items-center gap-2 rounded-xl border border-brand-pink bg-white px-3 py-2 text-sm font-semibold text-brand-pink transition hover:bg-brand-pink/5"
+                      >
+                        <span className="text-lg leading-none">
+                          +
+                        </span>
+                        Agregar instrucción
+                      </button>
+                    </div>
 
                     <div className="mt-2 flex items-center justify-between gap-3">
 
                       <p className="text-xs text-[#8A8790]">
-                        Puedes modificar estas instrucciones cuando sea necesario.
+                        Cada indicación se guardará como un punto independiente.
                       </p>
 
                       <span className="shrink-0 text-[11px] text-[#AAA7AF]">
-                        {
-                          actividad
-                            .instrucciones
-                            .length
-                        }
+                        {totalCaracteres(
+                          actividad.instrucciones
+                        )}
                         /5000
                       </span>
 
