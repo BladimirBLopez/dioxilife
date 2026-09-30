@@ -8,6 +8,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Modal from "@/components/Modal";
 
 import { abrirWhatsApp } from "@/lib/whatsapp-cliente";
 
@@ -71,6 +72,11 @@ export default function NuevoSeguimientoForm({
 
   const [enviando, setEnviando] =
     useState(false);
+
+  const [
+    modalExitoAbierto,
+    setModalExitoAbierto,
+  ] = useState(false);
 
   async function crear(
     e: FormEvent
@@ -179,6 +185,10 @@ export default function NuevoSeguimientoForm({
         token: data.token,
       });
 
+      setModalExitoAbierto(
+        true
+      );
+
       toast.success(
         "Seguimiento creado correctamente",
         {
@@ -283,6 +293,12 @@ export default function NuevoSeguimientoForm({
       );
     }
   }
+
+  const planSeleccionado =
+    planes.find(
+      (plan) =>
+        plan.id === planId
+    ) || null;
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
@@ -548,6 +564,153 @@ export default function NuevoSeguimientoForm({
         )}
 
       </aside>
+
+
+      {modalExitoAbierto &&
+        enlaceTemporal &&
+        creado && (
+        <Modal
+          title="Seguimiento creado"
+          onClose={() =>
+            setModalExitoAbierto(
+              false
+            )
+          }
+          maxWidthClassName="max-w-lg"
+        >
+          <div className="space-y-5">
+
+            <div className="text-center">
+
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-2xl font-bold text-green-700">
+                ✓
+              </div>
+
+              <h3 className="mt-3 text-lg font-semibold text-[#1F1B24]">
+                Seguimiento listo
+              </h3>
+
+              <p className="mt-1 text-sm leading-6 text-[#6B6870]">
+                El enlace privado del cliente ya fue generado.
+              </p>
+
+            </div>
+
+
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+
+              <div className="space-y-3 text-sm">
+
+                <div>
+                  <p className="text-xs font-medium text-[#8A8790]">
+                    Cliente
+                  </p>
+
+                  <p className="mt-0.5 font-semibold text-[#1F1B24]">
+                    {nombreCliente}
+                  </p>
+                </div>
+
+
+                {planSeleccionado && (
+                  <div>
+                    <p className="text-xs font-medium text-[#8A8790]">
+                      Plantilla
+                    </p>
+
+                    <p className="mt-0.5 font-semibold text-[#1F1B24]">
+                      {planSeleccionado.nombre}
+                      {" · "}
+                      {planSeleccionado.duracionDias} días
+                    </p>
+                  </div>
+                )}
+
+
+                <div>
+                  <p className="text-xs font-medium text-[#8A8790]">
+                    Inicio previsto
+                  </p>
+
+                  <p className="mt-0.5 font-semibold text-[#1F1B24]">
+                    {fechaInicioPrevista ||
+                      "Sin fecha definida"}
+                  </p>
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <div>
+
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#8A8790]">
+                Enlace del cliente
+              </p>
+
+              <div className="mt-2 rounded-xl border border-green-200 bg-green-50 p-3">
+
+                <p className="break-all text-xs leading-5 text-green-800">
+                  {enlaceTemporal}
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <button
+              type="button"
+              disabled={enviando}
+              onClick={() =>
+                void enviarWhatsApp()
+              }
+              className="w-full rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
+            >
+              {enviando
+                ? "Preparando WhatsApp..."
+                : "📱 Enviar por WhatsApp"}
+            </button>
+
+
+            <div className="grid gap-2 sm:grid-cols-2">
+
+              <button
+                type="button"
+                onClick={() =>
+                  void copiarEnlace()
+                }
+                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#1F1B24] transition hover:bg-gray-50"
+              >
+                Copiar enlace
+              </button>
+
+              <Link
+                href={`/admin/seguimiento/clientes/${creado.id}`}
+                className="rounded-xl border border-brand-pink bg-white px-4 py-2.5 text-center text-sm font-semibold text-brand-pink transition hover:bg-brand-pink/5"
+              >
+                Ver seguimiento
+              </Link>
+
+            </div>
+
+
+            <button
+              type="button"
+              onClick={() =>
+                setModalExitoAbierto(
+                  false
+                )
+              }
+              className="w-full py-2 text-sm font-medium text-[#8A8790] hover:text-[#1F1B24]"
+            >
+              Cerrar
+            </button>
+
+          </div>
+        </Modal>
+      )}
 
     </div>
   );
