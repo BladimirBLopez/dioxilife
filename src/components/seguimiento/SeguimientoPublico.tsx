@@ -221,6 +221,7 @@ const ORDEN_MOMENTOS: Record<string, number> = {
   "Cena": 60,
   "Noche": 70,
   "Antes de dormir": 80,
+  "Importante": 100,
 };
 
 
@@ -379,6 +380,20 @@ export default function SeguimientoPublico({
   ] =
     useState<Pestana>(
       "hoy"
+    );
+
+  const [
+    mostrarTodosCalendario,
+    setMostrarTodosCalendario,
+  ] =
+    useState(false);
+
+  const [
+    diaCalendarioAbierto,
+    setDiaCalendarioAbierto,
+  ] =
+    useState<number | null>(
+      null
     );
 
   const [
@@ -1298,6 +1313,50 @@ export default function SeguimientoPublico({
     1;
 
 
+  const inicioCalendario =
+    Math.max(
+      1,
+      Math.min(
+        diaActual - 3,
+        Math.max(
+          1,
+          seguimiento.duracionDias - 6
+        )
+      )
+    );
+
+
+  const cantidadDiasCalendario =
+    mostrarTodosCalendario
+      ? seguimiento.duracionDias
+      : Math.min(
+          7,
+          seguimiento.duracionDias
+        );
+
+
+  const diasCalendario =
+    Array.from(
+      {
+        length:
+          cantidadDiasCalendario,
+      },
+      (
+        _,
+        indice
+      ) =>
+        mostrarTodosCalendario
+          ? indice + 1
+          : inicioCalendario +
+            indice
+    ).filter(
+      (dia) =>
+        dia >= 1 &&
+        dia <=
+          seguimiento.duracionDias
+    );
+
+
   return (
     <main className="min-h-screen bg-[#F8F7FC] pb-24">
 
@@ -1350,7 +1409,7 @@ export default function SeguimientoPublico({
           </p>
 
           <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#1F1B24]">
-            Tu día de seguimiento
+            Tu seguimiento de hoy
           </h1>
         </section>
 
@@ -1410,107 +1469,10 @@ export default function SeguimientoPublico({
         </section>
 
 
-        <section className="mt-4 rounded-2xl border border-[#E9E4F2] bg-white p-4 shadow-sm">
-
-          <div className="flex items-start gap-3">
-
-            <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-              estadoRecordatorios === "ACTIVOS"
-                ? "bg-emerald-50 text-emerald-700"
-                : "bg-[#F8F6FF] text-brand-blue"
-            }`}>
-              {estadoRecordatorios === "ACTIVOS" ? (
-                <Bell className="h-5 w-5" />
-              ) : (
-                <BellOff className="h-5 w-5" />
-              )}
-            </div>
-
-
-            <div className="min-w-0 flex-1">
-
-              <div className="flex flex-wrap items-center justify-between gap-2">
-
-                <h2 className="font-bold text-[#1F1B24]">
-                  Recordatorios
-                </h2>
-
-                {estadoRecordatorios === "ACTIVOS" && (
-                  <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
-                    Activados
-                  </span>
-                )}
-
-              </div>
-
-
-              <p className="mt-1 text-sm leading-6 text-brand-gray">
-                {estadoRecordatorios === "ACTIVOS"
-                  ? "Recibirás avisos de las actividades que tengan un recordatorio programado."
-                  : estadoRecordatorios === "BLOQUEADOS"
-                  ? "Las notificaciones están bloqueadas en la configuración de este navegador."
-                  : estadoRecordatorios === "NO_COMPATIBLE"
-                  ? "Este navegador no admite notificaciones de seguimiento."
-                  : "Activa avisos en este dispositivo para tus actividades programadas."}
-              </p>
-
-
-              {estadoRecordatorios === "INACTIVOS" && (
-                <button
-                  type="button"
-                  onClick={
-                    activarRecordatorios
-                  }
-                  disabled={
-                    cambiandoRecordatorios
-                  }
-                  className="mt-3 inline-flex items-center justify-center gap-2 rounded-xl bg-brand-blue px-4 py-2.5 text-sm font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {cambiandoRecordatorios ? (
-                    <LoaderCircle className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Bell className="h-4 w-4" />
-                  )}
-
-                  Activar recordatorios
-                </button>
-              )}
-
-
-              {estadoRecordatorios === "ACTIVOS" && (
-                <button
-                  type="button"
-                  onClick={
-                    desactivarRecordatorios
-                  }
-                  disabled={
-                    cambiandoRecordatorios
-                  }
-                  className="mt-3 text-sm font-semibold text-brand-gray underline decoration-[#CEC7DB] underline-offset-4 transition hover:text-[#1F1B24] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {cambiandoRecordatorios
-                    ? "Desactivando..."
-                    : "Desactivar en este dispositivo"}
-                </button>
-              )}
-
-
-              {estadoRecordatorios === "COMPROBANDO" && (
-                <div className="mt-3 flex items-center gap-2 text-xs font-medium text-brand-gray">
-                  <LoaderCircle className="h-4 w-4 animate-spin" />
-                  Comprobando este dispositivo...
-                </div>
-              )}
-
-            </div>
-
-          </div>
-
-        </section>
-
-
         {pestana ===
           "hoy" && (
+
+          <>
 
           <section className="mt-6">
 
@@ -1526,9 +1488,9 @@ export default function SeguimientoPublico({
                 </h2>
               </div>
 
-              {actividadesHoy.length > 0 && (
+              {tareasHoy.length > 0 && (
                 <span className="rounded-full border border-[#E9E4F2] bg-white px-3 py-1 text-xs font-semibold text-brand-gray">
-                  {actividadesHoy.length}
+                  {completadasHoy}/{tareasHoy.length} realizadas
                 </span>
               )}
 
@@ -1567,30 +1529,70 @@ export default function SeguimientoPublico({
                       actualizandoActividad ===
                       actividad.id;
 
+                    const esInformacion =
+                      actividad.tipo ===
+                      "INFORMACION";
+
+                    const esControl =
+                      actividad.tipo ===
+                      "CONTROL";
+
+                    const esAyunas =
+                      actividad.momento ===
+                        "Ayunas" ||
+                      actividad.titulo ===
+                        "Ayunas";
+
+                    const momentoDiferente =
+                      actividad.momento &&
+                      actividad.momento !==
+                        actividad.titulo;
+
+                    const instrucciones =
+                      actividad.descripcion
+                        ? actividad.descripcion
+                            .split(/\r?\n/)
+                            .map(
+                              (linea) =>
+                                linea.trim()
+                            )
+                            .filter(Boolean)
+                        : [];
+
                     return (
                       <article
                         key={
                           actividad.id
                         }
-                        className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition ${
-                          completada
-                            ? "border-emerald-200"
-                            : "border-[#E9E4F2]"
+                        className={`overflow-hidden rounded-2xl border shadow-sm transition ${
+                          esInformacion
+                            ? "border-blue-200 bg-blue-50/40"
+                            : completada
+                            ? "border-emerald-200 bg-emerald-50/30"
+                            : "border-[#E9E4F2] bg-white"
                         }`}
                       >
 
-                        <div className="p-4">
+                        <div className="p-4 sm:p-5">
 
                           <div className="flex items-start gap-3">
 
                             <div
-                              className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-                                completada
+                              className={`mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                                esInformacion
+                                  ? "bg-blue-100 text-blue-700"
+                                  : esControl
+                                  ? "bg-amber-100 text-amber-700"
+                                  : completada
                                   ? "bg-emerald-100 text-emerald-700"
                                   : "bg-[#F8F6FF] text-brand-blue"
                               }`}
                             >
-                              {completada ? (
+                              {esInformacion ? (
+                                <ClipboardList className="h-5 w-5" />
+                              ) : esControl ? (
+                                <Clock3 className="h-5 w-5" />
+                              ) : completada ? (
                                 <Check className="h-5 w-5" />
                               ) : (
                                 <Clock3 className="h-5 w-5" />
@@ -1602,37 +1604,30 @@ export default function SeguimientoPublico({
 
                               <div className="flex flex-wrap items-center gap-2">
 
-                                <span
-                                  className={`rounded-lg px-2 py-1 text-xs font-bold ${
-                                    actividad.tipo === "TAREA"
-                                      ? "bg-emerald-50 text-emerald-700"
-                                      : actividad.tipo === "INFORMACION"
-                                      ? "bg-blue-50 text-blue-700"
-                                      : "bg-amber-50 text-amber-700"
-                                  }`}
-                                >
-                                  {actividad.tipo === "TAREA"
-                                    ? "Tarea"
-                                    : actividad.tipo === "INFORMACION"
-                                    ? "Información"
-                                    : "Control"}
-                                </span>
-
                                 {actividad.hora && (
-                                  <span className="rounded-lg bg-[#F4F2F8] px-2 py-1 text-xs font-bold text-brand-blue">
+                                  <span className="rounded-lg bg-[#F4F2F8] px-2.5 py-1 text-xs font-bold text-brand-blue">
                                     {actividad.hora}
                                   </span>
                                 )}
 
-                                {actividad.momento && (
-                                  <span className="text-xs font-medium text-brand-gray">
-                                    {actividad.momento}
+                                {esAyunas &&
+                                  !actividad.hora && (
+                                  <span className="rounded-lg bg-[#F4F2F8] px-2.5 py-1 text-xs font-semibold text-brand-blue">
+                                    Sin hora fija
                                   </span>
                                 )}
 
-                                {actividad.recordatorio !== "NINGUNO" && (
+                                {esInformacion && (
+                                  <span className="rounded-lg bg-blue-100 px-2.5 py-1 text-xs font-bold text-blue-700">
+                                    Para tener en cuenta
+                                  </span>
+                                )}
+
+                                {actividad.recordatorio !==
+                                  "NINGUNO" && (
                                   <span className="rounded-lg bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
-                                    🔔 {textoRecordatorio(
+                                    🔔{" "}
+                                    {textoRecordatorio(
                                       actividad.recordatorio
                                     )}
                                   </span>
@@ -1641,18 +1636,22 @@ export default function SeguimientoPublico({
                               </div>
 
 
-                              <h3 className={`mt-2 text-base font-bold ${
-                                completada
-                                  ? "text-emerald-800"
-                                  : "text-[#1F1B24]"
-                              }`}>
+                              <h3
+                                className={`mt-2 text-base font-extrabold ${
+                                  esInformacion
+                                    ? "text-blue-900"
+                                    : completada
+                                    ? "text-emerald-800"
+                                    : "text-[#1F1B24]"
+                                }`}
+                              >
                                 {actividad.titulo}
                               </h3>
 
 
-                              {actividad.descripcion && (
-                                <p className="mt-1 whitespace-pre-line text-sm leading-6 text-brand-gray">
-                                  {actividad.descripcion}
+                              {momentoDiferente && (
+                                <p className="mt-0.5 text-xs font-medium text-brand-gray">
+                                  {actividad.momento}
                                 </p>
                               )}
 
@@ -1661,7 +1660,52 @@ export default function SeguimientoPublico({
                           </div>
 
 
-                          {actividad.tipo === "TAREA" && (
+                          {instrucciones.length >
+                            0 && (
+                            <div className="mt-4 border-t border-black/5 pt-4">
+
+                              <p className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-brand-gray">
+                                {esInformacion
+                                  ? "Información"
+                                  : "Instrucciones"}
+                              </p>
+
+                              <ul className="space-y-2.5">
+
+                                {instrucciones.map(
+                                  (
+                                    instruccion,
+                                    indice
+                                  ) => (
+                                    <li
+                                      key={`${actividad.id}-${indice}`}
+                                      className="flex items-start gap-2.5 text-sm leading-6 text-[#4F4B56]"
+                                    >
+
+                                      {esInformacion ? (
+                                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+                                      ) : (
+                                        <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#F8F6FF] text-[11px] font-bold text-brand-blue">
+                                          {indice + 1}
+                                        </span>
+                                      )}
+
+                                      <span className="min-w-0 flex-1">
+                                        {instruccion}
+                                      </span>
+
+                                    </li>
+                                  )
+                                )}
+
+                              </ul>
+
+                            </div>
+                          )}
+
+
+                          {actividad.tipo ===
+                            "TAREA" && (
                             <button
                               type="button"
                               onClick={() =>
@@ -1687,19 +1731,14 @@ export default function SeguimientoPublico({
                               )}
 
                               {completada
-                                ? "Realizada"
-                                : "Marcar como realizada"}
+                                ? "Realizado"
+                                : "Marcar como realizado"}
                             </button>
                           )}
 
-                          {actividad.tipo === "INFORMACION" && (
-                            <div className="mt-4 rounded-xl bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
-                              Información del día
-                            </div>
-                          )}
 
-                          {actividad.tipo === "CONTROL" && (
-                            <div className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
+                          {esControl && (
+                            <div className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
                               Control programado
                             </div>
                           )}
@@ -1713,6 +1752,109 @@ export default function SeguimientoPublico({
               </div>
             )}
           </section>
+
+
+          <section className="mt-6 rounded-2xl border border-[#E9E4F2] bg-white p-4 shadow-sm">
+
+                    <div className="flex items-start gap-3">
+
+                      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                        estadoRecordatorios === "ACTIVOS"
+                          ? "bg-emerald-50 text-emerald-700"
+                          : "bg-[#F8F6FF] text-brand-blue"
+                      }`}>
+                        {estadoRecordatorios === "ACTIVOS" ? (
+                          <Bell className="h-5 w-5" />
+                        ) : (
+                          <BellOff className="h-5 w-5" />
+                        )}
+                      </div>
+
+
+                      <div className="min-w-0 flex-1">
+
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+
+                          <h2 className="font-bold text-[#1F1B24]">
+                            Recordatorios
+                          </h2>
+
+                          {estadoRecordatorios === "ACTIVOS" && (
+                            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
+                              Activados
+                            </span>
+                          )}
+
+                        </div>
+
+
+                        <p className="mt-1 text-sm leading-6 text-brand-gray">
+                          {estadoRecordatorios === "ACTIVOS"
+                            ? "Recibirás avisos de las actividades que tengan un recordatorio programado."
+                            : estadoRecordatorios === "BLOQUEADOS"
+                            ? "Las notificaciones están bloqueadas en la configuración de este navegador."
+                            : estadoRecordatorios === "NO_COMPATIBLE"
+                            ? "Este navegador no admite notificaciones de seguimiento."
+                            : "Activa avisos en este dispositivo para tus actividades programadas."}
+                        </p>
+
+
+                        {estadoRecordatorios === "INACTIVOS" && (
+                          <button
+                            type="button"
+                            onClick={
+                              activarRecordatorios
+                            }
+                            disabled={
+                              cambiandoRecordatorios
+                            }
+                            className="mt-3 inline-flex items-center justify-center gap-2 rounded-xl bg-brand-blue px-4 py-2.5 text-sm font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {cambiandoRecordatorios ? (
+                              <LoaderCircle className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Bell className="h-4 w-4" />
+                            )}
+
+                            Activar recordatorios
+                          </button>
+                        )}
+
+
+                        {estadoRecordatorios === "ACTIVOS" && (
+                          <button
+                            type="button"
+                            onClick={
+                              desactivarRecordatorios
+                            }
+                            disabled={
+                              cambiandoRecordatorios
+                            }
+                            className="mt-3 text-sm font-semibold text-brand-gray underline decoration-[#CEC7DB] underline-offset-4 transition hover:text-[#1F1B24] disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {cambiandoRecordatorios
+                              ? "Desactivando..."
+                              : "Desactivar en este dispositivo"}
+                          </button>
+                        )}
+
+
+                        {estadoRecordatorios === "COMPROBANDO" && (
+                          <div className="mt-3 flex items-center gap-2 text-xs font-medium text-brand-gray">
+                            <LoaderCircle className="h-4 w-4 animate-spin" />
+                            Comprobando este dispositivo...
+                          </div>
+                        )}
+
+                      </div>
+
+                    </div>
+
+                  </section>
+
+
+          </>
+
         )}
 
 
@@ -1721,27 +1863,43 @@ export default function SeguimientoPublico({
 
           <section className="mt-6">
 
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
-              Calendario
-            </p>
+            <div className="flex items-end justify-between gap-4">
 
-            <h2 className="mt-1 text-lg font-bold text-[#1F1B24]">
-              Tu agenda completa
-            </h2>
+              <div>
+
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
+                  Calendario
+                </p>
+
+                <h2 className="mt-1 text-lg font-bold text-[#1F1B24]">
+                  Tu agenda
+                </h2>
+
+                <p className="mt-1 text-sm text-brand-gray">
+                  Día {diaActual} de {seguimiento.duracionDias}
+                </p>
+
+              </div>
+
+
+              <div className="rounded-xl bg-[#F8F6FF] px-3 py-2 text-center">
+
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-brand-gray">
+                  Avance
+                </p>
+
+                <p className="mt-0.5 text-sm font-extrabold text-brand-blue">
+                  {porcentajeGeneral}%
+                </p>
+
+              </div>
+
+            </div>
+
 
             <div className="mt-4 space-y-3">
 
-              {Array.from(
-                {
-                  length:
-                    seguimiento.duracionDias,
-                },
-                (
-                  _,
-                  indice
-                ) =>
-                  indice + 1
-              ).map(
+              {diasCalendario.map(
                 (dia) => {
 
                   const actividadesDia =
@@ -1757,11 +1915,14 @@ export default function SeguimientoPublico({
                         ordenarActividadesAgenda
                       );
 
+
                   const tareasDia =
                     actividadesDia.filter(
                       (actividad) =>
-                        actividad.tipo === "TAREA"
+                        actividad.tipo ===
+                        "TAREA"
                     );
+
 
                   const completadasDia =
                     tareasDia.filter(
@@ -1772,51 +1933,172 @@ export default function SeguimientoPublico({
                         )
                     ).length;
 
+
                   const esHoy =
                     dia ===
                     diaActual;
 
+
+                  const esPasado =
+                    dia <
+                    diaActual;
+
+
+                  const esFuturo =
+                    dia >
+                    diaActual;
+
+
+                  const diaCompleto =
+                    tareasDia.length >
+                      0 &&
+                    completadasDia ===
+                      tareasDia.length;
+
+
+                  const porcentajeDia =
+                    tareasDia.length >
+                    0
+                      ? Math.round(
+                          (
+                            completadasDia /
+                            tareasDia.length
+                          ) *
+                            100
+                        )
+                      : 0;
+
+
+                  const estadoDia =
+                    tareasDia.length ===
+                    0
+                      ? "Sin tareas"
+                      : esHoy
+                      ? "Hoy"
+                      : esFuturo
+                      ? "Próximo"
+                      : diaCompleto
+                      ? "Completado"
+                      : esPasado
+                      ? "Pendiente"
+                      : "";
+
+
                   return (
-                    <div
+                    <details
                       key={
                         dia
                       }
-                      className={`rounded-2xl border bg-white p-4 shadow-sm ${
+                      open={
+                        diaCalendarioAbierto ===
+                        dia
+                      }
+                      onToggle={(
+                        evento
+                      ) => {
+                        const abierto =
+                          evento.currentTarget.open;
+
+                        setDiaCalendarioAbierto(
+                          (
+                            actual
+                          ) =>
+                            abierto
+                              ? dia
+                              : actual ===
+                                dia
+                              ? null
+                              : actual
+                        );
+                      }}
+                      className={`group overflow-hidden rounded-2xl border bg-white shadow-sm ${
                         esHoy
                           ? "border-brand-pink"
+                          : diaCompleto
+                          ? "border-emerald-200"
                           : "border-[#E9E4F2]"
                       }`}
                     >
-                      <div className="flex items-center justify-between gap-3">
 
-                        <div className="flex items-center gap-3">
+                      <summary className="cursor-pointer list-none p-4">
 
-                          <div
-                            className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold ${
-                              esHoy
-                                ? "bg-brand-pink text-white"
-                                : "bg-[#F8F6FF] text-brand-blue"
-                            }`}
-                          >
-                            {dia}
+                        <div className="flex items-center justify-between gap-3">
+
+                          <div className="flex min-w-0 items-center gap-3">
+
+                            <div
+                              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-extrabold ${
+                                esHoy
+                                  ? "bg-brand-pink text-white"
+                                  : diaCompleto
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : "bg-[#F8F6FF] text-brand-blue"
+                              }`}
+                            >
+                              {dia}
+                            </div>
+
+
+                            <div className="min-w-0">
+
+                              <div className="flex flex-wrap items-center gap-2">
+
+                                <p className="font-bold text-[#1F1B24]">
+                                  Día {dia}
+                                </p>
+
+
+                                {estadoDia && (
+                                  <span
+                                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                                      esHoy
+                                        ? "bg-pink-50 text-brand-pink"
+                                        : diaCompleto
+                                        ? "bg-emerald-50 text-emerald-700"
+                                        : esFuturo
+                                        ? "bg-[#F8F6FF] text-brand-blue"
+                                        : "bg-amber-50 text-amber-700"
+                                    }`}
+                                  >
+                                    {estadoDia}
+                                  </span>
+                                )}
+
+                              </div>
+
+
+                              <p className="mt-0.5 text-xs text-brand-gray">
+                                {tareasDia.length ===
+                                0
+                                  ? "Sin tareas"
+                                  : `${completadasDia} de ${tareasDia.length} realizadas`}
+                              </p>
+
+                            </div>
+
                           </div>
 
-                          <div>
-                            <p className="font-bold text-[#1F1B24]">
-                              Día {dia}
-                            </p>
 
-                            <p className="text-xs text-brand-gray">
-                              {actividadesDia.length ===
-                              0
-                                ? "Sin actividades"
-                                : `${actividadesDia.length} ${
-                                    actividadesDia.length ===
-                                    1
-                                      ? "actividad"
-                                      : "actividades"
-                                  }`}
-                            </p>
+                          <div className="flex items-center gap-2">
+
+                            {tareasDia.length >
+                              0 && (
+                              <span
+                                className={`text-xs font-bold ${
+                                  diaCompleto
+                                    ? "text-emerald-600"
+                                    : "text-brand-gray"
+                                }`}
+                              >
+                                {porcentajeDia}%
+                              </span>
+                            )}
+
+
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F8F6FF] text-base font-bold text-brand-blue transition group-open:rotate-45">
+                              +
+                            </div>
+
                           </div>
 
                         </div>
@@ -1824,82 +2106,183 @@ export default function SeguimientoPublico({
 
                         {tareasDia.length >
                           0 && (
-                          <span className={`text-xs font-bold ${
-                            completadasDia ===
-                            tareasDia.length
-                              ? "text-emerald-600"
-                              : "text-brand-gray"
-                          }`}>
-                            {completadasDia}/{tareasDia.length}
-                          </span>
+
+                          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#EEEAF5]">
+
+                            <div
+                              className={`h-full rounded-full transition-all ${
+                                diaCompleto
+                                  ? "bg-emerald-500"
+                                  : esHoy
+                                  ? "bg-brand-pink"
+                                  : "bg-brand-blue"
+                              }`}
+                              style={{
+                                width:
+                                  `${porcentajeDia}%`,
+                              }}
+                            />
+
+                          </div>
+                        )}
+
+                      </summary>
+
+
+                      <div className="border-t border-[#EEEAF5] px-4 pb-4 pt-3">
+
+                        {actividadesDia.length ===
+                        0 ? (
+
+                          <p className="text-sm text-brand-gray">
+                            No hay actividades programadas para este día.
+                          </p>
+
+                        ) : (
+
+                          <div className="space-y-2.5">
+
+                            {actividadesDia.map(
+                              (
+                                actividad
+                              ) => {
+
+                                const hecha =
+                                  actividadCompletadaEnDia(
+                                    actividad,
+                                    dia
+                                  );
+
+
+                                const esInformacion =
+                                  actividad.tipo ===
+                                  "INFORMACION";
+
+
+                                return (
+                                  <div
+                                    key={
+                                      actividad.id
+                                    }
+                                    className={`flex items-start gap-3 rounded-xl px-3 py-2.5 ${
+                                      esInformacion
+                                        ? "bg-blue-50"
+                                        : hecha
+                                        ? "bg-emerald-50"
+                                        : "bg-[#FAF9FC]"
+                                    }`}
+                                  >
+
+                                    <div className="mt-0.5 shrink-0">
+
+                                      {actividad.tipo ===
+                                      "TAREA" ? (
+
+                                        hecha ? (
+                                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                                        ) : (
+                                          <Circle className="h-4 w-4 text-slate-300" />
+                                        )
+
+                                      ) : esInformacion ? (
+
+                                        <ClipboardList className="h-4 w-4 text-blue-500" />
+
+                                      ) : (
+
+                                        <Clock3 className="h-4 w-4 text-amber-500" />
+
+                                      )}
+
+                                    </div>
+
+
+                                    <div className="min-w-0 flex-1">
+
+                                      <div className="flex flex-wrap items-center gap-2">
+
+                                        <p
+                                          className={`text-sm font-semibold ${
+                                            esInformacion
+                                              ? "text-blue-900"
+                                              : hecha
+                                              ? "text-emerald-800"
+                                              : "text-[#1F1B24]"
+                                          }`}
+                                        >
+                                          {actividad.titulo}
+                                        </p>
+
+
+                                        {actividad.hora && (
+                                          <span className="text-xs font-bold text-brand-blue">
+                                            {actividad.hora}
+                                          </span>
+                                        )}
+
+                                      </div>
+
+
+                                      {esInformacion && (
+                                        <p className="mt-0.5 text-xs text-blue-700">
+                                          Información importante
+                                        </p>
+                                      )}
+
+                                    </div>
+
+                                  </div>
+                                );
+                              }
+                            )}
+
+                          </div>
+
                         )}
 
                       </div>
 
-
-                      {actividadesDia.length >
-                        0 && (
-                        <div className="mt-3 space-y-2 border-t border-[#EEEAF5] pt-3">
-
-                          {actividadesDia.map(
-                            (actividad) => {
-
-                              const hecha =
-                                actividadCompletadaEnDia(
-                                  actividad,
-                                  dia
-                                );
-
-                              return (
-                                <div
-                                  key={
-                                    actividad.id
-                                  }
-                                  className="flex items-start gap-2 text-sm"
-                                >
-                                  {actividad.tipo === "TAREA" ? (
-                                    hecha ? (
-                                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                                    ) : (
-                                      <Circle className="mt-0.5 h-4 w-4 shrink-0 text-slate-300" />
-                                    )
-                                  ) : actividad.tipo === "INFORMACION" ? (
-                                    <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
-                                  ) : (
-                                    <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-                                  )}
-
-                                  <span className={
-                                    hecha
-                                      ? "text-brand-gray"
-                                      : "text-[#1F1B24]"
-                                  }>
-                                    {actividad.hora
-                                      ? `${actividad.hora} · `
-                                      : ""}
-                                    {actividad.titulo}
-
-                                    {actividad.recordatorio !== "NINGUNO" && (
-                                      <span className="ml-2 text-xs font-medium text-amber-600">
-                                        · 🔔 {textoRecordatorio(
-                                          actividad.recordatorio
-                                        )}
-                                      </span>
-                                    )}
-                                  </span>
-                                </div>
-                              );
-                            }
-                          )}
-
-                        </div>
-                      )}
-                    </div>
+                    </details>
                   );
                 }
               )}
 
             </div>
+
+
+            {seguimiento.duracionDias >
+              7 && (
+
+              <button
+                type="button"
+                onClick={() =>
+                  setMostrarTodosCalendario(
+                    (
+                      actual
+                    ) =>
+                      !actual
+                  )
+                }
+                className="mt-4 inline-flex w-full items-center justify-center rounded-xl border border-[#E1DCEB] bg-white px-4 py-3 text-sm font-bold text-brand-blue transition hover:bg-[#F8F6FF]"
+              >
+                {mostrarTodosCalendario
+                  ? "Mostrar alrededor de hoy"
+                  : `Ver los ${seguimiento.duracionDias} días`}
+              </button>
+
+            )}
+
+
+            {!mostrarTodosCalendario &&
+              seguimiento.duracionDias >
+                7 && (
+
+              <p className="mt-3 text-center text-xs leading-5 text-brand-gray">
+                Mostrando los días más cercanos a tu día actual.
+              </p>
+
+            )}
+
           </section>
         )}
 
@@ -1914,7 +2297,7 @@ export default function SeguimientoPublico({
             </p>
 
             <h2 className="mt-1 text-lg font-bold text-[#1F1B24]">
-              Resumen de seguimiento
+              Tu seguimiento
             </h2>
 
 
@@ -1923,6 +2306,7 @@ export default function SeguimientoPublico({
               <p className="text-sm font-bold text-[#1F1B24]">
                 {seguimiento.nombrePlan}
               </p>
+
 
               <div className="mt-4 grid grid-cols-2 gap-3">
 
@@ -1975,10 +2359,10 @@ export default function SeguimientoPublico({
               </div>
 
 
-              <div className="mt-5 space-y-3 border-t border-[#EEEAF5] pt-4">
+              <div className="mt-5 grid gap-3 border-t border-[#EEEAF5] pt-4 sm:grid-cols-2">
 
                 <div className="flex items-center gap-3">
-                  <CalendarDays className="h-5 w-5 text-brand-blue" />
+                  <CalendarDays className="h-5 w-5 shrink-0 text-brand-blue" />
 
                   <div>
                     <p className="text-xs text-brand-gray">
@@ -1995,7 +2379,7 @@ export default function SeguimientoPublico({
 
 
                 <div className="flex items-center gap-3">
-                  <ClipboardList className="h-5 w-5 text-brand-blue" />
+                  <ClipboardList className="h-5 w-5 shrink-0 text-brand-blue" />
 
                   <div>
                     <p className="text-xs text-brand-gray">
@@ -2009,21 +2393,193 @@ export default function SeguimientoPublico({
                 </div>
 
               </div>
+
             </div>
 
 
-            <div className="mt-4 rounded-2xl border border-[#E9E4F2] bg-white p-4">
+            <div className="mt-6">
+
+              <div className="mb-3">
+
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
+                  Tu rutina
+                </p>
+
+                <h3 className="mt-1 text-lg font-bold text-[#1F1B24]">
+                  Actividades de tu seguimiento
+                </h3>
+
+                <p className="mt-1 text-sm leading-6 text-brand-gray">
+                  Toca cada sección para consultar sus instrucciones.
+                </p>
+
+              </div>
+
+
+              <div className="space-y-3">
+
+                {seguimiento.actividades
+                  .slice()
+                  .sort(
+                    ordenarActividadesAgenda
+                  )
+                  .map(
+                    (actividad) => {
+
+                      const esInformacion =
+                        actividad.tipo ===
+                        "INFORMACION";
+
+                      const esAyunas =
+                        actividad.momento ===
+                          "Ayunas" ||
+                        actividad.titulo ===
+                          "Ayunas";
+
+                      const instrucciones =
+                        actividad.descripcion
+                          ? actividad.descripcion
+                              .split(/\r?\n/)
+                              .map(
+                                (linea) =>
+                                  linea.trim()
+                              )
+                              .filter(Boolean)
+                          : [];
+
+                      return (
+                        <details
+                          key={
+                            actividad.id
+                          }
+                          className={`group overflow-hidden rounded-2xl border shadow-sm ${
+                            esInformacion
+                              ? "border-blue-200 bg-blue-50/40"
+                              : "border-[#E9E4F2] bg-white"
+                          }`}
+                        >
+
+                          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4">
+
+                            <div className="min-w-0">
+
+                              <div className="flex flex-wrap items-center gap-2">
+
+                                {actividad.hora ? (
+                                  <span className="rounded-lg bg-[#F4F2F8] px-2.5 py-1 text-xs font-bold text-brand-blue">
+                                    {actividad.hora}
+                                  </span>
+                                ) : esAyunas ? (
+                                  <span className="rounded-lg bg-[#F4F2F8] px-2.5 py-1 text-xs font-semibold text-brand-blue">
+                                    Sin hora fija
+                                  </span>
+                                ) : esInformacion ? (
+                                  <span className="rounded-lg bg-blue-100 px-2.5 py-1 text-xs font-bold text-blue-700">
+                                    Información
+                                  </span>
+                                ) : null}
+
+                              </div>
+
+
+                              <p
+                                className={`mt-2 font-bold ${
+                                  esInformacion
+                                    ? "text-blue-900"
+                                    : "text-[#1F1B24]"
+                                }`}
+                              >
+                                {actividad.titulo}
+                              </p>
+
+                            </div>
+
+
+                            <div
+                              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lg font-bold transition group-open:rotate-45 ${
+                                esInformacion
+                                  ? "bg-blue-100 text-blue-700"
+                                  : "bg-[#F8F6FF] text-brand-blue"
+                              }`}
+                            >
+                              +
+                            </div>
+
+                          </summary>
+
+
+                          <div className="border-t border-black/5 px-4 pb-4 pt-4">
+
+                            {instrucciones.length >
+                            0 ? (
+
+                              <ul className="space-y-2.5">
+
+                                {instrucciones.map(
+                                  (
+                                    instruccion,
+                                    indice
+                                  ) => (
+                                    <li
+                                      key={`${actividad.id}-plan-${indice}`}
+                                      className="flex items-start gap-2.5 text-sm leading-6 text-[#4F4B56]"
+                                    >
+
+                                      {esInformacion ? (
+                                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+                                      ) : (
+                                        <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#F8F6FF] text-[11px] font-bold text-brand-blue">
+                                          {indice + 1}
+                                        </span>
+                                      )}
+
+                                      <span className="min-w-0 flex-1">
+                                        {instruccion}
+                                      </span>
+
+                                    </li>
+                                  )
+                                )}
+
+                              </ul>
+
+                            ) : (
+
+                              <p className="text-sm text-brand-gray">
+                                Sin instrucciones adicionales.
+                              </p>
+
+                            )}
+
+                          </div>
+
+                        </details>
+                      );
+                    }
+                  )}
+
+              </div>
+
+            </div>
+
+
+            <div className="mt-5 rounded-2xl border border-[#E9E4F2] bg-white p-4">
+
               <div className="flex items-start gap-3">
+
                 <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-brand-blue" />
 
                 <p className="text-xs leading-5 text-brand-gray">
                   Tu agenda es personal. Las actividades que ves corresponden al seguimiento preparado para ti por DioxiLife.
                 </p>
+
               </div>
+
             </div>
 
           </section>
         )}
+
 
       </div>
 
@@ -2057,11 +2613,15 @@ export default function SeguimientoPublico({
             icono={
               <CalendarDays className="h-5 w-5" />
             }
-            onClick={() =>
+            onClick={() => {
               setPestana(
                 "calendario"
-              )
-            }
+              );
+
+              setDiaCalendarioAbierto(
+                diaActual
+              );
+            }}
           />
 
           <BotonNavegacion
