@@ -7,10 +7,12 @@ export default function Modal({
   title,
   onClose,
   children,
+  maxWidthClassName = "max-w-md",
 }: {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  maxWidthClassName?: string;
 }) {
   const [montado, setMontado] = useState(false);
 
@@ -20,8 +22,10 @@ export default function Modal({
     function handleEsc(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
     }
+
     document.addEventListener("keydown", handleEsc);
     document.body.style.overflow = "hidden";
+
     return () => {
       document.removeEventListener("keydown", handleEsc);
       document.body.style.overflow = "";
@@ -32,26 +36,43 @@ export default function Modal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-40 bg-black/50 flex items-start sm:items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-black/50 p-3 sm:items-center sm:p-4"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md my-8"
+        className={`my-4 w-full ${maxWidthClassName} rounded-2xl bg-white shadow-2xl sm:my-8`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-          <h2 className="text-base font-semibold text-[#1F1B24]">{title}</h2>
+        <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-gray-100 bg-white px-5 py-4">
+          <h2 className="text-base font-semibold text-[#1F1B24]">
+            {title}
+          </h2>
+
           <button
+            type="button"
             onClick={onClose}
             aria-label="Cerrar"
-            className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
-              <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              className="h-4 w-4"
+            >
+              <path
+                d="M18 6 6 18M6 6l12 12"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </button>
         </div>
-        <div className="p-5">{children}</div>
+
+        <div className="p-4 sm:p-5">
+          {children}
+        </div>
       </div>
     </div>,
     document.body

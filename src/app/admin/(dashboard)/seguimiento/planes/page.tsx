@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Modal from "@/components/Modal";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import NuevaPlantillaModal from "@/components/admin/seguimiento/NuevaPlantillaModal";
 
 type Plan = {
   id: string;
@@ -28,6 +29,7 @@ export default function PlanesSeguimientoPage() {
   const [cargando, setCargando] = useState(true);
 
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [nuevaPlantillaAbierta, setNuevaPlantillaAbierta] = useState(false);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [form, setForm] = useState(vacio);
   const [formInicial, setFormInicial] = useState(vacio);
@@ -71,10 +73,7 @@ export default function PlanesSeguimientoPage() {
   }
 
   function abrirNuevo() {
-    setEditandoId(null);
-    setForm(vacio);
-    setFormInicial(vacio);
-    setModalAbierto(true);
+    setNuevaPlantillaAbierta(true);
   }
 
   function abrirEditar(plan: Plan) {
@@ -162,7 +161,7 @@ export default function PlanesSeguimientoPage() {
     const data = await res.json().catch(() => null);
 
     if (!res.ok) {
-      alert(data?.error || "No se pudo borrar el plan");
+      alert(data?.error || "No se pudo borrar la plantilla");
       setBorrarId(null);
       return;
     }
@@ -314,6 +313,13 @@ export default function PlanesSeguimientoPage() {
         </div>
       )}
 
+      {nuevaPlantillaAbierta && (
+        <NuevaPlantillaModal
+          onClose={() => setNuevaPlantillaAbierta(false)}
+          onCreada={cargar}
+        />
+      )}
+
       {modalAbierto && (
         <Modal
           title={editandoId ? "Editar plantilla" : "Nueva plantilla de seguimiento"}
@@ -416,7 +422,7 @@ export default function PlanesSeguimientoPage() {
               </select>
 
               <p className="mt-1 text-xs text-[#8A8790]">
-                Solo los planes activos podrán asignarse posteriormente a clientes.
+                Solo las plantillas activas podrán asignarse posteriormente a clientes.
               </p>
             </div>
 
@@ -429,7 +435,7 @@ export default function PlanesSeguimientoPage() {
                 ? "Guardando..."
                 : editandoId
                 ? "Guardar cambios"
-                : "Crear plan"}
+                : "Crear plantilla"}
             </button>
           </form>
         </Modal>
@@ -447,8 +453,8 @@ export default function PlanesSeguimientoPage() {
 
       {borrarId && (
         <ConfirmDialog
-          title="Borrar plan"
-          message="¿Seguro que quieres borrar este plan? Si ya fue asignado a un cliente no podrá eliminarse."
+          title="Borrar plantilla"
+          message="¿Seguro que quieres borrar esta plantilla? Si ya fue asignada a un cliente no podrá eliminarse."
           onConfirm={confirmarBorrar}
           onCancel={() => setBorrarId(null)}
         />
