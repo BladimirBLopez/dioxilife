@@ -204,8 +204,20 @@ const grupos: NavGroup[] = [
     titulo: "Seguimiento",
     items: [
       {
+        href: "/admin/seguimiento/biblioteca",
+        label: "Biblioteca",
+        icon: (
+          <>
+            <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z" />
+            <path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20" />
+            <path d="M8 7h8M8 11h6" />
+          </>
+        ),
+      },
+
+      {
         href: "/admin/seguimiento/planes",
-        label: "Planes",
+        label: "Plantillas",
         icon: (
           <>
             <rect x="4" y="3" width="16" height="18" rx="2" />

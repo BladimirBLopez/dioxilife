@@ -95,7 +95,7 @@ export default function PlanesSeguimientoPage() {
     e.preventDefault();
 
     if (!form.nombre.trim()) {
-      alert("El nombre del plan es obligatorio");
+      alert("El nombre de la plantilla es obligatorio");
       return;
     }
 
@@ -134,7 +134,7 @@ export default function PlanesSeguimientoPage() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        alert(data?.error || "No se pudo guardar el plan");
+        alert(data?.error || "No se pudo guardar la plantilla");
         return;
       }
 
@@ -188,11 +188,11 @@ export default function PlanesSeguimientoPage() {
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-[#1F1B24]">
-            Planes de seguimiento
+            Plantillas de seguimiento
           </h1>
 
           <p className="mt-1 text-sm text-[#6B6870]">
-            Crea plantillas reutilizables para el seguimiento posterior a la compra.
+            Crea plantillas reutilizables que luego podrás asignar y personalizar para cada cliente.
           </p>
         </div>
 
@@ -201,7 +201,7 @@ export default function PlanesSeguimientoPage() {
           onClick={abrirNuevo}
           className="admin-btn-primary shrink-0"
         >
-          + Nuevo plan
+          + Nueva plantilla
         </button>
       </div>
 
@@ -210,11 +210,11 @@ export default function PlanesSeguimientoPage() {
       ) : planes.length === 0 ? (
         <div className="admin-card p-8 text-center">
           <p className="font-semibold text-[#1F1B24]">
-            Aún no hay planes de seguimiento
+            Aún no hay plantillas de seguimiento
           </p>
 
           <p className="mt-1 text-sm text-[#8A8790]">
-            Crea el primer plan y luego podrás añadir sus actividades.
+            Crea la primera plantilla y luego configura sus actividades.
           </p>
 
           <button
@@ -222,7 +222,7 @@ export default function PlanesSeguimientoPage() {
             onClick={abrirNuevo}
             className="admin-btn-primary mt-4"
           >
-            Crear primer plan
+            Crear primera plantilla
           </button>
         </div>
       ) : (
@@ -291,7 +291,7 @@ export default function PlanesSeguimientoPage() {
                   href={`/admin/seguimiento/planes/${plan.id}`}
                   className="font-medium text-brand-pink hover:underline"
                 >
-                  Gestionar actividades
+                  Configurar actividades
                 </a>
 
                 <button
@@ -316,13 +316,13 @@ export default function PlanesSeguimientoPage() {
 
       {modalAbierto && (
         <Modal
-          title={editandoId ? "Editar plan" : "Nuevo plan de seguimiento"}
+          title={editandoId ? "Editar plantilla" : "Nueva plantilla de seguimiento"}
           onClose={pedirCerrarModal}
         >
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="admin-label">
-                Nombre del plan
+                Nombre de la plantilla
               </label>
 
               <input
@@ -335,7 +335,7 @@ export default function PlanesSeguimientoPage() {
                   })
                 }
                 className="admin-input"
-                placeholder="Ej. Seguimiento 30 días"
+                placeholder="Ej. Plantilla estándar 90 días"
                 required
               />
             </div>
@@ -355,7 +355,7 @@ export default function PlanesSeguimientoPage() {
                 }
                 className="admin-input"
                 rows={4}
-                placeholder="Descripción interna del plan..."
+                placeholder="Descripción interna de la plantilla..."
               />
             </div>
 

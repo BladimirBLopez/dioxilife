@@ -105,6 +105,12 @@ export default async function SeguimientoClientePage({
               diaInicio: "asc",
             },
             {
+              hora: {
+                sort: "asc",
+                nulls: "last",
+              },
+            },
+            {
               orden: "asc",
             },
             {
@@ -196,7 +202,7 @@ export default async function SeguimientoClientePage({
         <div className="rounded-xl bg-white p-5 shadow">
 
           <p className="text-sm text-gray-500">
-            Plan asignado
+            Plantilla asignada
           </p>
 
           <p className="mt-2 font-semibold text-gray-900">

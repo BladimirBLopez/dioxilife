@@ -94,7 +94,7 @@ export default function SeguimientoPedido({
 
     const confirmar =
       window.confirm(
-        "¿Deseas asignar este plan de seguimiento al cliente?"
+        "¿Deseas asignar esta plantilla de seguimiento al cliente?"
       );
 
     if (!confirmar) {
@@ -318,7 +318,7 @@ export default function SeguimientoPedido({
 
               <div>
                 <p className="text-xs font-medium text-gray-500">
-                  Plan asignado
+                  Plantilla asignada
                 </p>
 
                 <p className="mt-1 font-semibold text-gray-900">
@@ -496,7 +496,7 @@ export default function SeguimientoPedido({
 
           <div>
             <label className="admin-label">
-              Plan de seguimiento
+              Plantilla de seguimiento
             </label>
 
             <select

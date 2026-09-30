@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Modal from "@/components/Modal";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import AgregarDesdeBiblioteca from "@/components/admin/seguimiento/AgregarDesdeBiblioteca";
 
 type TipoActividad =
   | "TAREA"
@@ -174,7 +175,7 @@ export default function PlanActividadesPage() {
       )
     ) {
       alert(
-        "El día final debe ser igual o mayor al día inicial y no superar la duración del plan"
+        "El día final debe ser igual o mayor al día inicial y no superar la duración de la plantilla"
       );
       return;
     }
@@ -266,7 +267,7 @@ export default function PlanActividadesPage() {
   if (cargando) {
     return (
       <p className="text-sm text-[#8A8790]">
-        Cargando plan...
+        Cargando plantilla...
       </p>
     );
   }
@@ -275,14 +276,14 @@ export default function PlanActividadesPage() {
     return (
       <div className="admin-card p-6">
         <p className="font-semibold text-[#1F1B24]">
-          Plan no encontrado
+          Plantilla no encontrada
         </p>
 
         <Link
           href="/admin/seguimiento/planes"
           className="mt-3 inline-block text-sm font-medium text-brand-blue hover:underline"
         >
-          Volver a planes
+          Volver a plantillas
         </Link>
       </div>
     );
@@ -295,7 +296,7 @@ export default function PlanActividadesPage() {
           href="/admin/seguimiento/planes"
           className="text-sm font-medium text-brand-blue hover:underline"
         >
-          ← Volver a planes
+          ← Volver a plantillas
         </Link>
       </div>
 
@@ -335,13 +336,20 @@ export default function PlanActividadesPage() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={abrirNueva}
-            className="admin-btn-primary shrink-0"
-          >
-            + Agregar actividad
-          </button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <AgregarDesdeBiblioteca
+              planId={id}
+              onAgregadas={cargar}
+            />
+
+            <button
+              type="button"
+              onClick={abrirNueva}
+              className="rounded-xl border border-brand-pink bg-white px-4 py-2.5 text-sm font-semibold text-brand-pink transition hover:bg-brand-pink/5"
+            >
+              + Crear actividad manual
+            </button>
+          </div>
         </div>
       </div>
 
@@ -362,7 +370,7 @@ export default function PlanActividadesPage() {
         {plan.actividades.length === 0 ? (
           <div className="admin-card p-8 text-center">
             <p className="font-semibold text-[#1F1B24]">
-              Este plan todavía no tiene actividades
+              Esta plantilla todavía no tiene actividades
             </p>
 
             <p className="mt-1 text-sm text-[#8A8790]">

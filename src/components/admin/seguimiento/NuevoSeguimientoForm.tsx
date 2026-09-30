@@ -371,7 +371,7 @@ export default function NuevoSeguimientoForm({
 
           <div>
             <label className="admin-label">
-              Plan de seguimiento *
+              Plantilla de seguimiento *
             </label>
 
             <select

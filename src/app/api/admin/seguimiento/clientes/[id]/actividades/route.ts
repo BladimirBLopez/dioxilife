@@ -36,6 +36,12 @@ export async function GET(
         actividades: {
           orderBy: [
             { diaInicio: "asc" },
+            {
+              hora: {
+                sort: "asc",
+                nulls: "last",
+              },
+            },
             { orden: "asc" },
             { createdAt: "asc" },
           ],

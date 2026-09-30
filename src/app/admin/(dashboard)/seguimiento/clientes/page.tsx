@@ -109,7 +109,7 @@ export default async function SeguimientosClientesPage() {
               <thead className="bg-gray-50 text-gray-600">
                 <tr>
                   <th className="px-4 py-3">Cliente</th>
-                  <th className="px-4 py-3">Plan</th>
+                  <th className="px-4 py-3">Plantilla</th>
                   <th className="px-4 py-3">Pedido</th>
                   <th className="px-4 py-3">Inicio previsto</th>
                   <th className="px-4 py-3">Estado</th>

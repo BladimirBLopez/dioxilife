@@ -142,6 +142,26 @@ enum RecordatorioActividad {
   MIN_60_ANTES
 }
 
+model ActividadBase {
+  id String @id @default(cuid())
+
+  tipo         TipoActividadSeguimiento @default(TAREA)
+  recordatorio RecordatorioActividad    @default(NINGUNO)
+
+  titulo      String
+  descripcion String?
+  momento     String?
+  hora        String?
+
+  activo Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([activo])
+  @@index([titulo])
+}
+
 model ActividadPlan {
   id String @id @default(cuid())
 
