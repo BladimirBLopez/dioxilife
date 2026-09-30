@@ -23,13 +23,13 @@ export async function GET(
       actividades: {
         orderBy: [
           { diaInicio: "asc" },
+          { orden: "asc" },
           {
             hora: {
               sort: "asc",
               nulls: "last",
             },
           },
-          { orden: "asc" },
           { createdAt: "asc" },
         ],
       },
@@ -162,7 +162,7 @@ export async function POST(
       recordatorio: recordatorioActividad,
       titulo: tituloLimpio,
       descripcion: descripcion
-        ? String(descripcion).trim().slice(0, 1500)
+        ? String(descripcion).trim().slice(0, 5000)
         : null,
       momento: momento
         ? String(momento).trim().slice(0, 60)

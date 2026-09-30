@@ -283,13 +283,13 @@ export async function POST(req: NextRequest) {
               diaInicio: "asc",
             },
             {
+              orden: "asc",
+            },
+            {
               hora: {
                 sort: "asc",
                 nulls: "last",
               },
-            },
-            {
-              orden: "asc",
             },
             {
               createdAt: "asc",

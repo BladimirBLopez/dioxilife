@@ -176,7 +176,7 @@ export async function PUT(
           descripcion
             ? String(descripcion)
                 .trim()
-                .slice(0, 1500)
+                .slice(0, 5000)
             : null,
 
         momento:

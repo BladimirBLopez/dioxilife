@@ -36,13 +36,13 @@ export async function GET(
         actividades: {
           orderBy: [
             { diaInicio: "asc" },
+            { orden: "asc" },
             {
               hora: {
                 sort: "asc",
                 nulls: "last",
               },
             },
-            { orden: "asc" },
             { createdAt: "asc" },
           ],
 
@@ -220,7 +220,7 @@ export async function POST(
           descripcion
             ? String(descripcion)
                 .trim()
-                .slice(0, 1500)
+                .slice(0, 5000)
             : null,
 
         momento:

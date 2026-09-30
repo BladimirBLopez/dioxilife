@@ -99,7 +99,7 @@ function normalizarActividad(
     valor.descripcion.trim()
       ? valor.descripcion
           .trim()
-          .slice(0, 1500)
+          .slice(0, 5000)
       : null;
 
   const momento =

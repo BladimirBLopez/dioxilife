@@ -137,7 +137,7 @@ export async function PUT(
       recordatorio: recordatorioActividad,
       titulo: tituloLimpio,
       descripcion: descripcion
-        ? String(descripcion).trim().slice(0, 1500)
+        ? String(descripcion).trim().slice(0, 5000)
         : null,
       momento: momento
         ? String(momento).trim().slice(0, 60)

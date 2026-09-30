@@ -1059,7 +1059,7 @@ export default function BibliotecaActividadesPage() {
 
             <div>
               <label className="admin-label">
-                Descripción
+                Instrucciones
               </label>
 
               <textarea
@@ -1076,8 +1076,8 @@ export default function BibliotecaActividadesPage() {
                 }
                 className="admin-input"
                 rows={4}
-                maxLength={1500}
-                placeholder="Instrucción general que luego podrá reutilizarse..."
+                maxLength={5000}
+                placeholder="Instrucciones que luego podrán reutilizarse..."
               />
             </div>
 

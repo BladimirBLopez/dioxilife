@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
   const descripcion =
     typeof body.descripcion === "string" &&
     body.descripcion.trim()
-      ? body.descripcion.trim().slice(0, 1500)
+      ? body.descripcion.trim().slice(0, 5000)
       : null;
 
   const momento =

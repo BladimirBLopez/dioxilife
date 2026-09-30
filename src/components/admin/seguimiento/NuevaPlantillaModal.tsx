@@ -1,9 +1,6 @@
 "use client";
 
 import {
-  useEffect,
-  useMemo,
-  useRef,
   useState,
   type FormEvent,
 } from "react";
@@ -14,55 +11,18 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 
 type EstadoPlantilla =
   | "BORRADOR"
-  | "ACTIVO"
-  | "INACTIVO";
+  | "ACTIVO";
 
-type TipoActividad =
-  | "TAREA"
-  | "INFORMACION"
-  | "CONTROL";
+type NombreActividad =
+  | "Ayunas"
+  | "Desayuno"
+  | "Almuerzo"
+  | "Cena";
 
-type RecordatorioActividad =
-  | "NINGUNO"
-  | "A_LA_HORA"
-  | "MIN_15_ANTES"
-  | "MIN_30_ANTES"
-  | "MIN_60_ANTES";
-
-type ActividadBase = {
-  id: string;
-  tipo: TipoActividad;
-  recordatorio: RecordatorioActividad;
-  titulo: string;
-  descripcion: string | null;
-  momento: string | null;
-  hora: string | null;
-  activo: boolean;
-};
-
-type ActividadTemporal = {
-  localId: string;
-  actividadBaseId: string | null;
-  tipo: TipoActividad;
-  recordatorio: RecordatorioActividad;
-  titulo: string;
-  descripcion: string;
-  momento: string;
+type ActividadPlantilla = {
+  nombre: NombreActividad;
   hora: string;
-  diaInicio: number;
-  diaFin: number | null;
-  orden: number;
-};
-
-type FormActividad = {
-  tipo: TipoActividad;
-  recordatorio: RecordatorioActividad;
-  titulo: string;
-  descripcion: string;
-  momento: string;
-  hora: string;
-  diaInicio: string;
-  diaFin: string;
+  instrucciones: string;
 };
 
 type Props = {
@@ -70,96 +30,37 @@ type Props = {
   onCreada: () => void | Promise<void>;
 };
 
-const FORM_PLANTILLA_INICIAL = {
+const FORM_INICIAL = {
   nombre: "",
   descripcion: "",
-  duracionDias: "30",
+  duracionDias: "90",
   estado: "ACTIVO" as EstadoPlantilla,
 };
 
-const MOMENTOS = [
-  "Ayunas",
-  "Desayuno",
-  "Mañana",
-  "Media mañana",
-  "Almuerzo",
-  "Mediodía",
-  "Tarde",
-  "Cena",
-  "Noche",
-  "Antes de dormir",
-  "Adicional",
-];
-
-function nuevoIdLocal() {
-  return `${Date.now()}-${Math.random()
-    .toString(36)
-    .slice(2)}`;
-}
-
-function nombreTipo(
-  tipo: TipoActividad
-) {
-  if (tipo === "INFORMACION") {
-    return "Información";
-  }
-
-  if (tipo === "CONTROL") {
-    return "Control";
-  }
-
-  return "Tarea";
-}
-
-function claseTipo(
-  tipo: TipoActividad
-) {
-  if (tipo === "INFORMACION") {
-    return "bg-blue-50 text-blue-700";
-  }
-
-  if (tipo === "CONTROL") {
-    return "bg-amber-50 text-amber-700";
-  }
-
-  return "bg-emerald-50 text-emerald-700";
-}
-
-function textoRecordatorio(
-  recordatorio: RecordatorioActividad
-) {
-  if (recordatorio === "A_LA_HORA") {
-    return "A la hora";
-  }
-
-  if (recordatorio === "MIN_15_ANTES") {
-    return "15 min antes";
-  }
-
-  if (recordatorio === "MIN_30_ANTES") {
-    return "30 min antes";
-  }
-
-  if (recordatorio === "MIN_60_ANTES") {
-    return "1 hora antes";
-  }
-
-  return null;
-}
-
-function formActividadVacio(
-  duracionDias: number
-): FormActividad {
-  return {
-    tipo: "TAREA",
-    recordatorio: "NINGUNO",
-    titulo: "",
-    descripcion: "",
-    momento: "",
-    hora: "",
-    diaInicio: "1",
-    diaFin: String(duracionDias),
-  };
+function crearActividadesIniciales():
+  ActividadPlantilla[] {
+  return [
+    {
+      nombre: "Ayunas",
+      hora: "",
+      instrucciones: "",
+    },
+    {
+      nombre: "Desayuno",
+      hora: "",
+      instrucciones: "",
+    },
+    {
+      nombre: "Almuerzo",
+      hora: "13:00",
+      instrucciones: "",
+    },
+    {
+      nombre: "Cena",
+      hora: "18:00",
+      instrucciones: "",
+    },
+  ];
 }
 
 export default function NuevaPlantillaModal({
@@ -170,65 +71,16 @@ export default function NuevaPlantillaModal({
     form,
     setForm,
   ] = useState(
-    FORM_PLANTILLA_INICIAL
+    FORM_INICIAL
   );
 
   const [
     actividades,
     setActividades,
   ] =
-    useState<ActividadTemporal[]>(
-      []
+    useState<ActividadPlantilla[]>(
+      crearActividadesIniciales
     );
-
-  const [
-    biblioteca,
-    setBiblioteca,
-  ] = useState<ActividadBase[]>(
-    []
-  );
-
-  const [
-    bibliotecaCargada,
-    setBibliotecaCargada,
-  ] = useState(false);
-
-  const [
-    cargandoBiblioteca,
-    setCargandoBiblioteca,
-  ] = useState(false);
-
-  const [
-    vista,
-    setVista,
-  ] = useState<
-    | null
-    | "BIBLIOTECA"
-    | "ACTIVIDAD"
-  >(null);
-
-  const [
-    busqueda,
-    setBusqueda,
-  ] = useState("");
-
-  const [
-    seleccionadas,
-    setSeleccionadas,
-  ] = useState<string[]>([]);
-
-  const [
-    actividadEditandoId,
-    setActividadEditandoId,
-  ] =
-    useState<string | null>(null);
-
-  const [
-    formActividad,
-    setFormActividad,
-  ] = useState<FormActividad>(
-    formActividadVacio(30)
-  );
 
   const [
     guardando,
@@ -240,142 +92,21 @@ export default function NuevaPlantillaModal({
     setConfirmarSalir,
   ] = useState(false);
 
-  const ultimaDuracionValida =
-    useRef(30);
-
-  const panelAccionRef =
-    useRef<HTMLDivElement | null>(
-      null
-    );
-
-  useEffect(() => {
-    if (!vista) {
-      return;
-    }
-
-    const timeout =
-      window.setTimeout(
-        () => {
-          panelAccionRef.current?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-        },
-        100
-      );
-
-    return () => {
-      window.clearTimeout(
-        timeout
-      );
-    };
-  }, [vista]);
-
-  const actividadesOrdenadas =
-    useMemo(() => {
-      return [
-        ...actividades,
-      ].sort((a, b) => {
-        const horaA =
-          a.hora || "99:99";
-
-        const horaB =
-          b.hora || "99:99";
-
-        const porHora =
-          horaA.localeCompare(
-            horaB
-          );
-
-        if (porHora !== 0) {
-          return porHora;
-        }
-
-        return (
-          a.orden -
-          b.orden
-        );
-      });
-    }, [actividades]);
-
-  const idsBaseYaUsados =
-    useMemo(
-      () =>
-        new Set(
-          actividades
-            .map(
-              (actividad) =>
-                actividad.actividadBaseId
-            )
-            .filter(
-              (
-                id
-              ): id is string =>
-                Boolean(id)
-            )
-        ),
-      [actividades]
-    );
-
-  const bibliotecaVisible =
-    useMemo(() => {
-      const termino =
-        busqueda
-          .trim()
-          .toLocaleLowerCase(
-            "es"
-          );
-
-      return biblioteca.filter(
-        (actividad) => {
-          if (
-            !actividad.activo ||
-            idsBaseYaUsados.has(
-              actividad.id
-            )
-          ) {
-            return false;
-          }
-
-          if (!termino) {
-            return true;
-          }
-
-          const texto = [
-            actividad.titulo,
-            actividad.descripcion ||
-              "",
-            actividad.momento ||
-              "",
-            actividad.hora ||
-              "",
-            nombreTipo(
-              actividad.tipo
-            ),
-          ]
-            .join(" ")
-            .toLocaleLowerCase(
-              "es"
-            );
-
-          return texto.includes(
-            termino
-          );
-        }
-      );
-    }, [
-      biblioteca,
-      busqueda,
-      idsBaseYaUsados,
-    ]);
-
   function hayCambios() {
+    const actividadesIniciales =
+      crearActividadesIniciales();
+
     return (
       JSON.stringify(form) !==
         JSON.stringify(
-          FORM_PLANTILLA_INICIAL
+          FORM_INICIAL
         ) ||
-      actividades.length > 0
+      JSON.stringify(
+        actividades
+      ) !==
+        JSON.stringify(
+          actividadesIniciales
+        )
     );
   }
 
@@ -394,449 +125,21 @@ export default function NuevaPlantillaModal({
     onClose();
   }
 
-  async function cargarBiblioteca() {
-    if (bibliotecaCargada) {
-      return;
-    }
-
-    setCargandoBiblioteca(
-      true
-    );
-
-    try {
-      const res = await fetch(
-        "/api/admin/seguimiento/biblioteca",
-        {
-          cache: "no-store",
-        }
-      );
-
-      const data =
-        await res
-          .json()
-          .catch(() => null);
-
-      if (!res.ok) {
-        toast.error(
-          data?.error ||
-            "No se pudo cargar la biblioteca."
-        );
-        return;
-      }
-
-      setBiblioteca(
-        Array.isArray(data)
-          ? data
-          : []
-      );
-
-      setBibliotecaCargada(
-        true
-      );
-    } catch {
-      toast.error(
-        "No se pudo conectar con el servidor."
-      );
-    } finally {
-      setCargandoBiblioteca(
-        false
-      );
-    }
-  }
-
-  function abrirBiblioteca() {
-    setVista("BIBLIOTECA");
-    setBusqueda("");
-    setSeleccionadas([]);
-    void cargarBiblioteca();
-  }
-
-  function alternarSeleccion(
-    id: string
-  ) {
-    setSeleccionadas(
-      (actual) =>
-        actual.includes(id)
-          ? actual.filter(
-              (item) =>
-                item !== id
-            )
-          : [
-              ...actual,
-              id,
-            ]
-    );
-  }
-
-  function seleccionarVisibles() {
-    const ids =
-      bibliotecaVisible.map(
-        (actividad) =>
-          actividad.id
-      );
-
-    const todos =
-      ids.length > 0 &&
-      ids.every((id) =>
-        seleccionadas.includes(
-          id
-        )
-      );
-
-    if (todos) {
-      setSeleccionadas(
-        (actual) =>
-          actual.filter(
-            (id) =>
-              !ids.includes(id)
-          )
-      );
-      return;
-    }
-
-    setSeleccionadas(
-      (actual) =>
-        Array.from(
-          new Set([
-            ...actual,
-            ...ids,
-          ])
-        )
-    );
-  }
-
-  function agregarDesdeBiblioteca() {
-    if (
-      seleccionadas.length === 0
-    ) {
-      toast.error(
-        "Selecciona al menos una actividad."
-      );
-      return;
-    }
-
-    const duracion =
-      ultimaDuracionValida.current;
-
-    const nuevas =
-      seleccionadas
-        .map((id) =>
-          biblioteca.find(
-            (actividad) =>
-              actividad.id === id
-          )
-        )
-        .filter(
-          (
-            actividad
-          ): actividad is ActividadBase =>
-            Boolean(actividad)
-        )
-        .map(
-          (
-            actividad,
-            indice
-          ): ActividadTemporal => ({
-            localId:
-              nuevoIdLocal(),
-
-            actividadBaseId:
-              actividad.id,
-
-            tipo:
-              actividad.tipo,
-
-            recordatorio:
-              actividad.recordatorio,
-
-            titulo:
-              actividad.titulo,
-
-            descripcion:
-              actividad.descripcion ||
-              "",
-
-            momento:
-              actividad.momento ||
-              "",
-
-            hora:
-              actividad.hora ||
-              "",
-
-            diaInicio:
-              1,
-
-            diaFin:
-              duracion,
-
-            orden:
-              actividades.length +
-              indice +
-              1,
-          })
-        );
-
-    setActividades(
-      (actual) => [
-        ...actual,
-        ...nuevas,
-      ]
-    );
-
-    setSeleccionadas([]);
-    setVista(null);
-
-    toast.success(
-      nuevas.length === 1
-        ? "1 actividad agregada."
-        : `${nuevas.length} actividades agregadas.`
-    );
-  }
-
-  function abrirNuevaActividad() {
-    const duracion =
-      ultimaDuracionValida.current;
-
-    setActividadEditandoId(
-      null
-    );
-
-    setFormActividad(
-      formActividadVacio(
-        duracion
-      )
-    );
-
-    setVista("ACTIVIDAD");
-  }
-
-  function abrirEditarActividad(
-    actividad: ActividadTemporal
-  ) {
-    setActividadEditandoId(
-      actividad.localId
-    );
-
-    setFormActividad({
-      tipo:
-        actividad.tipo,
-
-      recordatorio:
-        actividad.recordatorio,
-
-      titulo:
-        actividad.titulo,
-
-      descripcion:
-        actividad.descripcion,
-
-      momento:
-        actividad.momento,
-
-      hora:
-        actividad.hora,
-
-      diaInicio:
-        String(
-          actividad.diaInicio
-        ),
-
-      diaFin:
-        actividad.diaFin ===
-        null
-          ? ""
-          : String(
-              actividad.diaFin
-            ),
-    });
-
-    setVista("ACTIVIDAD");
-  }
-
-  function guardarActividadTemporal(
-    e: FormEvent
-  ) {
-    e.preventDefault();
-
-    const titulo =
-      formActividad.titulo.trim();
-
-    if (!titulo) {
-      toast.error(
-        "El título de la actividad es obligatorio."
-      );
-      return;
-    }
-
-    if (
-      formActividad.recordatorio !==
-        "NINGUNO" &&
-      !formActividad.hora
-    ) {
-      toast.error(
-        "Define una hora para utilizar el recordatorio."
-      );
-      return;
-    }
-
-    const duracion =
-      ultimaDuracionValida.current;
-
-    const diaInicio =
-      Number(
-        formActividad.diaInicio
-      );
-
-    const diaFin =
-      formActividad.diaFin
-        ? Number(
-            formActividad.diaFin
-          )
-        : null;
-
-    if (
-      !Number.isInteger(
-        diaInicio
-      ) ||
-      diaInicio < 1 ||
-      diaInicio > duracion
-    ) {
-      toast.error(
-        `El día inicial debe estar entre 1 y ${duracion}.`
-      );
-      return;
-    }
-
-    if (
-      diaFin !== null &&
-      (
-        !Number.isInteger(
-          diaFin
-        ) ||
-        diaFin <
-          diaInicio ||
-        diaFin > duracion
-      )
-    ) {
-      toast.error(
-        `El día final debe estar entre ${diaInicio} y ${duracion}.`
-      );
-      return;
-    }
-
-    if (
-      actividadEditandoId
-    ) {
-      setActividades(
-        (actual) =>
-          actual.map(
-            (actividad) =>
-              actividad.localId ===
-              actividadEditandoId
-                ? {
-                    ...actividad,
-
-                    tipo:
-                      formActividad.tipo,
-
-                    recordatorio:
-                      formActividad.recordatorio,
-
-                    titulo,
-
-                    descripcion:
-                      formActividad.descripcion.trim(),
-
-                    momento:
-                      formActividad.momento,
-
-                    hora:
-                      formActividad.hora,
-
-                    diaInicio,
-
-                    diaFin,
-                  }
-                : actividad
-          )
-      );
-
-      toast.success(
-        "Actividad actualizada."
-      );
-    } else {
-      const nuevoOrden =
-        actividades.reduce(
-          (
-            maximo,
-            actividad
-          ) =>
-            Math.max(
-              maximo,
-              actividad.orden
-            ),
-          0
-        ) + 1;
-
-      setActividades(
-        (actual) => [
-          ...actual,
-
-          {
-            localId:
-              nuevoIdLocal(),
-
-            actividadBaseId:
-              null,
-
-            tipo:
-              formActividad.tipo,
-
-            recordatorio:
-              formActividad.recordatorio,
-
-            titulo,
-
-            descripcion:
-              formActividad.descripcion.trim(),
-
-            momento:
-              formActividad.momento,
-
-            hora:
-              formActividad.hora,
-
-            diaInicio,
-
-            diaFin,
-
-            orden:
-              nuevoOrden,
-          },
-        ]
-      );
-
-      toast.success(
-        "Actividad agregada."
-      );
-    }
-
-    setActividadEditandoId(
-      null
-    );
-    setVista(null);
-  }
-
-  function quitarActividad(
-    localId: string
+  function actualizarActividad(
+    nombre: NombreActividad,
+    cambios: Partial<ActividadPlantilla>
   ) {
     setActividades(
       (actual) =>
-        actual.filter(
+        actual.map(
           (actividad) =>
-            actividad.localId !==
-            localId
+            actividad.nombre ===
+            nombre
+              ? {
+                  ...actividad,
+                  ...cambios,
+                }
+              : actividad
         )
     );
   }
@@ -844,9 +147,6 @@ export default function NuevaPlantillaModal({
   function cambiarDuracion(
     valor: string
   ) {
-    const anterior =
-      ultimaDuracionValida.current;
-
     setForm(
       (actual) => ({
         ...actual,
@@ -854,66 +154,6 @@ export default function NuevaPlantillaModal({
           valor,
       })
     );
-
-    const nueva =
-      Number(valor);
-
-    if (
-      !Number.isInteger(nueva) ||
-      nueva < 1 ||
-      nueva > 365
-    ) {
-      return;
-    }
-
-    setActividades(
-      (actual) =>
-        actual.map(
-          (actividad) => {
-            let diaInicio =
-              actividad.diaInicio;
-
-            let diaFin =
-              actividad.diaFin;
-
-            if (
-              diaInicio > nueva
-            ) {
-              diaInicio =
-                nueva;
-            }
-
-            if (
-              diaFin !== null &&
-              (
-                diaFin ===
-                  anterior ||
-                diaFin > nueva
-              )
-            ) {
-              diaFin = nueva;
-            }
-
-            if (
-              diaFin !== null &&
-              diaFin <
-                diaInicio
-            ) {
-              diaFin =
-                diaInicio;
-            }
-
-            return {
-              ...actividad,
-              diaInicio,
-              diaFin,
-            };
-          }
-        )
-    );
-
-    ultimaDuracionValida.current =
-      nueva;
   }
 
   async function crearPlantilla(
@@ -935,17 +175,17 @@ export default function NuevaPlantillaModal({
       return;
     }
 
-    const duracion =
+    const duracionDias =
       Number(
         form.duracionDias
       );
 
     if (
       !Number.isInteger(
-        duracion
+        duracionDias
       ) ||
-      duracion < 1 ||
-      duracion > 365
+      duracionDias < 1 ||
+      duracionDias > 365
     ) {
       toast.error(
         "La duración debe estar entre 1 y 365 días."
@@ -953,13 +193,17 @@ export default function NuevaPlantillaModal({
       return;
     }
 
-    if (
-      form.estado ===
-        "ACTIVO" &&
-      actividades.length === 0
-    ) {
+    const actividadSinHora =
+      actividades.find(
+        (actividad) =>
+          actividad.nombre !==
+            "Ayunas" &&
+          !actividad.hora
+      );
+
+    if (actividadSinHora) {
       toast.error(
-        "Agrega al menos una actividad antes de activar la plantilla."
+        `Define la hora de ${actividadSinHora.nombre}.`
       );
       return;
     }
@@ -991,8 +235,7 @@ export default function NuevaPlantillaModal({
                   .trim() ||
                 null,
 
-              duracionDias:
-                duracion,
+              duracionDias,
 
               estado:
                 form.estado,
@@ -1000,37 +243,40 @@ export default function NuevaPlantillaModal({
               actividades:
                 actividades.map(
                   (
-                    actividad
+                    actividad,
+                    indice
                   ) => ({
                     tipo:
-                      actividad.tipo,
+                      "TAREA",
 
                     recordatorio:
-                      actividad.recordatorio,
+                      "NINGUNO",
 
                     titulo:
-                      actividad.titulo,
+                      actividad.nombre,
 
                     descripcion:
-                      actividad.descripcion ||
+                      actividad.instrucciones
+                        .trim() ||
                       null,
 
                     momento:
-                      actividad.momento ||
-                      null,
+                      actividad.nombre,
 
                     hora:
-                      actividad.hora ||
-                      null,
+                      actividad.nombre ===
+                      "Ayunas"
+                        ? null
+                        : actividad.hora,
 
                     diaInicio:
-                      actividad.diaInicio,
+                      1,
 
                     diaFin:
-                      actividad.diaFin,
+                      duracionDias,
 
                     orden:
-                      actividad.orden,
+                      indice + 1,
                   })
                 ),
             }),
@@ -1047,23 +293,18 @@ export default function NuevaPlantillaModal({
           "No se pudo crear la plantilla.",
           {
             id: toastId,
+
             description:
               data?.error ||
               "Inténtalo nuevamente.",
           }
         );
+
         return;
       }
 
       toast.success(
-        actividades.length === 0
-          ? "Plantilla creada."
-          : `Plantilla creada con ${actividades.length} actividad${
-              actividades.length ===
-              1
-                ? ""
-                : "es"
-            }.`,
+        "Plantilla creada con sus 4 actividades.",
         {
           id: toastId,
         }
@@ -1098,18 +339,20 @@ export default function NuevaPlantillaModal({
           }
           className="space-y-6"
         >
+
           <section>
             <div className="mb-4">
-              <p className="font-semibold text-[#1F1B24]">
+              <h3 className="font-semibold text-[#1F1B24]">
                 Datos de la plantilla
-              </p>
+              </h3>
 
               <p className="mt-1 text-xs leading-5 text-[#8A8790]">
-                Define la información general y luego agrega las actividades que formarán parte del seguimiento.
+                Define la información general del seguimiento.
               </p>
             </div>
 
             <div className="space-y-4">
+
               <div>
                 <label className="admin-label">
                   Nombre de la plantilla
@@ -1129,7 +372,7 @@ export default function NuevaPlantillaModal({
                     })
                   }
                   className="admin-input"
-                  placeholder="Ej. Prostatitis"
+                  placeholder="Ej. Protocolo estándar"
                   maxLength={200}
                   required
                 />
@@ -1197,8 +440,10 @@ export default function NuevaPlantillaModal({
                   onChange={(e) =>
                     setForm({
                       ...form,
+
                       estado:
-                        e.target.checked
+                        e.target
+                          .checked
                           ? "ACTIVO"
                           : "BORRADOR",
                     })
@@ -1212,669 +457,133 @@ export default function NuevaPlantillaModal({
                   </span>
 
                   <span className="mt-1 block text-xs leading-5 text-[#6B6870]">
-                    Déjalo marcado si la plantilla ya está lista para usarse. Desmárcalo si todavía quieres seguir preparándola.
+                    Desmárcalo si todavía quieres seguir preparando la plantilla.
                   </span>
                 </span>
               </label>
+
             </div>
           </section>
+
 
           <section className="border-t border-gray-100 pt-5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="font-semibold text-[#1F1B24]">
-                  Actividades
-                </p>
 
-                <p className="mt-1 text-xs text-[#8A8790]">
-                  {actividades.length ===
-                  0
-                    ? "Aún no agregaste actividades."
-                    : `${actividades.length} actividad${
-                        actividades.length ===
-                        1
-                          ? ""
-                          : "es"
-                      } agregada${
-                        actividades.length ===
-                        1
-                          ? ""
-                          : "s"
-                      }.`}
-                </p>
-              </div>
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-[#1F1B24]">
+                Actividades del día
+              </h3>
 
-              <span className="flex h-9 min-w-9 items-center justify-center rounded-full bg-[#F8F6FF] px-3 text-sm font-bold text-brand-pink">
-                {
-                  actividades.length
-                }
-              </span>
+              <p className="mt-1 text-xs leading-5 text-[#8A8790]">
+                Cada actividad tiene sus propias instrucciones. Ayunas no necesita una hora fija.
+              </p>
             </div>
 
-            <div className="mt-4 grid gap-2 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={
-                  abrirBiblioteca
-                }
-                className="rounded-xl border border-brand-pink bg-brand-pink/5 px-4 py-3 text-sm font-semibold text-brand-pink transition hover:bg-brand-pink/10"
-              >
-                + Desde biblioteca
-              </button>
 
-              <button
-                type="button"
-                onClick={
-                  abrirNuevaActividad
-                }
-                className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-              >
-                + Crear actividad
-              </button>
-            </div>
+            <div className="space-y-4">
 
-            {vista ===
-              "BIBLIOTECA" && (
-              <div
-                ref={panelAccionRef}
-                className="scroll-mt-24 mt-4 rounded-2xl border border-gray-200 bg-gray-50/60 p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">
-                      Agregar desde biblioteca
-                    </p>
+              {actividades.map(
+                (actividad) => {
+                  const esAyunas =
+                    actividad.nombre ===
+                    "Ayunas";
 
-                    <p className="mt-1 text-xs text-gray-500">
-                      Marca todas las actividades que quieras reutilizar.
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setVista(
-                        null
-                      );
-                      setSeleccionadas(
-                        []
-                      );
-                    }}
-                    className="text-xs font-semibold text-gray-500 hover:text-gray-800"
-                  >
-                    Cerrar
-                  </button>
-                </div>
-
-                <input
-                  type="search"
-                  value={
-                    busqueda
-                  }
-                  onChange={(e) =>
-                    setBusqueda(
-                      e.target
-                        .value
-                    )
-                  }
-                  className="admin-input mt-3"
-                  placeholder="Buscar actividad..."
-                />
-
-                {cargandoBiblioteca ? (
-                  <p className="py-6 text-center text-sm text-gray-500">
-                    Cargando biblioteca...
-                  </p>
-                ) : bibliotecaVisible.length ===
-                  0 ? (
-                  <div className="py-6 text-center">
-                    <p className="text-sm font-medium text-gray-700">
-                      No hay actividades disponibles.
-                    </p>
-
-                    <p className="mt-1 text-xs text-gray-500">
-                      Puede que ya las hayas agregado o que la biblioteca esté vacía.
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="mt-3 flex items-center justify-between gap-3">
-                      <button
-                        type="button"
-                        onClick={
-                          seleccionarVisibles
-                        }
-                        className="text-xs font-semibold text-brand-blue hover:underline"
-                      >
-                        Seleccionar visibles
-                      </button>
-
-                      <span className="text-xs text-gray-500">
-                        {
-                          seleccionadas.length
-                        }{" "}
-                        seleccionada
-                        {seleccionadas.length ===
-                        1
-                          ? ""
-                          : "s"}
-                      </span>
-                    </div>
-
-                    <div className="mt-3 max-h-72 space-y-2 overflow-y-auto">
-                      {bibliotecaVisible.map(
-                        (
-                          actividad
-                        ) => {
-                          const seleccionada =
-                            seleccionadas.includes(
-                              actividad.id
-                            );
-
-                          return (
-                            <label
-                              key={
-                                actividad.id
-                              }
-                              className={`flex cursor-pointer items-start gap-3 rounded-xl border bg-white p-3 ${
-                                seleccionada
-                                  ? "border-brand-pink ring-1 ring-brand-pink/20"
-                                  : "border-gray-200"
-                              }`}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={
-                                  seleccionada
-                                }
-                                onChange={() =>
-                                  alternarSeleccion(
-                                    actividad.id
-                                  )
-                                }
-                                className="mt-1 h-4 w-4 accent-pink-600"
-                              />
-
-                              <div className="min-w-0 flex-1">
-                                <div className="flex flex-wrap gap-1.5">
-                                  <span
-                                    className={`rounded-md px-2 py-0.5 text-[10px] font-semibold ${claseTipo(
-                                      actividad.tipo
-                                    )}`}
-                                  >
-                                    {nombreTipo(
-                                      actividad.tipo
-                                    )}
-                                  </span>
-
-                                  {actividad.hora && (
-                                    <span className="rounded-md bg-[#F8F6FF] px-2 py-0.5 text-[10px] font-semibold text-brand-pink">
-                                      {
-                                        actividad.hora
-                                      }
-                                    </span>
-                                  )}
-
-                                  {actividad.momento && (
-                                    <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[10px] text-gray-600">
-                                      {
-                                        actividad.momento
-                                      }
-                                    </span>
-                                  )}
-                                </div>
-
-                                <p className="mt-1.5 text-sm font-semibold text-gray-900">
-                                  {
-                                    actividad.titulo
-                                  }
-                                </p>
-
-                                {actividad.descripcion && (
-                                  <p className="mt-1 line-clamp-2 text-xs leading-5 text-gray-500">
-                                    {
-                                      actividad.descripcion
-                                    }
-                                  </p>
-                                )}
-                              </div>
-                            </label>
-                          );
-                        }
-                      )}
-                    </div>
-                  </>
-                )}
-
-                <button
-                  type="button"
-                  disabled={
-                    seleccionadas.length ===
-                    0
-                  }
-                  onClick={
-                    agregarDesdeBiblioteca
-                  }
-                  className="admin-btn-primary mt-4 w-full disabled:opacity-50"
-                >
-                  {seleccionadas.length ===
-                  1
-                    ? "Agregar 1 actividad"
-                    : `Agregar ${seleccionadas.length} actividades`}
-                </button>
-              </div>
-            )}
-
-            {vista ===
-              "ACTIVIDAD" && (
-              <div
-                ref={panelAccionRef}
-                className="scroll-mt-24 mt-4 rounded-2xl border border-gray-200 bg-gray-50/60 p-4"
-              >
-                <div className="mb-4 flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {actividadEditandoId
-                        ? "Editar actividad"
-                        : "Nueva actividad"}
-                    </p>
-
-                    <p className="mt-1 text-xs text-gray-500">
-                      Esta actividad se agregará únicamente a esta plantilla.
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setVista(
-                        null
-                      );
-                      setActividadEditandoId(
-                        null
-                      );
-                    }}
-                    className="text-xs font-semibold text-gray-500 hover:text-gray-800"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="admin-label">
-                      Título
-                    </label>
-
-                    <input
-                      type="text"
-                      value={
-                        formActividad.titulo
+                  return (
+                    <article
+                      key={
+                        actividad.nombre
                       }
-                      onChange={(e) =>
-                        setFormActividad({
-                          ...formActividad,
-                          titulo:
-                            e.target
-                              .value,
-                        })
-                      }
-                      className="admin-input"
-                      placeholder="Ej. Actividad de la mañana"
-                      maxLength={200}
-                    />
-                  </div>
+                      className="rounded-2xl border border-gray-200 bg-white p-4"
+                    >
 
-                  <div>
-                    <label className="admin-label">
-                      Descripción
-                    </label>
+                      <div className="flex items-center justify-between gap-3">
 
-                    <textarea
-                      value={
-                        formActividad.descripcion
-                      }
-                      onChange={(e) =>
-                        setFormActividad({
-                          ...formActividad,
-                          descripcion:
-                            e.target
-                              .value,
-                        })
-                      }
-                      className="admin-input"
-                      rows={3}
-                      maxLength={1500}
-                      placeholder="Información que verá el cliente..."
-                    />
-                  </div>
+                        <div>
+                          <h4 className="text-base font-bold text-[#1F1B24]">
+                            {
+                              actividad.nombre
+                            }
+                          </h4>
 
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="admin-label">
-                        Tipo
-                      </label>
-
-                      <select
-                        value={
-                          formActividad.tipo
-                        }
-                        onChange={(e) =>
-                          setFormActividad({
-                            ...formActividad,
-                            tipo:
-                              e.target
-                                .value as TipoActividad,
-                          })
-                        }
-                        className="admin-input"
-                      >
-                        <option value="TAREA">
-                          Tarea
-                        </option>
-
-                        <option value="INFORMACION">
-                          Información
-                        </option>
-
-                        <option value="CONTROL">
-                          Control
-                        </option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="admin-label">
-                        Momento
-                      </label>
-
-                      <select
-                        value={
-                          formActividad.momento
-                        }
-                        onChange={(e) =>
-                          setFormActividad({
-                            ...formActividad,
-                            momento:
-                              e.target
-                                .value,
-                          })
-                        }
-                        className="admin-input"
-                      >
-                        <option value="">
-                          Sin especificar
-                        </option>
-
-                        {MOMENTOS.map(
-                          (
-                            momento
-                          ) => (
-                            <option
-                              key={
-                                momento
-                              }
-                              value={
-                                momento
-                              }
-                            >
-                              {
-                                momento
-                              }
-                            </option>
-                          )
-                        )}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="admin-label">
-                        Hora
-                      </label>
-
-                      <input
-                        type="time"
-                        value={
-                          formActividad.hora
-                        }
-                        onChange={(e) =>
-                          setFormActividad({
-                            ...formActividad,
-                            hora:
-                              e.target
-                                .value,
-                          })
-                        }
-                        className="admin-input"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="admin-label">
-                        Recordatorio
-                      </label>
-
-                      <select
-                        value={
-                          formActividad.recordatorio
-                        }
-                        onChange={(e) =>
-                          setFormActividad({
-                            ...formActividad,
-                            recordatorio:
-                              e.target
-                                .value as RecordatorioActividad,
-                          })
-                        }
-                        className="admin-input"
-                      >
-                        <option value="NINGUNO">
-                          Sin recordatorio
-                        </option>
-
-                        <option value="A_LA_HORA">
-                          A la hora indicada
-                        </option>
-
-                        <option value="MIN_15_ANTES">
-                          15 minutos antes
-                        </option>
-
-                        <option value="MIN_30_ANTES">
-                          30 minutos antes
-                        </option>
-
-                        <option value="MIN_60_ANTES">
-                          1 hora antes
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="admin-label">
-                        Día inicial
-                      </label>
-
-                      <input
-                        type="number"
-                        min={1}
-                        max={
-                          ultimaDuracionValida.current
-                        }
-                        value={
-                          formActividad.diaInicio
-                        }
-                        onChange={(e) =>
-                          setFormActividad({
-                            ...formActividad,
-                            diaInicio:
-                              e.target
-                                .value,
-                          })
-                        }
-                        className="admin-input"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="admin-label">
-                        Día final
-                      </label>
-
-                      <input
-                        type="number"
-                        min={1}
-                        max={
-                          ultimaDuracionValida.current
-                        }
-                        value={
-                          formActividad.diaFin
-                        }
-                        onChange={(e) =>
-                          setFormActividad({
-                            ...formActividad,
-                            diaFin:
-                              e.target
-                                .value,
-                          })
-                        }
-                        className="admin-input"
-                        placeholder="Opcional"
-                      />
-                    </div>
-                  </div>
-
-                  {formActividad.recordatorio !==
-                    "NINGUNO" &&
-                    !formActividad.hora && (
-                      <p className="text-xs text-amber-600">
-                        Define una hora para utilizar el recordatorio.
-                      </p>
-                    )}
-
-                  <button
-                    type="button"
-                    onClick={
-                      guardarActividadTemporal
-                    }
-                    className="admin-btn-primary w-full"
-                  >
-                    {actividadEditandoId
-                      ? "Guardar cambios"
-                      : "Agregar actividad"}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {actividadesOrdenadas.length >
-              0 && (
-              <div className="mt-4 space-y-2">
-                {actividadesOrdenadas.map(
-                  (
-                    actividad
-                  ) => {
-                    const recordatorio =
-                      textoRecordatorio(
-                        actividad.recordatorio
-                      );
-
-                    return (
-                      <article
-                        key={
-                          actividad.localId
-                        }
-                        className="rounded-xl border border-gray-200 bg-white p-3"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap gap-1.5">
-                              <span
-                                className={`rounded-md px-2 py-0.5 text-[10px] font-semibold ${claseTipo(
-                                  actividad.tipo
-                                )}`}
-                              >
-                                {nombreTipo(
-                                  actividad.tipo
-                                )}
-                              </span>
-
-                              {actividad.hora && (
-                                <span className="rounded-md bg-[#F8F6FF] px-2 py-0.5 text-[10px] font-bold text-brand-pink">
-                                  {
-                                    actividad.hora
-                                  }
-                                </span>
-                              )}
-
-                              {actividad.momento && (
-                                <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[10px] text-gray-600">
-                                  {
-                                    actividad.momento
-                                  }
-                                </span>
-                              )}
-                            </div>
-
-                            <p className="mt-2 text-sm font-semibold text-gray-900">
-                              {
-                                actividad.titulo
-                              }
+                          {esAyunas && (
+                            <p className="mt-0.5 text-xs text-[#8A8790]">
+                              Al iniciar el día, sin hora fija.
                             </p>
-
-                            <p className="mt-1 text-xs text-gray-500">
-                              Día{" "}
-                              {
-                                actividad.diaInicio
-                              }
-                              {actividad.diaFin
-                                ? ` al ${actividad.diaFin}`
-                                : ""}
-                              {recordatorio
-                                ? ` · 🔔 ${recordatorio}`
-                                : ""}
-                            </p>
-                          </div>
-
-                          <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                abrirEditarActividad(
-                                  actividad
-                                )
-                              }
-                              className="px-2 py-1 text-xs font-semibold text-brand-blue hover:underline"
-                            >
-                              Editar
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                quitarActividad(
-                                  actividad.localId
-                                )
-                              }
-                              className="px-2 py-1 text-xs font-semibold text-red-600 hover:underline"
-                            >
-                              Quitar
-                            </button>
-                          </div>
+                          )}
                         </div>
-                      </article>
-                    );
-                  }
-                )}
-              </div>
-            )}
+
+                        {!esAyunas && (
+                          <div className="w-32">
+                            <label className="mb-1 block text-[11px] font-semibold text-[#6B6870]">
+                              Hora
+                            </label>
+
+                            <input
+                              type="time"
+                              value={
+                                actividad.hora
+                              }
+                              onChange={(e) =>
+                                actualizarActividad(
+                                  actividad.nombre,
+                                  {
+                                    hora:
+                                      e.target
+                                        .value,
+                                  }
+                                )
+                              }
+                              className="admin-input"
+                              required
+                            />
+                          </div>
+                        )}
+
+                      </div>
+
+
+                      <div className="mt-4">
+
+                        <label className="admin-label">
+                          Instrucciones
+                        </label>
+
+                        <textarea
+                          value={
+                            actividad.instrucciones
+                          }
+                          onChange={(e) =>
+                            actualizarActividad(
+                              actividad.nombre,
+                              {
+                                instrucciones:
+                                  e.target
+                                    .value,
+                              }
+                            )
+                          }
+                          className="admin-input"
+                          rows={4}
+                          maxLength={5000}
+                          placeholder={`Escribe las instrucciones de ${actividad.nombre.toLowerCase()}...`}
+                        />
+
+                        <p className="mt-1 text-xs text-[#8A8790]">
+                          Estas instrucciones podrán editarse posteriormente sin cambiar el nombre de la actividad.
+                        </p>
+
+                      </div>
+
+                    </article>
+                  );
+                }
+              )}
+
+            </div>
           </section>
 
+
           <div className="sticky bottom-0 -mx-4 border-t border-gray-100 bg-white px-4 pb-1 pt-4 sm:-mx-5 sm:px-5">
+
             <button
               type="submit"
               disabled={
@@ -1884,29 +593,25 @@ export default function NuevaPlantillaModal({
             >
               {guardando
                 ? "Creando plantilla..."
-                : actividades.length ===
-                  0
-                ? "Crear plantilla"
-                : `Crear plantilla con ${actividades.length} actividad${
-                    actividades.length ===
-                    1
-                      ? ""
-                      : "es"
-                  }`}
+                : "Crear plantilla"}
             </button>
+
           </div>
+
         </form>
       </Modal>
+
 
       {confirmarSalir && (
         <ConfirmDialog
           title="Cambios sin guardar"
-          message="La plantilla todavía no fue creada. Si sales ahora perderás los datos y las actividades agregadas."
+          message="La plantilla todavía no fue creada. Si sales ahora perderás los datos y las instrucciones ingresadas."
           confirmLabel="Salir sin guardar"
           onConfirm={() => {
             setConfirmarSalir(
               false
             );
+
             onClose();
           }}
           onCancel={() =>

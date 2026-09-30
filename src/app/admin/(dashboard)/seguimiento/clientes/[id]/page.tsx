@@ -105,13 +105,13 @@ export default async function SeguimientoClientePage({
               diaInicio: "asc",
             },
             {
+              orden: "asc",
+            },
+            {
               hora: {
                 sort: "asc",
                 nulls: "last",
               },
-            },
-            {
-              orden: "asc",
             },
             {
               createdAt: "asc",

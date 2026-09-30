@@ -705,7 +705,7 @@ export default function AgendaCliente({
                   })
                 }
                 rows={3}
-                maxLength={1500}
+                maxLength={5000}
                 className="admin-input"
               />
             </div>
