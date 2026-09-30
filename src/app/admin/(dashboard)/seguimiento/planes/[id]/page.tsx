@@ -66,7 +66,8 @@ type NombreActividad =
   | "Ayunas"
   | "Desayuno"
   | "Almuerzo"
-  | "Cena";
+  | "Cena"
+  | "Importante";
 
 type ActividadBasica = {
   id:
@@ -165,6 +166,14 @@ const SECCIONES: Array<{
     descripcion:
       "Define la hora habitual de la cena.",
   },
+  {
+    nombre:
+      "Importante",
+    horaInicial:
+      "",
+    descripcion:
+      "Información general para el cliente. No requiere hora ni se marca como realizada.",
+  },
 ];
 
 function construirActividadesBasicas(
@@ -205,7 +214,9 @@ function construirActividadesBasicas(
 
         hora:
           seccion.nombre ===
-          "Ayunas"
+            "Ayunas" ||
+          seccion.nombre ===
+            "Importante"
             ? ""
             : encontrada?.hora ??
               seccion.horaInicial,
@@ -487,6 +498,8 @@ export default function PlanActividadesPage() {
         (actividad) =>
           actividad.nombre !==
             "Ayunas" &&
+          actividad.nombre !==
+            "Importante" &&
           !actividad.hora
       );
 
@@ -725,7 +738,7 @@ export default function PlanActividadesPage() {
             </h2>
 
             <p className="mt-1 max-w-2xl text-sm leading-6 text-[#8A8790]">
-              Configura las instrucciones de Ayunas, Desayuno, Almuerzo y Cena. Se aplicarán del día 1 al día{" "}
+              Configura las instrucciones de Ayunas, Desayuno, Almuerzo, Cena e Importante. Se aplicarán del día 1 al día{" "}
               {plan.duracionDias}.
             </p>
           </div>
@@ -760,9 +773,11 @@ export default function PlanActividadesPage() {
                     actividad.nombre
                 )!;
 
-              const esAyunas =
+              const sinHora =
                 actividad.nombre ===
-                "Ayunas";
+                  "Ayunas" ||
+                actividad.nombre ===
+                  "Importante";
 
               return (
                 <article
@@ -793,7 +808,7 @@ export default function PlanActividadesPage() {
                       </div>
 
 
-                      {esAyunas ? (
+                      {sinHora ? (
                         <span className="self-start rounded-xl bg-[#F8F6FF] px-3 py-2 text-xs font-semibold text-brand-pink">
                           Sin hora fija
                         </span>

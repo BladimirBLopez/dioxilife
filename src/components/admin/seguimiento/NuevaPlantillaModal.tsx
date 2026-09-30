@@ -17,7 +17,8 @@ type NombreActividad =
   | "Ayunas"
   | "Desayuno"
   | "Almuerzo"
-  | "Cena";
+  | "Cena"
+  | "Importante";
 
 type ActividadPlantilla = {
   nombre: NombreActividad;
@@ -58,6 +59,11 @@ function crearActividadesIniciales():
     {
       nombre: "Cena",
       hora: "18:00",
+      instrucciones: [""],
+    },
+    {
+      nombre: "Importante",
+      hora: "",
       instrucciones: [""],
     },
   ];
@@ -313,6 +319,8 @@ export default function NuevaPlantillaModal({
         (actividad) =>
           actividad.nombre !==
             "Ayunas" &&
+          actividad.nombre !==
+            "Importante" &&
           !actividad.hora
       );
 
@@ -377,7 +385,10 @@ export default function NuevaPlantillaModal({
                     indice
                   ) => ({
                     tipo:
-                      "TAREA",
+                      actividad.nombre ===
+                      "Importante"
+                        ? "INFORMACION"
+                        : "TAREA",
 
                     recordatorio:
                       "NINGUNO",
@@ -396,7 +407,9 @@ export default function NuevaPlantillaModal({
 
                     hora:
                       actividad.nombre ===
-                      "Ayunas"
+                        "Ayunas" ||
+                      actividad.nombre ===
+                        "Importante"
                         ? null
                         : actividad.hora,
 
@@ -435,7 +448,7 @@ export default function NuevaPlantillaModal({
       }
 
       toast.success(
-        "Plantilla creada con sus 4 actividades.",
+        "Plantilla creada con sus actividades.",
         {
           id: toastId,
         }
@@ -618,6 +631,14 @@ export default function NuevaPlantillaModal({
                     actividad.nombre ===
                     "Ayunas";
 
+                  const esImportante =
+                    actividad.nombre ===
+                    "Importante";
+
+                  const sinHora =
+                    esAyunas ||
+                    esImportante;
+
                   return (
                     <article
                       key={
@@ -640,9 +661,15 @@ export default function NuevaPlantillaModal({
                               Al iniciar el día, sin hora fija.
                             </p>
                           )}
+
+                          {esImportante && (
+                            <p className="mt-0.5 text-xs text-[#8A8790]">
+                              Información general para el cliente. No requiere hora ni se marca como realizada.
+                            </p>
+                          )}
                         </div>
 
-                        {!esAyunas && (
+                        {!sinHora && (
                           <div className="w-32">
                             <label className="mb-1 block text-[11px] font-semibold text-[#6B6870]">
                               Hora

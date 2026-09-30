@@ -23,6 +23,11 @@ const SECCIONES = [
     orden: 4,
     requiereHora: true,
   },
+  {
+    nombre: "Importante",
+    orden: 5,
+    requiereHora: false,
+  },
 ] as const;
 
 type NombreSeccion =
@@ -359,7 +364,10 @@ export async function PUT(
 
         const data = {
           tipo:
-            "TAREA" as const,
+            actividad.nombre ===
+            "Importante"
+              ? "INFORMACION" as const
+              : "TAREA" as const,
 
           titulo:
             actividad.nombre,
@@ -398,13 +406,17 @@ export async function PUT(
             data: {
               ...data,
 
-              ...(actividad.nombre ===
-              "Ayunas"
-                ? {
-                    recordatorio:
-                      "NINGUNO" as const,
-                  }
-                : {}),
+              ...(
+                actividad.nombre ===
+                  "Ayunas" ||
+                actividad.nombre ===
+                  "Importante"
+                  ? {
+                      recordatorio:
+                        "NINGUNO" as const,
+                    }
+                  : {}
+              ),
             },
           });
         }
