@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -241,6 +242,34 @@ export default function NuevaPlantillaModal({
 
   const ultimaDuracionValida =
     useRef(30);
+
+  const panelAccionRef =
+    useRef<HTMLDivElement | null>(
+      null
+    );
+
+  useEffect(() => {
+    if (!vista) {
+      return;
+    }
+
+    const timeout =
+      window.setTimeout(
+        () => {
+          panelAccionRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        },
+        100
+      );
+
+    return () => {
+      window.clearTimeout(
+        timeout
+      );
+    };
+  }, [vista]);
 
   const actividadesOrdenadas =
     useMemo(() => {
@@ -1246,7 +1275,10 @@ export default function NuevaPlantillaModal({
 
             {vista ===
               "BIBLIOTECA" && (
-              <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50/60 p-4">
+              <div
+                ref={panelAccionRef}
+                className="scroll-mt-24 mt-4 rounded-2xl border border-gray-200 bg-gray-50/60 p-4"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-gray-900">
@@ -1435,7 +1467,10 @@ export default function NuevaPlantillaModal({
 
             {vista ===
               "ACTIVIDAD" && (
-              <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50/60 p-4">
+              <div
+                ref={panelAccionRef}
+                className="scroll-mt-24 mt-4 rounded-2xl border border-gray-200 bg-gray-50/60 p-4"
+              >
                 <div className="mb-4 flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-gray-900">
