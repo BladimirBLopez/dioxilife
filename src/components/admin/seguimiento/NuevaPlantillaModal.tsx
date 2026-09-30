@@ -73,7 +73,7 @@ const FORM_PLANTILLA_INICIAL = {
   nombre: "",
   descripcion: "",
   duracionDias: "30",
-  estado: "BORRADOR" as EstadoPlantilla,
+  estado: "ACTIVO" as EstadoPlantilla,
 };
 
 const MOMENTOS = [
@@ -1130,72 +1130,63 @@ export default function NuevaPlantillaModal({
                 />
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="admin-label">
-                    Duración
-                  </label>
+              <div>
+                <label className="admin-label">
+                  Duración
+                </label>
 
-                  <div className="relative">
-                    <input
-                      type="number"
-                      min={1}
-                      max={365}
-                      value={
-                        form.duracionDias
-                      }
-                      onChange={(e) =>
-                        cambiarDuracion(
-                          e.target.value
-                        )
-                      }
-                      className="admin-input pr-14"
-                      required
-                    />
-
-                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8A8790]">
-                      días
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="admin-label">
-                    Estado
-                  </label>
-
-                  <select
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={1}
+                    max={365}
                     value={
-                      form.estado
+                      form.duracionDias
                     }
                     onChange={(e) =>
-                      setForm({
-                        ...form,
-                        estado:
-                          e.target
-                            .value as EstadoPlantilla,
-                      })
+                      cambiarDuracion(
+                        e.target.value
+                      )
                     }
-                    className="admin-input"
-                  >
-                    <option value="BORRADOR">
-                      Borrador
-                    </option>
+                    className="admin-input pr-14"
+                    required
+                  />
 
-                    <option value="ACTIVO">
-                      Activo
-                    </option>
-
-                    <option value="INACTIVO">
-                      Inactivo
-                    </option>
-                  </select>
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8A8790]">
+                    días
+                  </span>
                 </div>
               </div>
 
-              <p className="text-xs leading-5 text-[#8A8790]">
-                Solo las plantillas activas podrán asignarse posteriormente a clientes.
-              </p>
+              <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-gray-200 bg-[#F8F6FF] p-4">
+                <input
+                  type="checkbox"
+                  checked={
+                    form.estado ===
+                    "ACTIVO"
+                  }
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      estado:
+                        e.target.checked
+                          ? "ACTIVO"
+                          : "BORRADOR",
+                    })
+                  }
+                  className="mt-1 h-5 w-5 shrink-0 accent-pink-600"
+                />
+
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-[#1F1B24]">
+                    Disponible para asignar a clientes
+                  </span>
+
+                  <span className="mt-1 block text-xs leading-5 text-[#6B6870]">
+                    Déjalo marcado si la plantilla ya está lista para usarse. Desmárcalo si todavía quieres seguir preparándola.
+                  </span>
+                </span>
+              </label>
             </div>
           </section>
 
