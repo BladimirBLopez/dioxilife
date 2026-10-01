@@ -730,3 +730,16 @@ model RecordatorioPushEnviado {
   @@unique([actividadSeguimientoId, diaPlan])
   @@index([seguimientoId])
 }
+
+model RecordatorioPushTardio {
+  id String @id @default(cuid())
+
+  seguimientoId          String
+  actividadSeguimientoId String
+  diaPlan                Int
+
+  enviadoAt DateTime @default(now())
+
+  @@unique([actividadSeguimientoId, diaPlan])
+  @@index([seguimientoId])
+}

@@ -114,3 +114,34 @@ export function mensajeRecordatorio({
 
   return `En ${cuando} (${hora}): ${titulo}`;
 }
+
+
+export const MINUTOS_SEGUNDO_AVISO = 30;
+
+export function recordatorioTardioVigente(
+  ahora: Date,
+  evento: Date
+) {
+  const desde =
+    evento.getTime() +
+    MINUTOS_SEGUNDO_AVISO * 60_000;
+
+  const hasta =
+    desde +
+    TARDANZA_MAXIMA_MIN * 60_000;
+
+  return (
+    ahora.getTime() >= desde &&
+    ahora.getTime() <= hasta
+  );
+}
+
+export function mensajeRecordatorioTardio({
+  titulo,
+  hora,
+}: {
+  titulo: string;
+  hora: string;
+}) {
+  return `Ya pasó la hora de: ${titulo} (${hora}). Aún estás a tiempo, márcala cuando la hagas.`;
+}

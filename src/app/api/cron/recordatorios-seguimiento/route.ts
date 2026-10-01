@@ -14,7 +14,9 @@ import { obtenerWebPush } from "@/lib/web-push";
 import { obtenerDiaSeguimiento } from "@/lib/seguimiento-publico";
 import {
   mensajeRecordatorio,
+  mensajeRecordatorioTardio,
   momentosRecordatorio,
+  recordatorioTardioVigente,
   recordatorioVigente,
 } from "@/lib/recordatorios-seguimiento";
 
@@ -129,6 +131,204 @@ async function enviarASuscripciones(
     fallidas,
   };
 }
+
+type ActividadAviso = {
+  id: string;
+  titulo: string;
+  hora: string | null;
+  recordatorio: string;
+  diaInicio: number;
+  diaFin: number | null;
+};
+
+async function procesarAvisosTardios({
+  seguimiento,
+  diaPlan,
+  ahora,
+  simulacion,
+}: {
+  seguimiento: {
+    id: string;
+    suscripcionesPush: Suscripcion[];
+    actividades: ActividadAviso[];
+  };
+  diaPlan: number;
+  ahora: Date;
+  simulacion: boolean;
+}) {
+  let enviados = 0;
+  let omitidos = 0;
+  let fallidos = 0;
+
+  const detalle: {
+    seguimientoId: string;
+    actividadId: string;
+    diaPlan: number;
+    estado: string;
+  }[] = [];
+
+  const candidatas = seguimiento.actividades
+    .filter(
+      (actividad) =>
+        diaPlan >= actividad.diaInicio &&
+        diaPlan <= (actividad.diaFin ?? actividad.diaInicio)
+    )
+    .map((actividad) => ({
+      actividad,
+      momentos: momentosRecordatorio(
+        ahora,
+        actividad.hora,
+        actividad.recordatorio
+      ),
+    }))
+    .filter(
+      (item) =>
+        item.momentos !== null &&
+        recordatorioTardioVigente(
+          ahora,
+          item.momentos.evento
+        )
+    );
+
+  if (candidatas.length === 0) {
+    return { enviados, omitidos, fallidos, detalle };
+  }
+
+  const completadas =
+    await prisma.progresoActividad.findMany({
+      where: {
+        seguimientoId: seguimiento.id,
+        diaPlan,
+        completado: true,
+      },
+      select: {
+        actividadSeguimientoId: true,
+      },
+    });
+
+  const idsCompletadas = new Set(
+    completadas.map(
+      (progreso: { actividadSeguimientoId: string }) =>
+        progreso.actividadSeguimientoId
+    )
+  );
+
+  for (const { actividad } of candidatas) {
+    if (!actividad.hora) {
+      continue;
+    }
+
+    const marca = {
+      seguimientoId: seguimiento.id,
+      actividadId: actividad.id,
+      diaPlan,
+    };
+
+    if (idsCompletadas.has(actividad.id)) {
+      omitidos++;
+
+      detalle.push({
+        ...marca,
+        estado: "segundo aviso omitido: ya completada",
+      });
+
+      continue;
+    }
+
+    const yaEnviado =
+      await prisma.recordatorioPushTardio.findUnique({
+        where: {
+          actividadSeguimientoId_diaPlan: {
+            actividadSeguimientoId: actividad.id,
+            diaPlan,
+          },
+        },
+        select: {
+          id: true,
+        },
+      });
+
+    if (yaEnviado) {
+      omitidos++;
+
+      detalle.push({
+        ...marca,
+        estado: "segundo aviso omitido: ya enviado",
+      });
+
+      continue;
+    }
+
+    if (simulacion) {
+      detalle.push({
+        ...marca,
+        estado: "segundo aviso: se enviaría ahora",
+      });
+
+      continue;
+    }
+
+    try {
+      await prisma.recordatorioPushTardio.create({
+        data: {
+          seguimientoId: seguimiento.id,
+          actividadSeguimientoId: actividad.id,
+          diaPlan,
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        omitidos++;
+        continue;
+      }
+
+      throw error;
+    }
+
+    const resultado = await enviarASuscripciones(
+      seguimiento.suscripcionesPush,
+      {
+        title: "DioxiLife",
+        body: mensajeRecordatorioTardio({
+          titulo: actividad.titulo,
+          hora: actividad.hora,
+        }),
+        tag: `tarde-${actividad.id}-${diaPlan}`,
+      }
+    );
+
+    if (resultado.entregadas === 0) {
+      await prisma.recordatorioPushTardio.deleteMany({
+        where: {
+          actividadSeguimientoId: actividad.id,
+          diaPlan,
+        },
+      });
+
+      fallidos++;
+
+      detalle.push({
+        ...marca,
+        estado: "segundo aviso falló: se reintentará",
+      });
+
+      continue;
+    }
+
+    enviados++;
+
+    detalle.push({
+      ...marca,
+      estado: `segundo aviso enviado a ${resultado.entregadas} dispositivo(s)`,
+    });
+  }
+
+  return { enviados, omitidos, fallidos, detalle };
+}
+
 
 export async function GET(
   req: NextRequest
@@ -298,6 +498,18 @@ export async function GET(
       ) {
         continue;
       }
+      const tardios =
+        await procesarAvisosTardios({
+          seguimiento,
+          diaPlan,
+          ahora,
+          simulacion,
+        });
+
+      enviados += tardios.enviados;
+      omitidos += tardios.omitidos;
+      fallidos += tardios.fallidos;
+      detalle.push(...tardios.detalle);
 
       const candidatas =
         seguimiento.actividades
