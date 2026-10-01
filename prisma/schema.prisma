@@ -717,3 +717,16 @@ model DetalleCompra {
 
   createdAt DateTime @default(now())
 }
+
+model RecordatorioPushEnviado {
+  id String @id @default(cuid())
+
+  seguimientoId          String
+  actividadSeguimientoId String
+  diaPlan                Int
+
+  enviadoAt DateTime @default(now())
+
+  @@unique([actividadSeguimientoId, diaPlan])
+  @@index([seguimientoId])
+}
