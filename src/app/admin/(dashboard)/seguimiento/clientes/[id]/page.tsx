@@ -13,6 +13,7 @@ import {
 import AgendaCliente from "@/components/admin/seguimiento/AgendaCliente";
 import AccionesSeguimientoCliente from "@/components/admin/seguimiento/AccionesSeguimientoCliente";
 import HistorialWhatsApp from "@/components/admin/seguimiento/HistorialWhatsApp";
+import ResumenCumplimiento from "@/components/admin/seguimiento/ResumenCumplimiento";
 
 function estiloEstado(estado: string) {
   switch (estado) {
@@ -404,6 +405,14 @@ export default async function SeguimientoClientePage({
         />
 
       </section>
+
+
+      <ResumenCumplimiento
+        seguimientoId={seguimiento.id}
+        tieneTelefono={Boolean(
+          seguimiento.telefonoCliente
+        )}
+      />
 
 
       <section className="rounded-xl bg-white px-4 py-2 shadow sm:px-5">
