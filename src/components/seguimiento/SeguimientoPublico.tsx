@@ -335,6 +335,99 @@ function cantidadCompletadas(
 }
 
 
+const MINUTOS_DE_TOLERANCIA = 30;
+
+function minutosAhoraBolivia() {
+  const partes =
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: "America/La_Paz",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    }).formatToParts(new Date());
+
+  const horas = Number(
+    partes.find((p) => p.type === "hour")?.value ?? 0
+  );
+
+  const minutos = Number(
+    partes.find((p) => p.type === "minute")?.value ?? 0
+  );
+
+  return horas * 60 + minutos;
+}
+
+
+function minutosDeHora(hora: string | null) {
+  const partes =
+    /^([01]\d|2[0-3]):([0-5]\d)$/.exec(
+      (hora || "").trim()
+    );
+
+  if (!partes) {
+    return null;
+  }
+
+  return Number(partes[1]) * 60 + Number(partes[2]);
+}
+
+
+function AvisoHora({
+  hora,
+  esSiguiente,
+}: {
+  hora: string | null;
+  esSiguiente: boolean;
+}) {
+  const [ahora, setAhora] = useState(
+    () => minutosAhoraBolivia()
+  );
+
+  useEffect(() => {
+    const intervalo = window.setInterval(
+      () => setAhora(minutosAhoraBolivia()),
+      60_000
+    );
+
+    return () => window.clearInterval(intervalo);
+  }, []);
+
+  const minutosHora = minutosDeHora(hora);
+
+  if (minutosHora === null || !hora) {
+    return null;
+  }
+
+  const diferencia = ahora - minutosHora;
+
+  if (diferencia > MINUTOS_DE_TOLERANCIA) {
+    return (
+      <span className="mt-2 inline-block rounded-lg bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
+        Pendiente · era a las {hora}
+      </span>
+    );
+  }
+
+  if (diferencia >= 0) {
+    return (
+      <span className="mt-2 inline-block rounded-lg bg-[#FBE7F4] px-2.5 py-1 text-xs font-bold text-brand-pink">
+        Ahora toca
+      </span>
+    );
+  }
+
+  if (esSiguiente) {
+    return (
+      <span className="mt-2 inline-block rounded-lg bg-[#F4F2F8] px-2.5 py-1 text-xs font-bold text-brand-blue">
+        Siguiente · a las {hora}
+      </span>
+    );
+  }
+
+  return null;
+}
+
+
 export default function SeguimientoPublico({
   token,
 }: {
@@ -870,6 +963,35 @@ export default function SeguimientoPublico({
           ) * 100
         )
       : 0;
+
+
+  const siguienteTareaId = (() => {
+    const dia = seguimiento?.diaActual;
+
+    if (!dia) {
+      return null;
+    }
+
+    const ahoraMin = minutosAhoraBolivia();
+
+    const siguiente = actividadesHoy.find(
+      (actividad) => {
+        if (actividad.tipo !== "TAREA") {
+          return false;
+        }
+
+        if (actividadCompletadaEnDia(actividad, dia)) {
+          return false;
+        }
+
+        const minutos = minutosDeHora(actividad.hora);
+
+        return minutos !== null && minutos > ahoraMin;
+      }
+    );
+
+    return siguiente ? siguiente.id : null;
+  })();
 
 
   const totalTareas =
@@ -1462,7 +1584,9 @@ export default function SeguimientoPublico({
             </div>
 
             <p className="mt-2 text-right text-xs text-white/70">
-              {porcentajeHoy}% realizado
+              {porcentajeHoy === 100
+                ? "¡Completaste tu día! 🎉"
+                : `${porcentajeHoy}% realizado`}
             </p>
 
           </div>
@@ -1524,6 +1648,9 @@ export default function SeguimientoPublico({
                         actividad,
                         diaActual
                       );
+
+                    const esSiguiente =
+                      siguienteTareaId === actividad.id;
 
                     const actualizando =
                       actualizandoActividad ===
@@ -1635,6 +1762,16 @@ export default function SeguimientoPublico({
 
                               </div>
 
+                              {actividad.tipo === "TAREA" &&
+                                !completada && (
+                                <div>
+                                  <AvisoHora
+                                    hora={actividad.hora}
+                                    esSiguiente={esSiguiente}
+                                  />
+                                </div>
+                              )}
+
 
                               <h3
                                 className={`mt-2 text-base font-extrabold ${
@@ -1660,8 +1797,8 @@ export default function SeguimientoPublico({
                           </div>
 
 
-                          {instrucciones.length >
-                            0 && (
+                          {instrucciones.length > 0 &&
+                            !completada && (
                             <div className="mt-4 border-t border-black/5 pt-4">
 
                               <p className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-brand-gray">
