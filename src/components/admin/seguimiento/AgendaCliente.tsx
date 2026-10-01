@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Modal from "@/components/Modal";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import {
+  aplicaEnDia,
+  describirDias,
+  horaDeAviso,
+} from "@/lib/seguimiento-agenda";
 
 type RecordatorioActividad =
   | "NINGUNO"
@@ -32,6 +37,7 @@ type Props = {
   seguimientoId: string;
   duracionDias: number;
   estado: string;
+  diaActual: number | null;
   actividades: Actividad[];
 };
 
@@ -52,6 +58,7 @@ export default function AgendaCliente({
   seguimientoId,
   duracionDias,
   estado,
+  diaActual,
   actividades,
 }: Props) {
   const router = useRouter();
@@ -449,13 +456,23 @@ export default function AgendaCliente({
                             : "Control"}
                         </span>
 
-                        <span className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-semibold text-violet-700">
-                          Día {actividad.diaInicio}
-                          {actividad.diaFin &&
-                          actividad.diaFin !==
-                            actividad.diaInicio
-                            ? ` al ${actividad.diaFin}`
-                            : ""}
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                            diaActual !== null &&
+                            actividad.activo &&
+                            aplicaEnDia(
+                              actividad,
+                              diaActual
+                            )
+                              ? "bg-violet-600 text-white"
+                              : "bg-violet-100 text-violet-700"
+                          }`}
+                        >
+                          {describirDias(
+                            actividad,
+                            duracionDias,
+                            diaActual
+                          )}
                         </span>
 
                         {actividad.hora && (
@@ -463,6 +480,27 @@ export default function AgendaCliente({
                             {actividad.hora}
                           </span>
                         )}
+
+                        {actividad.hora &&
+                          (() => {
+                            const aviso =
+                              horaDeAviso(
+                                actividad.hora,
+                                actividad.recordatorio
+                              );
+
+                            if (!aviso) {
+                              return null;
+                            }
+
+                            return (
+                              <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+                                {aviso.cruzaMedianoche
+                                  ? "🔔 Aviso la noche anterior"
+                                  : `🔔 Aviso ${aviso.texto}`}
+                              </span>
+                            );
+                          })()}
 
                         {actividad.momento && (
                           <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">

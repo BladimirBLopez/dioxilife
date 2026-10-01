@@ -6,17 +6,14 @@ import { toast } from "sonner";
 
 import { abrirWhatsApp } from "@/lib/whatsapp-cliente";
 
-type UltimoEnvio = {
-  fechaEnvio: Date | string;
-  enviadoPorUsuario: string | null;
-} | null;
-
 export default function AccionesSeguimientoCliente({
   seguimientoId,
-  ultimoEnvio,
+  tieneTelefono,
+  haEnviado,
 }: {
   seguimientoId: string;
-  ultimoEnvio: UltimoEnvio;
+  tieneTelefono: boolean;
+  haEnviado: boolean;
 }) {
   const router = useRouter();
 
@@ -27,11 +24,9 @@ export default function AccionesSeguimientoCliente({
   async function enviarWhatsApp(
     nuevoEnlace: boolean
   ) {
-
     if (procesando) {
       return;
     }
-
 
     if (
       nuevoEnlace &&
@@ -42,12 +37,9 @@ export default function AccionesSeguimientoCliente({
       return;
     }
 
-
     setProcesando(true);
 
-
     try {
-
       const res =
         await fetch(
           `/api/admin/seguimiento/clientes/${seguimientoId}/enviar-whatsapp${
@@ -100,126 +92,41 @@ export default function AccionesSeguimientoCliente({
       setProcesando(false);
 
     }
-
   }
 
 
   return (
+    <div className="flex flex-col gap-2 sm:flex-row">
 
-    <div className="flex w-full max-w-full flex-col gap-3 overflow-hidden">
+      <button
+        type="button"
+        disabled={procesando || !tieneTelefono}
+        onClick={() =>
+          void enviarWhatsApp(false)
+        }
+        className="inline-flex flex-1 items-center justify-center rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50 sm:flex-none"
+      >
+        {procesando
+          ? "Preparando..."
+          : haEnviado
+          ? "📱 Reenviar por WhatsApp"
+          : "📱 Enviar por WhatsApp"}
+      </button>
 
-      <div className="flex w-full max-w-full flex-col gap-2 sm:flex-row">
 
+      {haEnviado && (
         <button
           type="button"
-          disabled={procesando}
+          disabled={procesando || !tieneTelefono}
           onClick={() =>
-            void enviarWhatsApp(false)
+            void enviarWhatsApp(true)
           }
-          className="
-            flex
-            w-full
-            max-w-full
-            items-center
-            justify-center
-            rounded-xl
-            bg-green-600
-            px-4
-            py-3
-            text-sm
-            font-semibold
-            text-white
-            transition
-            hover:bg-green-700
-            disabled:opacity-50
-            sm:w-auto
-          "
+          className="inline-flex flex-1 items-center justify-center rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50 sm:flex-none"
         >
-
-          {procesando
-            ? "Preparando..."
-            : "📱 Enviar WhatsApp"}
-
+          🔄 Enlace nuevo
         </button>
-
-
-        {ultimoEnvio && (
-
-          <button
-            type="button"
-            disabled={procesando}
-            onClick={() =>
-              void enviarWhatsApp(true)
-            }
-            className="
-              flex
-              w-full
-              max-w-full
-              items-center
-              justify-center
-              rounded-xl
-              border
-              border-gray-300
-              bg-white
-              px-4
-              py-3
-              text-sm
-              font-semibold
-              text-gray-700
-              transition
-              hover:bg-gray-50
-              disabled:opacity-50
-              sm:w-auto
-            "
-          >
-
-            🔄 Generar enlace nuevo
-
-          </button>
-
-        )}
-
-      </div>
-
-
-      {ultimoEnvio && (
-
-        <div className="w-full max-w-full overflow-hidden rounded-xl border border-green-200 bg-green-50 p-3">
-
-          <p className="text-xs font-bold text-green-800">
-            Último contacto WhatsApp
-          </p>
-
-
-          <div className="mt-2 space-y-1">
-
-            <p className="break-words text-xs text-green-700">
-              ✅{" "}
-              {new Date(
-                ultimoEnvio.fechaEnvio
-              ).toLocaleString(
-                "es-BO",
-                {
-                  timeZone:
-                    "America/La_Paz",
-                }
-              )}
-            </p>
-
-
-            <p className="break-words text-xs text-green-700">
-              👤 Enviado por:{" "}
-              {ultimoEnvio.enviadoPorUsuario ||
-                "Sistema"}
-            </p>
-
-          </div>
-
-        </div>
-
       )}
 
     </div>
-
   );
 }
