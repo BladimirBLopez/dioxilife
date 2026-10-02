@@ -867,7 +867,8 @@ export default function ProtocoloPrincipalPreparacion({
                               }
                             </p>
 
-                            {actividad.descripcion && (
+                            {actividad.descripcion &&
+                              actividad.indicaciones.length === 0 && (
 
                               <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-gray-500">
                                 {
