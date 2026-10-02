@@ -14,6 +14,7 @@ import AgendaCliente from "@/components/admin/seguimiento/AgendaCliente";
 import AccionesSeguimientoCliente from "@/components/admin/seguimiento/AccionesSeguimientoCliente";
 import HistorialWhatsApp from "@/components/admin/seguimiento/HistorialWhatsApp";
 import ResumenCumplimiento from "@/components/admin/seguimiento/ResumenCumplimiento";
+import RegistroDiarioCliente from "@/components/admin/seguimiento/RegistroDiarioCliente";
 
 function estiloEstado(estado: string) {
   switch (estado) {
@@ -412,6 +413,13 @@ export default async function SeguimientoClientePage({
         tieneTelefono={Boolean(
           seguimiento.telefonoCliente
         )}
+      />
+
+
+      <RegistroDiarioCliente
+        seguimientoId={seguimiento.id}
+        duracionDias={seguimiento.duracionDias}
+        diaInicial={diaActual ?? 1}
       />
 
 
