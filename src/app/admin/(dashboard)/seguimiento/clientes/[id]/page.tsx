@@ -568,7 +568,11 @@ export default async function SeguimientoClientePage({
       </p>
 
 
-      <AgendaCliente
+      <div
+        id="agenda-individual"
+        className="scroll-mt-5"
+      >
+        <AgendaCliente
         seguimientoId={seguimiento.id}
         duracionDias={seguimiento.duracionDias}
         estado={seguimiento.estado}
@@ -591,7 +595,8 @@ export default async function SeguimientoClientePage({
               actividad._count.progresos,
           })
         )}
-      />
+        />
+      </div>
 
     </div>
   );

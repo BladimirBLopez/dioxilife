@@ -1,8 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import type {
+  ReactNode,
+} from "react";
+
+import {
+  useState,
+} from "react";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+
+import Modal from "@/components/Modal";
 
 import {
   abrirWhatsApp,
@@ -18,6 +28,7 @@ type Props = {
   cantidadPrincipales: number;
   cantidadAdicionales: number;
   tieneTelefono: boolean;
+  children: ReactNode;
 };
 
 export default function PrepararSeguimientoCliente({
@@ -30,7 +41,11 @@ export default function PrepararSeguimientoCliente({
   cantidadPrincipales,
   cantidadAdicionales,
   tieneTelefono,
+  children,
 }: Props) {
+  const router =
+    useRouter();
+
   const [
     peso,
     setPeso,
@@ -38,7 +53,9 @@ export default function PrepararSeguimientoCliente({
     useState(
       pesoInicial === null
         ? ""
-        : String(pesoInicial)
+        : String(
+            pesoInicial
+          )
     );
 
   const [
@@ -62,14 +79,6 @@ export default function PrepararSeguimientoCliente({
     useState(false);
 
   const [
-    enlace,
-    setEnlace,
-  ] =
-    useState<string | null>(
-      null
-    );
-
-  const [
     token,
     setToken,
   ] =
@@ -78,10 +87,25 @@ export default function PrepararSeguimientoCliente({
     );
 
   const [
+    enlace,
+    setEnlace,
+  ] =
+    useState<string | null>(
+      null
+    );
+
+  const [
+    modalExito,
+    setModalExito,
+  ] =
+    useState(false);
+
+  const [
     enviando,
     setEnviando,
   ] =
     useState(false);
+
 
   async function guardarPeso() {
     if (guardandoPeso) {
@@ -102,7 +126,8 @@ export default function PrepararSeguimientoCliente({
         await fetch(
           `/api/admin/seguimiento/clientes/${seguimientoId}/registro-diario/1`,
           {
-            method: "PUT",
+            method:
+              "PUT",
 
             headers: {
               "Content-Type":
@@ -124,7 +149,9 @@ export default function PrepararSeguimientoCliente({
       const data =
         await res
           .json()
-          .catch(() => null);
+          .catch(
+            () => null
+          );
 
       if (!res.ok) {
         toast.error(
@@ -141,23 +168,25 @@ export default function PrepararSeguimientoCliente({
         return;
       }
 
-      const nuevoPeso =
-        data?.registro?.peso ??
-        data?.peso ??
-        null;
+      const valor =
+        peso.trim()
+          ? Number(
+              peso
+                .replace(
+                  ",",
+                  "."
+                )
+            )
+          : null;
 
       setPesoGuardado(
-        nuevoPeso === null
-          ? null
-          : Number(
-              nuevoPeso
-            )
+        valor
       );
 
       toast.success(
-        peso.trim()
-          ? "Peso inicial guardado"
-          : "Peso inicial dejado pendiente",
+        valor === null
+          ? "Peso inicial pendiente"
+          : "Peso inicial guardado",
         {
           id: toastId,
         }
@@ -184,13 +213,23 @@ export default function PrepararSeguimientoCliente({
       return;
     }
 
+    if (
+      token &&
+      enlace
+    ) {
+      setModalExito(
+        true
+      );
+      return;
+    }
+
     setFinalizando(
       true
     );
 
     const toastId =
       toast.loading(
-        "Generando enlace definitivo..."
+        "Finalizando preparación..."
       );
 
     try {
@@ -198,14 +237,17 @@ export default function PrepararSeguimientoCliente({
         await fetch(
           `/api/admin/seguimiento/clientes/${seguimientoId}/finalizar-preparacion`,
           {
-            method: "POST",
+            method:
+              "POST",
           }
         );
 
       const data =
         await res
           .json()
-          .catch(() => null);
+          .catch(
+            () => null
+          );
 
       if (!res.ok) {
         toast.error(
@@ -224,12 +266,13 @@ export default function PrepararSeguimientoCliente({
 
       const nuevoToken =
         String(
-          data.token || ""
+          data?.token ||
+          ""
         );
 
       if (!nuevoToken) {
         throw new Error(
-          "No se recibió el nuevo enlace."
+          "No se recibió el enlace del seguimiento."
         );
       }
 
@@ -244,13 +287,17 @@ export default function PrepararSeguimientoCliente({
         nuevoEnlace
       );
 
+      setModalExito(
+        true
+      );
+
       toast.success(
-        "Preparación finalizada",
+        "Seguimiento preparado",
         {
           id: toastId,
 
           description:
-            "El enlace del cliente ya está listo para enviar.",
+            "El enlace privado ya está listo.",
         }
       );
 
@@ -278,12 +325,14 @@ export default function PrepararSeguimientoCliente({
     }
 
     try {
-      await navigator.clipboard.writeText(
-        enlace
-      );
+      await navigator
+        .clipboard
+        .writeText(
+          enlace
+        );
 
       toast.success(
-        "Enlace copiado"
+        "Enlace privado copiado"
       );
 
     } catch {
@@ -311,7 +360,8 @@ export default function PrepararSeguimientoCliente({
         await fetch(
           `/api/admin/seguimiento/clientes/${seguimientoId}/enviar-whatsapp`,
           {
-            method: "POST",
+            method:
+              "POST",
 
             headers: {
               "Content-Type":
@@ -328,12 +378,14 @@ export default function PrepararSeguimientoCliente({
       const data =
         await res
           .json()
-          .catch(() => null);
+          .catch(
+            () => null
+          );
 
       if (!res.ok) {
         throw new Error(
           data?.error ||
-            "No se pudo preparar el WhatsApp."
+          "No se pudo preparar el WhatsApp."
         );
       }
 
@@ -361,6 +413,17 @@ export default function PrepararSeguimientoCliente({
   }
 
 
+  function cerrarModal() {
+    setModalExito(
+      false
+    );
+
+    router.push(
+      `/admin/seguimiento/clientes/${seguimientoId}`
+    );
+  }
+
+
   return (
     <div className="space-y-4">
 
@@ -373,17 +436,17 @@ export default function PrepararSeguimientoCliente({
           </p>
 
           <h2 className="mt-1 text-xl font-semibold text-gray-900">
-            Preparar seguimiento
+            Personalizar protocolo
           </h2>
 
           <p className="mt-1 text-sm text-gray-500">
-            Revisa todo antes de enviar el enlace al cliente.
+            Revisa el protocolo antes de generar el acceso del cliente.
           </p>
 
         </div>
 
 
-        <div className="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 p-5 sm:grid-cols-2">
 
           <div className="rounded-xl bg-gray-50 p-4">
 
@@ -414,40 +477,6 @@ export default function PrepararSeguimientoCliente({
 
           </div>
 
-
-          <div className="rounded-xl bg-blue-50 p-4">
-
-            <p className="text-xs text-blue-700">
-              Protocolo principal
-            </p>
-
-            <p className="mt-1 text-xl font-bold text-blue-800">
-              {cantidadPrincipales}
-            </p>
-
-            <p className="text-xs text-blue-700">
-              actividades
-            </p>
-
-          </div>
-
-
-          <div className="rounded-xl bg-purple-50 p-4">
-
-            <p className="text-xs text-purple-700">
-              Adicionales
-            </p>
-
-            <p className="mt-1 text-xl font-bold text-purple-800">
-              {cantidadAdicionales}
-            </p>
-
-            <p className="text-xs text-purple-700">
-              protocolos
-            </p>
-
-          </div>
-
         </div>
 
       </section>
@@ -457,18 +486,19 @@ export default function PrepararSeguimientoCliente({
 
         <div className="flex items-start gap-3">
 
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 font-bold text-emerald-700">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 font-bold text-emerald-700">
             1
           </div>
 
+
           <div className="min-w-0 flex-1">
 
-            <h3 className="font-semibold text-gray-900">
+            <h2 className="font-semibold text-gray-900">
               Peso inicial
-            </h3>
+            </h2>
 
             <p className="mt-1 text-sm leading-6 text-gray-500">
-              Es opcional. Si no se registra ahora, el primer peso ingresado posteriormente será tomado como peso inicial.
+              Es opcional. Si no lo registras ahora, el primer peso ingresado posteriormente será tomado como peso inicial.
             </p>
 
 
@@ -483,14 +513,17 @@ export default function PrepararSeguimientoCliente({
                 <input
                   type="text"
                   inputMode="decimal"
-                  value={peso}
+                  value={
+                    peso
+                  }
                   onChange={(e) =>
                     setPeso(
-                      e.target.value
+                      e.target
+                        .value
                     )
                   }
                   className="admin-input"
-                  placeholder="Ej. 78.5"
+                  placeholder="Ej. 86.0"
                 />
 
               </div>
@@ -515,7 +548,8 @@ export default function PrepararSeguimientoCliente({
 
 
             <p className="mt-2 text-xs text-gray-500">
-              {pesoGuardado === null
+              {pesoGuardado ===
+              null
                 ? "Peso inicial aún no registrado."
                 : `Peso inicial registrado: ${pesoGuardado} kg`}
             </p>
@@ -527,139 +561,91 @@ export default function PrepararSeguimientoCliente({
       </section>
 
 
-      <section className="rounded-xl border border-violet-100 bg-[#F8F6FF] p-5">
-
-        <div className="flex items-start gap-3">
-
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-100 font-bold text-violet-700">
-            2
-          </div>
-
-          <div>
-
-            <h3 className="font-semibold text-gray-900">
-              Revisa la agenda
-            </h3>
-
-            <p className="mt-1 text-sm leading-6 text-gray-600">
-              Debajo puedes revisar las actividades principales, corregirlas y agregar los protocolos adicionales que correspondan al cliente.
-            </p>
-
-            <p className="mt-2 text-xs font-medium text-violet-700">
-              Los protocolos adicionales creados ahora comenzarán desde el Día 1.
-            </p>
-
-          </div>
-
-        </div>
-
-      </section>
+      {children}
 
 
       <section className="rounded-xl bg-white p-5 shadow">
 
         <div className="flex items-start gap-3">
 
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50 font-bold text-green-700">
-            3
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-100 font-bold text-green-700">
+            4
           </div>
+
 
           <div className="min-w-0 flex-1">
 
-            <h3 className="font-semibold text-gray-900">
-              Finalizar preparación
-            </h3>
+            <h2 className="font-semibold text-gray-900">
+              Revisar y finalizar
+            </h2>
 
-            {!enlace ? (
-              <>
+            <p className="mt-1 text-sm leading-6 text-gray-500">
+              Verifica el resumen antes de generar el enlace privado.
+            </p>
 
-                <p className="mt-1 text-sm leading-6 text-gray-500">
-                  Cuando todo esté correcto, genera el enlace que enviarás al cliente.
+
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+
+              <div className="rounded-xl bg-gray-50 p-3">
+
+                <p className="text-xs text-gray-500">
+                  Peso inicial
                 </p>
 
-                <button
-                  type="button"
-                  disabled={
-                    finalizando
-                  }
-                  onClick={() =>
-                    void finalizarPreparacion()
-                  }
-                  className="admin-btn-primary mt-4 disabled:opacity-60"
-                >
-                  {finalizando
-                    ? "Generando..."
-                    : "Finalizar preparación y generar enlace"}
-                </button>
+                <p className="mt-1 font-semibold text-gray-900">
+                  {pesoGuardado ===
+                  null
+                    ? "Pendiente"
+                    : `${pesoGuardado} kg`}
+                </p>
 
-              </>
-            ) : (
-              <>
-
-                <div className="mt-3 rounded-xl border border-green-200 bg-green-50 p-4">
-
-                  <p className="font-semibold text-green-800">
-                    ✓ Seguimiento preparado
-                  </p>
-
-                  <p className="mt-1 text-sm leading-6 text-green-700">
-                    El seguimiento todavía está pendiente. Comenzará cuando el cliente abra el enlace y pulse “Iniciar mi seguimiento”.
-                  </p>
+              </div>
 
 
-                  <div className="mt-3 rounded-lg bg-white p-3">
+              <div className="rounded-xl bg-blue-50 p-3">
 
-                    <p className="break-all text-xs leading-5 text-green-800">
-                      {enlace}
-                    </p>
+                <p className="text-xs text-blue-700">
+                  Principal
+                </p>
 
-                  </div>
+                <p className="mt-1 font-semibold text-blue-900">
+                  {cantidadPrincipales} actividades
+                </p>
 
-                </div>
-
-
-                <div className="mt-4 flex flex-wrap gap-2">
-
-                  {tieneTelefono && (
-                    <button
-                      type="button"
-                      disabled={
-                        enviando
-                      }
-                      onClick={() =>
-                        void enviarWhatsApp()
-                      }
-                      className="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-60"
-                    >
-                      {enviando
-                        ? "Preparando..."
-                        : "📱 Enviar por WhatsApp"}
-                    </button>
-                  )}
+              </div>
 
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void copiarEnlace()
-                    }
-                    className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                  >
-                    Copiar enlace
-                  </button>
+              <div className="rounded-xl bg-purple-50 p-3">
+
+                <p className="text-xs text-purple-700">
+                  Adicionales
+                </p>
+
+                <p className="mt-1 font-semibold text-purple-900">
+                  {cantidadAdicionales} protocolos
+                </p>
+
+              </div>
+
+            </div>
 
 
-                  <Link
-                    href={`/admin/seguimiento/clientes/${seguimientoId}`}
-                    className="rounded-xl border border-violet-200 bg-white px-4 py-2.5 text-sm font-semibold text-violet-700 hover:bg-violet-50"
-                  >
-                    Ir al seguimiento
-                  </Link>
-
-                </div>
-
-              </>
-            )}
+            <button
+              type="button"
+              disabled={
+                finalizando
+              }
+              onClick={() =>
+                void finalizarPreparacion()
+              }
+              className="admin-btn-primary mt-5 w-full py-3 disabled:opacity-60 sm:w-auto"
+            >
+              {finalizando
+                ? "Finalizando..."
+                : token
+                ? "Ver enlace generado"
+                : "Finalizar y generar enlace"}
+            </button>
 
           </div>
 
@@ -668,17 +654,187 @@ export default function PrepararSeguimientoCliente({
       </section>
 
 
-      {!enlace && (
-        <div className="text-center">
+      <div className="text-center">
 
-          <Link
-            href={`/admin/seguimiento/clientes/${seguimientoId}`}
-            className="text-sm font-medium text-gray-500 underline underline-offset-4 hover:text-gray-800"
-          >
-            Guardar y continuar después
-          </Link>
+        <Link
+          href={`/admin/seguimiento/clientes/${seguimientoId}`}
+          className="text-sm font-medium text-gray-500 underline underline-offset-4 hover:text-gray-800"
+        >
+          Guardar y continuar después
+        </Link>
 
-        </div>
+      </div>
+
+
+      {modalExito &&
+        enlace &&
+        token && (
+
+        <Modal
+          title="Seguimiento preparado"
+          onClose={
+            cerrarModal
+          }
+          maxWidthClassName="max-w-lg"
+        >
+
+          <div className="space-y-5">
+
+            <div className="text-center">
+
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-2xl font-bold text-green-700">
+                ✓
+              </div>
+
+              <h3 className="mt-3 text-lg font-semibold text-gray-900">
+                Preparación finalizada
+              </h3>
+
+              <p className="mt-1 text-sm leading-6 text-gray-500">
+                El protocolo de {nombreCliente} está listo para ser enviado.
+              </p>
+
+            </div>
+
+
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+
+              <div className="grid gap-3 text-sm sm:grid-cols-2">
+
+                <div>
+
+                  <p className="text-xs text-gray-500">
+                    Plan
+                  </p>
+
+                  <p className="mt-1 font-semibold text-gray-900">
+                    {nombrePlan}
+                  </p>
+
+                </div>
+
+
+                <div>
+
+                  <p className="text-xs text-gray-500">
+                    Duración
+                  </p>
+
+                  <p className="mt-1 font-semibold text-gray-900">
+                    {duracionDias} días
+                  </p>
+
+                </div>
+
+
+                <div>
+
+                  <p className="text-xs text-gray-500">
+                    Peso inicial
+                  </p>
+
+                  <p className="mt-1 font-semibold text-gray-900">
+                    {pesoGuardado ===
+                    null
+                      ? "No registrado"
+                      : `${pesoGuardado} kg`}
+                  </p>
+
+                </div>
+
+
+                <div>
+
+                  <p className="text-xs text-gray-500">
+                    Protocolo
+                  </p>
+
+                  <p className="mt-1 font-semibold text-gray-900">
+                    {cantidadPrincipales} principales ·{" "}
+                    {cantidadAdicionales} adicionales
+                  </p>
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <div>
+
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Enlace privado
+              </p>
+
+              <div className="mt-2 rounded-xl border border-green-200 bg-green-50 p-3">
+
+                <p className="break-all text-xs leading-5 text-green-800">
+                  {enlace}
+                </p>
+
+              </div>
+
+            </div>
+
+
+            {tieneTelefono && (
+
+              <button
+                type="button"
+                disabled={
+                  enviando
+                }
+                onClick={() =>
+                  void enviarWhatsApp()
+                }
+                className="w-full rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-60"
+              >
+                {enviando
+                  ? "Preparando WhatsApp..."
+                  : "📱 Enviar por WhatsApp"}
+              </button>
+
+            )}
+
+
+            <div className="grid gap-2 sm:grid-cols-2">
+
+              <button
+                type="button"
+                onClick={() =>
+                  void copiarEnlace()
+                }
+                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                Copiar enlace
+              </button>
+
+
+              <Link
+                href={`/admin/seguimiento/clientes/${seguimientoId}`}
+                className="rounded-xl border border-violet-200 bg-white px-4 py-2.5 text-center text-sm font-semibold text-violet-700 hover:bg-violet-50"
+              >
+                Ver seguimiento
+              </Link>
+
+            </div>
+
+
+            <button
+              type="button"
+              onClick={
+                cerrarModal
+              }
+              className="w-full py-2 text-sm font-medium text-gray-500 hover:text-gray-900"
+            >
+              Cerrar
+            </button>
+
+          </div>
+
+        </Modal>
+
       )}
 
     </div>

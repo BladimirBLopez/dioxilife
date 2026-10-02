@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+
 import {
   notFound,
   redirect,
@@ -8,9 +9,9 @@ import {
 
 import { prisma } from "@/lib/prisma";
 
-import AgendaCliente from "@/components/admin/seguimiento/AgendaCliente";
-
 import PrepararSeguimientoCliente from "@/components/admin/seguimiento/PrepararSeguimientoCliente";
+
+import ProtocolosAdicionalesPreparacion from "@/components/admin/seguimiento/ProtocolosAdicionalesPreparacion";
 
 export default async function PrepararSeguimientoPage({
   params,
@@ -70,6 +71,12 @@ export default async function PrepararSeguimientoPage({
                 "asc",
             },
             {
+              hora: {
+                sort: "asc",
+                nulls: "last",
+              },
+            },
+            {
               orden:
                 "asc",
             },
@@ -92,16 +99,6 @@ export default async function PrepararSeguimientoPage({
             diaFin: true,
             orden: true,
             activo: true,
-
-            createdAt:
-              true,
-
-            _count: {
-              select: {
-                progresos:
-                  true,
-              },
-            },
           },
         },
       },
@@ -126,70 +123,21 @@ export default async function PrepararSeguimientoPage({
       .registrosDiarios[0] ||
     null;
 
-  const actividades =
-    seguimiento.actividades
-      .slice()
-      .sort(
-        (a, b) => {
-          if (
-            a.seccion !==
-            b.seccion
-          ) {
-            return a.seccion ===
-              "PRINCIPAL"
-              ? -1
-              : 1;
-          }
-
-          const horaA =
-            a.hora ||
-            "99:99";
-
-          const horaB =
-            b.hora ||
-            "99:99";
-
-          const porHora =
-            horaA.localeCompare(
-              horaB
-            );
-
-          if (porHora !== 0) {
-            return porHora;
-          }
-
-          if (
-            a.orden !==
-            b.orden
-          ) {
-            return (
-              a.orden -
-              b.orden
-            );
-          }
-
-          return (
-            a.createdAt.getTime() -
-            b.createdAt.getTime()
-          );
-        }
-      );
-
-  const cantidadPrincipales =
-    actividades.filter(
+  const principales =
+    seguimiento.actividades.filter(
       (actividad) =>
         actividad.activo &&
         actividad.seccion ===
           "PRINCIPAL"
-    ).length;
+    );
 
-  const cantidadAdicionales =
-    actividades.filter(
+  const adicionales =
+    seguimiento.actividades.filter(
       (actividad) =>
         actividad.activo &&
         actividad.seccion ===
           "ADICIONAL"
-    ).length;
+    );
 
   return (
     <div className="space-y-5">
@@ -197,10 +145,10 @@ export default async function PrepararSeguimientoPage({
       <div>
 
         <Link
-          href="/admin/seguimiento/clientes"
+          href={`/admin/seguimiento/clientes/${seguimiento.id}`}
           className="text-sm font-medium text-blue-600 hover:underline"
         >
-          ← Clientes
+          ← Guardar y continuar después
         </Link>
 
         <h1 className="mt-3 text-2xl font-semibold text-gray-900">
@@ -208,9 +156,9 @@ export default async function PrepararSeguimientoPage({
         </h1>
 
         <p className="mt-1 text-sm text-gray-500">
-          Configura el protocolo de{" "}
+          Personaliza el protocolo de{" "}
           {seguimiento.nombreCliente ||
-            "este cliente"} antes de enviar su enlace.
+            "este cliente"} antes de enviar su acceso.
         </p>
 
       </div>
@@ -232,9 +180,9 @@ export default async function PrepararSeguimientoPage({
         }
         pesoInicial={
           registroInicial?.peso ===
-          null ||
+            null ||
           registroInicial?.peso ===
-          undefined
+            undefined
             ? null
             : Number(
                 registroInicial.peso
@@ -246,59 +194,157 @@ export default async function PrepararSeguimientoPage({
           null
         }
         cantidadPrincipales={
-          cantidadPrincipales
+          principales.length
         }
         cantidadAdicionales={
-          cantidadAdicionales
+          adicionales.length
         }
         tieneTelefono={
           Boolean(
             seguimiento.telefonoCliente
           )
         }
-      />
+      >
+
+        <section className="rounded-xl bg-white p-5 shadow">
+
+          <div className="flex items-start gap-3">
+
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 font-bold text-blue-700">
+              2
+            </div>
 
 
-      <div className="pt-2">
+            <div className="min-w-0 flex-1">
 
-        <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-violet-600">
-          Configuración del protocolo
-        </p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 
-        <AgendaCliente
+                <div>
+
+                  <h2 className="font-semibold text-gray-900">
+                    Protocolo principal
+                  </h2>
+
+                  <p className="mt-1 text-sm leading-6 text-gray-500">
+                    Se cargó automáticamente desde la plantilla seleccionada.
+                  </p>
+
+                </div>
+
+
+                <Link
+                  href={`/admin/seguimiento/clientes/${seguimiento.id}#agenda-individual`}
+                  className="shrink-0 rounded-xl border border-blue-200 bg-white px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50"
+                >
+                  Configuración avanzada
+                </Link>
+
+              </div>
+
+
+              <div className="mt-4 overflow-hidden rounded-xl border border-gray-200">
+
+                {principales.length ===
+                0 ? (
+
+                  <div className="p-5 text-sm text-gray-500">
+                    No hay actividades principales activas.
+                  </div>
+
+                ) : (
+
+                  <div className="divide-y divide-gray-100">
+
+                    {principales.map(
+                      (
+                        actividad
+                      ) => (
+
+                        <div
+                          key={
+                            actividad.id
+                          }
+                          className="flex gap-3 p-3"
+                        >
+
+                          <div className="w-14 shrink-0 text-sm font-bold text-blue-700">
+                            {actividad.hora ||
+                              "—"}
+                          </div>
+
+
+                          <div className="min-w-0 flex-1">
+
+                            <div className="flex flex-wrap items-center gap-2">
+
+                              <p className="font-medium text-gray-900">
+                                {
+                                  actividad.titulo
+                                }
+                              </p>
+
+                              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
+                                Día{" "}
+                                {
+                                  actividad.diaInicio
+                                }
+                                {actividad.diaFin !==
+                                null
+                                  ? `–${actividad.diaFin}`
+                                  : ""}
+                              </span>
+
+                            </div>
+
+
+                            {actividad.descripcion && (
+                              <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-gray-500">
+                                {
+                                  actividad.descripcion
+                                }
+                              </p>
+                            )}
+
+                          </div>
+
+                        </div>
+
+                      )
+                    )}
+
+                  </div>
+
+                )}
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <ProtocolosAdicionalesPreparacion
           seguimientoId={
             seguimiento.id
           }
           duracionDias={
             seguimiento.duracionDias
           }
-          estado={
-            seguimiento.estado
-          }
-          diaActual={1}
           actividades={
-            actividades.map(
-              (actividad) => ({
+            adicionales.map(
+              (
+                actividad
+              ) => ({
                 id:
                   actividad.id,
-
-                tipo:
-                  actividad.tipo,
-
-                recordatorio:
-                  actividad.recordatorio,
-
-                seccion:
-                  actividad.seccion,
 
                 titulo:
                   actividad.titulo,
 
                 descripcion:
                   actividad.descripcion,
-
-                momento:
-                  actividad.momento,
 
                 hora:
                   actividad.hora,
@@ -312,18 +358,14 @@ export default async function PrepararSeguimientoPage({
                 orden:
                   actividad.orden,
 
-                activo:
-                  actividad.activo,
-
-                cantidadProgresos:
-                  actividad._count
-                    .progresos,
+                recordatorio:
+                  actividad.recordatorio,
               })
             )
           }
         />
 
-      </div>
+      </PrepararSeguimientoCliente>
 
     </div>
   );
