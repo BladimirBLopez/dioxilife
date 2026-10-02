@@ -142,11 +142,17 @@ enum RecordatorioActividad {
   MIN_60_ANTES
 }
 
+enum SeccionActividadSeguimiento {
+  PRINCIPAL
+  ADICIONAL
+}
+
 model ActividadBase {
   id String @id @default(cuid())
 
-  tipo         TipoActividadSeguimiento @default(TAREA)
-  recordatorio RecordatorioActividad    @default(NINGUNO)
+  tipo         TipoActividadSeguimiento    @default(TAREA)
+  recordatorio RecordatorioActividad       @default(NINGUNO)
+  seccion      SeccionActividadSeguimiento @default(PRINCIPAL)
 
   titulo      String
   descripcion String?
@@ -168,8 +174,9 @@ model ActividadPlan {
   planId String
   plan   PlanSeguimiento @relation(fields: [planId], references: [id], onDelete: Cascade)
 
-  tipo         TipoActividadSeguimiento @default(TAREA)
-  recordatorio RecordatorioActividad    @default(NINGUNO)
+  tipo         TipoActividadSeguimiento    @default(TAREA)
+  recordatorio RecordatorioActividad       @default(NINGUNO)
+  seccion      SeccionActividadSeguimiento @default(PRINCIPAL)
   titulo       String
   descripcion  String?
   momento      String?
@@ -225,6 +232,7 @@ model SeguimientoCliente {
 
   actividades       ActividadSeguimiento[]
   progresos         ProgresoActividad[]
+  registrosDiarios  RegistroDiaSeguimiento[]
   suscripcionesPush SuscripcionPush[]
   enviosWhatsApp    SeguimientoEnvioWhatsApp[]
 
@@ -260,8 +268,9 @@ model ActividadSeguimiento {
   seguimientoId String
   seguimiento   SeguimientoCliente @relation(fields: [seguimientoId], references: [id], onDelete: Cascade)
 
-  tipo         TipoActividadSeguimiento @default(TAREA)
-  recordatorio RecordatorioActividad    @default(NINGUNO)
+  tipo         TipoActividadSeguimiento    @default(TAREA)
+  recordatorio RecordatorioActividad       @default(NINGUNO)
+  seccion      SeccionActividadSeguimiento @default(PRINCIPAL)
   titulo       String
   descripcion  String?
   momento      String?
@@ -302,6 +311,25 @@ model SuscripcionPush {
   @@unique([seguimientoId, endpoint])
   @@index([seguimientoId])
   @@index([activa])
+}
+
+model RegistroDiaSeguimiento {
+  id String @id @default(cuid())
+
+  seguimientoId String
+  seguimiento   SeguimientoCliente @relation(fields: [seguimientoId], references: [id], onDelete: Cascade)
+
+  diaPlan Int
+
+  peso        Decimal? @db.Decimal(6, 2)
+  observacion String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([seguimientoId, diaPlan])
+  @@index([seguimientoId])
+  @@index([diaPlan])
 }
 
 model ProgresoActividad {
