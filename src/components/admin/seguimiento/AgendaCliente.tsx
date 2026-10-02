@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Modal from "@/components/Modal";
+import SelectorHora from "@/components/admin/seguimiento/SelectorHora";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import {
   aplicaEnDia,
@@ -1024,17 +1025,14 @@ export default function AgendaCliente({
                   Hora
                 </label>
 
-                <input
-                  type="time"
+                <SelectorHora
                   value={form.hora}
-                  onChange={(e) =>
+                  onChange={(hora) =>
                     setForm({
                       ...form,
-                      hora:
-                        e.target.value,
+                      hora,
                     })
                   }
-                  className="admin-input"
                 />
               </div>
 

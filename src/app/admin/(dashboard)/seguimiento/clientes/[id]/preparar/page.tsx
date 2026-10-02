@@ -12,6 +12,7 @@ import { prisma } from "@/lib/prisma";
 import PrepararSeguimientoCliente from "@/components/admin/seguimiento/PrepararSeguimientoCliente";
 
 import ProtocolosAdicionalesPreparacion from "@/components/admin/seguimiento/ProtocolosAdicionalesPreparacion";
+import ProtocoloPrincipalPreparacion from "@/components/admin/seguimiento/ProtocoloPrincipalPreparacion";
 
 export default async function PrepararSeguimientoPage({
   params,
@@ -206,123 +207,24 @@ export default async function PrepararSeguimientoPage({
         }
       >
 
-        <section className="rounded-xl bg-white p-5 shadow">
-
-          <div className="flex items-start gap-3">
-
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 font-bold text-blue-700">
-              2
-            </div>
-
-
-            <div className="min-w-0 flex-1">
-
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-
-                <div>
-
-                  <h2 className="font-semibold text-gray-900">
-                    Protocolo principal
-                  </h2>
-
-                  <p className="mt-1 text-sm leading-6 text-gray-500">
-                    Se cargó automáticamente desde la plantilla seleccionada.
-                  </p>
-
-                </div>
-
-
-                <Link
-                  href={`/admin/seguimiento/clientes/${seguimiento.id}#agenda-individual`}
-                  className="shrink-0 rounded-xl border border-blue-200 bg-white px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50"
-                >
-                  Configuración avanzada
-                </Link>
-
-              </div>
-
-
-              <div className="mt-4 overflow-hidden rounded-xl border border-gray-200">
-
-                {principales.length ===
-                0 ? (
-
-                  <div className="p-5 text-sm text-gray-500">
-                    No hay actividades principales activas.
-                  </div>
-
-                ) : (
-
-                  <div className="divide-y divide-gray-100">
-
-                    {principales.map(
-                      (
-                        actividad
-                      ) => (
-
-                        <div
-                          key={
-                            actividad.id
-                          }
-                          className="flex gap-3 p-3"
-                        >
-
-                          <div className="w-14 shrink-0 text-sm font-bold text-blue-700">
-                            {actividad.hora ||
-                              "—"}
-                          </div>
-
-
-                          <div className="min-w-0 flex-1">
-
-                            <div className="flex flex-wrap items-center gap-2">
-
-                              <p className="font-medium text-gray-900">
-                                {
-                                  actividad.titulo
-                                }
-                              </p>
-
-                              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
-                                Día{" "}
-                                {
-                                  actividad.diaInicio
-                                }
-                                {actividad.diaFin !==
-                                null
-                                  ? `–${actividad.diaFin}`
-                                  : ""}
-                              </span>
-
-                            </div>
-
-
-                            {actividad.descripcion && (
-                              <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-gray-500">
-                                {
-                                  actividad.descripcion
-                                }
-                              </p>
-                            )}
-
-                          </div>
-
-                        </div>
-
-                      )
-                    )}
-
-                  </div>
-
-                )}
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </section>
+        <ProtocoloPrincipalPreparacion
+          seguimientoId={seguimiento.id}
+          duracionDias={seguimiento.duracionDias}
+          actividades={principales.map(
+            (actividad) => ({
+              id: actividad.id,
+              tipo: actividad.tipo,
+              recordatorio: actividad.recordatorio,
+              titulo: actividad.titulo,
+              descripcion: actividad.descripcion,
+              momento: actividad.momento,
+              hora: actividad.hora,
+              diaInicio: actividad.diaInicio,
+              diaFin: actividad.diaFin,
+              orden: actividad.orden,
+            })
+          )}
+        />
 
 
         <ProtocolosAdicionalesPreparacion

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Modal from "@/components/Modal";
+import SelectorHora from "@/components/admin/seguimiento/SelectorHora";
 
 type Recordatorio =
   | "NINGUNO"
@@ -643,20 +644,15 @@ export default function ProtocolosAdicionalesPreparacion({
                 Hora *
               </label>
 
-              <input
-                type="time"
-                value={
-                  form.hora
-                }
-                onChange={(e) =>
+              <SelectorHora
+                value={form.hora}
+                onChange={(hora) =>
                   setForm({
                     ...form,
-                    hora:
-                      e.target
-                        .value,
+                    hora,
                   })
                 }
-                className="admin-input"
+                permitirVacio={false}
               />
 
             </div>
