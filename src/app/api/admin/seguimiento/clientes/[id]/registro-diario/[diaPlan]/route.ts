@@ -184,13 +184,225 @@ export async function GET(
       },
     });
 
+  const actividades =
+    await prisma.actividadSeguimiento.findMany({
+      where: {
+        seguimientoId: id,
+      },
+
+      select: {
+        id: true,
+        tipo: true,
+        seccion: true,
+        titulo: true,
+        descripcion: true,
+        momento: true,
+        hora: true,
+        diaInicio: true,
+        diaFin: true,
+        orden: true,
+        activo: true,
+        createdAt: true,
+
+        progresos: {
+          where: {
+            diaPlan,
+          },
+
+          select: {
+            completado: true,
+            completadoAt: true,
+          },
+
+          take: 1,
+        },
+      },
+    });
+
+  const actividadesDia =
+    actividades
+      .filter(
+        (actividad) => {
+          const ultimoDia =
+            actividad.diaFin ??
+            actividad.diaInicio;
+
+          const tieneProgreso =
+            actividad.progresos.length >
+            0;
+
+          return (
+            diaPlan >=
+              actividad.diaInicio &&
+            diaPlan <=
+              ultimoDia &&
+            (
+              actividad.activo ||
+              tieneProgreso
+            )
+          );
+        }
+      )
+      .sort(
+        (a, b) => {
+          const seccionA =
+            a.seccion ===
+            "PRINCIPAL"
+              ? 0
+              : 1;
+
+          const seccionB =
+            b.seccion ===
+            "PRINCIPAL"
+              ? 0
+              : 1;
+
+          if (
+            seccionA !==
+            seccionB
+          ) {
+            return (
+              seccionA -
+              seccionB
+            );
+          }
+
+          if (
+            a.hora &&
+            b.hora
+          ) {
+            const comparacionHora =
+              a.hora.localeCompare(
+                b.hora
+              );
+
+            if (
+              comparacionHora !==
+              0
+            ) {
+              return comparacionHora;
+            }
+          } else if (
+            a.hora &&
+            !b.hora
+          ) {
+            return -1;
+          } else if (
+            !a.hora &&
+            b.hora
+          ) {
+            return 1;
+          }
+
+          if (
+            a.orden !==
+            b.orden
+          ) {
+            return (
+              a.orden -
+              b.orden
+            );
+          }
+
+          return (
+            a.createdAt.getTime() -
+            b.createdAt.getTime()
+          );
+        }
+      )
+      .map(
+        (actividad) => {
+          const progreso =
+            actividad.progresos[0] ??
+            null;
+
+          return {
+            id:
+              actividad.id,
+
+            tipo:
+              actividad.tipo,
+
+            seccion:
+              actividad.seccion,
+
+            titulo:
+              actividad.titulo,
+
+            descripcion:
+              actividad.descripcion,
+
+            momento:
+              actividad.momento,
+
+            hora:
+              actividad.hora,
+
+            diaInicio:
+              actividad.diaInicio,
+
+            diaFin:
+              actividad.diaFin,
+
+            orden:
+              actividad.orden,
+
+            activo:
+              actividad.activo,
+
+            completado:
+              actividad.tipo ===
+              "TAREA"
+                ? progreso
+                    ?.completado ??
+                  false
+                : null,
+
+            completadoAt:
+              progreso
+                ?.completadoAt ??
+              null,
+          };
+        }
+      );
+
+  const tareasDia =
+    actividadesDia.filter(
+      (actividad) =>
+        actividad.tipo ===
+        "TAREA"
+    );
+
+  const realizadas =
+    tareasDia.filter(
+      (actividad) =>
+        actividad.completado ===
+        true
+    ).length;
+
+  const total =
+    tareasDia.length;
+
+  const porcentaje =
+    total > 0
+      ? Math.round(
+          (
+            realizadas /
+            total
+          ) * 100
+        )
+      : 0;
+
   return NextResponse.json({
     seguimiento,
+
     registro: registro
       ? {
           ...registro,
+
           peso:
-            registro.peso !== null
+            registro.peso !==
+            null
               ? Number(
                   registro.peso
                 )
@@ -204,6 +416,18 @@ export async function GET(
           createdAt: null,
           updatedAt: null,
         },
+
+    actividades:
+      actividadesDia,
+
+    resumen: {
+      realizadas,
+      pendientes:
+        total -
+        realizadas,
+      total,
+      porcentaje,
+    },
   });
 }
 
