@@ -99,6 +99,7 @@ export async function GET(
             id: true,
             tipo: true,
             recordatorio: true,
+            seccion: true,
             titulo: true,
             descripcion: true,
             momento: true,

@@ -1,6 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { obtenerAdminActual } from "@/lib/admin-auth";
+import { obtenerDiaSeguimiento } from "@/lib/seguimiento-publico";
+
+function diaDelCambio({
+  fechaInicio,
+  duracionDias,
+  diaInicio,
+}: {
+  fechaInicio: Date | null;
+  duracionDias: number;
+  diaInicio: number;
+}) {
+  if (!fechaInicio) {
+    return diaInicio;
+  }
+
+  return Math.min(
+    Math.max(
+      obtenerDiaSeguimiento(
+        fechaInicio
+      ),
+      1
+    ),
+    duracionDias
+  );
+}
 
 export async function PUT(
   req: NextRequest,
@@ -13,12 +38,17 @@ export async function PUT(
     }>;
   }
 ) {
-  const admin = await obtenerAdminActual();
+  const admin =
+    await obtenerAdminActual();
 
   if (!admin) {
     return NextResponse.json(
-      { error: "No autorizado" },
-      { status: 401 }
+      {
+        error: "No autorizado",
+      },
+      {
+        status: 401,
+      }
     );
   }
 
@@ -36,26 +66,36 @@ export async function PUT(
       select: {
         duracionDias: true,
         estado: true,
+        fechaInicio: true,
       },
     });
 
   if (!seguimiento) {
     return NextResponse.json(
-      { error: "Seguimiento no encontrado" },
-      { status: 404 }
+      {
+        error:
+          "Seguimiento no encontrado",
+      },
+      {
+        status: 404,
+      }
     );
   }
 
   if (
-    seguimiento.estado === "COMPLETADO" ||
-    seguimiento.estado === "CANCELADO"
+    seguimiento.estado ===
+      "COMPLETADO" ||
+    seguimiento.estado ===
+      "CANCELADO"
   ) {
     return NextResponse.json(
       {
         error:
           "No se puede modificar la agenda de un seguimiento finalizado.",
       },
-      { status: 409 }
+      {
+        status: 409,
+      }
     );
   }
 
@@ -68,91 +108,313 @@ export async function PUT(
 
       select: {
         id: true,
+        tipo: true,
+        recordatorio: true,
         seccion: true,
+        titulo: true,
+        descripcion: true,
+        momento: true,
+        hora: true,
+        diaInicio: true,
+        diaFin: true,
+        orden: true,
+        activo: true,
       },
     });
 
   if (!actividad) {
     return NextResponse.json(
-      { error: "Actividad no encontrada" },
-      { status: 404 }
+      {
+        error:
+          "Actividad no encontrada",
+      },
+      {
+        status: 404,
+      }
     );
   }
 
-  const {
-    tipo,
-    recordatorio,
-    seccion,
-    titulo,
-    descripcion,
-    momento,
-    hora,
-    diaInicio,
-    diaFin,
-    orden,
-    activo,
-  } = await req.json();
+  const body: unknown =
+    await req.json();
+
+  if (
+    typeof body !== "object" ||
+    body === null ||
+    Array.isArray(body)
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Los datos enviados no son válidos.",
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+
+  const datos =
+    body as Record<
+      string,
+      unknown
+    >;
+
+  /*
+   * QUITAR PROTOCOLO ADICIONAL
+   *
+   * No se borra.
+   * Su vigencia termina el día anterior
+   * al día actual.
+   */
+  if (
+    datos.quitar === true
+  ) {
+    if (
+      actividad.seccion !==
+      "ADICIONAL"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Esta acción solo corresponde a protocolos adicionales.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const diaCambio =
+      diaDelCambio({
+        fechaInicio:
+          seguimiento.fechaInicio,
+        duracionDias:
+          seguimiento.duracionDias,
+        diaInicio:
+          actividad.diaInicio,
+      });
+
+    const ultimoDia =
+      actividad.diaFin ??
+      seguimiento.duracionDias;
+
+    if (
+      diaCambio >
+      ultimoDia
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Este protocolo ya había finalizado.",
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
+    /*
+     * Si todavía no comenzó, simplemente
+     * queda inactivo porque no existe
+     * historial anterior que preservar.
+     */
+    if (
+      !seguimiento.fechaInicio ||
+      diaCambio <=
+        actividad.diaInicio
+    ) {
+      const resultado =
+        await prisma.actividadSeguimiento.update({
+          where: {
+            id: actividad.id,
+          },
+
+          data: {
+            activo: false,
+          },
+        });
+
+      return NextResponse.json(
+        resultado
+      );
+    }
+
+    const resultado =
+      await prisma.actividadSeguimiento.update({
+        where: {
+          id: actividad.id,
+        },
+
+        data: {
+          diaFin:
+            diaCambio - 1,
+
+          /*
+           * Se mantiene activo para que
+           * siga existiendo al consultar
+           * sus días históricos.
+           */
+          activo: true,
+        },
+      });
+
+    return NextResponse.json(
+      resultado
+    );
+  }
+
+  const tipoSolicitado =
+    datos.tipo;
 
   const tipoActividad =
-    tipo === "INFORMACION" ||
-    tipo === "CONTROL"
-      ? tipo
+    tipoSolicitado ===
+      "INFORMACION" ||
+    tipoSolicitado ===
+      "CONTROL"
+      ? tipoSolicitado
       : "TAREA";
 
+  const recordatorioSolicitado =
+    datos.recordatorio;
+
   const recordatorioActividad =
-    recordatorio === "A_LA_HORA" ||
-    recordatorio === "MIN_15_ANTES" ||
-    recordatorio === "MIN_30_ANTES" ||
-    recordatorio === "MIN_60_ANTES"
-      ? recordatorio
+    recordatorioSolicitado ===
+      "A_LA_HORA" ||
+    recordatorioSolicitado ===
+      "MIN_15_ANTES" ||
+    recordatorioSolicitado ===
+      "MIN_30_ANTES" ||
+    recordatorioSolicitado ===
+      "MIN_60_ANTES"
+      ? recordatorioSolicitado
       : "NINGUNO";
 
+  const seccionSolicitada =
+    datos.seccion;
+
   const seccionActividad =
-    seccion === "PRINCIPAL" ||
-    seccion === "ADICIONAL"
-      ? seccion
+    seccionSolicitada ===
+      "PRINCIPAL" ||
+    seccionSolicitada ===
+      "ADICIONAL"
+      ? seccionSolicitada
       : actividad.seccion;
 
   const tituloLimpio =
-    String(titulo || "").trim();
+    String(
+      datos.titulo || ""
+    ).trim();
+
+  const descripcion =
+    datos.descripcion
+      ? String(
+          datos.descripcion
+        )
+          .trim()
+          .slice(
+            0,
+            5000
+          )
+      : null;
+
+  const momento =
+    datos.momento
+      ? String(
+          datos.momento
+        )
+          .trim()
+          .slice(
+            0,
+            60
+          )
+      : null;
+
+  const hora =
+    datos.hora
+      ? String(
+          datos.hora
+        )
+          .trim()
+          .slice(
+            0,
+            20
+          )
+      : null;
 
   const inicio =
-    Number(diaInicio);
+    Number(
+      datos.diaInicio
+    );
 
   const fin =
-    diaFin === null ||
-    diaFin === undefined ||
-    diaFin === ""
+    datos.diaFin === null ||
+    datos.diaFin === undefined ||
+    datos.diaFin === ""
       ? null
-      : Number(diaFin);
+      : Number(
+          datos.diaFin
+        );
+
+  const orden =
+    Number.isFinite(
+      Number(
+        datos.orden
+      )
+    )
+      ? Math.trunc(
+          Number(
+            datos.orden
+          )
+        )
+      : 0;
+
+  const activo =
+    typeof datos.activo ===
+      "boolean"
+      ? datos.activo
+      : actividad.activo;
 
   if (!tituloLimpio) {
     return NextResponse.json(
-      { error: "El título es obligatorio" },
-      { status: 400 }
+      {
+        error:
+          "El título es obligatorio",
+      },
+      {
+        status: 400,
+      }
     );
   }
 
   if (
-    !Number.isInteger(inicio) ||
+    !Number.isInteger(
+      inicio
+    ) ||
     inicio < 1 ||
-    inicio > seguimiento.duracionDias
+    inicio >
+      seguimiento.duracionDias
   ) {
     return NextResponse.json(
       {
         error:
           `El día inicial debe estar entre 1 y ${seguimiento.duracionDias}`,
       },
-      { status: 400 }
+      {
+        status: 400,
+      }
     );
   }
 
   if (
     fin !== null &&
     (
-      !Number.isInteger(fin) ||
-      fin < inicio ||
-      fin > seguimiento.duracionDias
+      !Number.isInteger(
+        fin
+      ) ||
+      fin <
+        inicio ||
+      fin >
+        seguimiento.duracionDias
     )
   ) {
     return NextResponse.json(
@@ -160,14 +422,207 @@ export async function PUT(
         error:
           "El día final debe ser igual o mayor al día inicial y no superar la duración del seguimiento",
       },
-      { status: 400 }
+      {
+        status: 400,
+      }
     );
   }
 
+  /*
+   * PROTOCOLO ADICIONAL
+   *
+   * Si ya tuvo días anteriores y se
+   * modifica, no sobrescribimos la
+   * versión histórica.
+   */
+  if (
+    actividad.seccion ===
+      "ADICIONAL" &&
+    seguimiento.fechaInicio
+  ) {
+    const diaCambio =
+      diaDelCambio({
+        fechaInicio:
+          seguimiento.fechaInicio,
+        duracionDias:
+          seguimiento.duracionDias,
+        diaInicio:
+          actividad.diaInicio,
+      });
+
+    const ultimoDia =
+      actividad.diaFin ??
+      seguimiento.duracionDias;
+
+    /*
+     * Una versión histórica que ya
+     * terminó no debe editarse.
+     */
+    if (
+      diaCambio >
+      ultimoDia
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Esta versión del protocolo ya terminó. Modifica la versión vigente.",
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
+    /*
+     * Si el protocolo ya existía antes
+     * de hoy, primero comprobamos que
+     * realmente haya algún cambio.
+     */
+    if (
+      diaCambio >
+      actividad.diaInicio
+    ) {
+      if (
+        seccionActividad !==
+        "ADICIONAL"
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Un protocolo adicional que ya tiene historial no puede convertirse en actividad principal.",
+          },
+          {
+            status: 400,
+          }
+        );
+      }
+
+      if (
+        fin !== null &&
+        fin < diaCambio
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              `El día final no puede ser anterior al día ${diaCambio}. Si deseas quitar el protocolo, usa "Quitar desde hoy".`,
+          },
+          {
+            status: 400,
+          }
+        );
+      }
+
+      const hayCambios =
+        tipoActividad !==
+          actividad.tipo ||
+        recordatorioActividad !==
+          actividad.recordatorio ||
+        tituloLimpio !==
+          actividad.titulo ||
+        descripcion !==
+          actividad.descripcion ||
+        momento !==
+          actividad.momento ||
+        hora !==
+          actividad.hora ||
+        fin !==
+          actividad.diaFin ||
+        orden !==
+          actividad.orden;
+
+      /*
+       * Si el administrador abrió el
+       * formulario y guardó sin cambiar
+       * nada, no creamos otra versión.
+       */
+      if (!hayCambios) {
+        return NextResponse.json(
+          actividad
+        );
+      }
+
+      const [
+        ,
+        nuevaActividad,
+      ] =
+        await prisma.$transaction([
+          prisma.actividadSeguimiento.update({
+            where: {
+              id:
+                actividad.id,
+            },
+
+            data: {
+              diaFin:
+                diaCambio -
+                1,
+
+              activo:
+                true,
+            },
+          }),
+
+          prisma.actividadSeguimiento.create({
+            data: {
+              seguimientoId:
+                id,
+
+              tipo:
+                tipoActividad,
+
+              recordatorio:
+                recordatorioActividad,
+
+              /*
+               * Sigue siendo protocolo
+               * adicional.
+               */
+              seccion:
+                "ADICIONAL",
+
+              titulo:
+                tituloLimpio,
+
+              descripcion,
+
+              momento,
+
+              hora,
+
+              diaInicio:
+                diaCambio,
+
+              /*
+               * El nuevo período puede
+               * conservar o modificar
+               * su día final.
+               */
+              diaFin:
+                fin,
+
+              orden,
+
+              activo:
+                true,
+            },
+          }),
+        ]);
+
+      return NextResponse.json(
+        nuevaActividad
+      );
+    }
+  }
+
+  /*
+   * Actividades principales o protocolos
+   * que todavía no tienen historial.
+   */
   const resultado =
     await prisma.actividadSeguimiento.update({
       where: {
-        id: actividadId,
+        id:
+          actividadId,
       },
 
       data: {
@@ -183,26 +638,11 @@ export async function PUT(
         titulo:
           tituloLimpio,
 
-        descripcion:
-          descripcion
-            ? String(descripcion)
-                .trim()
-                .slice(0, 5000)
-            : null,
+        descripcion,
 
-        momento:
-          momento
-            ? String(momento)
-                .trim()
-                .slice(0, 60)
-            : null,
+        momento,
 
-        hora:
-          hora
-            ? String(hora)
-                .trim()
-                .slice(0, 20)
-            : null,
+        hora,
 
         diaInicio:
           inicio,
@@ -210,17 +650,15 @@ export async function PUT(
         diaFin:
           fin,
 
-        orden:
-          Number.isFinite(Number(orden))
-            ? Math.trunc(Number(orden))
-            : 0,
+        orden,
 
-        activo:
-          Boolean(activo),
+        activo,
       },
     });
 
-  return NextResponse.json(resultado);
+  return NextResponse.json(
+    resultado
+  );
 }
 
 export async function DELETE(
@@ -234,12 +672,18 @@ export async function DELETE(
     }>;
   }
 ) {
-  const admin = await obtenerAdminActual();
+  const admin =
+    await obtenerAdminActual();
 
   if (!admin) {
     return NextResponse.json(
-      { error: "No autorizado" },
-      { status: 401 }
+      {
+        error:
+          "No autorizado",
+      },
+      {
+        status: 401,
+      }
     );
   }
 
@@ -261,37 +705,51 @@ export async function DELETE(
 
   if (!seguimiento) {
     return NextResponse.json(
-      { error: "Seguimiento no encontrado" },
-      { status: 404 }
+      {
+        error:
+          "Seguimiento no encontrado",
+      },
+      {
+        status: 404,
+      }
     );
   }
 
   if (
-    seguimiento.estado === "COMPLETADO" ||
-    seguimiento.estado === "CANCELADO"
+    seguimiento.estado ===
+      "COMPLETADO" ||
+    seguimiento.estado ===
+      "CANCELADO"
   ) {
     return NextResponse.json(
       {
         error:
           "No se puede modificar la agenda de un seguimiento finalizado.",
       },
-      { status: 409 }
+      {
+        status: 409,
+      }
     );
   }
 
   const actividad =
     await prisma.actividadSeguimiento.findFirst({
       where: {
-        id: actividadId,
-        seguimientoId: id,
+        id:
+          actividadId,
+
+        seguimientoId:
+          id,
       },
 
       select: {
         id: true,
+        seccion: true,
 
         _count: {
           select: {
-            progresos: true,
+            progresos:
+              true,
           },
         },
       },
@@ -299,26 +757,55 @@ export async function DELETE(
 
   if (!actividad) {
     return NextResponse.json(
-      { error: "Actividad no encontrada" },
-      { status: 404 }
+      {
+        error:
+          "Actividad no encontrada",
+      },
+      {
+        status: 404,
+      }
+    );
+  }
+
+  /*
+   * Los protocolos adicionales nunca
+   * se eliminan directamente porque
+   * debemos conservar su historial.
+   */
+  if (
+    actividad.seccion ===
+    "ADICIONAL"
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Los protocolos adicionales deben quitarse desde la agenda para conservar los días anteriores.",
+      },
+      {
+        status: 409,
+      }
     );
   }
 
   if (
-    actividad._count.progresos > 0
+    actividad._count
+      .progresos > 0
   ) {
     return NextResponse.json(
       {
         error:
           "Esta actividad ya tiene progreso registrado. Puedes desactivarla, pero no eliminarla.",
       },
-      { status: 409 }
+      {
+        status: 409,
+      }
     );
   }
 
   await prisma.actividadSeguimiento.delete({
     where: {
-      id: actividadId,
+      id:
+        actividadId,
     },
   });
 
