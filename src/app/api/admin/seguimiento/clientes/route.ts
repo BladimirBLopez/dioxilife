@@ -299,6 +299,7 @@ export async function POST(req: NextRequest) {
           select: {
             tipo: true,
             recordatorio: true,
+            seccion: true,
             titulo: true,
             descripcion: true,
             momento: true,
@@ -399,6 +400,9 @@ export async function POST(req: NextRequest) {
 
                 recordatorio:
                   actividad.recordatorio,
+
+                seccion:
+                  actividad.seccion,
 
                 titulo:
                   actividad.titulo,

@@ -68,6 +68,7 @@ export async function PUT(
 
       select: {
         id: true,
+        seccion: true,
       },
     });
 
@@ -81,6 +82,7 @@ export async function PUT(
   const {
     tipo,
     recordatorio,
+    seccion,
     titulo,
     descripcion,
     momento,
@@ -104,6 +106,12 @@ export async function PUT(
     recordatorio === "MIN_60_ANTES"
       ? recordatorio
       : "NINGUNO";
+
+  const seccionActividad =
+    seccion === "PRINCIPAL" ||
+    seccion === "ADICIONAL"
+      ? seccion
+      : actividad.seccion;
 
   const tituloLimpio =
     String(titulo || "").trim();
@@ -168,6 +176,9 @@ export async function PUT(
 
         recordatorio:
           recordatorioActividad,
+
+        seccion:
+          seccionActividad,
 
         titulo:
           tituloLimpio,

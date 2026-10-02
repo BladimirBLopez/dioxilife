@@ -25,6 +25,7 @@ type RecordatorioActividad =
 type ActividadPreparada = {
   tipo: TipoActividad;
   recordatorio: RecordatorioActividad;
+  seccion: "PRINCIPAL" | "ADICIONAL";
   titulo: string;
   descripcion: string | null;
   momento: string | null;
@@ -151,6 +152,11 @@ function normalizarActividad(
       ? (recordatorioSolicitado as RecordatorioActividad)
       : "NINGUNO";
 
+  const seccion =
+    valor.seccion === "ADICIONAL"
+      ? "ADICIONAL" as const
+      : "PRINCIPAL" as const;
+
   if (
     recordatorio !== "NINGUNO" &&
     !hora
@@ -217,6 +223,7 @@ function normalizarActividad(
     actividad: {
       tipo,
       recordatorio,
+      seccion,
       titulo,
       descripcion,
       momento,
@@ -464,6 +471,9 @@ export async function POST(
 
                       recordatorio:
                         actividad.recordatorio,
+
+                      seccion:
+                        actividad.seccion,
 
                       titulo:
                         actividad.titulo,

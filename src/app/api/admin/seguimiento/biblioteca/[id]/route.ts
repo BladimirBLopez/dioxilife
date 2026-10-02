@@ -96,6 +96,12 @@ export async function PUT(
       ? body.recordatorio
       : existente.recordatorio;
 
+  const seccion =
+    body.seccion === "PRINCIPAL" ||
+    body.seccion === "ADICIONAL"
+      ? body.seccion
+      : existente.seccion;
+
   const tipo: TipoActividad =
     TIPOS.includes(
       tipoSolicitado as TipoActividad
@@ -154,6 +160,7 @@ export async function PUT(
         descripcion,
         tipo,
         recordatorio,
+        seccion,
         momento,
         hora,
 

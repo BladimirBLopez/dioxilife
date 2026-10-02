@@ -139,6 +139,7 @@ export async function POST(
         id: true,
         tipo: true,
         recordatorio: true,
+        seccion: true,
         titulo: true,
         descripcion: true,
         momento: true,
@@ -215,6 +216,9 @@ export async function POST(
 
             recordatorio:
               actividad.recordatorio,
+
+            seccion:
+              actividad.seccion,
 
             titulo:
               actividad.titulo,

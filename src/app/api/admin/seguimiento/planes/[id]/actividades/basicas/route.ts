@@ -363,6 +363,9 @@ export async function PUT(
         }
 
         const data = {
+          seccion:
+            "PRINCIPAL" as const,
+
           tipo:
             actividad.nombre ===
             "Importante"

@@ -96,6 +96,11 @@ export async function POST(req: NextRequest) {
       ? body.recordatorio
       : "NINGUNO";
 
+  const seccion =
+    body.seccion === "ADICIONAL"
+      ? "ADICIONAL"
+      : "PRINCIPAL";
+
   const tipo: TipoActividad =
     TIPOS.includes(
       tipoSolicitado as TipoActividad
@@ -150,6 +155,7 @@ export async function POST(req: NextRequest) {
         descripcion,
         tipo,
         recordatorio,
+        seccion,
         momento,
         hora,
         activo: true,

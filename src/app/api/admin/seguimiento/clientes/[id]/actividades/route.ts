@@ -48,6 +48,9 @@ export async function GET(
 
           select: {
             id: true,
+            tipo: true,
+            recordatorio: true,
+            seccion: true,
             titulo: true,
             descripcion: true,
             momento: true,
@@ -128,6 +131,7 @@ export async function POST(
   const {
     tipo,
     recordatorio,
+    seccion,
     titulo,
     descripcion,
     momento,
@@ -150,6 +154,11 @@ export async function POST(
     recordatorio === "MIN_60_ANTES"
       ? recordatorio
       : "NINGUNO";
+
+  const seccionActividad =
+    seccion === "ADICIONAL"
+      ? "ADICIONAL"
+      : "PRINCIPAL";
 
   const tituloLimpio =
     String(titulo || "").trim();
@@ -213,6 +222,8 @@ export async function POST(
         tipo: tipoActividad,
 
         recordatorio: recordatorioActividad,
+
+        seccion: seccionActividad,
 
         titulo: tituloLimpio,
 
