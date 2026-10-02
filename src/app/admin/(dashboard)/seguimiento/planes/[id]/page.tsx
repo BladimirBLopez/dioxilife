@@ -9,6 +9,7 @@ import {
   useParams,
 } from "next/navigation";
 import { toast } from "sonner";
+import SelectorHora from "@/components/admin/seguimiento/SelectorHora";
 
 type TipoActividad =
   | "TAREA"
@@ -42,6 +43,14 @@ type Actividad = {
     | null;
   orden: number;
   activo: boolean;
+
+  indicaciones: Array<{
+    id: string;
+    hora: string;
+    texto: string;
+    orden: number;
+    activo: boolean;
+  }>;
 };
 
 type Plan = {
@@ -69,6 +78,11 @@ type NombreActividad =
   | "Cena"
   | "Importante";
 
+type IndicacionBasica = {
+  hora: string;
+  texto: string;
+};
+
 type ActividadBasica = {
   id:
     | string
@@ -76,31 +90,78 @@ type ActividadBasica = {
   nombre:
     NombreActividad;
   hora: string;
-  instrucciones: string[];
+  instrucciones: IndicacionBasica[];
 };
 
-function textoAInstrucciones(
-  texto:
-    | string
-    | null
+function actividadAInstrucciones(
+  actividad:
+    | Actividad
     | undefined
-) {
-  if (!texto?.trim()) {
-    return [""];
+): IndicacionBasica[] {
+  const estructuradas =
+    actividad?.indicaciones
+      ?.filter(
+        (indicacion) =>
+          indicacion.activo
+      )
+      .sort(
+        (a, b) =>
+          a.hora.localeCompare(
+            b.hora
+          ) ||
+          a.orden -
+            b.orden
+      ) ?? [];
+
+  if (
+    estructuradas.length >
+    0
+  ) {
+    return estructuradas.map(
+      (indicacion) => ({
+        hora:
+          indicacion.hora,
+
+        texto:
+          indicacion.texto,
+      })
+    );
   }
 
-  const instrucciones =
-    texto
-      .split(/\r?\n/)
+  /*
+   * Compatibilidad con plantillas
+   * antiguas: recuperamos las líneas
+   * de descripcion, pero NO inventamos
+   * sus horarios.
+   */
+  const legacy =
+    actividad?.descripcion
+      ?.split(/\r?\n/)
       .map(
         (linea) =>
           linea.trim()
       )
-      .filter(Boolean);
+      .filter(Boolean) ??
+    [];
 
-  return instrucciones.length
-    ? instrucciones
-    : [""];
+  if (
+    legacy.length >
+    0
+  ) {
+    return legacy.map(
+      (texto) => ({
+        hora: "",
+        texto,
+      })
+    );
+  }
+
+  return [
+    {
+      hora: "",
+      texto: "",
+    },
+  ];
 }
 
 function limpiarInstruccion(
@@ -112,16 +173,23 @@ function limpiarInstruccion(
 }
 
 function instruccionesATexto(
-  instrucciones: string[]
+  instrucciones:
+    IndicacionBasica[]
 ) {
   return instrucciones
-    .map(limpiarInstruccion)
+    .map(
+      (indicacion) =>
+        limpiarInstruccion(
+          indicacion.texto
+        )
+    )
     .filter(Boolean)
     .join("\n");
 }
 
 function totalCaracteres(
-  instrucciones: string[]
+  instrucciones:
+    IndicacionBasica[]
 ) {
   return instruccionesATexto(
     instrucciones
@@ -222,9 +290,8 @@ function construirActividadesBasicas(
               seccion.horaInicial,
 
         instrucciones:
-          textoAInstrucciones(
+          actividadAInstrucciones(
             encontrada
-              ?.descripcion
           ),
       };
     }
@@ -353,7 +420,8 @@ export default function PlanActividadesPage() {
   function actualizarInstruccion(
     nombre: NombreActividad,
     indice: number,
-    valor: string
+    cambios:
+      Partial<IndicacionBasica>
   ) {
     setActividades(
       (actuales) =>
@@ -370,11 +438,25 @@ export default function PlanActividadesPage() {
               ...actividad.instrucciones,
             ];
 
-            instrucciones[indice] =
-              valor.replace(
-                /\r?\n/g,
-                " "
-              );
+            instrucciones[indice] = {
+              ...instrucciones[
+                indice
+              ],
+              ...cambios,
+            };
+
+            if (
+              cambios.texto !==
+              undefined
+            ) {
+              instrucciones[
+                indice
+              ].texto =
+                cambios.texto.replace(
+                  /\r?\n/g,
+                  " "
+                );
+            }
 
             return {
               ...actividad,
@@ -398,7 +480,10 @@ export default function PlanActividadesPage() {
                   ...actividad,
                   instrucciones: [
                     ...actividad.instrucciones,
-                    "",
+                    {
+                      hora: "",
+                      texto: "",
+                    },
                   ],
                 }
               : actividad
@@ -511,6 +596,31 @@ export default function PlanActividadesPage() {
       return;
     }
 
+    for (
+      const actividad of
+      actividades
+    ) {
+      const indiceSinHora =
+        actividad.instrucciones.findIndex(
+          (indicacion) =>
+            Boolean(
+              indicacion.texto.trim()
+            ) &&
+            !indicacion.hora
+        );
+
+      if (
+        indiceSinHora !==
+        -1
+      ) {
+        toast.error(
+          `Define el horario de la indicación ${indiceSinHora + 1} de ${actividad.nombre}.`
+        );
+
+        return;
+      }
+    }
+
     const actividadDemasiadoLarga =
       actividades.find(
         (actividad) =>
@@ -568,10 +678,31 @@ export default function PlanActividadesPage() {
                           ? null
                           : actividad.hora,
 
-                      instrucciones:
-                        instruccionesATexto(
-                          actividad.instrucciones
-                        ),
+                      indicaciones:
+                        actividad.instrucciones
+                          .map(
+                            (
+                              indicacion,
+                              indice
+                            ) => ({
+                              hora:
+                                indicacion.hora,
+
+                              texto:
+                                limpiarInstruccion(
+                                  indicacion.texto
+                                ),
+
+                              orden:
+                                indice,
+                            })
+                          )
+                          .filter(
+                            (indicacion) =>
+                              Boolean(
+                                indicacion.texto
+                              )
+                          ),
                     })
                   ),
               }),
@@ -819,23 +950,19 @@ export default function PlanActividadesPage() {
                             Hora
                           </label>
 
-                          <input
-                            type="time"
+                          <SelectorHora
                             value={
                               actividad.hora
                             }
-                            onChange={(e) =>
+                            onChange={(hora) =>
                               actualizarActividad(
                                 actividad.nombre,
                                 {
-                                  hora:
-                                    e.target
-                                      .value,
+                                  hora,
                                 }
                               )
                             }
-                            className="admin-input"
-                            required
+                            permitirVacio={false}
                           />
 
                         </div>
@@ -853,6 +980,7 @@ export default function PlanActividadesPage() {
                     </label>
 
                     <div className="space-y-3">
+
                       {actividad.instrucciones.map(
                         (
                           instruccion,
@@ -860,48 +988,116 @@ export default function PlanActividadesPage() {
                         ) => (
                           <div
                             key={indice}
-                            className="flex items-start gap-2"
+                            className="rounded-xl border border-gray-200 bg-[#FAFAFC] p-3"
                           >
-                            <span className="mt-3 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#F8F6FF] text-xs font-bold text-brand-pink">
-                              {indice + 1}
-                            </span>
 
-                            <textarea
-                              value={
-                                instruccion
-                              }
-                              onChange={(e) =>
-                                actualizarInstruccion(
-                                  actividad.nombre,
-                                  indice,
-                                  e.target.value
-                                )
-                              }
-                              className="admin-input min-h-20 flex-1"
-                              rows={2}
-                              maxLength={5000}
-                              placeholder={`Instrucción ${indice + 1}...`}
-                            />
+                            <div className="flex items-start gap-3">
 
-                            {actividad.instrucciones.length >
-                              1 && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  eliminarInstruccion(
-                                    actividad.nombre,
-                                    indice
-                                  )
-                                }
-                                className="mt-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-lg font-bold text-red-500 transition hover:bg-red-100"
-                                aria-label={`Eliminar instrucción ${indice + 1}`}
-                              >
-                                ×
-                              </button>
-                            )}
+                              <span className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#F8F6FF] text-xs font-bold text-brand-pink">
+                                {indice + 1}
+                              </span>
+
+
+                              <div className="min-w-0 flex-1 space-y-3">
+
+                                <div>
+
+                                  <label className="mb-1 block text-xs font-semibold text-[#6B6870]">
+                                    Horario de la indicación
+                                  </label>
+
+                                  <SelectorHora
+                                    value={
+                                      instruccion.hora
+                                    }
+                                    onChange={(hora) =>
+                                      actualizarInstruccion(
+                                        actividad.nombre,
+                                        indice,
+                                        {
+                                          hora,
+                                        }
+                                      )
+                                    }
+                                    permitirVacio={false}
+                                  />
+
+                                </div>
+
+
+                                <div>
+
+                                  <label className="mb-1 block text-xs font-semibold text-[#6B6870]">
+                                    Indicación
+                                  </label>
+
+                                  <textarea
+                                    value={
+                                      instruccion.texto
+                                    }
+                                    onChange={(e) =>
+                                      actualizarInstruccion(
+                                        actividad.nombre,
+                                        indice,
+                                        {
+                                          texto:
+                                            e.target.value,
+                                        }
+                                      )
+                                    }
+                                    className="admin-input min-h-20"
+                                    rows={2}
+                                    maxLength={5000}
+                                    placeholder={`Indicación ${indice + 1}...`}
+                                  />
+
+                                </div>
+
+                              </div>
+
+
+                              {actividad.instrucciones.length >
+                                1 && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    eliminarInstruccion(
+                                      actividad.nombre,
+                                      indice
+                                    )
+                                  }
+                                  className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-lg font-bold text-red-500 transition hover:bg-red-100"
+                                  aria-label={`Eliminar indicación ${indice + 1}`}
+                                >
+                                  ×
+                                </button>
+                              )}
+
+                            </div>
+
                           </div>
                         )
                       )}
+
+
+                      {actividad.instrucciones.some(
+                        (indicacion) =>
+                          Boolean(
+                            indicacion.texto.trim()
+                          ) &&
+                          !indicacion.hora
+                      ) && (
+
+                        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+
+                          <p className="text-xs leading-5 text-amber-800">
+                            Esta plantilla contiene indicaciones antiguas. Asigna un horario a cada una antes de guardar. DioxiLife no asignará horarios automáticamente.
+                          </p>
+
+                        </div>
+
+                      )}
+
 
                       <button
                         type="button"
@@ -915,14 +1111,16 @@ export default function PlanActividadesPage() {
                         <span className="text-lg leading-none">
                           +
                         </span>
-                        Agregar instrucción
+                        Agregar indicación
                       </button>
+
                     </div>
+
 
                     <div className="mt-2 flex items-center justify-between gap-3">
 
                       <p className="text-xs text-[#8A8790]">
-                        Cada indicación se guardará como un punto independiente.
+                        Cada indicación se guardará con su propio horario.
                       </p>
 
                       <span className="shrink-0 text-[11px] text-[#AAA7AF]">

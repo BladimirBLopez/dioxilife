@@ -32,6 +32,26 @@ export async function GET(
           },
           { createdAt: "asc" },
         ],
+
+        include: {
+          indicaciones: {
+            where: {
+              activo: true,
+            },
+
+            orderBy: [
+              {
+                hora: "asc",
+              },
+              {
+                orden: "asc",
+              },
+              {
+                createdAt: "asc",
+              },
+            ],
+          },
+        },
       },
       _count: {
         select: {

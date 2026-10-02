@@ -1,4 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
+
 import { prisma } from "@/lib/prisma";
 import { obtenerAdminActual } from "@/lib/admin-auth";
 
@@ -33,11 +37,17 @@ const SECCIONES = [
 type NombreSeccion =
   (typeof SECCIONES)[number]["nombre"];
 
+type IndicacionRecibida = {
+  hora: string;
+  texto: string;
+  orden: number;
+};
+
 type ActividadRecibida = {
   id: string | null;
   nombre: NombreSeccion;
   hora: string | null;
-  instrucciones: string | null;
+  indicaciones: IndicacionRecibida[];
 };
 
 function esRegistro(
@@ -56,6 +66,144 @@ function horaValida(
   return /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(
     hora
   );
+}
+
+function obtenerIndicaciones(
+  valor: Record<string, unknown>,
+  nombre: NombreSeccion
+):
+  | {
+      ok: true;
+      indicaciones: IndicacionRecibida[];
+    }
+  | {
+      ok: false;
+      error: string;
+    } {
+  if (
+    valor.indicaciones ===
+      undefined ||
+    valor.indicaciones ===
+      null
+  ) {
+    return {
+      ok: true,
+      indicaciones: [],
+    };
+  }
+
+  if (
+    !Array.isArray(
+      valor.indicaciones
+    )
+  ) {
+    return {
+      ok: false,
+      error:
+        `Las indicaciones de ${nombre} no son válidas.`,
+    };
+  }
+
+  const indicaciones:
+    IndicacionRecibida[] = [];
+
+  for (
+    let indice = 0;
+    indice <
+    valor.indicaciones.length;
+    indice++
+  ) {
+    const item =
+      valor.indicaciones[
+        indice
+      ];
+
+    if (!esRegistro(item)) {
+      return {
+        ok: false,
+        error:
+          `La indicación ${indice + 1} de ${nombre} no es válida.`,
+      };
+    }
+
+    const texto =
+      typeof item.texto ===
+      "string"
+        ? item.texto
+            .replace(
+              /\r?\n/g,
+              " "
+            )
+            .trim()
+        : "";
+
+    /*
+     * Una fila totalmente vacía
+     * simplemente se ignora.
+     */
+    if (!texto) {
+      continue;
+    }
+
+    if (
+      texto.length >
+      5000
+    ) {
+      return {
+        ok: false,
+        error:
+          `La indicación ${indice + 1} de ${nombre} es demasiado larga.`,
+      };
+    }
+
+    const hora =
+      typeof item.hora ===
+      "string"
+        ? item.hora.trim()
+        : "";
+
+    if (
+      !hora ||
+      !horaValida(hora)
+    ) {
+      return {
+        ok: false,
+        error:
+          `Define un horario válido para la indicación ${indice + 1} de ${nombre}.`,
+      };
+    }
+
+    indicaciones.push({
+      hora,
+      texto,
+      orden:
+        indicaciones.length,
+    });
+  }
+
+  const descripcion =
+    indicaciones
+      .map(
+        (indicacion) =>
+          indicacion.texto
+      )
+      .join("\n");
+
+  if (
+    descripcion.length >
+    5000
+  ) {
+    return {
+      ok: false,
+      error:
+        `Las indicaciones de ${nombre} superan los 5000 caracteres.`,
+    };
+  }
+
+  return {
+    ok: true,
+    indicaciones,
+  };
 }
 
 function obtenerActividades(
@@ -115,15 +263,6 @@ function obtenerActividades(
         ? valor.id.trim()
         : null;
 
-    const instrucciones =
-      typeof valor.instrucciones ===
-        "string" &&
-      valor.instrucciones.trim()
-        ? valor.instrucciones
-            .trim()
-            .slice(0, 5000)
-        : null;
-
     let hora: string | null =
       null;
 
@@ -141,7 +280,7 @@ function obtenerActividades(
         return {
           ok: false,
           error:
-            `Define la hora de ${seccion.nombre}.`,
+            `Define la hora general de ${seccion.nombre}.`,
         };
       }
 
@@ -156,12 +295,33 @@ function obtenerActividades(
       }
     }
 
+    const resultadoIndicaciones =
+      obtenerIndicaciones(
+        valor,
+        seccion.nombre
+      );
+
+    if (
+      !resultadoIndicaciones.ok
+    ) {
+      return {
+        ok: false,
+        error:
+          resultadoIndicaciones.error,
+      };
+    }
+
     recibidas.push({
       id,
+
       nombre:
         seccion.nombre,
+
       hora,
-      instrucciones,
+
+      indicaciones:
+        resultadoIndicaciones
+          .indicaciones,
     });
   }
 
@@ -362,6 +522,15 @@ export async function PUT(
           }
         }
 
+        const descripcion =
+          actividad.indicaciones
+            .map(
+              (indicacion) =>
+                indicacion.texto
+            )
+            .join("\n") ||
+          null;
+
         const data = {
           seccion:
             "PRINCIPAL" as const,
@@ -375,8 +544,7 @@ export async function PUT(
           titulo:
             actividad.nombre,
 
-          descripcion:
-            actividad.instrucciones,
+          descripcion,
 
           momento:
             actividad.nombre,
@@ -395,7 +563,27 @@ export async function PUT(
 
           activo:
             true,
+
         };
+
+        const indicacionesNuevas =
+          actividad.indicaciones.map(
+            (
+              indicacion
+            ) => ({
+              hora:
+                indicacion.hora,
+
+              texto:
+                indicacion.texto,
+
+              orden:
+                indicacion.orden,
+
+              activo:
+                true,
+            })
+          );
 
         if (
           idObjetivo
@@ -408,6 +596,13 @@ export async function PUT(
 
             data: {
               ...data,
+
+              indicaciones: {
+                deleteMany: {},
+
+                create:
+                  indicacionesNuevas,
+              },
 
               ...(
                 actividad.nombre ===
@@ -433,6 +628,11 @@ export async function PUT(
               "NINGUNO",
 
             ...data,
+
+            indicaciones: {
+              create:
+                indicacionesNuevas,
+            },
           },
         });
       }
@@ -471,6 +671,26 @@ export async function PUT(
             "asc",
         },
       ],
+
+      include: {
+        indicaciones: {
+          where: {
+            activo: true,
+          },
+
+          orderBy: [
+            {
+              hora: "asc",
+            },
+            {
+              orden: "asc",
+            },
+            {
+              createdAt: "asc",
+            },
+          ],
+        },
+      },
     });
 
   return NextResponse.json({
