@@ -127,6 +127,7 @@ export async function PUT(
       select: {
         id: true,
         tipo: true,
+        seccion: true,
         diaInicio:
           true,
         diaFin:
@@ -163,7 +164,12 @@ export async function PUT(
 
   const ultimoDia =
     actividad.diaFin ??
-    actividad.diaInicio;
+    (
+      actividad.seccion ===
+        "ADICIONAL"
+        ? seguimiento.duracionDias
+        : actividad.diaInicio
+    );
 
   if (
     diaPlan <

@@ -137,6 +137,9 @@ type ActividadAviso = {
   titulo: string;
   hora: string | null;
   recordatorio: string;
+  seccion:
+    | "PRINCIPAL"
+    | "ADICIONAL";
   diaInicio: number;
   diaFin: number | null;
 };
@@ -171,7 +174,12 @@ async function procesarAvisosTardios({
     .filter(
       (actividad) =>
         diaPlan >= actividad.diaInicio &&
-        diaPlan <= (actividad.diaFin ?? actividad.diaInicio)
+        diaPlan <= (actividad.diaFin ??
+          (
+            actividad.seccion === "ADICIONAL"
+              ? Number.MAX_SAFE_INTEGER
+              : actividad.diaInicio
+          ))
     )
     .map((actividad) => ({
       actividad,
@@ -460,6 +468,7 @@ export async function GET(
             titulo: true,
             hora: true,
             recordatorio: true,
+            seccion: true,
             diaInicio: true,
             diaFin: true,
           },
@@ -519,7 +528,11 @@ export async function GET(
                 actividad.diaInicio &&
               diaPlan <=
                 (actividad.diaFin ??
-                  actividad.diaInicio)
+          (
+            actividad.seccion === "ADICIONAL"
+              ? Number.MAX_SAFE_INTEGER
+              : actividad.diaInicio
+          ))
           )
           .map((actividad) => ({
             actividad,

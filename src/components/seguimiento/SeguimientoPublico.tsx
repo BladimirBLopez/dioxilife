@@ -57,6 +57,9 @@ type RecordatorioActividad =
 type Actividad = {
   id: string;
   tipo: "TAREA" | "INFORMACION" | "CONTROL";
+  seccion:
+    | "PRINCIPAL"
+    | "ADICIONAL";
   recordatorio: RecordatorioActividad;
   titulo: string;
   descripcion: string | null;
@@ -182,7 +185,12 @@ function actividadCorrespondeDia(
 ) {
   const diaFin =
     actividad.diaFin ??
-    actividad.diaInicio;
+    (
+      actividad.seccion ===
+        "ADICIONAL"
+        ? Number.MAX_SAFE_INTEGER
+        : actividad.diaInicio
+    );
 
   return (
     dia >=
@@ -260,6 +268,23 @@ function ordenarActividadesAgenda(
 }
 
 
+function ordenarActividadesPorSeccionYAgenda(
+  a: Actividad,
+  b: Actividad
+) {
+  if (a.seccion !== b.seccion) {
+    return a.seccion === "PRINCIPAL"
+      ? -1
+      : 1;
+  }
+
+  return ordenarActividadesAgenda(
+    a,
+    b
+  );
+}
+
+
 function actividadCompletadaEnDia(
   actividad: Actividad,
   dia: number
@@ -291,7 +316,12 @@ function cantidadTotalTareas(
       const fin =
         Math.min(
           actividad.diaFin ??
-            actividad.diaInicio,
+            (
+              actividad.seccion ===
+                "ADICIONAL"
+                ? seguimiento.duracionDias
+                : actividad.diaInicio
+            ),
           seguimiento.duracionDias
         );
 
@@ -908,9 +938,7 @@ export default function SeguimientoPublico({
                 seguimiento.diaActual as number
               )
           )
-          .sort(
-            ordenarActividadesAgenda
-          );
+          .sort(ordenarActividadesPorSeccionYAgenda);
       },
       [
         seguimiento,
@@ -1565,7 +1593,7 @@ export default function SeguimientoPublico({
 
             <div className="flex items-center justify-between gap-3 text-xs font-semibold">
               <span>
-                Progreso de hoy
+                Calificación del día
               </span>
 
               <span>
@@ -1608,7 +1636,7 @@ export default function SeguimientoPublico({
                 </p>
 
                 <h2 className="mt-1 text-lg font-bold text-[#1F1B24]">
-                  Tus actividades
+                  Tu protocolo de hoy
                 </h2>
               </div>
 
@@ -1641,7 +1669,10 @@ export default function SeguimientoPublico({
               <div className="space-y-3">
 
                 {actividadesHoy.map(
-                  (actividad) => {
+                  (
+                    actividad,
+                    indice
+                  ) => {
 
                     const completada =
                       actividadCompletadaEnDia(
@@ -1686,11 +1717,51 @@ export default function SeguimientoPublico({
                             .filter(Boolean)
                         : [];
 
+                    const mostrarTituloSeccion =
+                      indice === 0 ||
+                      actividadesHoy[
+                        indice - 1
+                      ]?.seccion !==
+                        actividad.seccion;
+
                     return (
-                      <article
+                      <div
                         key={
                           actividad.id
                         }
+                      >
+
+                        {mostrarTituloSeccion && (
+                          <div
+                            className={
+                              indice === 0
+                                ? "pb-1 pt-1"
+                                : "pb-1 pt-5"
+                            }
+                          >
+
+                            <div className="flex items-center gap-3">
+
+                              <p
+                                className={`shrink-0 text-xs font-extrabold uppercase tracking-[0.14em] ${
+                                  actividad.seccion === "ADICIONAL"
+                                    ? "text-purple-700"
+                                    : "text-brand-blue"
+                                }`}
+                              >
+                                {actividad.seccion === "ADICIONAL"
+                                  ? "Protocolos adicionales"
+                                  : "Protocolo principal"}
+                              </p>
+
+                              <div className="h-px flex-1 bg-[#E9E4F2]" />
+
+                            </div>
+
+                          </div>
+                        )}
+
+                        <article
                         className={`overflow-hidden rounded-2xl border shadow-sm transition ${
                           esInformacion
                             ? "border-blue-200 bg-blue-50/40"
@@ -1797,8 +1868,7 @@ export default function SeguimientoPublico({
                           </div>
 
 
-                          {instrucciones.length > 0 &&
-                            !completada && (
+                          {instrucciones.length > 0 && (
                             <div className="mt-4 border-t border-black/5 pt-4">
 
                               <p className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-brand-gray">
@@ -1881,7 +1951,9 @@ export default function SeguimientoPublico({
                           )}
 
                         </div>
-                      </article>
+                        </article>
+
+                      </div>
                     );
                   }
                 )}
@@ -2048,9 +2120,7 @@ export default function SeguimientoPublico({
                             dia
                           )
                       )
-                      .sort(
-                        ordenarActividadesAgenda
-                      );
+                      .sort(ordenarActividadesPorSeccionYAgenda);
 
 
                   const tareasDia =
@@ -2357,6 +2427,12 @@ export default function SeguimientoPublico({
                                           </span>
                                         )}
 
+                                        {actividad.seccion === "ADICIONAL" && (
+                                          <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-700">
+                                            Adicional
+                                          </span>
+                                        )}
+
                                       </div>
 
 
@@ -2557,9 +2633,15 @@ export default function SeguimientoPublico({
 
                 {seguimiento.actividades
                   .slice()
-                  .sort(
-                    ordenarActividadesAgenda
+                  .filter(
+                    (actividad) =>
+                      actividad.seccion === "PRINCIPAL" ||
+                      (
+                        actividad.diaFin ??
+                        seguimiento.duracionDias
+                      ) >= diaActual
                   )
+                  .sort(ordenarActividadesPorSeccionYAgenda)
                   .map(
                     (actividad) => {
 
@@ -2615,6 +2697,12 @@ export default function SeguimientoPublico({
                                     Información
                                   </span>
                                 ) : null}
+
+                                {actividad.seccion === "ADICIONAL" && (
+                                  <span className="rounded-lg bg-purple-50 px-2.5 py-1 text-xs font-bold text-purple-700">
+                                    Protocolo adicional
+                                  </span>
+                                )}
 
                               </div>
 

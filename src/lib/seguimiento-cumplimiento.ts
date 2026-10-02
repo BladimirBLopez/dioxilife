@@ -106,6 +106,7 @@ export async function calcularCumplimiento(
           id: true,
           titulo: true,
           hora: true,
+          seccion: true,
           diaInicio: true,
           diaFin: true,
         },
@@ -151,11 +152,26 @@ export async function calcularCumplimiento(
     actividad: {
       diaInicio: number;
       diaFin: number | null;
+      seccion:
+        | "PRINCIPAL"
+        | "ADICIONAL";
     },
     d: number
-  ) =>
-    d >= actividad.diaInicio &&
-    d <= (actividad.diaFin ?? actividad.diaInicio);
+  ) => {
+    const ultimoDia =
+      actividad.diaFin ??
+      (
+        actividad.seccion ===
+          "ADICIONAL"
+          ? seguimiento.duracionDias
+          : actividad.diaInicio
+      );
+
+    return (
+      d >= actividad.diaInicio &&
+      d <= ultimoDia
+    );
+  };
 
   let totalHoy = 0;
   let completadasHoy = 0;

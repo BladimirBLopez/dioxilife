@@ -300,7 +300,12 @@ export async function GET(
         (actividad) => {
           const ultimoDia =
             actividad.diaFin ??
-            actividad.diaInicio;
+            (
+              actividad.seccion ===
+                "ADICIONAL"
+                ? seguimiento.duracionDias
+                : actividad.diaInicio
+            );
 
           const tieneProgreso =
             actividad.progresos.length >
