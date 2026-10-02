@@ -308,6 +308,28 @@ export async function POST(req: NextRequest) {
             diaFin: true,
             orden: true,
             activo: true,
+
+            indicaciones: {
+              where: {
+                activo: true,
+              },
+
+              orderBy: [
+                {
+                  hora: "asc",
+                },
+                {
+                  orden: "asc",
+                },
+              ],
+
+              select: {
+                hora: true,
+                texto: true,
+                orden: true,
+                activo: true,
+              },
+            },
           },
         },
       },
@@ -427,6 +449,25 @@ export async function POST(req: NextRequest) {
 
                 activo:
                   actividad.activo,
+
+                indicaciones: {
+                  create:
+                    actividad.indicaciones.map(
+                      (indicacion) => ({
+                        hora:
+                          indicacion.hora,
+
+                        texto:
+                          indicacion.texto,
+
+                        orden:
+                          indicacion.orden,
+
+                        activo:
+                          indicacion.activo,
+                      })
+                    ),
+                },
               })
             ),
         },

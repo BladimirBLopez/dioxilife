@@ -187,6 +187,8 @@ model ActividadPlan {
   orden     Int     @default(0)
   activo    Boolean @default(true)
 
+  indicaciones IndicacionActividadPlan[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -263,6 +265,26 @@ model SeguimientoEnvioWhatsApp {
   @@index([fechaEnvio])
 }
 
+model IndicacionActividadPlan {
+  id String @id @default(cuid())
+
+  actividadPlanId String
+  actividadPlan   ActividadPlan @relation(fields: [actividadPlanId], references: [id], onDelete: Cascade)
+
+  hora  String
+  texto String
+  orden Int    @default(0)
+
+  activo Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([actividadPlanId])
+  @@index([hora])
+  @@index([orden])
+}
+
 model ActividadSeguimiento {
   id String @id @default(cuid())
 
@@ -282,7 +304,8 @@ model ActividadSeguimiento {
   orden     Int     @default(0)
   activo    Boolean @default(true)
 
-  progresos ProgresoActividad[]
+  indicaciones IndicacionActividadSeguimiento[]
+  progresos    ProgresoActividad[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -331,6 +354,26 @@ model RegistroDiaSeguimiento {
   @@unique([seguimientoId, diaPlan])
   @@index([seguimientoId])
   @@index([diaPlan])
+}
+
+model IndicacionActividadSeguimiento {
+  id String @id @default(cuid())
+
+  actividadSeguimientoId String
+  actividadSeguimiento   ActividadSeguimiento @relation(fields: [actividadSeguimientoId], references: [id], onDelete: Cascade)
+
+  hora  String
+  texto String
+  orden Int    @default(0)
+
+  activo Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([actividadSeguimientoId])
+  @@index([hora])
+  @@index([orden])
 }
 
 model ProgresoActividad {

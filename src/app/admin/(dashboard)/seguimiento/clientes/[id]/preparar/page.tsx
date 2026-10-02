@@ -100,6 +100,31 @@ export default async function PrepararSeguimientoPage({
             diaFin: true,
             orden: true,
             activo: true,
+
+            indicaciones: {
+              where: {
+                activo: true,
+              },
+
+              orderBy: [
+                {
+                  hora: "asc",
+                },
+                {
+                  orden: "asc",
+                },
+                {
+                  createdAt: "asc",
+                },
+              ],
+
+              select: {
+                id: true,
+                hora: true,
+                texto: true,
+                orden: true,
+              },
+            },
           },
         },
       },
@@ -222,6 +247,7 @@ export default async function PrepararSeguimientoPage({
               diaInicio: actividad.diaInicio,
               diaFin: actividad.diaFin,
               orden: actividad.orden,
+              indicaciones: actividad.indicaciones,
             })
           )}
         />

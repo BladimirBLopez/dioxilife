@@ -108,6 +108,31 @@ export async function GET(
             diaFin: true,
             orden: true,
 
+            indicaciones: {
+              where: {
+                activo: true,
+              },
+
+              orderBy: [
+                {
+                  hora: "asc",
+                },
+                {
+                  orden: "asc",
+                },
+                {
+                  createdAt: "asc",
+                },
+              ],
+
+              select: {
+                id: true,
+                hora: true,
+                texto: true,
+                orden: true,
+              },
+            },
+
             progresos: {
               select: {
                 diaPlan:

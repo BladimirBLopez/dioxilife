@@ -54,6 +54,14 @@ type RecordatorioActividad =
   | "MIN_60_ANTES";
 
 
+type IndicacionActividad = {
+  id: string;
+  hora: string;
+  texto: string;
+  orden: number;
+};
+
+
 type Actividad = {
   id: string;
   tipo: "TAREA" | "INFORMACION" | "CONTROL";
@@ -68,6 +76,7 @@ type Actividad = {
   diaInicio: number;
   diaFin: number | null;
   orden: number;
+  indicaciones: IndicacionActividad[];
   progresos: Progreso[];
 };
 
@@ -1707,15 +1716,44 @@ export default function SeguimientoPublico({
                         actividad.titulo;
 
                     const instrucciones =
-                      actividad.descripcion
-                        ? actividad.descripcion
-                            .split(/\r?\n/)
-                            .map(
-                              (linea) =>
-                                linea.trim()
-                            )
-                            .filter(Boolean)
-                        : [];
+                      actividad.indicaciones.length > 0
+                        ? actividad.indicaciones.map(
+                            (indicacion) => ({
+                              id:
+                                indicacion.id,
+
+                              hora:
+                                indicacion.hora,
+
+                              texto:
+                                indicacion.texto,
+                            })
+                          )
+                        : actividad.descripcion
+                          ? actividad.descripcion
+                              .split(/\r?\n/)
+                              .map(
+                                (
+                                  linea,
+                                  indice
+                                ) => ({
+                                  id:
+                                    `legacy-${indice}`,
+
+                                  hora:
+                                    null,
+
+                                  texto:
+                                    linea.trim(),
+                                })
+                              )
+                              .filter(
+                                (item) =>
+                                  Boolean(
+                                    item.texto
+                                  )
+                              )
+                          : [];
 
                     const mostrarTituloSeccion =
                       indice === 0 ||
@@ -1885,9 +1923,18 @@ export default function SeguimientoPublico({
                                     indice
                                   ) => (
                                     <li
-                                      key={`${actividad.id}-${indice}`}
+                                      key={`${actividad.id}-${instruccion.id}`}
                                       className="flex items-start gap-2.5 text-sm leading-6 text-[#4F4B56]"
                                     >
+
+                                      {instruccion.hora && (
+                                        <span className="mt-0.5 min-w-[58px] shrink-0 rounded-lg bg-[#F4F2F8] px-2 py-1 text-center font-mono text-xs font-bold text-brand-blue">
+                                          {
+                                            instruccion.hora
+                                          }
+                                        </span>
+                                      )}
+
 
                                       {esInformacion ? (
                                         <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
@@ -1897,8 +1944,11 @@ export default function SeguimientoPublico({
                                         </span>
                                       )}
 
+
                                       <span className="min-w-0 flex-1">
-                                        {instruccion}
+                                        {
+                                          instruccion.texto
+                                        }
                                       </span>
 
                                     </li>
@@ -2656,15 +2706,44 @@ export default function SeguimientoPublico({
                           "Ayunas";
 
                       const instrucciones =
-                        actividad.descripcion
-                          ? actividad.descripcion
-                              .split(/\r?\n/)
-                              .map(
-                                (linea) =>
-                                  linea.trim()
-                              )
-                              .filter(Boolean)
-                          : [];
+                        actividad.indicaciones.length > 0
+                          ? actividad.indicaciones.map(
+                              (indicacion) => ({
+                                id:
+                                  indicacion.id,
+
+                                hora:
+                                  indicacion.hora,
+
+                                texto:
+                                  indicacion.texto,
+                              })
+                            )
+                          : actividad.descripcion
+                            ? actividad.descripcion
+                                .split(/\r?\n/)
+                                .map(
+                                  (
+                                    linea,
+                                    indice
+                                  ) => ({
+                                    id:
+                                      `legacy-${indice}`,
+
+                                    hora:
+                                      null,
+
+                                    texto:
+                                      linea.trim(),
+                                  })
+                                )
+                                .filter(
+                                  (item) =>
+                                    Boolean(
+                                      item.texto
+                                    )
+                                )
+                            : [];
 
                       return (
                         <details
@@ -2746,9 +2825,18 @@ export default function SeguimientoPublico({
                                     indice
                                   ) => (
                                     <li
-                                      key={`${actividad.id}-plan-${indice}`}
+                                      key={`${actividad.id}-plan-${instruccion.id}`}
                                       className="flex items-start gap-2.5 text-sm leading-6 text-[#4F4B56]"
                                     >
+
+                                      {instruccion.hora && (
+                                        <span className="mt-0.5 min-w-[58px] shrink-0 rounded-lg bg-[#F4F2F8] px-2 py-1 text-center font-mono text-xs font-bold text-brand-blue">
+                                          {
+                                            instruccion.hora
+                                          }
+                                        </span>
+                                      )}
+
 
                                       {esInformacion ? (
                                         <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
@@ -2758,8 +2846,11 @@ export default function SeguimientoPublico({
                                         </span>
                                       )}
 
+
                                       <span className="min-w-0 flex-1">
-                                        {instruccion}
+                                        {
+                                          instruccion.texto
+                                        }
                                       </span>
 
                                     </li>

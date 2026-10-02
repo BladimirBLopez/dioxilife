@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import Modal from "@/components/Modal";
 
 import SelectorHora from "@/components/admin/seguimiento/SelectorHora";
+import IndicacionesActividadPreparacion from "@/components/admin/seguimiento/IndicacionesActividadPreparacion";
 
 type Recordatorio =
   | "NINGUNO"
@@ -33,6 +34,13 @@ type Actividad = {
   diaInicio: number;
   diaFin: number | null;
   orden: number;
+
+  indicaciones: Array<{
+    id: string;
+    hora: string;
+    texto: string;
+    orden: number;
+  }>;
 };
 
 type Props = {
@@ -870,7 +878,14 @@ export default function ProtocoloPrincipalPreparacion({
                             )}
 
 
-                            <div className="mt-2 flex flex-wrap gap-2">
+                            <IndicacionesActividadPreparacion
+                              seguimientoId={seguimientoId}
+                              actividadId={actividad.id}
+                              indicaciones={actividad.indicaciones}
+                            />
+
+
+                            <div className="mt-3 flex flex-wrap gap-2">
 
                               <button
                                 type="button"
