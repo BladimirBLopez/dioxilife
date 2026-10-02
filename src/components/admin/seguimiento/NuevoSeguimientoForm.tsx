@@ -5,12 +5,8 @@ import {
   useState,
 } from "react";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import Modal from "@/components/Modal";
-
-import { abrirWhatsApp } from "@/lib/whatsapp-cliente";
 
 type Plan = {
   id: string;
@@ -59,25 +55,6 @@ export default function NuevoSeguimientoForm({
   const [procesando, setProcesando] =
     useState(false);
 
-  const [
-    enlaceTemporal,
-    setEnlaceTemporal,
-  ] = useState<string | null>(null);
-
-  const [creado, setCreado] =
-    useState<{
-      id: string;
-      token: string;
-    } | null>(null);
-
-  const [enviando, setEnviando] =
-    useState(false);
-
-  const [
-    modalExitoAbierto,
-    setModalExitoAbierto,
-  ] = useState(false);
-
   async function crear(
     e: FormEvent
   ) {
@@ -99,7 +76,11 @@ export default function NuevoSeguimientoForm({
       return;
     }
 
-    if (!/^[0-9]{8}$/.test(telefonoCliente)) {
+    if (
+      !/^[0-9]{8}$/.test(
+        telefonoCliente
+      )
+    ) {
       toast.error(
         "El WhatsApp debe tener exactamente 8 números."
       );
@@ -111,7 +92,7 @@ export default function NuevoSeguimientoForm({
 
     const toastId =
       toast.loading(
-        "Creando seguimiento..."
+        "Registrando cliente..."
       );
 
     try {
@@ -134,7 +115,10 @@ export default function NuevoSeguimientoForm({
                   nombreCliente.trim(),
 
                 telefonoCliente:
-                  telefonoCliente.replace(/\D/g, ""),
+                  telefonoCliente.replace(
+                    /\D/g,
+                    ""
+                  ),
 
                 origen,
 
@@ -162,7 +146,7 @@ export default function NuevoSeguimientoForm({
 
       if (!res.ok) {
         toast.error(
-          "No se pudo crear el seguimiento",
+          "No se pudo registrar el seguimiento",
           {
             id: toastId,
 
@@ -175,31 +159,19 @@ export default function NuevoSeguimientoForm({
         return;
       }
 
-      const url =
-        `${window.location.origin}/seguimiento/${data.token}`;
-
-      setEnlaceTemporal(url);
-
-      setCreado({
-        id: data.seguimiento.id,
-        token: data.token,
-      });
-
-      setModalExitoAbierto(
-        true
-      );
-
       toast.success(
-        "Seguimiento creado correctamente",
+        "Cliente registrado",
         {
           id: toastId,
 
           description:
-            "El enlace privado ya está listo.",
+            "Ahora prepara su protocolo antes de enviar el enlace.",
         }
       );
 
-      router.refresh();
+      router.push(
+        `/admin/seguimiento/clientes/${data.seguimiento.id}/preparar`
+      );
 
     } catch {
       toast.error(
@@ -211,86 +183,6 @@ export default function NuevoSeguimientoForm({
 
     } finally {
       setProcesando(false);
-    }
-  }
-
-  async function enviarWhatsApp() {
-    if (!creado || enviando) {
-      return;
-    }
-
-    setEnviando(true);
-
-    try {
-      const res =
-        await fetch(
-          `/api/admin/seguimiento/clientes/${creado.id}/enviar-whatsapp`,
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
-
-            body:
-              JSON.stringify({
-                token: creado.token,
-              }),
-          }
-        );
-
-      const data =
-        await res
-          .json()
-          .catch(() => null);
-
-      if (!res.ok) {
-        throw new Error(
-          data?.error ||
-          "No se pudo preparar el WhatsApp."
-        );
-      }
-
-      abrirWhatsApp(
-        data.telefono,
-        data.mensaje
-      );
-
-      toast.success(
-        "WhatsApp listo y registrado"
-      );
-
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Error enviando WhatsApp"
-      );
-
-    } finally {
-      setEnviando(false);
-    }
-  }
-
-  async function copiarEnlace() {
-    if (!enlaceTemporal) {
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(
-        enlaceTemporal
-      );
-
-      toast.success(
-        "Enlace privado copiado"
-      );
-
-    } catch {
-      toast.error(
-        "No se pudo copiar el enlace"
-      );
     }
   }
 
@@ -307,6 +199,23 @@ export default function NuevoSeguimientoForm({
         onSubmit={crear}
         className="rounded-xl bg-white p-6 shadow"
       >
+
+        <div className="mb-5">
+
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-600">
+            Paso 1 de 2
+          </p>
+
+          <h2 className="mt-1 text-lg font-semibold text-gray-900">
+            Datos del cliente
+          </h2>
+
+          <p className="mt-1 text-sm text-gray-500">
+            Primero registra al cliente y selecciona la plantilla que servirá de base.
+          </p>
+
+        </div>
+
 
         <div className="grid gap-5 md:grid-cols-2">
 
@@ -341,7 +250,10 @@ export default function NuevoSeguimientoForm({
               value={telefonoCliente}
               onChange={(e) =>
                 setTelefonoCliente(
-                  e.target.value.replace(/\D/g, "")
+                  e.target.value.replace(
+                    /\D/g,
+                    ""
+                  )
                 )
               }
               className="admin-input"
@@ -411,7 +323,8 @@ export default function NuevoSeguimientoForm({
                       key={plan.id}
                       value={plan.id}
                     >
-                      {plan.nombre} · {plan.duracionDias} días
+                      {plan.nombre} ·{" "}
+                      {plan.duracionDias} días
                     </option>
                   )
                 )
@@ -433,7 +346,7 @@ export default function NuevoSeguimientoForm({
                 )
               }
               className="admin-input"
-              placeholder="Ej. Kit CDS, compra por WhatsApp..."
+              placeholder="Ej. Kit, compra por WhatsApp..."
               maxLength={500}
             />
           </div>
@@ -489,8 +402,8 @@ export default function NuevoSeguimientoForm({
             className="admin-btn-primary"
           >
             {procesando
-              ? "Creando..."
-              : "Crear seguimiento"}
+              ? "Registrando..."
+              : "Continuar y preparar →"}
           </button>
 
         </div>
@@ -502,215 +415,40 @@ export default function NuevoSeguimientoForm({
 
         <div className="rounded-xl border border-violet-100 bg-[#F8F6FF] p-5">
 
-          <h2 className="font-semibold text-gray-900">
-            Registro rápido
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-600">
+            Flujo recomendado
+          </p>
+
+          <h2 className="mt-2 font-semibold text-gray-900">
+            Primero registra, luego prepara
           </h2>
 
           <p className="mt-2 text-sm leading-6 text-gray-600">
-            No necesitas crear un pedido. Registra al cliente, elige su plan y genera su enlace privado.
+            El enlace del cliente se mostrará después de revisar su protocolo, peso inicial y protocolos adicionales.
           </p>
 
         </div>
 
 
-        {enlaceTemporal && (
-          <div className="rounded-xl border border-green-200 bg-green-50 p-5">
+        {planSeleccionado && (
+          <div className="rounded-xl border border-gray-200 bg-white p-5">
 
-            <p className="font-semibold text-green-800">
-              Enlace privado listo
+            <p className="text-xs font-medium text-gray-500">
+              Plantilla seleccionada
             </p>
 
-            <p className="mt-2 text-xs leading-5 text-green-700">
-              Envíalo por WhatsApp o cópialo antes de salir de la página.
+            <p className="mt-1 font-semibold text-gray-900">
+              {planSeleccionado.nombre}
             </p>
 
-            <div className="mt-4 flex flex-wrap gap-2">
-
-              <button
-                type="button"
-                disabled={enviando}
-                onClick={() =>
-                  void enviarWhatsApp()
-                }
-                className="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
-              >
-                {enviando
-                  ? "Preparando..."
-                  : "📱 Enviar por WhatsApp"}
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  void copiarEnlace()
-                }
-                className="rounded-xl border border-green-300 bg-white px-4 py-2.5 text-sm font-semibold text-green-700 transition hover:bg-green-100"
-              >
-                Copiar enlace
-              </button>
-
-            </div>
-
-            {creado && (
-              <Link
-                href={`/admin/seguimiento/clientes/${creado.id}`}
-                className="mt-3 inline-block text-xs font-semibold text-green-800 underline"
-              >
-                Ver seguimiento del cliente →
-              </Link>
-            )}
+            <p className="mt-1 text-sm text-gray-500">
+              {planSeleccionado.duracionDias} días
+            </p>
 
           </div>
         )}
 
       </aside>
-
-
-      {modalExitoAbierto &&
-        enlaceTemporal &&
-        creado && (
-        <Modal
-          title="Seguimiento creado"
-          onClose={() =>
-            setModalExitoAbierto(
-              false
-            )
-          }
-          maxWidthClassName="max-w-lg"
-        >
-          <div className="space-y-5">
-
-            <div className="text-center">
-
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-2xl font-bold text-green-700">
-                ✓
-              </div>
-
-              <h3 className="mt-3 text-lg font-semibold text-[#1F1B24]">
-                Seguimiento listo
-              </h3>
-
-              <p className="mt-1 text-sm leading-6 text-[#6B6870]">
-                El enlace privado del cliente ya fue generado.
-              </p>
-
-            </div>
-
-
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-
-              <div className="space-y-3 text-sm">
-
-                <div>
-                  <p className="text-xs font-medium text-[#8A8790]">
-                    Cliente
-                  </p>
-
-                  <p className="mt-0.5 font-semibold text-[#1F1B24]">
-                    {nombreCliente}
-                  </p>
-                </div>
-
-
-                {planSeleccionado && (
-                  <div>
-                    <p className="text-xs font-medium text-[#8A8790]">
-                      Plantilla
-                    </p>
-
-                    <p className="mt-0.5 font-semibold text-[#1F1B24]">
-                      {planSeleccionado.nombre}
-                      {" · "}
-                      {planSeleccionado.duracionDias} días
-                    </p>
-                  </div>
-                )}
-
-
-                <div>
-                  <p className="text-xs font-medium text-[#8A8790]">
-                    Inicio previsto
-                  </p>
-
-                  <p className="mt-0.5 font-semibold text-[#1F1B24]">
-                    {fechaInicioPrevista ||
-                      "Sin fecha definida"}
-                  </p>
-                </div>
-
-              </div>
-
-            </div>
-
-
-            <div>
-
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#8A8790]">
-                Enlace del cliente
-              </p>
-
-              <div className="mt-2 rounded-xl border border-green-200 bg-green-50 p-3">
-
-                <p className="break-all text-xs leading-5 text-green-800">
-                  {enlaceTemporal}
-                </p>
-
-              </div>
-
-            </div>
-
-
-            <button
-              type="button"
-              disabled={enviando}
-              onClick={() =>
-                void enviarWhatsApp()
-              }
-              className="w-full rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
-            >
-              {enviando
-                ? "Preparando WhatsApp..."
-                : "📱 Enviar por WhatsApp"}
-            </button>
-
-
-            <div className="grid gap-2 sm:grid-cols-2">
-
-              <button
-                type="button"
-                onClick={() =>
-                  void copiarEnlace()
-                }
-                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#1F1B24] transition hover:bg-gray-50"
-              >
-                Copiar enlace
-              </button>
-
-              <Link
-                href={`/admin/seguimiento/clientes/${creado.id}`}
-                className="rounded-xl border border-brand-pink bg-white px-4 py-2.5 text-center text-sm font-semibold text-brand-pink transition hover:bg-brand-pink/5"
-              >
-                Ver seguimiento
-              </Link>
-
-            </div>
-
-
-            <button
-              type="button"
-              onClick={() =>
-                setModalExitoAbierto(
-                  false
-                )
-              }
-              className="w-full py-2 text-sm font-medium text-[#8A8790] hover:text-[#1F1B24]"
-            >
-              Cerrar
-            </button>
-
-          </div>
-        </Modal>
-      )}
 
     </div>
   );

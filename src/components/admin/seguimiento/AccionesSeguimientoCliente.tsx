@@ -37,6 +37,16 @@ export default function AccionesSeguimientoCliente({
       return;
     }
 
+    if (
+      !nuevoEnlace &&
+      !haEnviado &&
+      !window.confirm(
+        "Este será el primer envío registrado. Se generará un enlace de acceso para el cliente. Si habías copiado otro enlace anteriormente, ese enlace dejará de funcionar. ¿Continuar?"
+      )
+    ) {
+      return;
+    }
+
     setProcesando(true);
 
     try {
@@ -110,7 +120,7 @@ export default function AccionesSeguimientoCliente({
           ? "Preparando..."
           : haEnviado
           ? "📱 Reenviar por WhatsApp"
-          : "📱 Enviar por WhatsApp"}
+          : "📱 Generar enlace y enviar"}
       </button>
 
 

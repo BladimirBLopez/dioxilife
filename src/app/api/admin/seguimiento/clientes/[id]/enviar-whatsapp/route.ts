@@ -91,6 +91,8 @@ export async function POST(
         id:true,
         nombreCliente:true,
         telefonoCliente:true,
+        estado:true,
+        preparadoAt:true,
         tokenAccesoHash:true,
         tokenCreadoAt:true,
       },
@@ -105,6 +107,22 @@ export async function POST(
       },
       {
         status:404,
+      }
+    );
+  }
+
+
+  if (
+    seguimiento.estado === "PENDIENTE" &&
+    !seguimiento.preparadoAt
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Primero debes finalizar la preparación del seguimiento antes de enviar el acceso al cliente.",
+      },
+      {
+        status: 409,
       }
     );
   }

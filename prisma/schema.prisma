@@ -223,7 +223,8 @@ model SeguimientoCliente {
   tokenCreadoAt   DateTime  @default(now())
   ultimoAccesoAt  DateTime?
 
-  estado EstadoSeguimientoCliente @default(PENDIENTE)
+  estado      EstadoSeguimientoCliente @default(PENDIENTE)
+  preparadoAt DateTime?
 
   fechaInicioPrevista DateTime? @db.Date
   fechaInicio         DateTime?

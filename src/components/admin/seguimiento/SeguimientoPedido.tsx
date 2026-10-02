@@ -21,6 +21,8 @@ type Seguimiento = {
     | "COMPLETADO"
     | "CANCELADO";
 
+  preparadoAt: string | Date | null;
+
   fechaInicioPrevista: string | Date | null;
   fechaInicio: string | Date | null;
   fechaFinalizado: string | Date | null;
@@ -76,9 +78,6 @@ export default function SeguimientoPedido({
 
   const [procesando, setProcesando] =
     useState(false);
-
-  const [enlaceTemporal, setEnlaceTemporal] =
-    useState<string | null>(null);
 
   const pedidoHabilitado =
     estadoPedido === "PAGADO" ||
@@ -146,113 +145,17 @@ export default function SeguimientoPedido({
         return;
       }
 
-      const url =
-        `${window.location.origin}/seguimiento/${data.token}`;
-
-      setEnlaceTemporal(url);
-
       toast.success(
         "Seguimiento asignado correctamente",
         {
           id: toastId,
           description:
-            "El acceso privado fue generado.",
+            "Ahora prepara el protocolo antes de enviarlo al cliente.",
         }
       );
 
-      router.refresh();
-    } catch {
-      toast.error(
-        "No se pudo conectar con el servidor",
-        {
-          id: toastId,
-        }
-      );
-    } finally {
-      setProcesando(false);
-    }
-  }
-
-  async function copiarEnlace() {
-    if (!enlaceTemporal) {
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(
-        enlaceTemporal
-      );
-
-      toast.success(
-        "Enlace privado copiado"
-      );
-    } catch {
-      toast.error(
-        "No se pudo copiar el enlace"
-      );
-    }
-  }
-
-  async function regenerarEnlace(
-    seguimientoId: string
-  ) {
-    if (procesando) {
-      return;
-    }
-
-    const confirmar =
-      window.confirm(
-        "El enlace anterior dejará de funcionar. ¿Deseas generar uno nuevo?"
-      );
-
-    if (!confirmar) {
-      return;
-    }
-
-    setProcesando(true);
-
-    const toastId =
-      toast.loading(
-        "Generando nuevo enlace..."
-      );
-
-    try {
-      const res = await fetch(
-        `/api/admin/seguimiento/clientes/${seguimientoId}/regenerar`,
-        {
-          method: "POST",
-        }
-      );
-
-      const data =
-        await res.json().catch(() => null);
-
-      if (!res.ok) {
-        toast.error(
-          "No se pudo regenerar el enlace",
-          {
-            id: toastId,
-            description:
-              data?.error ||
-              "Inténtalo nuevamente.",
-          }
-        );
-
-        return;
-      }
-
-      const url =
-        `${window.location.origin}/seguimiento/${data.token}`;
-
-      setEnlaceTemporal(url);
-
-      toast.success(
-        "Nuevo enlace privado generado",
-        {
-          id: toastId,
-          description:
-            "El enlace anterior dejó de funcionar.",
-        }
+      router.push(
+        `/admin/seguimiento/clientes/${data.seguimiento.id}/preparar`
       );
     } catch {
       toast.error(
@@ -372,10 +275,23 @@ export default function SeguimientoPedido({
             <div className="mt-4 flex flex-wrap gap-2 border-t border-violet-100 pt-4">
 
               <Link
-                href={`/admin/seguimiento/clientes/${vigente.id}`}
-                className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-700"
+                href={
+                  vigente.estado === "PENDIENTE" &&
+                  !vigente.preparadoAt
+                    ? `/admin/seguimiento/clientes/${vigente.id}/preparar`
+                    : `/admin/seguimiento/clientes/${vigente.id}`
+                }
+                className={`rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition ${
+                  vigente.estado === "PENDIENTE" &&
+                  !vigente.preparadoAt
+                    ? "bg-amber-600 hover:bg-amber-700"
+                    : "bg-violet-600 hover:bg-violet-700"
+                }`}
               >
-                Administrar agenda
+                {vigente.estado === "PENDIENTE" &&
+                !vigente.preparadoAt
+                  ? "Continuar preparación →"
+                  : "Administrar seguimiento"}
               </Link>
 
             </div>
@@ -406,73 +322,6 @@ export default function SeguimientoPedido({
           </div>
 
 
-          {enlaceTemporal ? (
-            <div className="rounded-xl border border-green-200 bg-green-50 p-4">
-
-              <p className="text-sm font-semibold text-green-800">
-                Enlace privado generado
-              </p>
-
-              <p className="mt-1 text-xs leading-5 text-green-700">
-                Por seguridad el token original no se guarda en la base de datos. Copia este enlace antes de salir de la página.
-              </p>
-
-              <div className="mt-3 flex flex-wrap gap-2">
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    void copiarEnlace()
-                  }
-                  className="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700"
-                >
-                  Copiar enlace privado
-                </button>
-
-                <button
-                  type="button"
-                  disabled={procesando}
-                  onClick={() =>
-                    void regenerarEnlace(
-                      vigente.id
-                    )
-                  }
-                  className="rounded-xl border border-green-200 bg-white px-4 py-2.5 text-sm font-semibold text-green-700 transition hover:bg-green-100 disabled:opacity-60"
-                >
-                  Generar otro enlace
-                </button>
-
-              </div>
-
-            </div>
-          ) : (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-
-              <p className="text-sm font-semibold text-amber-800">
-                Enlace privado protegido
-              </p>
-
-              <p className="mt-1 text-xs leading-5 text-amber-700">
-                El token original no se almacena. Si necesitas volver a compartir el seguimiento, genera un nuevo enlace.
-              </p>
-
-              <button
-                type="button"
-                disabled={procesando}
-                onClick={() =>
-                  void regenerarEnlace(
-                    vigente.id
-                  )
-                }
-                className="mt-3 rounded-xl border border-amber-300 bg-white px-4 py-2.5 text-sm font-semibold text-amber-800 transition hover:bg-amber-100 disabled:opacity-60"
-              >
-                {procesando
-                  ? "Generando..."
-                  : "Regenerar enlace privado"}
-              </button>
-
-            </div>
-          )}
 
         </div>
 

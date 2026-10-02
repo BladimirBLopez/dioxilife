@@ -129,6 +129,7 @@ export default async function SeguimientoClientePage({
         duracionDias: true,
 
         estado: true,
+        preparadoAt: true,
 
         fechaInicioPrevista: true,
         fechaInicio: true,
@@ -251,6 +252,18 @@ export default async function SeguimientoClientePage({
         )
       : null;
 
+  const pendienteSinPreparar =
+    seguimiento.estado ===
+      "PENDIENTE" &&
+    !seguimiento.preparadoAt;
+
+  const pendientePreparado =
+    seguimiento.estado ===
+      "PENDIENTE" &&
+    Boolean(
+      seguimiento.preparadoAt
+    );
+
   const porcentajeTiempo =
     diaActual
       ? Math.round(
@@ -311,6 +324,59 @@ export default async function SeguimientoClientePage({
         </div>
 
       </div>
+
+
+      {pendienteSinPreparar && (
+
+        <section className="rounded-xl border border-amber-200 bg-amber-50 p-5">
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+            <div>
+
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-amber-700">
+                Preparación pendiente
+              </p>
+
+              <h2 className="mt-1 font-semibold text-amber-950">
+                Todavía falta preparar el seguimiento
+              </h2>
+
+              <p className="mt-1 text-sm leading-6 text-amber-800">
+                Revisa el peso inicial, las actividades y los protocolos adicionales antes de enviar el enlace al cliente.
+              </p>
+
+            </div>
+
+            <Link
+              href={`/admin/seguimiento/clientes/${seguimiento.id}/preparar`}
+              className="inline-flex shrink-0 items-center justify-center rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-700"
+            >
+              Continuar preparación →
+            </Link>
+
+          </div>
+
+        </section>
+
+      )}
+
+
+      {pendientePreparado && (
+
+        <section className="rounded-xl border border-green-200 bg-green-50 p-4">
+
+          <p className="text-sm font-semibold text-green-900">
+            ✓ Protocolo preparado
+          </p>
+
+          <p className="mt-1 text-xs leading-5 text-green-800">
+            El seguimiento está listo. Ahora puedes enviar el enlace al cliente. El Día 1 comenzará cuando el cliente pulse “Iniciar mi seguimiento”.
+          </p>
+
+        </section>
+
+      )}
 
 
       <section className="space-y-4 rounded-xl bg-white p-4 shadow sm:p-5">
@@ -398,30 +464,35 @@ export default async function SeguimientoClientePage({
         </div>
 
 
-        <AccionesSeguimientoCliente
-          seguimientoId={seguimiento.id}
-          tieneTelefono={Boolean(
-            seguimiento.telefonoCliente
-          )}
-          haEnviado={Boolean(ultimoEnvio)}
-        />
+        {!pendienteSinPreparar && (
+          <AccionesSeguimientoCliente
+            seguimientoId={seguimiento.id}
+            tieneTelefono={Boolean(
+              seguimiento.telefonoCliente
+            )}
+            haEnviado={Boolean(ultimoEnvio)}
+          />
+        )}
 
       </section>
 
 
-      <ResumenCumplimiento
-        seguimientoId={seguimiento.id}
-        tieneTelefono={Boolean(
-          seguimiento.telefonoCliente
-        )}
-      />
+      {seguimiento.estado !== "PENDIENTE" && (
+        <>
+          <ResumenCumplimiento
+            seguimientoId={seguimiento.id}
+            tieneTelefono={Boolean(
+              seguimiento.telefonoCliente
+            )}
+          />
 
-
-      <RegistroDiarioCliente
-        seguimientoId={seguimiento.id}
-        duracionDias={seguimiento.duracionDias}
-        diaInicial={diaActual ?? 1}
-      />
+          <RegistroDiarioCliente
+            seguimientoId={seguimiento.id}
+            duracionDias={seguimiento.duracionDias}
+            diaInicial={diaActual ?? 1}
+          />
+        </>
+      )}
 
 
       <section className="rounded-xl bg-white px-4 py-2 shadow sm:px-5">

@@ -38,6 +38,7 @@ export async function POST(
       select: {
         id: true,
         estado: true,
+        preparadoAt: true,
       },
     });
 
@@ -56,6 +57,19 @@ export async function POST(
       {
         error:
           "No se puede regenerar el acceso de un seguimiento finalizado.",
+      },
+      { status: 409 }
+    );
+  }
+
+  if (
+    seguimiento.estado === "PENDIENTE" &&
+    !seguimiento.preparadoAt
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Primero debes finalizar la preparación antes de generar un enlace de acceso.",
       },
       { status: 409 }
     );

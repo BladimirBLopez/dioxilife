@@ -150,6 +150,7 @@ export default async function DetallePedidoPage({
           select: {
             id: true,
             estado: true,
+            preparadoAt: true,
             fechaInicioPrevista: true,
             fechaInicio: true,
             fechaFinalizado: true,
