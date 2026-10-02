@@ -46,6 +46,26 @@ type RespuestaDia = {
 
   actividades: ActividadDia[];
 
+  resumenPeso: {
+    cantidadRegistros: number;
+
+    pesoInicial: {
+      diaPlan: number;
+      peso: number;
+    } | null;
+
+    ultimoPeso: {
+      diaPlan: number;
+      peso: number;
+    } | null;
+
+    pesoPromedio: number | null;
+
+    cambio: number | null;
+
+    esPesoFinal: boolean;
+  };
+
   resumen: {
     realizadas: number;
     pendientes: number;
@@ -363,6 +383,10 @@ export default function RegistroDiarioCliente({
       if (
         mostrarMensaje
       ) {
+        await cargarDia(
+          diaPlan
+        );
+
         toast.success(
           "Registro guardado",
           {
@@ -768,10 +792,121 @@ export default function RegistroDiarioCliente({
           )}
 
 
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+
+            <div className="rounded-xl bg-gray-50 p-3">
+
+              <p className="text-[11px] text-gray-500">
+                Peso inicial
+              </p>
+
+              <p className="mt-1 text-sm font-bold text-gray-900">
+                {data.resumenPeso
+                  .pesoInicial
+                  ? `${data.resumenPeso.pesoInicial.peso} kg`
+                  : "Sin registro"}
+              </p>
+
+              {data.resumenPeso
+                .pesoInicial && (
+                <p className="mt-1 text-[10px] text-gray-400">
+                  Día{" "}
+                  {data.resumenPeso
+                    .pesoInicial
+                    .diaPlan}
+                </p>
+              )}
+
+            </div>
+
+
+            <div className="rounded-xl bg-gray-50 p-3">
+
+              <p className="text-[11px] text-gray-500">
+                {data.resumenPeso
+                  .esPesoFinal
+                  ? "Peso final"
+                  : "Último peso"}
+              </p>
+
+              <p className="mt-1 text-sm font-bold text-gray-900">
+                {data.resumenPeso
+                  .ultimoPeso
+                  ? `${data.resumenPeso.ultimoPeso.peso} kg`
+                  : "Sin registro"}
+              </p>
+
+              {data.resumenPeso
+                .ultimoPeso && (
+                <p className="mt-1 text-[10px] text-gray-400">
+                  Día{" "}
+                  {data.resumenPeso
+                    .ultimoPeso
+                    .diaPlan}
+                </p>
+              )}
+
+            </div>
+
+
+            <div className="rounded-xl bg-gray-50 p-3">
+
+              <p className="text-[11px] text-gray-500">
+                Peso promedio
+              </p>
+
+              <p className="mt-1 text-sm font-bold text-gray-900">
+                {data.resumenPeso
+                  .pesoPromedio !==
+                null
+                  ? `${data.resumenPeso.pesoPromedio} kg`
+                  : "Sin registro"}
+              </p>
+
+              <p className="mt-1 text-[10px] text-gray-400">
+                {data.resumenPeso
+                  .cantidadRegistros}{" "}
+                pesaje
+                {data.resumenPeso
+                  .cantidadRegistros ===
+                1
+                  ? ""
+                  : "s"}
+              </p>
+
+            </div>
+
+
+            <div className="rounded-xl bg-gray-50 p-3">
+
+              <p className="text-[11px] text-gray-500">
+                Cambio
+              </p>
+
+              <p className="mt-1 text-sm font-bold text-gray-900">
+                {data.resumenPeso
+                  .cambio !==
+                null
+                  ? `${data.resumenPeso.cambio > 0 ? "+" : ""}${data.resumenPeso.cambio} kg`
+                  : "—"}
+              </p>
+
+              <p className="mt-1 text-[10px] text-gray-400">
+                Desde el primer pesaje
+              </p>
+
+            </div>
+
+          </div>
+
+
           <div>
 
             <label className="admin-label">
               Peso del día
+              <span className="ml-1 font-normal text-gray-400">
+                (opcional)
+              </span>
             </label>
 
             <div className="relative max-w-xs">

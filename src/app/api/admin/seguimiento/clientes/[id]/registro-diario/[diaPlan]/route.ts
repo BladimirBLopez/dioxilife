@@ -184,6 +184,81 @@ export async function GET(
       },
     });
 
+  const pesosRegistrados =
+    await prisma.registroDiaSeguimiento.findMany({
+      where: {
+        seguimientoId: id,
+        peso: {
+          not: null,
+        },
+      },
+
+      orderBy: {
+        diaPlan: "asc",
+      },
+
+      select: {
+        diaPlan: true,
+        peso: true,
+      },
+    });
+
+  const pesos =
+    pesosRegistrados.map(
+      (registro) => ({
+        diaPlan:
+          registro.diaPlan,
+
+        peso:
+          Number(
+            registro.peso
+          ),
+      })
+    );
+
+  const pesoInicial =
+    pesos.length > 0
+      ? pesos[0]
+      : null;
+
+  const ultimoPeso =
+    pesos.length > 0
+      ? pesos[
+          pesos.length - 1
+        ]
+      : null;
+
+  const pesoPromedio =
+    pesos.length > 0
+      ? Math.round(
+          (
+            pesos.reduce(
+              (
+                acumulado,
+                registro
+              ) =>
+                acumulado +
+                registro.peso,
+              0
+            ) /
+            pesos.length
+          ) *
+            100
+        ) / 100
+      : null;
+
+  const cambioPeso =
+    pesoInicial &&
+    ultimoPeso
+      ? Math.round(
+          (
+            ultimoPeso.peso -
+            pesoInicial.peso
+          ) *
+            100
+        ) / 100
+      : null;
+
   const actividades =
     await prisma.actividadSeguimiento.findMany({
       where: {
@@ -419,6 +494,24 @@ export async function GET(
 
     actividades:
       actividadesDia,
+
+    resumenPeso: {
+      cantidadRegistros:
+        pesos.length,
+
+      pesoInicial,
+
+      ultimoPeso,
+
+      pesoPromedio,
+
+      cambio:
+        cambioPeso,
+
+      esPesoFinal:
+        seguimiento.estado ===
+        "COMPLETADO",
+    },
 
     resumen: {
       realizadas,
