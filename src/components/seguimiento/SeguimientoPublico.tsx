@@ -1368,37 +1368,6 @@ export default function SeguimientoPublico({
                           data.completadoAt,
                       },
                     ],
-
-                    indicaciones:
-                      item.indicaciones.map(
-                        (indicacion) => {
-
-                          const otrosIndicacion =
-                            indicacion.progresos.filter(
-                              (progreso) =>
-                                progreso.diaPlan !==
-                                dia
-                            );
-
-                          return {
-                            ...indicacion,
-
-                            progresos: [
-                              ...otrosIndicacion,
-                              {
-                                diaPlan:
-                                  dia,
-
-                                completado:
-                                  data.completado,
-
-                                completadoAt:
-                                  data.completadoAt,
-                              },
-                            ],
-                          };
-                        }
-                      ),
                   };
                 }
               ),
