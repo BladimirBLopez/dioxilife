@@ -988,23 +988,31 @@ export default function PlanActividadesPage() {
                         ) => (
                           <div
                             key={indice}
-                            className="rounded-xl border border-gray-200 bg-[#FAFAFC] p-3"
+                            className="w-full rounded-2xl border border-gray-200 bg-[#FAFAFC] p-4"
                           >
 
-                            <div className="flex items-start gap-3">
+                            <div className="flex items-center justify-between gap-3">
 
-                              <span className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#F8F6FF] text-xs font-bold text-brand-pink">
-                                {indice + 1}
+                              <p className="text-xs font-bold uppercase tracking-[0.1em] text-[#6B6870]">
+                                Indicación
+                              </p>
+
+                              <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-[#F8F6FF] px-2 text-xs font-bold text-brand-pink">
+                                #{indice + 1}
                               </span>
 
+                            </div>
 
-                              <div className="min-w-0 flex-1 space-y-3">
 
-                                <div>
+                            <div className="mt-4 space-y-4">
 
-                                  <label className="mb-1 block text-xs font-semibold text-[#6B6870]">
-                                    Horario de la indicación
-                                  </label>
+                              <div>
+
+                                <label className="mb-1.5 block text-xs font-semibold text-[#6B6870]">
+                                  Horario
+                                </label>
+
+                                <div className="w-full sm:max-w-48">
 
                                   <SelectorHora
                                     value={
@@ -1024,40 +1032,45 @@ export default function PlanActividadesPage() {
 
                                 </div>
 
-
-                                <div>
-
-                                  <label className="mb-1 block text-xs font-semibold text-[#6B6870]">
-                                    Indicación
-                                  </label>
-
-                                  <textarea
-                                    value={
-                                      instruccion.texto
-                                    }
-                                    onChange={(e) =>
-                                      actualizarInstruccion(
-                                        actividad.nombre,
-                                        indice,
-                                        {
-                                          texto:
-                                            e.target.value,
-                                        }
-                                      )
-                                    }
-                                    className="admin-input min-h-20"
-                                    rows={2}
-                                    maxLength={5000}
-                                    placeholder={`Indicación ${indice + 1}...`}
-                                  />
-
-                                </div>
-
                               </div>
 
 
-                              {actividad.instrucciones.length >
-                                1 && (
+                              <div>
+
+                                <label className="mb-1.5 block text-xs font-semibold text-[#6B6870]">
+                                  Texto de la indicación
+                                </label>
+
+                                <textarea
+                                  value={
+                                    instruccion.texto
+                                  }
+                                  onChange={(e) =>
+                                    actualizarInstruccion(
+                                      actividad.nombre,
+                                      indice,
+                                      {
+                                        texto:
+                                          e.target.value,
+                                      }
+                                    )
+                                  }
+                                  className="admin-input min-h-24 w-full"
+                                  rows={3}
+                                  maxLength={5000}
+                                  placeholder={`Escribe la indicación ${indice + 1}...`}
+                                />
+
+                              </div>
+
+                            </div>
+
+
+                            {actividad.instrucciones.length >
+                              1 && (
+
+                              <div className="mt-4 flex justify-end border-t border-gray-200 pt-3">
+
                                 <button
                                   type="button"
                                   onClick={() =>
@@ -1066,14 +1079,14 @@ export default function PlanActividadesPage() {
                                       indice
                                     )
                                   }
-                                  className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-lg font-bold text-red-500 transition hover:bg-red-100"
-                                  aria-label={`Eliminar indicación ${indice + 1}`}
+                                  className="rounded-lg px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50"
                                 >
-                                  ×
+                                  Eliminar indicación
                                 </button>
-                              )}
 
-                            </div>
+                              </div>
+
+                            )}
 
                           </div>
                         )
@@ -1106,7 +1119,7 @@ export default function PlanActividadesPage() {
                             actividad.nombre
                           )
                         }
-                        className="inline-flex items-center gap-2 rounded-xl border border-brand-pink bg-white px-3 py-2 text-sm font-semibold text-brand-pink transition hover:bg-brand-pink/5"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-brand-pink bg-white px-4 py-3 text-sm font-semibold text-brand-pink transition hover:bg-brand-pink/5 sm:w-auto sm:justify-start sm:py-2"
                       >
                         <span className="text-lg leading-none">
                           +

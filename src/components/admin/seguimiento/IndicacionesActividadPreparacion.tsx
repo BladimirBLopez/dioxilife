@@ -289,7 +289,7 @@ export default function IndicacionesActividadPreparacion({
   return (
     <>
 
-      <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50/70 p-3">
+      <div className="mt-3 w-full rounded-2xl border border-gray-200 bg-gray-50/70 p-3 sm:p-4">
 
         <div className="flex items-center justify-between gap-3">
 
@@ -341,71 +341,60 @@ export default function IndicacionesActividadPreparacion({
                   key={
                     indicacion.id
                   }
-                  className="rounded-xl border border-gray-200 bg-white p-3"
+                  className="w-full rounded-2xl border border-gray-200 bg-white p-4"
                 >
 
-                  <div className="flex gap-3">
+                  <div className="flex items-center justify-between gap-3">
 
-                    <div className="shrink-0">
-
-                      <div className="rounded-lg bg-violet-50 px-2.5 py-1.5 font-mono text-sm font-bold text-violet-700">
-                        {
-                          indicacion.hora
-                        }
-                      </div>
-
+                    <div className="rounded-xl bg-violet-50 px-3.5 py-2 font-mono text-base font-bold text-violet-700">
+                      {
+                        indicacion.hora
+                      }
                     </div>
 
 
-                    <div className="min-w-0 flex-1">
+                    <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-gray-100 px-2 text-xs font-bold text-gray-500">
+                      #{indice + 1}
+                    </span>
 
-                      <div className="flex gap-2">
-
-                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-100 text-[10px] font-bold text-gray-500">
-                          {indice + 1}
-                        </span>
-
-                        <p className="whitespace-pre-wrap text-sm leading-5 text-gray-700">
-                          {
-                            indicacion.texto
-                          }
-                        </p>
-
-                      </div>
+                  </div>
 
 
-                      <div className="mt-2 flex flex-wrap gap-2">
+                  <p className="mt-3 w-full whitespace-pre-wrap break-words text-sm leading-6 text-gray-700">
+                    {
+                      indicacion.texto
+                    }
+                  </p>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            abrirEditar(
-                              indicacion
-                            )
-                          }
-                          className="text-xs font-semibold text-blue-600 hover:underline"
-                        >
-                          Editar
-                        </button>
 
-                        <button
-                          type="button"
-                          disabled={
-                            procesando
-                          }
-                          onClick={() =>
-                            void eliminar(
-                              indicacion
-                            )
-                          }
-                          className="text-xs font-semibold text-red-600 hover:underline disabled:opacity-50"
-                        >
-                          Eliminar
-                        </button>
+                  <div className="mt-4 flex items-center justify-between gap-3 border-t border-gray-100 pt-3">
 
-                      </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        abrirEditar(
+                          indicacion
+                        )
+                      }
+                      className="rounded-lg px-2 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                    >
+                      Editar
+                    </button>
 
-                    </div>
+                    <button
+                      type="button"
+                      disabled={
+                        procesando
+                      }
+                      onClick={() =>
+                        void eliminar(
+                          indicacion
+                        )
+                      }
+                      className="rounded-lg px-2 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                    >
+                      Eliminar
+                    </button>
 
                   </div>
 
