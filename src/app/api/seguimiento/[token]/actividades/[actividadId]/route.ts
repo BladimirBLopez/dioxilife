@@ -255,47 +255,6 @@ export async function PUT(
           });
 
 
-        for (
-          const indicacion of
-          actividad.indicaciones
-        ) {
-          await tx.progresoIndicacion.upsert({
-            where: {
-              indicacionActividadSeguimientoId_diaPlan:
-                {
-                  indicacionActividadSeguimientoId:
-                    indicacion.id,
-
-                  diaPlan,
-                },
-            },
-
-            create: {
-              indicacionActividadSeguimientoId:
-                indicacion.id,
-
-              diaPlan,
-
-              completado,
-
-              completadoAt:
-                completado
-                  ? new Date()
-                  : null,
-            },
-
-            update: {
-              completado,
-
-              completadoAt:
-                completado
-                  ? new Date()
-                  : null,
-            },
-          });
-        }
-
-
         await tx.seguimientoCliente.update({
           where: {
             id:

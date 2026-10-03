@@ -1392,29 +1392,8 @@ export default function SeguimientoPublico({
                     return item;
                   }
 
-                  const otrosProgresosActividad =
-                    item.progresos.filter(
-                      (progreso) =>
-                        progreso.diaPlan !==
-                        diaActual
-                    );
-
                   return {
                     ...item,
-
-                    progresos: [
-                      ...otrosProgresosActividad,
-                      {
-                        diaPlan:
-                          diaActual,
-
-                        completado:
-                          data.actividadCompletada,
-
-                        completadoAt:
-                          data.actividadCompletadoAt,
-                      },
-                    ],
 
                     indicaciones:
                       item.indicaciones.map(
@@ -1461,14 +1440,6 @@ export default function SeguimientoPublico({
           };
         }
       );
-
-      if (
-        data.actividadCompletada
-      ) {
-        toast.success(
-          "Actividad completada."
-        );
-      }
 
     } catch (err) {
       toast.error(
@@ -1955,6 +1926,23 @@ export default function SeguimientoPublico({
                       actividad.momento !==
                         actividad.titulo;
 
+                    const descripcionPrincipal =
+                      actividad.indicaciones.length >
+                        0 &&
+                      actividad.descripcion &&
+                      actividad.descripcion.trim() !==
+                        actividad.indicaciones
+                          .map(
+                            (indicacion) =>
+                              indicacion.texto.trim()
+                          )
+                          .filter(Boolean)
+                          .join("\n")
+                          .trim()
+                        ? actividad.descripcion.trim()
+                        : null;
+
+
                     const instrucciones =
                       actividad.indicaciones.length > 0
                         ? actividad.indicaciones.map(
@@ -2152,6 +2140,23 @@ export default function SeguimientoPublico({
                           </div>
 
 
+                          {descripcionPrincipal && (
+
+                            <div className="mt-4 rounded-xl bg-[#FAF9FC] px-3.5 py-3">
+
+                              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-brand-gray">
+                                Instrucción principal
+                              </p>
+
+                              <p className="mt-1.5 whitespace-pre-wrap text-sm leading-6 text-[#4F4B56]">
+                                {descripcionPrincipal}
+                              </p>
+
+                            </div>
+
+                          )}
+
+
                           {instrucciones.length > 0 && (
                             <div className="mt-4 border-t border-black/5 pt-4">
 
@@ -2342,14 +2347,9 @@ export default function SeguimientoPublico({
                                 <Circle className="h-5 w-5" />
                               )}
 
-                              {actividad.indicaciones.length >
-                              0
-                                ? completada
-                                  ? "Desmarcar todas"
-                                  : "Marcar todas como realizadas"
-                                : completada
-                                  ? "Realizado"
-                                  : "Marcar como realizado"}
+                              {completada
+                                ? "Realizado"
+                                : "Marcar como realizado"}
                             </button>
                           )}
 
@@ -3065,6 +3065,23 @@ export default function SeguimientoPublico({
                         actividad.titulo ===
                           "Ayunas";
 
+                      const descripcionPrincipal =
+                        actividad.indicaciones.length >
+                          0 &&
+                        actividad.descripcion &&
+                        actividad.descripcion.trim() !==
+                          actividad.indicaciones
+                            .map(
+                              (indicacion) =>
+                                indicacion.texto.trim()
+                            )
+                            .filter(Boolean)
+                            .join("\n")
+                            .trim()
+                          ? actividad.descripcion.trim()
+                          : null;
+
+
                       const instrucciones =
                         actividad.indicaciones.length > 0
                           ? actividad.indicaciones.map(
@@ -3173,6 +3190,23 @@ export default function SeguimientoPublico({
 
 
                           <div className="border-t border-black/5 px-4 pb-4 pt-4">
+
+                            {descripcionPrincipal && (
+
+                              <div className="mb-4 rounded-xl bg-[#FAF9FC] px-3.5 py-3">
+
+                                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-brand-gray">
+                                  Instrucción principal
+                                </p>
+
+                                <p className="mt-1.5 whitespace-pre-wrap text-sm leading-6 text-[#4F4B56]">
+                                  {descripcionPrincipal}
+                                </p>
+
+                              </div>
+
+                            )}
+
 
                             {instrucciones.length >
                             0 ? (

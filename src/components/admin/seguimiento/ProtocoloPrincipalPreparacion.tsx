@@ -868,13 +868,29 @@ export default function ProtocoloPrincipalPreparacion({
                             </p>
 
                             {actividad.descripcion &&
-                              actividad.indicaciones.length === 0 && (
+                              actividad.descripcion.trim() !==
+                                actividad.indicaciones
+                                  .map(
+                                    (indicacion) =>
+                                      indicacion.texto.trim()
+                                  )
+                                  .filter(Boolean)
+                                  .join("\n")
+                                  .trim() && (
 
-                              <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-gray-500">
-                                {
-                                  actividad.descripcion
-                                }
-                              </p>
+                              <div className="mt-2 rounded-xl bg-gray-50 px-3 py-2.5">
+
+                                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400">
+                                  Instrucción principal
+                                </p>
+
+                                <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-gray-600">
+                                  {
+                                    actividad.descripcion
+                                  }
+                                </p>
+
+                              </div>
 
                             )}
 

@@ -47,6 +47,7 @@ type ActividadRecibida = {
   id: string | null;
   nombre: NombreSeccion;
   hora: string | null;
+  descripcion: string | null;
   indicaciones: IndicacionRecibida[];
 };
 
@@ -295,6 +296,24 @@ function obtenerActividades(
       }
     }
 
+    const descripcion =
+      typeof valor.descripcion ===
+        "string"
+        ? valor.descripcion.trim()
+        : "";
+
+    if (
+      descripcion.length >
+      5000
+    ) {
+      return {
+        ok: false,
+        error:
+          `La instrucción principal de ${seccion.nombre} supera los 5000 caracteres.`,
+      };
+    }
+
+
     const resultadoIndicaciones =
       obtenerIndicaciones(
         valor,
@@ -318,6 +337,10 @@ function obtenerActividades(
         seccion.nombre,
 
       hora,
+
+      descripcion:
+        descripcion ||
+        null,
 
       indicaciones:
         resultadoIndicaciones
@@ -522,15 +545,6 @@ export async function PUT(
           }
         }
 
-        const descripcion =
-          actividad.indicaciones
-            .map(
-              (indicacion) =>
-                indicacion.texto
-            )
-            .join("\n") ||
-          null;
-
         const data = {
           seccion:
             "PRINCIPAL" as const,
@@ -544,7 +558,8 @@ export async function PUT(
           titulo:
             actividad.nombre,
 
-          descripcion,
+          descripcion:
+            actividad.descripcion,
 
           momento:
             actividad.nombre,

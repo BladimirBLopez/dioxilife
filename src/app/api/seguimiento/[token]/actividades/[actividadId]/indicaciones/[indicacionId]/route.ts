@@ -269,91 +269,6 @@ export async function PUT(
           });
 
 
-        const idsIndicaciones =
-          actividad.indicaciones.map(
-            (indicacion) =>
-              indicacion.id
-          );
-
-
-        const cantidadCompletadas =
-          await tx.progresoIndicacion.count({
-            where: {
-              indicacionActividadSeguimientoId:
-                {
-                  in:
-                    idsIndicaciones,
-                },
-
-              diaPlan,
-
-              completado:
-                true,
-            },
-          });
-
-
-        const cantidadTotal =
-          idsIndicaciones.length;
-
-
-        const actividadCompletada =
-          cantidadTotal >
-            0 &&
-          cantidadCompletadas ===
-            cantidadTotal;
-
-
-        const progresoActividad =
-          await tx.progresoActividad.upsert({
-            where: {
-              seguimientoId_actividadSeguimientoId_diaPlan:
-                {
-                  seguimientoId:
-                    seguimiento.id,
-
-                  actividadSeguimientoId:
-                    actividad.id,
-
-                  diaPlan,
-                },
-            },
-
-            create: {
-              seguimientoId:
-                seguimiento.id,
-
-              actividadSeguimientoId:
-                actividad.id,
-
-              diaPlan,
-
-              completado:
-                actividadCompletada,
-
-              completadoAt:
-                actividadCompletada
-                  ? new Date()
-                  : null,
-            },
-
-            update: {
-              completado:
-                actividadCompletada,
-
-              completadoAt:
-                actividadCompletada
-                  ? new Date()
-                  : null,
-            },
-
-            select: {
-              completado: true,
-              completadoAt: true,
-            },
-          });
-
-
         await tx.seguimientoCliente.update({
           where: {
             id:
@@ -369,20 +284,12 @@ export async function PUT(
 
         return {
           progresoIndicacion,
-          progresoActividad,
-          cantidadCompletadas,
-          cantidadTotal,
         };
       }
     );
 
 
   return NextResponse.json({
-    diaPlan:
-      resultado
-        .progresoIndicacion
-        .diaPlan,
-
     completado:
       resultado
         .progresoIndicacion
@@ -392,23 +299,5 @@ export async function PUT(
       resultado
         .progresoIndicacion
         .completadoAt,
-
-    actividadCompletada:
-      resultado
-        .progresoActividad
-        .completado,
-
-    actividadCompletadoAt:
-      resultado
-        .progresoActividad
-        .completadoAt,
-
-    cantidadCompletadas:
-      resultado
-        .cantidadCompletadas,
-
-    cantidadTotal:
-      resultado
-        .cantidadTotal,
   });
 }

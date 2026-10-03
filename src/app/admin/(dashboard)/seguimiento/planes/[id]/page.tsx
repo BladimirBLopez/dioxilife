@@ -90,6 +90,7 @@ type ActividadBasica = {
   nombre:
     NombreActividad;
   hora: string;
+  descripcion: string;
   instrucciones: IndicacionBasica[];
 };
 
@@ -163,6 +164,82 @@ function actividadAInstrucciones(
     },
   ];
 }
+
+function descripcionPrincipalActividad(
+  actividad:
+    | Actividad
+    | undefined
+) {
+  const descripcion =
+    actividad?.descripcion
+      ?.trim() ?? "";
+
+  if (!descripcion) {
+    return "";
+  }
+
+  const estructuradas =
+    actividad?.indicaciones
+      ?.filter(
+        (indicacion) =>
+          indicacion.activo
+      ) ?? [];
+
+  /*
+   * Compatibilidad:
+   * anteriormente descripcion era una
+   * copia de todas las indicaciones.
+   * Si coincide exactamente, no la
+   * consideramos instrucción principal.
+   */
+  if (
+    estructuradas.length >
+    0
+  ) {
+    const textoIndicaciones =
+      estructuradas
+        .map(
+          (indicacion) =>
+            indicacion.texto
+              .trim()
+        )
+        .filter(Boolean)
+        .join("\n");
+
+    const normalizar = (
+      valor: string
+    ) =>
+      valor
+        .split(/\r?\n/)
+        .map(
+          (linea) =>
+            linea.trim()
+        )
+        .filter(Boolean)
+        .join("\n");
+
+    if (
+      normalizar(
+        descripcion
+      ) ===
+      normalizar(
+        textoIndicaciones
+      )
+    ) {
+      return "";
+    }
+
+    return descripcion;
+  }
+
+  /*
+   * Si aún no existen indicaciones
+   * estructuradas, descripcion puede
+   * pertenecer al formato antiguo.
+   */
+  return "";
+}
+
 
 function limpiarInstruccion(
   valor: string
@@ -288,6 +365,11 @@ function construirActividadesBasicas(
             ? ""
             : encontrada?.hora ??
               seccion.horaInicial,
+
+        descripcion:
+          descripcionPrincipalActividad(
+            encontrada
+          ),
 
         instrucciones:
           actividadAInstrucciones(
@@ -678,6 +760,11 @@ export default function PlanActividadesPage() {
                           ? null
                           : actividad.hora,
 
+                      descripcion:
+                        actividad.descripcion
+                          .trim() ||
+                        null,
+
                       indicaciones:
                         actividad.instrucciones
                           .map(
@@ -975,8 +1062,45 @@ export default function PlanActividadesPage() {
 
                   <div className="p-4 sm:p-5">
 
+                    {actividad.nombre !==
+                      "Importante" && (
+
+                      <div className="mb-5">
+
+                        <label className="admin-label">
+                          Instrucción principal
+                        </label>
+
+                        <p className="mb-2 text-xs leading-5 text-[#8A8790]">
+                          Describe aquí la indicación propia de {actividad.nombre}. Esta información es independiente de las indicaciones con horario.
+                        </p>
+
+                        <textarea
+                          value={
+                            actividad.descripcion
+                          }
+                          onChange={(e) =>
+                            actualizarActividad(
+                              actividad.nombre,
+                              {
+                                descripcion:
+                                  e.target.value,
+                              }
+                            )
+                          }
+                          className="admin-input min-h-24 w-full"
+                          rows={3}
+                          maxLength={5000}
+                          placeholder={`Escribe la instrucción principal de ${actividad.nombre}...`}
+                        />
+
+                      </div>
+
+                    )}
+
+
                     <label className="admin-label">
-                      Instrucciones
+                      Indicaciones con horario
                     </label>
 
                     <div className="space-y-3">
