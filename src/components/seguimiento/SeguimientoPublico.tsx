@@ -1866,39 +1866,109 @@ export default function SeguimientoPublico({
       </header>
 
 
-      {seguimiento.estado ===
-        "ACTIVO" && (
+        {seguimiento.estado ===
+          "ACTIVO" && (
 
-        <section className="sticky top-0 z-40 border-b border-[#E9E4F2] bg-[#F8F7FC]/95 py-2 backdrop-blur">
+          <section className="sticky top-0 z-40 border-b border-[#E9E4F2] bg-[#F8F7FC]/95 py-2 backdrop-blur">
 
-          <div className="mx-auto max-w-3xl px-3 sm:px-4">
+            <div className="mx-auto max-w-3xl px-3 sm:px-4">
 
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-2xl border border-[#E9E4F2] bg-white px-3.5 py-3 shadow-sm">
+              <div className="rounded-2xl border border-[#E9E4F2] bg-white px-4 py-3 shadow-sm">
 
-              <div className="min-w-0">
+                <div className="flex items-start justify-between gap-3">
 
-                <div className="flex items-center gap-3">
+                  <div className="min-w-0">
 
-                  <span className="shrink-0 text-xl font-extrabold text-brand-blue">
-                    {porcentajeHoy}%
-                  </span>
+                    <p className="truncate text-base font-extrabold text-[#1F1B24]">
+                      {seguimiento.nombreCliente?.trim() || "Cliente"}
+                    </p>
 
-                  <div className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[#EEEAF5]">
+                    <p className="mt-0.5 text-[11px] font-semibold text-brand-gray">
+                      Seguimiento de hoy
+                    </p>
 
-                    <div
-                      className="h-full rounded-full bg-brand-pink transition-all duration-300"
-                      style={{
-                        width:
-                          `${porcentajeHoy}%`,
-                      }}
-                    />
+                  </div>
+
+
+                  <div className="shrink-0 text-right">
+
+                    <p className="text-2xl font-extrabold text-brand-blue">
+                      {porcentajeHoy}%
+                    </p>
+
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-brand-gray">
+                      avance
+                    </p>
 
                   </div>
 
                 </div>
 
 
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-semibold text-brand-gray">
+                <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[#EEEAF5]">
+
+                  <div
+                    className="h-full rounded-full bg-brand-pink transition-all duration-300"
+                    style={{
+                      width:
+                        `${porcentajeHoy}%`,
+                    }}
+                  />
+
+                </div>
+
+
+                <div className="mt-3 grid grid-cols-2 divide-x divide-[#EEEAF3] rounded-xl bg-[#FAF9FC] py-2.5">
+
+                  <div className="px-3">
+
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-brand-gray">
+                      Peso inicial
+                    </p>
+
+                    <p className="mt-0.5 text-base font-extrabold text-[#1F1B24]">
+                      {pesoInicial
+                        ? `${pesoInicial.peso.toLocaleString(
+                            "es-BO",
+                            {
+                              minimumFractionDigits:
+                                1,
+                              maximumFractionDigits:
+                                2,
+                            }
+                          )} kg`
+                        : "—"}
+                    </p>
+
+                  </div>
+
+
+                  <div className="px-3">
+
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-brand-gray">
+                      Peso actual
+                    </p>
+
+                    <p className="mt-0.5 text-base font-extrabold text-[#1F1B24]">
+                      {ultimoPeso
+                        ? `${ultimoPeso.peso.toLocaleString(
+                            "es-BO",
+                            {
+                              minimumFractionDigits:
+                                1,
+                              maximumFractionDigits:
+                                2,
+                            }
+                          )} kg`
+                        : "—"}
+                    </p>
+
+                  </div>
+
+                </div>
+
+
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-semibold text-brand-gray">
 
                   <span>
                     {completadasHoy}/{tareasHoy.length} actividades
@@ -1917,79 +1987,11 @@ export default function SeguimientoPublico({
 
               </div>
 
-
-              <div className="flex min-w-[88px] flex-col justify-center border-l border-[#EEEAF3] pl-3 text-right">
-
-                <p className="whitespace-nowrap text-base font-extrabold text-[#1F1B24]">
-
-                  {ultimoPeso
-                    ? `${ultimoPeso.peso.toLocaleString(
-                        "es-BO",
-                        {
-                          minimumFractionDigits:
-                            1,
-                          maximumFractionDigits:
-                            2,
-                        }
-                      )} kg`
-                    : "Sin peso"}
-
-                </p>
-
-
-                <p
-                  className={`mt-0.5 whitespace-nowrap text-[11px] font-bold ${
-                    cambioPeso ===
-                      null ||
-                    cambioPeso ===
-                      0
-                      ? "text-brand-gray"
-                      : cambioPeso >
-                          0
-                        ? "text-amber-700"
-                        : "text-brand-blue"
-                  }`}
-                >
-
-                  {cambioPeso ===
-                  null
-                    ? "Sin comparación"
-                    : cambioPeso >
-                        0
-                      ? `↑ ${Math.abs(
-                          cambioPeso
-                        ).toLocaleString(
-                          "es-BO",
-                          {
-                            maximumFractionDigits:
-                              2,
-                          }
-                        )} kg`
-                      : cambioPeso <
-                          0
-                        ? `↓ ${Math.abs(
-                            cambioPeso
-                          ).toLocaleString(
-                            "es-BO",
-                            {
-                              maximumFractionDigits:
-                                2,
-                            }
-                          )} kg`
-                        : "— sin cambio"}
-
-                </p>
-
-              </div>
-
             </div>
 
-          </div>
+          </section>
 
-        </section>
-
-      )}
-
+        )}
 
       <div className="mx-auto max-w-3xl px-4 py-5">
 
@@ -2010,38 +2012,7 @@ export default function SeguimientoPublico({
         </section>
 
 
-        <section className="mt-5 overflow-hidden rounded-3xl bg-gradient-to-br from-brand-blue to-[#4B2DB7] p-5 text-white shadow-sm">
-
-          <div className="flex items-start justify-between gap-4">
-
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/70">
-                {seguimiento.nombrePlan}
-              </p>
-
-              <p className="mt-2 text-3xl font-extrabold">
-                Día {diaActual}
-              </p>
-
-              <p className="mt-1 text-sm text-white/75">
-                de {seguimiento.duracionDias} días
-              </p>
-            </div>
-
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10">
-              <CalendarDays className="h-6 w-6" />
-            </div>
-
-          </div>
-
-
-        </section>
-
-
-        {pestana ===
-          "hoy" && (
-
-          <>
+          {pestana === "hoy" && (
 
           <section className="mt-5 overflow-hidden rounded-2xl border border-[#E9E4F2] bg-white p-4 shadow-sm sm:p-5">
 
@@ -2311,6 +2282,43 @@ export default function SeguimientoPublico({
             )}
 
           </section>
+
+          )}
+
+
+        <section className="mt-5 overflow-hidden rounded-3xl bg-gradient-to-br from-brand-blue to-[#4B2DB7] p-5 text-white shadow-sm">
+
+          <div className="flex items-start justify-between gap-4">
+
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/70">
+                {seguimiento.nombrePlan}
+              </p>
+
+              <p className="mt-2 text-3xl font-extrabold">
+                Día {diaActual}
+              </p>
+
+              <p className="mt-1 text-sm text-white/75">
+                de {seguimiento.duracionDias} días
+              </p>
+            </div>
+
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10">
+              <CalendarDays className="h-6 w-6" />
+            </div>
+
+          </div>
+
+
+        </section>
+
+
+        {pestana ===
+          "hoy" && (
+
+          <>
+
 
           <section className="mt-6">
 
