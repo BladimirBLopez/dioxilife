@@ -30,6 +30,16 @@ import {
 
 import { toast } from "sonner";
 
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
 
 type EstadoSeguimiento =
   | "PENDIENTE"
@@ -82,6 +92,12 @@ type Actividad = {
 };
 
 
+type RegistroPeso = {
+  diaPlan: number;
+  peso: number;
+};
+
+
 type Seguimiento = {
   nombreCliente: string | null;
   nombrePlan: string;
@@ -91,6 +107,7 @@ type Seguimiento = {
   fechaInicio: string | null;
   fechaFinalizado: string | null;
   diaActual: number | null;
+  pesos: RegistroPeso[];
   actividades: Actividad[];
 };
 
@@ -1083,6 +1100,90 @@ export default function SeguimientoPublico({
       : 0;
 
 
+  const totalIndicacionesHoy =
+    tareasHoy.reduce(
+      (
+        total,
+        actividad
+      ) =>
+        total +
+        actividad.indicaciones.length,
+      0
+    );
+
+
+  const indicacionesCompletadasHoy =
+    seguimiento?.diaActual
+      ? tareasHoy.reduce(
+          (
+            total,
+            actividad
+          ) =>
+            total +
+            actividad.indicaciones.filter(
+              (indicacion) =>
+                indicacionCompletadaEnDia(
+                  indicacion,
+                  seguimiento.diaActual as number
+                )
+            ).length,
+          0
+        )
+      : 0;
+
+
+  const pesos =
+    seguimiento?.pesos ??
+    [];
+
+
+  const pesoInicial =
+    pesos.length > 0
+      ? pesos[0]
+      : null;
+
+
+  const ultimoPeso =
+    pesos.length > 0
+      ? pesos[
+          pesos.length - 1
+        ]
+      : null;
+
+
+  const pesoPromedio =
+    pesos.length > 0
+      ? Math.round(
+          (
+            pesos.reduce(
+              (
+                acumulado,
+                registro
+              ) =>
+                acumulado +
+                registro.peso,
+              0
+            ) /
+            pesos.length
+          ) *
+            100
+        ) / 100
+      : null;
+
+
+  const cambioPeso =
+    pesoInicial &&
+    ultimoPeso
+      ? Math.round(
+          (
+            ultimoPeso.peso -
+            pesoInicial.peso
+          ) *
+            100
+        ) / 100
+      : null;
+
+
   async function iniciarSeguimiento() {
     if (iniciando) {
       return;
@@ -1765,6 +1866,131 @@ export default function SeguimientoPublico({
       </header>
 
 
+      {seguimiento.estado ===
+        "ACTIVO" && (
+
+        <section className="sticky top-0 z-40 border-b border-[#E9E4F2] bg-[#F8F7FC]/95 py-2 backdrop-blur">
+
+          <div className="mx-auto max-w-3xl px-3 sm:px-4">
+
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-2xl border border-[#E9E4F2] bg-white px-3.5 py-3 shadow-sm">
+
+              <div className="min-w-0">
+
+                <div className="flex items-center gap-3">
+
+                  <span className="shrink-0 text-xl font-extrabold text-brand-blue">
+                    {porcentajeHoy}%
+                  </span>
+
+                  <div className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[#EEEAF5]">
+
+                    <div
+                      className="h-full rounded-full bg-brand-pink transition-all duration-300"
+                      style={{
+                        width:
+                          `${porcentajeHoy}%`,
+                      }}
+                    />
+
+                  </div>
+
+                </div>
+
+
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-semibold text-brand-gray">
+
+                  <span>
+                    {completadasHoy}/{tareasHoy.length} actividades
+                  </span>
+
+                  {totalIndicacionesHoy >
+                    0 && (
+
+                    <span>
+                      Indicaciones {indicacionesCompletadasHoy}/{totalIndicacionesHoy}
+                    </span>
+
+                  )}
+
+                </div>
+
+              </div>
+
+
+              <div className="flex min-w-[88px] flex-col justify-center border-l border-[#EEEAF3] pl-3 text-right">
+
+                <p className="whitespace-nowrap text-base font-extrabold text-[#1F1B24]">
+
+                  {ultimoPeso
+                    ? `${ultimoPeso.peso.toLocaleString(
+                        "es-BO",
+                        {
+                          minimumFractionDigits:
+                            1,
+                          maximumFractionDigits:
+                            2,
+                        }
+                      )} kg`
+                    : "Sin peso"}
+
+                </p>
+
+
+                <p
+                  className={`mt-0.5 whitespace-nowrap text-[11px] font-bold ${
+                    cambioPeso ===
+                      null ||
+                    cambioPeso ===
+                      0
+                      ? "text-brand-gray"
+                      : cambioPeso >
+                          0
+                        ? "text-amber-700"
+                        : "text-brand-blue"
+                  }`}
+                >
+
+                  {cambioPeso ===
+                  null
+                    ? "Sin comparación"
+                    : cambioPeso >
+                        0
+                      ? `↑ ${Math.abs(
+                          cambioPeso
+                        ).toLocaleString(
+                          "es-BO",
+                          {
+                            maximumFractionDigits:
+                              2,
+                          }
+                        )} kg`
+                      : cambioPeso <
+                          0
+                        ? `↓ ${Math.abs(
+                            cambioPeso
+                          ).toLocaleString(
+                            "es-BO",
+                            {
+                              maximumFractionDigits:
+                                2,
+                            }
+                          )} kg`
+                        : "— sin cambio"}
+
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+      )}
+
+
       <div className="mx-auto max-w-3xl px-4 py-5">
 
         <section>
@@ -1809,35 +2035,6 @@ export default function SeguimientoPublico({
           </div>
 
 
-          <div className="mt-6">
-
-            <div className="flex items-center justify-between gap-3 text-xs font-semibold">
-              <span>
-                Calificación del día
-              </span>
-
-              <span>
-                {completadasHoy} de {tareasHoy.length}
-              </span>
-            </div>
-
-            <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-white/20">
-              <div
-                className="h-full rounded-full bg-white transition-all duration-300"
-                style={{
-                  width:
-                    `${porcentajeHoy}%`,
-                }}
-              />
-            </div>
-
-            <p className="mt-2 text-right text-xs text-white/70">
-              {porcentajeHoy === 100
-                ? "¡Completaste tu día! 🎉"
-                : `${porcentajeHoy}% realizado`}
-            </p>
-
-          </div>
         </section>
 
 
@@ -1845,6 +2042,275 @@ export default function SeguimientoPublico({
           "hoy" && (
 
           <>
+
+          <section className="mt-5 overflow-hidden rounded-2xl border border-[#E9E4F2] bg-white p-4 shadow-sm sm:p-5">
+
+            <div className="flex items-start justify-between gap-4">
+
+              <div className="min-w-0">
+
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
+                  Evolución del peso
+                </p>
+
+                <div className="mt-1 flex flex-wrap items-baseline gap-2">
+
+                  <p className="text-2xl font-extrabold text-[#1F1B24]">
+                    {ultimoPeso
+                      ? `${ultimoPeso.peso.toLocaleString(
+                          "es-BO",
+                          {
+                            minimumFractionDigits:
+                              1,
+                            maximumFractionDigits:
+                              2,
+                          }
+                        )} kg`
+                      : "Sin registros"}
+                  </p>
+
+                  {ultimoPeso && (
+                    <span className="text-xs font-semibold text-brand-gray">
+                      Día {ultimoPeso.diaPlan}
+                    </span>
+                  )}
+
+                </div>
+
+              </div>
+
+
+              {cambioPeso !==
+                null && (
+
+                <div className="shrink-0 rounded-xl bg-[#F8F6FF] px-3 py-2 text-right">
+
+                  <p
+                    className={`text-sm font-extrabold ${
+                      cambioPeso >
+                        0
+                        ? "text-amber-700"
+                        : cambioPeso <
+                            0
+                          ? "text-brand-blue"
+                          : "text-brand-gray"
+                    }`}
+                  >
+                    {cambioPeso >
+                    0
+                      ? `↑ ${Math.abs(
+                          cambioPeso
+                        ).toLocaleString(
+                          "es-BO",
+                          {
+                            maximumFractionDigits:
+                              2,
+                          }
+                        )} kg`
+                      : cambioPeso <
+                          0
+                        ? `↓ ${Math.abs(
+                            cambioPeso
+                          ).toLocaleString(
+                            "es-BO",
+                            {
+                              maximumFractionDigits:
+                                2,
+                            }
+                          )} kg`
+                        : "— 0 kg"}
+                  </p>
+
+                  <p className="mt-0.5 text-[10px] font-semibold text-brand-gray">
+                    desde el inicio
+                  </p>
+
+                </div>
+
+              )}
+
+            </div>
+
+
+            {pesos.length >
+            0 ? (
+
+              <>
+
+                <div className="mt-5 h-52 w-full">
+
+                  <ResponsiveContainer
+                    width="100%"
+                    height="100%"
+                  >
+
+                    <LineChart
+                      data={pesos.map(
+                        (registro) => ({
+                          ...registro,
+                          dia:
+                            `D${registro.diaPlan}`,
+                        })
+                      )}
+                      margin={{
+                        top: 8,
+                        right: 8,
+                        left: -12,
+                        bottom: 0,
+                      }}
+                    >
+
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        vertical={false}
+                        opacity={0.25}
+                      />
+
+                      <XAxis
+                        dataKey="dia"
+                        axisLine={false}
+                        tickLine={false}
+                        fontSize={11}
+                      />
+
+                      <YAxis
+                        dataKey="peso"
+                        domain={[
+                          "auto",
+                          "auto",
+                        ]}
+                        axisLine={false}
+                        tickLine={false}
+                        fontSize={11}
+                        width={46}
+                      />
+
+                      <Tooltip />
+
+                      <Line
+                        type="monotone"
+                        dataKey="peso"
+                        name="Peso"
+                        unit=" kg"
+                        stroke="#6750A4"
+                        strokeWidth={3}
+                        dot={{
+                          r: 4,
+                          fill:
+                            "#FFFFFF",
+                          stroke:
+                            "#6750A4",
+                          strokeWidth:
+                            3,
+                        }}
+                        activeDot={{
+                          r: 6,
+                        }}
+                      />
+
+                    </LineChart>
+
+                  </ResponsiveContainer>
+
+                </div>
+
+
+                {pesos.length ===
+                  1 && (
+
+                  <p className="mt-2 text-center text-xs text-brand-gray">
+                    Registra más días para visualizar la tendencia del peso.
+                  </p>
+
+                )}
+
+
+                <div className="mt-4 grid grid-cols-3 divide-x divide-[#EEEAF3] rounded-xl bg-[#FAF9FC] py-3 text-center">
+
+                  <div className="px-2">
+
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-brand-gray">
+                      Inicial
+                    </p>
+
+                    <p className="mt-1 text-sm font-extrabold text-[#1F1B24]">
+                      {pesoInicial
+                        ? `${pesoInicial.peso.toLocaleString(
+                            "es-BO",
+                            {
+                              maximumFractionDigits:
+                                2,
+                            }
+                          )} kg`
+                        : "—"}
+                    </p>
+
+                  </div>
+
+
+                  <div className="px-2">
+
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-brand-gray">
+                      Último
+                    </p>
+
+                    <p className="mt-1 text-sm font-extrabold text-[#1F1B24]">
+                      {ultimoPeso
+                        ? `${ultimoPeso.peso.toLocaleString(
+                            "es-BO",
+                            {
+                              maximumFractionDigits:
+                                2,
+                            }
+                          )} kg`
+                        : "—"}
+                    </p>
+
+                  </div>
+
+
+                  <div className="px-2">
+
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-brand-gray">
+                      Promedio
+                    </p>
+
+                    <p className="mt-1 text-sm font-extrabold text-[#1F1B24]">
+                      {pesoPromedio !==
+                      null
+                        ? `${pesoPromedio.toLocaleString(
+                            "es-BO",
+                            {
+                              maximumFractionDigits:
+                                2,
+                            }
+                          )} kg`
+                        : "—"}
+                    </p>
+
+                  </div>
+
+                </div>
+
+              </>
+
+            ) : (
+
+              <div className="mt-4 rounded-xl border border-dashed border-[#DDD7E8] bg-[#FAF9FC] px-4 py-5 text-center">
+
+                <p className="text-sm font-semibold text-[#4F4B56]">
+                  Aún no hay registros de peso
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-brand-gray">
+                  Cuando se registre un peso, aquí aparecerá su evolución.
+                </p>
+
+              </div>
+
+            )}
+
+          </section>
 
           <section className="mt-6">
 

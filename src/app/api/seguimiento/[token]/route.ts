@@ -75,6 +75,23 @@ export async function GET(
         fechaFinalizado:
           true,
 
+        registrosDiarios: {
+          where: {
+            peso: {
+              not: null,
+            },
+          },
+
+          orderBy: {
+            diaPlan: "asc",
+          },
+
+          select: {
+            diaPlan: true,
+            peso: true,
+          },
+        },
+
         actividades: {
           where: {
             activo: true,
@@ -225,6 +242,19 @@ export async function GET(
         seguimiento.fechaFinalizado,
 
       diaActual,
+
+      pesos:
+        seguimiento.registrosDiarios.map(
+          (registro) => ({
+            diaPlan:
+              registro.diaPlan,
+
+            peso:
+              Number(
+                registro.peso
+              ),
+          })
+        ),
 
       actividades:
         seguimiento.actividades,
