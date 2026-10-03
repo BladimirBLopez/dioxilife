@@ -1616,80 +1616,215 @@ export default function SeguimientoPublico({
     seguimiento.estado ===
     "PENDIENTE"
   ) {
-    return (
-      <main className="min-h-screen bg-[#F8F7FC] px-4 py-8 sm:py-12">
-        <div className="mx-auto max-w-md">
+    const nombreBienvenida =
+      seguimiento.nombreCliente?.trim() ||
+      "Cliente";
 
-          <header className="mb-6 text-center">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-[#E9E4F2] bg-white shadow-sm">
+    return (
+      <main className="min-h-screen bg-gradient-to-b from-[#F2EDFF] via-[#FBFAFD] to-[#F8F7FC] px-4 py-6 sm:py-10">
+
+        <div className="mx-auto w-full max-w-lg">
+
+
+          <header className="text-center">
+
+            <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-[28px] border border-white/80 bg-white shadow-[0_18px_45px_rgba(67,48,130,0.16)]">
+
               <Image
                 src="/logo.png"
                 alt="DioxiLife Bolivia"
-                width={90}
-                height={74}
+                width={120}
+                height={100}
                 priority
-                className="h-auto w-16"
+                className="h-auto w-20"
               />
+
             </div>
 
-            <p className="mt-4 text-xs font-bold uppercase tracking-[0.18em] text-brand-pink">
-              Mi seguimiento
+
+            <p className="mt-5 text-sm font-extrabold uppercase tracking-[0.2em] text-brand-pink">
+              DioxiLife Bolivia
             </p>
+
+            <p className="mt-1 text-sm font-semibold text-brand-gray">
+              Seguimiento personalizado
+            </p>
+
           </header>
 
 
-          <section className="overflow-hidden rounded-3xl border border-[#E9E4F2] bg-white shadow-sm">
+          <section className="mt-6 overflow-hidden rounded-[28px] border border-[#E6E0F0] bg-white shadow-[0_22px_60px_rgba(42,31,79,0.12)]">
 
-            <div className="bg-gradient-to-br from-brand-blue to-[#4B2DB7] px-6 py-7 text-white">
-              <Sparkles className="h-7 w-7 text-white/90" />
 
-              <h1 className="mt-4 text-2xl font-bold">
-                {primerNombre(
-                  seguimiento.nombreCliente
-                ) === "Hola"
-                  ? "¡Bienvenido!"
-                  : `Hola, ${primerNombre(
-                      seguimiento.nombreCliente
-                    )}`}
-              </h1>
+            <div className="relative overflow-hidden bg-gradient-to-br from-brand-blue via-[#5B3DB9] to-[#41258E] px-6 py-7 text-white sm:px-7 sm:py-8">
 
-              <p className="mt-2 text-sm leading-6 text-white/80">
-                Tu agenda personal ya está preparada.
-              </p>
+              <div className="absolute -right-10 -top-12 h-36 w-36 rounded-full bg-white/10" />
+
+              <div className="absolute -bottom-16 -left-10 h-44 w-44 rounded-full bg-white/[0.06]" />
+
+
+              <div className="relative">
+
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-bold text-white/90">
+
+                  <Sparkles className="h-4 w-4" />
+
+                  Todo listo para comenzar
+
+                </div>
+
+
+                <p className="mt-6 text-sm font-semibold text-white/70">
+                  Bienvenido
+                </p>
+
+
+                <h1 className="mt-1 break-words text-3xl font-extrabold tracking-tight sm:text-4xl">
+                  {nombreBienvenida}
+                </h1>
+
+
+                <p className="mt-3 max-w-md text-sm leading-6 text-white/80">
+                  Tu espacio personal de seguimiento ya está preparado. Desde aquí podrás consultar tu agenda y registrar tus avances día a día.
+                </p>
+
+              </div>
+
             </div>
 
 
-            <div className="p-6">
+            <div className="p-5 sm:p-6">
 
-              <div className="rounded-2xl bg-[#F8F6FF] p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
-                  Tu plan
+
+              <div className="rounded-2xl border border-[#E9E4F2] bg-[#FAF8FF] p-5">
+
+                <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-brand-pink">
+                  Tu plan personalizado
                 </p>
 
-                <h2 className="mt-2 text-lg font-bold text-[#1F1B24]">
+
+                <h2 className="mt-2 text-xl font-extrabold leading-tight text-[#1F1B24]">
                   {seguimiento.nombrePlan}
                 </h2>
 
-                <div className="mt-4 flex items-center gap-2 text-sm text-brand-gray">
-                  <CalendarDays className="h-4 w-4 text-brand-blue" />
 
-                  <span>
-                    {seguimiento.duracionDias} días de seguimiento
-                  </span>
+                <div className="mt-5 grid grid-cols-2 gap-3">
+
+                  <div className="rounded-2xl bg-white p-3.5 shadow-sm">
+
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F0ECFA] text-brand-blue">
+                      <CalendarDays className="h-5 w-5" />
+                    </div>
+
+                    <p className="mt-3 text-[10px] font-bold uppercase tracking-wide text-brand-gray">
+                      Duración
+                    </p>
+
+                    <p className="mt-0.5 text-base font-extrabold text-[#1F1B24]">
+                      {seguimiento.duracionDias} días
+                    </p>
+
+                  </div>
+
+
+                  <div className="rounded-2xl bg-white p-3.5 shadow-sm">
+
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F0ECFA] text-brand-blue">
+                      <Clock3 className="h-5 w-5" />
+                    </div>
+
+                    <p className="mt-3 text-[10px] font-bold uppercase tracking-wide text-brand-gray">
+                      Inicio previsto
+                    </p>
+
+                    <p className="mt-0.5 text-sm font-extrabold leading-5 text-[#1F1B24]">
+
+                      {seguimiento.fechaInicioPrevista
+                        ? formatearFecha(
+                            seguimiento.fechaInicioPrevista
+                          )
+                        : "Al iniciar"}
+
+                    </p>
+
+                  </div>
+
                 </div>
 
-                {seguimiento.fechaInicioPrevista && (
-                  <div className="mt-2 flex items-center gap-2 text-sm text-brand-gray">
-                    <Clock3 className="h-4 w-4 text-brand-blue" />
+              </div>
 
-                    <span>
-                      Inicio previsto:{" "}
-                      {formatearFecha(
-                        seguimiento.fechaInicioPrevista
-                      )}
-                    </span>
+
+              <div className="mt-6">
+
+                <p className="text-sm font-extrabold text-[#1F1B24]">
+                  Desde este enlace podrás
+                </p>
+
+
+                <div className="mt-3 grid grid-cols-2 gap-3">
+
+
+                  <div className="rounded-2xl border border-[#EEEAF5] bg-white p-4">
+
+                    <CalendarDays className="h-5 w-5 text-brand-pink" />
+
+                    <p className="mt-3 text-sm font-bold text-[#1F1B24]">
+                      Agenda diaria
+                    </p>
+
+                    <p className="mt-1 text-xs leading-5 text-brand-gray">
+                      Revisar las actividades correspondientes a cada día.
+                    </p>
+
                   </div>
-                )}
+
+
+                  <div className="rounded-2xl border border-[#EEEAF5] bg-white p-4">
+
+                    <Sparkles className="h-5 w-5 text-brand-pink" />
+
+                    <p className="mt-3 text-sm font-bold text-[#1F1B24]">
+                      Tu avance
+                    </p>
+
+                    <p className="mt-1 text-xs leading-5 text-brand-gray">
+                      Visualizar tu porcentaje de progreso diario.
+                    </p>
+
+                  </div>
+
+
+                  <div className="rounded-2xl border border-[#EEEAF5] bg-white p-4">
+
+                    <Clock3 className="h-5 w-5 text-brand-pink" />
+
+                    <p className="mt-3 text-sm font-bold text-[#1F1B24]">
+                      Indicaciones
+                    </p>
+
+                    <p className="mt-1 text-xs leading-5 text-brand-gray">
+                      Consultar horarios e indicaciones organizadas.
+                    </p>
+
+                  </div>
+
+
+                  <div className="rounded-2xl border border-[#EEEAF5] bg-white p-4">
+
+                    <ShieldCheck className="h-5 w-5 text-brand-pink" />
+
+                    <p className="mt-3 text-sm font-bold text-[#1F1B24]">
+                      Evolución
+                    </p>
+
+                    <p className="mt-1 text-xs leading-5 text-brand-gray">
+                      Consultar tus registros y la evolución de tu peso.
+                    </p>
+
+                  </div>
+
+                </div>
+
               </div>
 
 
@@ -1701,31 +1836,63 @@ export default function SeguimientoPublico({
                 disabled={
                   iniciando
                 }
-                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-pink px-5 py-3.5 text-sm font-bold text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-7 inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-brand-pink px-6 py-4 text-base font-extrabold text-white shadow-[0_12px_30px_rgba(219,63,133,0.28)] transition duration-200 hover:-translate-y-0.5 hover:opacity-95 disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-60"
               >
+
                 {iniciando ? (
                   <LoaderCircle className="h-5 w-5 animate-spin" />
                 ) : (
                   <Play className="h-5 w-5" />
                 )}
 
+
                 {iniciando
-                  ? "Iniciando..."
+                  ? "Preparando tu seguimiento..."
                   : "Iniciar mi seguimiento"}
+
               </button>
 
 
-              <div className="mt-5 flex items-start gap-2 rounded-xl border border-[#EEEAF5] bg-white p-3">
-                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-blue" />
+              <div className="mt-5 flex items-start gap-3 rounded-2xl border border-[#E9E4F2] bg-[#FAF9FC] p-4">
 
-                <p className="text-xs leading-5 text-brand-gray">
-                  Este enlace es personal. Guárdalo para volver a consultar tu agenda y tus avances.
-                </p>
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F0ECFA] text-brand-blue">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+
+
+                <div>
+
+                  <p className="text-xs font-extrabold text-[#34303A]">
+                    Enlace personal
+                  </p>
+
+                  <p className="mt-1 text-xs leading-5 text-brand-gray">
+                    Guarda este enlace de WhatsApp. Podrás utilizarlo para volver a consultar tu seguimiento y tus avances.
+                  </p>
+
+                </div>
+
               </div>
 
             </div>
+
           </section>
+
+
+          <footer className="px-4 pb-4 pt-7 text-center">
+
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-brand-blue">
+              DioxiLife Bolivia
+            </p>
+
+            <p className="mt-1 text-xs text-brand-gray">
+              Tu seguimiento organizado en un solo lugar.
+            </p>
+
+          </footer>
+
         </div>
+
       </main>
     );
   }
