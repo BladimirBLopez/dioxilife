@@ -19,6 +19,17 @@ function hashToken(
     .digest("hex");
 }
 
+function horaValida(
+  hora: string | null
+) {
+  return Boolean(
+    hora &&
+      /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(
+        hora
+      )
+  );
+}
+
 export async function POST(
   _req: NextRequest,
   {
@@ -64,9 +75,22 @@ export async function POST(
 
           select: {
             id: true,
-          },
+            titulo: true,
+            seccion: true,
+            hora: true,
 
-          take: 1,
+            indicaciones: {
+              where: {
+                activo: true,
+              },
+
+              select: {
+                id: true,
+                hora: true,
+                texto: true,
+              },
+            },
+          },
         },
       },
     });
@@ -125,6 +149,64 @@ export async function POST(
         status: 409,
       }
     );
+  }
+
+  for (
+    const actividad of
+    seguimiento.actividades
+  ) {
+    for (
+      const indicacion of
+      actividad.indicaciones
+    ) {
+      if (
+        !horaValida(
+          indicacion.hora
+        )
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              `La actividad "${actividad.titulo}" tiene una indicación sin horario válido.`,
+          },
+          {
+            status: 409,
+          }
+        );
+      }
+
+      if (
+        !indicacion.texto.trim()
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              `La actividad "${actividad.titulo}" tiene una indicación vacía.`,
+          },
+          {
+            status: 409,
+          }
+        );
+      }
+    }
+
+    if (
+      actividad.seccion ===
+        "ADICIONAL" &&
+      !horaValida(
+        actividad.hora
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            `El protocolo adicional "${actividad.titulo}" debe tener un horario válido.`,
+        },
+        {
+          status: 409,
+        }
+      );
+    }
   }
 
   const token =

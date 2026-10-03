@@ -230,6 +230,57 @@ export default async function PrepararSeguimientoPage({
             seguimiento.telefonoCliente
           )
         }
+
+        resumenPrincipales={
+          principales.map(
+            (actividad) => ({
+              id:
+                actividad.id,
+
+              titulo:
+                actividad.titulo,
+
+              descripcion:
+                actividad.descripcion,
+
+              hora:
+                actividad.hora,
+
+              diaInicio:
+                actividad.diaInicio,
+
+              diaFin:
+                actividad.diaFin,
+
+              indicaciones:
+                actividad.indicaciones,
+            })
+          )
+        }
+
+        resumenAdicionales={
+          adicionales.map(
+            (actividad) => ({
+              id:
+                actividad.id,
+
+              titulo:
+                actividad.titulo,
+
+              descripcion:
+                actividad.descripcion,
+
+              hora:
+                actividad.hora,
+
+              diaInicio:
+                actividad.diaInicio,
+
+              diaFin:
+                actividad.diaFin,
+            })
+          )
+        }
       >
 
         <ProtocoloPrincipalPreparacion

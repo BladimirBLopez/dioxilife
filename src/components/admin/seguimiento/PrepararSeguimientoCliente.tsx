@@ -18,6 +18,43 @@ import {
   abrirWhatsApp,
 } from "@/lib/whatsapp-cliente";
 
+type IndicacionRevision = {
+  id: string;
+  hora: string;
+  texto: string;
+  orden: number;
+};
+
+type PrincipalRevision = {
+  id: string;
+  titulo: string;
+  descripcion: string | null;
+  hora: string | null;
+  diaInicio: number;
+  diaFin: number | null;
+  indicaciones: IndicacionRevision[];
+};
+
+type AdicionalRevision = {
+  id: string;
+  titulo: string;
+  descripcion: string | null;
+  hora: string | null;
+  diaInicio: number;
+  diaFin: number | null;
+};
+
+function horaValida(
+  hora: string | null
+) {
+  return Boolean(
+    hora &&
+      /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(
+        hora
+      )
+  );
+}
+
 type Props = {
   seguimientoId: string;
   nombreCliente: string;
@@ -28,6 +65,8 @@ type Props = {
   cantidadPrincipales: number;
   cantidadAdicionales: number;
   tieneTelefono: boolean;
+  resumenPrincipales: PrincipalRevision[];
+  resumenAdicionales: AdicionalRevision[];
   children: ReactNode;
 };
 
@@ -41,6 +80,8 @@ export default function PrepararSeguimientoCliente({
   cantidadPrincipales,
   cantidadAdicionales,
   tieneTelefono,
+  resumenPrincipales,
+  resumenAdicionales,
   children,
 }: Props) {
   const router =
@@ -105,6 +146,180 @@ export default function PrepararSeguimientoCliente({
     setEnviando,
   ] =
     useState(false);
+
+
+  const erroresRevision: string[] = [];
+
+  for (
+    const actividad of
+    resumenPrincipales
+  ) {
+    for (
+      const indicacion of
+      actividad.indicaciones
+    ) {
+      if (
+        !horaValida(
+          indicacion.hora
+        )
+      ) {
+        erroresRevision.push(
+          `${actividad.titulo}: hay una indicación sin horario válido.`
+        );
+      }
+
+      if (
+        !indicacion.texto.trim()
+      ) {
+        erroresRevision.push(
+          `${actividad.titulo}: hay una indicación vacía.`
+        );
+      }
+    }
+  }
+
+  for (
+    const actividad of
+    resumenAdicionales
+  ) {
+    if (
+      !horaValida(
+        actividad.hora
+      )
+    ) {
+      erroresRevision.push(
+        `${actividad.titulo}: el protocolo adicional necesita un horario.`
+      );
+    }
+  }
+
+  const actividadesLegacy =
+    resumenPrincipales.filter(
+      (actividad) =>
+        actividad.indicaciones.length ===
+          0 &&
+        Boolean(
+          actividad.descripcion?.trim()
+        )
+    );
+
+  const filasPrincipales =
+    resumenPrincipales.flatMap(
+      (actividad) => {
+        if (
+          actividad.indicaciones.length >
+          0
+        ) {
+          return actividad.indicaciones.map(
+            (indicacion) => ({
+              id:
+                `${actividad.id}-${indicacion.id}`,
+
+              hora:
+                indicacion.hora,
+
+              titulo:
+                actividad.titulo,
+
+              texto:
+                indicacion.texto,
+
+              diaInicio:
+                actividad.diaInicio,
+
+              diaFin:
+                actividad.diaFin,
+            })
+          );
+        }
+
+        return [
+          {
+            id:
+              `${actividad.id}-legacy`,
+
+            hora:
+              actividad.hora,
+
+            titulo:
+              actividad.titulo,
+
+            texto:
+              actividad.descripcion ||
+              "",
+
+            diaInicio:
+              actividad.diaInicio,
+
+            diaFin:
+              actividad.diaFin,
+          },
+        ];
+      }
+    )
+    .filter(
+      (fila) =>
+        Boolean(
+          fila.texto.trim()
+        ) ||
+        Boolean(
+          fila.titulo.trim()
+        )
+    )
+    .sort(
+      (a, b) => {
+        if (
+          a.hora &&
+          b.hora
+        ) {
+          return a.hora.localeCompare(
+            b.hora
+          );
+        }
+
+        if (a.hora) {
+          return -1;
+        }
+
+        if (b.hora) {
+          return 1;
+        }
+
+        return a.titulo.localeCompare(
+          b.titulo
+        );
+      }
+    );
+
+  const filasAdicionales =
+    [...resumenAdicionales].sort(
+      (a, b) => {
+        if (
+          a.hora &&
+          b.hora
+        ) {
+          return a.hora.localeCompare(
+            b.hora
+          );
+        }
+
+        if (a.hora) {
+          return -1;
+        }
+
+        if (b.hora) {
+          return 1;
+        }
+
+        return a.titulo.localeCompare(
+          b.titulo
+        );
+      }
+    );
+
+  const revisionValida =
+    erroresRevision.length ===
+    0;
 
 
   async function guardarPeso() {
@@ -210,6 +425,21 @@ export default function PrepararSeguimientoCliente({
 
   async function finalizarPreparacion() {
     if (finalizando) {
+      return;
+    }
+
+    if (
+      !revisionValida
+    ) {
+      toast.error(
+        "La revisión todavía tiene pendientes",
+        {
+          description:
+            erroresRevision[0] ||
+            "Revisa el protocolo antes de finalizar.",
+        }
+      );
+
       return;
     }
 
@@ -630,10 +860,230 @@ export default function PrepararSeguimientoCliente({
             </div>
 
 
+            <div className="mt-5 space-y-4">
+
+              <div
+                className={`rounded-xl border p-4 ${
+                  revisionValida
+                    ? "border-emerald-200 bg-emerald-50"
+                    : "border-red-200 bg-red-50"
+                }`}
+              >
+
+                <p
+                  className={`text-sm font-semibold ${
+                    revisionValida
+                      ? "text-emerald-800"
+                      : "text-red-800"
+                  }`}
+                >
+                  {revisionValida
+                    ? "✓ Protocolo listo para finalizar"
+                    : "Hay datos pendientes antes de finalizar"}
+                </p>
+
+
+                {erroresRevision.length >
+                  0 && (
+
+                  <div className="mt-2 space-y-1">
+
+                    {erroresRevision.map(
+                      (
+                        error,
+                        indice
+                      ) => (
+
+                      <p
+                        key={`${error}-${indice}`}
+                        className="text-xs leading-5 text-red-700"
+                      >
+                        • {error}
+                      </p>
+
+                    ))}
+
+                  </div>
+
+                )}
+
+
+                {actividadesLegacy.length >
+                  0 && (
+
+                  <p className="mt-2 text-xs leading-5 text-amber-700">
+                    {actividadesLegacy.length} actividad
+                    {actividadesLegacy.length ===
+                    1
+                      ? ""
+                      : "es"} todavía utiliza
+                    {actividadesLegacy.length ===
+                    1
+                      ? ""
+                      : "n"} la descripción antigua. Puede finalizarse, pero conviene convertirla a indicaciones con horario.
+                  </p>
+
+                )}
+
+              </div>
+
+
+              <div className="overflow-hidden rounded-xl border border-gray-200">
+
+                <div className="border-b border-gray-100 bg-gray-50 px-4 py-3">
+
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-gray-500">
+                    Vista previa del protocolo principal
+                  </p>
+
+                </div>
+
+
+                <div className="divide-y divide-gray-100">
+
+                  {filasPrincipales.map(
+                    (fila) => (
+
+                    <div
+                      key={
+                        fila.id
+                      }
+                      className="flex gap-3 px-4 py-3"
+                    >
+
+                      <div className="w-14 shrink-0">
+
+                        <span className="inline-flex rounded-lg bg-violet-50 px-2 py-1 text-xs font-bold text-violet-700">
+                          {fila.hora ||
+                            "—"}
+                        </span>
+
+                      </div>
+
+
+                      <div className="min-w-0 flex-1">
+
+                        <p className="text-sm font-semibold text-gray-900">
+                          {fila.titulo}
+                        </p>
+
+                        {fila.texto && (
+
+                          <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-gray-600">
+                            {fila.texto}
+                          </p>
+
+                        )}
+
+
+                        <p className="mt-1 text-[11px] text-gray-400">
+                          Día {fila.diaInicio}
+                          {fila.diaFin &&
+                          fila.diaFin !==
+                            fila.diaInicio
+                            ? ` al ${fila.diaFin}`
+                            : ""}
+                        </p>
+
+                      </div>
+
+                    </div>
+
+                  ))}
+
+
+                  {filasPrincipales.length ===
+                    0 && (
+
+                    <div className="px-4 py-5 text-sm text-gray-500">
+                      No hay actividades principales para mostrar.
+                    </div>
+
+                  )}
+
+                </div>
+
+              </div>
+
+
+              {filasAdicionales.length >
+                0 && (
+
+                <div className="overflow-hidden rounded-xl border border-purple-200">
+
+                  <div className="border-b border-purple-100 bg-purple-50 px-4 py-3">
+
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-purple-700">
+                      Protocolos adicionales
+                    </p>
+
+                  </div>
+
+
+                  <div className="divide-y divide-purple-100">
+
+                    {filasAdicionales.map(
+                      (actividad) => (
+
+                      <div
+                        key={
+                          actividad.id
+                        }
+                        className="flex gap-3 px-4 py-3"
+                      >
+
+                        <div className="w-14 shrink-0">
+
+                          <span className="inline-flex rounded-lg bg-purple-50 px-2 py-1 text-xs font-bold text-purple-700">
+                            {actividad.hora ||
+                              "—"}
+                          </span>
+
+                        </div>
+
+
+                        <div className="min-w-0 flex-1">
+
+                          <p className="text-sm font-semibold text-gray-900">
+                            {actividad.titulo}
+                          </p>
+
+                          {actividad.descripcion && (
+
+                            <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-gray-600">
+                              {actividad.descripcion}
+                            </p>
+
+                          )}
+
+
+                          <p className="mt-1 text-[11px] text-gray-400">
+                            Desde día {actividad.diaInicio}
+                            {actividad.diaFin
+                              ? ` hasta día ${actividad.diaFin}`
+                              : " hasta finalizar el seguimiento"}
+                          </p>
+
+                        </div>
+
+                      </div>
+
+                    ))}
+
+                  </div>
+
+                </div>
+
+              )}
+
+            </div>
+
+
             <button
               type="button"
               disabled={
-                finalizando
+                finalizando ||
+                !revisionValida
               }
               onClick={() =>
                 void finalizarPreparacion()
