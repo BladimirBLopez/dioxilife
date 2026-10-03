@@ -375,9 +375,17 @@ function cantidadTotalTareas(
         return total;
       }
 
+      const diasActivos =
+        fin - inicio + 1;
+
+      const checksPorDia =
+        1 +
+        actividad.indicaciones.length;
+
       return (
         total +
-        (fin - inicio + 1)
+        diasActivos *
+          checksPorDia
       );
     },
     0
@@ -398,7 +406,19 @@ function cantidadCompletadas(
           actividad.progresos.filter(
             (progreso) =>
               progreso.completado
-          ).length
+          ).length +
+          actividad.indicaciones.reduce(
+            (
+              totalIndicaciones,
+              indicacion
+            ) =>
+              totalIndicaciones +
+              indicacion.progresos.filter(
+                (progreso) =>
+                  progreso.completado
+              ).length,
+            0
+          )
         : total,
     0
   );
@@ -1030,17 +1050,6 @@ export default function SeguimientoPublico({
     );
 
 
-  const porcentajeHoy =
-    tareasHoy.length > 0
-      ? Math.round(
-          (
-            completadasHoy /
-            tareasHoy.length
-          ) * 100
-        )
-      : 0;
-
-
   const siguienteTareaId = (() => {
     const dia = seguimiento?.diaActual;
 
@@ -1128,6 +1137,27 @@ export default function SeguimientoPublico({
                 )
             ).length,
           0
+        )
+      : 0;
+
+
+  const totalChecksHoy =
+    tareasHoy.length +
+    totalIndicacionesHoy;
+
+
+  const checksCompletadosHoy =
+    completadasHoy +
+    indicacionesCompletadasHoy;
+
+
+  const porcentajeHoy =
+    totalChecksHoy > 0
+      ? Math.round(
+          (
+            checksCompletadosHoy /
+            totalChecksHoy
+          ) * 100
         )
       : 0;
 
@@ -2036,11 +2066,11 @@ export default function SeguimientoPublico({
         {seguimiento.estado ===
           "ACTIVO" && (
 
-          <section className="sticky top-0 z-40 border-b border-[#E9E4F2] bg-[#F8F7FC]/95 py-2 backdrop-blur">
+          <section className="sticky top-0 z-40 border-b border-[#E2D9F0] bg-[#F2EDF8]/95 py-2 backdrop-blur">
 
             <div className="mx-auto max-w-3xl px-3 sm:px-4">
 
-              <div className="rounded-2xl border border-[#E9E4F2] bg-white px-4 py-3 shadow-sm">
+              <div className="rounded-2xl border border-[#E2D9F0] bg-[#F6F1FB] px-4 py-3 shadow-sm">
 
                 <div className="flex items-start justify-between gap-3">
 
@@ -2137,8 +2167,12 @@ export default function SeguimientoPublico({
 
                 <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-semibold text-brand-gray">
 
+                  <span className="font-bold text-brand-blue">
+                    {checksCompletadosHoy}/{totalChecksHoy} checks completados
+                  </span>
+
                   <span>
-                    {completadasHoy}/{tareasHoy.length} actividades
+                    Títulos {completadasHoy}/{tareasHoy.length}
                   </span>
 
                   {totalIndicacionesHoy >
