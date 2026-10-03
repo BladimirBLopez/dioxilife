@@ -25,7 +25,7 @@ const geistMono =
   });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://dioxilifebolivia.online"),
+  metadataBase: new URL("https://www.dioxilifebolivia.online"),
   title: "DioxiLife Bolivia",
   description: "Tienda online DioxiLife Bolivia",
   applicationName: "DioxiLife Bolivia",
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "DioxiLife Bolivia",
     description: "Seguimiento personalizado DioxiLife Bolivia",
-    url: "https://dioxilifebolivia.online",
+    url: "https://www.dioxilifebolivia.online",
     siteName: "DioxiLife Bolivia",
     images: [
       {
