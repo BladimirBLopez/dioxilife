@@ -2137,6 +2137,55 @@ export default function SeguimientoPublico({
 
                             </div>
 
+
+                            {actividad.tipo ===
+                              "TAREA" && (
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  void cambiarEstadoActividad(
+                                    actividad
+                                  )
+                                }
+                                disabled={
+                                  actualizandoActividad ===
+                                  actividad.id
+                                }
+                                aria-label={
+                                  completada
+                                    ? `Marcar como pendiente: ${actividad.titulo}`
+                                    : `Marcar como realizada: ${actividad.titulo}`
+                                }
+                                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+                                  completada
+                                    ? "border-brand-pink bg-brand-pink text-white"
+                                    : "border-brand-pink bg-white text-brand-pink"
+                                }`}
+                              >
+
+                                {actualizandoActividad ===
+                                actividad.id ? (
+
+                                  <LoaderCircle className="h-6 w-6 animate-spin" />
+
+                                ) : (
+
+                                  <Check
+                                    className={`h-6 w-6 ${
+                                      completada
+                                        ? ""
+                                        : "opacity-35"
+                                    }`}
+                                    strokeWidth={3}
+                                  />
+
+                                )}
+
+                              </button>
+
+                            )}
+
                           </div>
 
 
@@ -2321,37 +2370,7 @@ export default function SeguimientoPublico({
                           )}
 
 
-                          {actividad.tipo ===
-                            "TAREA" && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                cambiarEstadoActividad(
-                                  actividad
-                                )
-                              }
-                              disabled={
-                                actualizando
-                              }
-                              className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                                completada
-                                  ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
-                                  : "bg-brand-pink text-white hover:opacity-90"
-                              }`}
-                            >
-                              {actualizando ? (
-                                <LoaderCircle className="h-5 w-5 animate-spin" />
-                              ) : completada ? (
-                                <CheckCircle2 className="h-5 w-5" />
-                              ) : (
-                                <Circle className="h-5 w-5" />
-                              )}
 
-                              {completada
-                                ? "Realizado"
-                                : "Marcar como realizado"}
-                            </button>
-                          )}
 
 
                           {esControl && (
