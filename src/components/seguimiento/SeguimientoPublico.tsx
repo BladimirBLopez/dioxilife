@@ -59,6 +59,7 @@ type IndicacionActividad = {
   hora: string;
   texto: string;
   orden: number;
+  progresos: Progreso[];
 };
 
 
@@ -307,6 +308,19 @@ function actividadCompletadaEnDia(
 }
 
 
+function indicacionCompletadaEnDia(
+  indicacion: IndicacionActividad,
+  dia: number
+) {
+  return indicacion.progresos.some(
+    (progreso) =>
+      progreso.diaPlan ===
+        dia &&
+      progreso.completado
+  );
+}
+
+
 function cantidadTotalTareas(
   seguimiento: Seguimiento
 ) {
@@ -495,6 +509,14 @@ export default function SeguimientoPublico({
   const [
     actualizandoActividad,
     setActualizandoActividad,
+  ] =
+    useState<string | null>(
+      null
+    );
+
+  const [
+    actualizandoIndicacion,
+    setActualizandoIndicacion,
   ] =
     useState<string | null>(
       null
@@ -1215,6 +1237,37 @@ export default function SeguimientoPublico({
                           data.completadoAt,
                       },
                     ],
+
+                    indicaciones:
+                      item.indicaciones.map(
+                        (indicacion) => {
+
+                          const otrosIndicacion =
+                            indicacion.progresos.filter(
+                              (progreso) =>
+                                progreso.diaPlan !==
+                                dia
+                            );
+
+                          return {
+                            ...indicacion,
+
+                            progresos: [
+                              ...otrosIndicacion,
+                              {
+                                diaPlan:
+                                  dia,
+
+                                completado:
+                                  data.completado,
+
+                                completadoAt:
+                                  data.completadoAt,
+                              },
+                            ],
+                          };
+                        }
+                      ),
                   };
                 }
               ),
@@ -1239,6 +1292,193 @@ export default function SeguimientoPublico({
 
     } finally {
       setActualizandoActividad(
+        null
+      );
+    }
+  }
+
+
+  async function cambiarEstadoIndicacion(
+    actividad: Actividad,
+    indicacionId: string
+  ) {
+    if (
+      !seguimiento?.diaActual ||
+      seguimiento.estado !==
+        "ACTIVO" ||
+      actualizandoIndicacion
+    ) {
+      return;
+    }
+
+    const indicacion =
+      actividad.indicaciones.find(
+        (item) =>
+          item.id ===
+          indicacionId
+      );
+
+    if (!indicacion) {
+      return;
+    }
+
+    const dia =
+      seguimiento.diaActual;
+
+    const completada =
+      indicacionCompletadaEnDia(
+        indicacion,
+        dia
+      );
+
+    setActualizandoIndicacion(
+      indicacionId
+    );
+
+    try {
+      const respuesta =
+        await fetch(
+          `/api/seguimiento/${encodeURIComponent(token)}/actividades/${encodeURIComponent(actividad.id)}/indicaciones/${encodeURIComponent(indicacionId)}`,
+          {
+            method:
+              "PUT",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                completado:
+                  !completada,
+              }),
+          }
+        );
+
+      const data =
+        await respuesta.json();
+
+      if (!respuesta.ok) {
+        throw new Error(
+          data.error ||
+            "No se pudo actualizar la indicación."
+        );
+      }
+
+      setSeguimiento(
+        (actual) => {
+          if (
+            !actual ||
+            !actual.diaActual
+          ) {
+            return actual;
+          }
+
+          const diaActual =
+            actual.diaActual;
+
+          return {
+            ...actual,
+
+            actividades:
+              actual.actividades.map(
+                (item) => {
+
+                  if (
+                    item.id !==
+                    actividad.id
+                  ) {
+                    return item;
+                  }
+
+                  const otrosProgresosActividad =
+                    item.progresos.filter(
+                      (progreso) =>
+                        progreso.diaPlan !==
+                        diaActual
+                    );
+
+                  return {
+                    ...item,
+
+                    progresos: [
+                      ...otrosProgresosActividad,
+                      {
+                        diaPlan:
+                          diaActual,
+
+                        completado:
+                          data.actividadCompletada,
+
+                        completadoAt:
+                          data.actividadCompletadoAt,
+                      },
+                    ],
+
+                    indicaciones:
+                      item.indicaciones.map(
+                        (
+                          indicacionActual
+                        ) => {
+
+                          if (
+                            indicacionActual.id !==
+                            indicacionId
+                          ) {
+                            return indicacionActual;
+                          }
+
+                          const otros =
+                            indicacionActual.progresos.filter(
+                              (progreso) =>
+                                progreso.diaPlan !==
+                                diaActual
+                            );
+
+                          return {
+                            ...indicacionActual,
+
+                            progresos: [
+                              ...otros,
+                              {
+                                diaPlan:
+                                  diaActual,
+
+                                completado:
+                                  data.completado,
+
+                                completadoAt:
+                                  data.completadoAt,
+                              },
+                            ],
+                          };
+                        }
+                      ),
+                  };
+                }
+              ),
+          };
+        }
+      );
+
+      if (
+        data.actividadCompletada
+      ) {
+        toast.success(
+          "Actividad completada."
+        );
+      }
+
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "No se pudo actualizar la indicación."
+      );
+
+    } finally {
+      setActualizandoIndicacion(
         null
       );
     }
@@ -1727,6 +1967,9 @@ export default function SeguimientoPublico({
 
                               texto:
                                 indicacion.texto,
+
+                              progresos:
+                                indicacion.progresos,
                             })
                           )
                         : actividad.descripcion
@@ -1745,6 +1988,9 @@ export default function SeguimientoPublico({
 
                                   texto:
                                     linea.trim(),
+
+                                  progresos:
+                                    null,
                                 })
                               )
                               .filter(
@@ -1909,50 +2155,159 @@ export default function SeguimientoPublico({
                           {instrucciones.length > 0 && (
                             <div className="mt-4 border-t border-black/5 pt-4">
 
-                              <p className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-brand-gray">
-                                {esInformacion
-                                  ? "Información"
-                                  : "Instrucciones"}
-                              </p>
+                              <div className="mb-3 flex items-center justify-between gap-3">
+
+                                <p className="text-xs font-bold uppercase tracking-[0.12em] text-brand-gray">
+                                  {esInformacion
+                                    ? "Información"
+                                    : "Instrucciones"}
+                                </p>
+
+
+                                {actividad.tipo ===
+                                  "TAREA" &&
+                                  actividad.indicaciones.length >
+                                    0 && (
+
+                                  <span className="rounded-full bg-[#F8F6FF] px-2.5 py-1 text-xs font-bold text-brand-blue">
+                                    {
+                                      actividad.indicaciones.filter(
+                                        (indicacion) =>
+                                          indicacionCompletadaEnDia(
+                                            indicacion,
+                                            diaActual
+                                          )
+                                      ).length
+                                    }{" "}
+                                    de{" "}
+                                    {
+                                      actividad.indicaciones.length
+                                    }
+                                  </span>
+
+                                )}
+
+                              </div>
 
                               <ul className="space-y-2.5">
 
                                 {instrucciones.map(
                                   (
-                                    instruccion,
-                                    indice
-                                  ) => (
-                                    <li
-                                      key={`${actividad.id}-${instruccion.id}`}
-                                      className="flex items-start gap-2.5 text-sm leading-6 text-[#4F4B56]"
-                                    >
+                                    instruccion
+                                  ) => {
 
-                                      {instruccion.hora && (
-                                        <span className="mt-0.5 min-w-[58px] shrink-0 rounded-lg bg-[#F4F2F8] px-2 py-1 text-center font-mono text-xs font-bold text-brand-blue">
+                                    const esIndicacionEstructurada =
+                                      instruccion.progresos !==
+                                      null;
+
+                                    const indicacionRealizada =
+                                      instruccion.progresos?.some(
+                                        (progreso) =>
+                                          progreso.diaPlan ===
+                                            diaActual &&
+                                          progreso.completado
+                                      ) ??
+                                      false;
+
+                                    const cargandoIndicacion =
+                                      actualizandoIndicacion ===
+                                      instruccion.id;
+
+                                    return (
+                                      <li
+                                        key={`${actividad.id}-${instruccion.id}`}
+                                        className={`flex items-start gap-2.5 rounded-xl border p-2.5 text-sm leading-6 transition ${
+                                          indicacionRealizada
+                                            ? "border-emerald-200 bg-emerald-50/60 text-emerald-800"
+                                            : "border-[#EEEAF3] bg-[#FCFBFD] text-[#4F4B56]"
+                                        }`}
+                                      >
+
+                                        {instruccion.hora && (
+                                          <span className="mt-0.5 min-w-[58px] shrink-0 rounded-lg bg-[#F4F2F8] px-2 py-1 text-center font-mono text-xs font-bold text-brand-blue">
+                                            {
+                                              instruccion.hora
+                                            }
+                                          </span>
+                                        )}
+
+
+                                        {esInformacion && (
+                                          <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+                                        )}
+
+
+                                        {!esInformacion &&
+                                          !esIndicacionEstructurada && (
+                                          <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-blue/40" />
+                                        )}
+
+
+                                        <span
+                                          className={`min-w-0 flex-1 ${
+                                            indicacionRealizada
+                                              ? "opacity-70"
+                                              : ""
+                                          }`}
+                                        >
                                           {
-                                            instruccion.hora
+                                            instruccion.texto
                                           }
                                         </span>
-                                      )}
 
 
-                                      {esInformacion ? (
-                                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
-                                      ) : (
-                                        <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#F8F6FF] text-[11px] font-bold text-brand-blue">
-                                          {indice + 1}
-                                        </span>
-                                      )}
+                                        {actividad.tipo ===
+                                          "TAREA" &&
+                                          esIndicacionEstructurada && (
 
+                                          <button
+                                            type="button"
+                                            disabled={
+                                              cargandoIndicacion ||
+                                              actualizando
+                                            }
+                                            onClick={() =>
+                                              void cambiarEstadoIndicacion(
+                                                actividad,
+                                                instruccion.id
+                                              )
+                                            }
+                                            aria-label={
+                                              indicacionRealizada
+                                                ? `Marcar como pendiente: ${instruccion.texto}`
+                                                : `Marcar como realizada: ${instruccion.texto}`
+                                            }
+                                            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+                                              indicacionRealizada
+                                                ? "border-brand-pink bg-brand-pink text-white"
+                                                : "border-brand-pink bg-white text-brand-pink"
+                                            }`}
+                                          >
 
-                                      <span className="min-w-0 flex-1">
-                                        {
-                                          instruccion.texto
-                                        }
-                                      </span>
+                                            {cargandoIndicacion ? (
 
-                                    </li>
-                                  )
+                                              <LoaderCircle className="h-6 w-6 animate-spin" />
+
+                                            ) : (
+
+                                              <Check
+                                                className={`h-6 w-6 ${
+                                                  indicacionRealizada
+                                                    ? ""
+                                                    : "opacity-35"
+                                                }`}
+                                                strokeWidth={3}
+                                              />
+
+                                            )}
+
+                                          </button>
+
+                                        )}
+
+                                      </li>
+                                    );
+                                  }
                                 )}
 
                               </ul>
@@ -1987,9 +2342,14 @@ export default function SeguimientoPublico({
                                 <Circle className="h-5 w-5" />
                               )}
 
-                              {completada
-                                ? "Realizado"
-                                : "Marcar como realizado"}
+                              {actividad.indicaciones.length >
+                              0
+                                ? completada
+                                  ? "Desmarcar todas"
+                                  : "Marcar todas como realizadas"
+                                : completada
+                                  ? "Realizado"
+                                  : "Marcar como realizado"}
                             </button>
                           )}
 

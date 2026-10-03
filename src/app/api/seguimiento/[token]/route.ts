@@ -130,6 +130,14 @@ export async function GET(
                 hora: true,
                 texto: true,
                 orden: true,
+
+                progresos: {
+                  select: {
+                    diaPlan: true,
+                    completado: true,
+                    completadoAt: true,
+                  },
+                },
               },
             },
 

@@ -19,12 +19,14 @@ export async function PUT(
     params: Promise<{
       token: string;
       actividadId: string;
+      indicacionId: string;
     }>;
   }
 ) {
   const {
     token,
     actividadId,
+    indicacionId,
   } = await params;
 
   if (
@@ -194,6 +196,25 @@ export async function PUT(
     );
   }
 
+  const indicacionExiste =
+    actividad.indicaciones.some(
+      (indicacion) =>
+        indicacion.id ===
+        indicacionId
+    );
+
+  if (!indicacionExiste) {
+    return NextResponse.json(
+      {
+        error:
+          "Indicación no encontrada.",
+      },
+      {
+        status: 404,
+      }
+    );
+  }
+
   const body =
     await req.json();
 
@@ -201,32 +222,25 @@ export async function PUT(
     body?.completado ===
     true;
 
-
-  const progreso =
+  const resultado =
     await prisma.$transaction(
       async (tx) => {
 
-        const progresoActividad =
-          await tx.progresoActividad.upsert({
+        const progresoIndicacion =
+          await tx.progresoIndicacion.upsert({
             where: {
-              seguimientoId_actividadSeguimientoId_diaPlan:
+              indicacionActividadSeguimientoId_diaPlan:
                 {
-                  seguimientoId:
-                    seguimiento.id,
-
-                  actividadSeguimientoId:
-                    actividad.id,
+                  indicacionActividadSeguimientoId:
+                    indicacionId,
 
                   diaPlan,
                 },
             },
 
             create: {
-              seguimientoId:
-                seguimiento.id,
-
-              actividadSeguimientoId:
-                actividad.id,
+              indicacionActividadSeguimientoId:
+                indicacionId,
 
               diaPlan,
 
@@ -255,45 +269,89 @@ export async function PUT(
           });
 
 
-        for (
-          const indicacion of
-          actividad.indicaciones
-        ) {
-          await tx.progresoIndicacion.upsert({
+        const idsIndicaciones =
+          actividad.indicaciones.map(
+            (indicacion) =>
+              indicacion.id
+          );
+
+
+        const cantidadCompletadas =
+          await tx.progresoIndicacion.count({
             where: {
-              indicacionActividadSeguimientoId_diaPlan:
+              indicacionActividadSeguimientoId:
                 {
-                  indicacionActividadSeguimientoId:
-                    indicacion.id,
+                  in:
+                    idsIndicaciones,
+                },
+
+              diaPlan,
+
+              completado:
+                true,
+            },
+          });
+
+
+        const cantidadTotal =
+          idsIndicaciones.length;
+
+
+        const actividadCompletada =
+          cantidadTotal >
+            0 &&
+          cantidadCompletadas ===
+            cantidadTotal;
+
+
+        const progresoActividad =
+          await tx.progresoActividad.upsert({
+            where: {
+              seguimientoId_actividadSeguimientoId_diaPlan:
+                {
+                  seguimientoId:
+                    seguimiento.id,
+
+                  actividadSeguimientoId:
+                    actividad.id,
 
                   diaPlan,
                 },
             },
 
             create: {
-              indicacionActividadSeguimientoId:
-                indicacion.id,
+              seguimientoId:
+                seguimiento.id,
+
+              actividadSeguimientoId:
+                actividad.id,
 
               diaPlan,
 
-              completado,
+              completado:
+                actividadCompletada,
 
               completadoAt:
-                completado
+                actividadCompletada
                   ? new Date()
                   : null,
             },
 
             update: {
-              completado,
+              completado:
+                actividadCompletada,
 
               completadoAt:
-                completado
+                actividadCompletada
                   ? new Date()
                   : null,
             },
+
+            select: {
+              completado: true,
+              completadoAt: true,
+            },
           });
-        }
 
 
         await tx.seguimientoCliente.update({
@@ -309,12 +367,48 @@ export async function PUT(
         });
 
 
-        return progresoActividad;
+        return {
+          progresoIndicacion,
+          progresoActividad,
+          cantidadCompletadas,
+          cantidadTotal,
+        };
       }
     );
 
 
-  return NextResponse.json(
-    progreso
-  );
+  return NextResponse.json({
+    diaPlan:
+      resultado
+        .progresoIndicacion
+        .diaPlan,
+
+    completado:
+      resultado
+        .progresoIndicacion
+        .completado,
+
+    completadoAt:
+      resultado
+        .progresoIndicacion
+        .completadoAt,
+
+    actividadCompletada:
+      resultado
+        .progresoActividad
+        .completado,
+
+    actividadCompletadoAt:
+      resultado
+        .progresoActividad
+        .completadoAt,
+
+    cantidadCompletadas:
+      resultado
+        .cantidadCompletadas,
+
+    cantidadTotal:
+      resultado
+        .cantidadTotal,
+  });
 }
