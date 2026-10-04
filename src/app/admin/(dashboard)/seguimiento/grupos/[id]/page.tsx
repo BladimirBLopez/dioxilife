@@ -243,9 +243,14 @@ export default async function GrupoSeguimientoDetallePage({
             </p>
           </div>
 
-          <AgregarParticipanteGrupo
-            grupoId={grupo.id}
-          />
+          {(grupo.estado ===
+            "BORRADOR" ||
+            grupo.estado ===
+            "ACTIVO") && (
+            <AgregarParticipanteGrupo
+              grupoId={grupo.id}
+            />
+          )}
 
         </div>
 

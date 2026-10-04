@@ -338,6 +338,187 @@ async function procesarAvisosTardios({
 }
 
 
+function fechaBoliviaUtc(
+  ahora: Date
+) {
+  const partes =
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone:
+          "America/La_Paz",
+        year:
+          "numeric",
+        month:
+          "2-digit",
+        day:
+          "2-digit",
+      }
+    ).formatToParts(
+      ahora
+    );
+
+  const valor = (
+    tipo: string
+  ) =>
+    partes.find(
+      (parte) =>
+        parte.type ===
+        tipo
+    )?.value || "";
+
+  return new Date(
+    `${valor("year")}-${valor("month")}-${valor("day")}T00:00:00.000Z`
+  );
+}
+
+function diaActualGrupoBolivia(
+  fechaInicio: Date,
+  ahora: Date
+) {
+  const hoy =
+    fechaBoliviaUtc(
+      ahora
+    );
+
+  const inicio =
+    Date.UTC(
+      fechaInicio.getUTCFullYear(),
+      fechaInicio.getUTCMonth(),
+      fechaInicio.getUTCDate()
+    );
+
+  const actual =
+    Date.UTC(
+      hoy.getUTCFullYear(),
+      hoy.getUTCMonth(),
+      hoy.getUTCDate()
+    );
+
+  return (
+    Math.floor(
+      (
+        actual -
+        inicio
+      ) /
+        86400000
+    ) + 1
+  );
+}
+
+async function finalizarGruposVencidos(
+  ahora: Date
+) {
+  const grupos =
+    await prisma.grupoSeguimiento.findMany({
+      where: {
+        estado:
+          "ACTIVO",
+      },
+
+      select: {
+        id: true,
+        fechaInicio: true,
+        duracionDias: true,
+
+        miembros: {
+          where: {
+            estado:
+              "ACTIVO",
+          },
+
+          select: {
+            seguimientoId:
+              true,
+          },
+        },
+      },
+    });
+
+  const vencidos =
+    grupos.filter(
+      (grupo) =>
+        diaActualGrupoBolivia(
+          grupo.fechaInicio,
+          ahora
+        ) >
+        grupo.duracionDias
+    );
+
+  if (
+    vencidos.length ===
+    0
+  ) {
+    return;
+  }
+
+  const idsGrupos =
+    vencidos.map(
+      (grupo) =>
+        grupo.id
+    );
+
+  const idsSeguimientos =
+    [
+      ...new Set(
+        vencidos.flatMap(
+          (grupo) =>
+            grupo.miembros.map(
+              (miembro) =>
+                miembro.seguimientoId
+            )
+        )
+      ),
+    ];
+
+  await prisma.$transaction(
+    async (tx) => {
+      await tx.grupoSeguimiento.updateMany({
+        where: {
+          id: {
+            in:
+              idsGrupos,
+          },
+
+          estado:
+            "ACTIVO",
+        },
+
+        data: {
+          estado:
+            "FINALIZADO",
+        },
+      });
+
+      if (
+        idsSeguimientos.length >
+        0
+      ) {
+        await tx.seguimientoCliente.updateMany({
+          where: {
+            id: {
+              in:
+                idsSeguimientos,
+            },
+
+            estado:
+              "ACTIVO",
+          },
+
+          data: {
+            estado:
+              "COMPLETADO",
+
+            fechaFinalizado:
+              ahora,
+          },
+        });
+      }
+    }
+  );
+}
+
+
 export async function GET(
   req: NextRequest
 ) {
@@ -416,6 +597,19 @@ export async function GET(
   }
 
   const ahora = new Date();
+
+  if (!simulacion) {
+    try {
+      await finalizarGruposVencidos(
+        ahora
+      );
+    } catch (error) {
+      console.error(
+        "No se pudieron finalizar los grupos vencidos:",
+        error
+      );
+    }
+  }
 
   const seguimientos =
     await prisma.seguimientoCliente.findMany({

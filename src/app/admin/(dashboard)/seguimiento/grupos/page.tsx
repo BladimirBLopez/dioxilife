@@ -533,6 +533,24 @@ export default function GruposSeguimientoPage() {
                   grupo.duracionDias
                 );
 
+              const jornada =
+                grupo.estado ===
+                "BORRADOR"
+                  ? "Por iniciar"
+                  : grupo.estado ===
+                    "FINALIZADO"
+                  ? "Finalizado"
+                  : grupo.estado ===
+                    "CANCELADO"
+                  ? "Cancelado"
+                  : dia ===
+                    null
+                  ? "—"
+                  : dia ===
+                    0
+                  ? "Por iniciar"
+                  : `Día ${dia}/${grupo.duracionDias}`;
+
               return (
                 <article
                   key={
@@ -642,13 +660,7 @@ export default function GruposSeguimientoPage() {
                       </p>
 
                       <p className="mt-1 text-sm font-semibold text-gray-800">
-                        {dia ===
-                        null
-                          ? "—"
-                          : dia ===
-                            0
-                          ? "Por iniciar"
-                          : `Día ${dia}/${grupo.duracionDias}`}
+                        {jornada}
                       </p>
                     </div>
 
