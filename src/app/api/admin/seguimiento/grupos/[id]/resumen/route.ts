@@ -799,6 +799,208 @@ export async function GET(
         })
       );
 
+  const graficaCumplimiento = [];
+
+  const graficaPeso = [];
+
+  const graficaCintura = [];
+
+  const graficaGlucemia = [];
+
+  for (
+    let dia = 1;
+    dia <= diaActual;
+    dia++
+  ) {
+    let checksCompletados = 0;
+    let checksTotales = 0;
+
+    const pesosDia: number[] = [];
+    const cinturasDia: number[] = [];
+    const glucemiasDia: number[] = [];
+
+    let participantesDia = 0;
+
+    for (
+      const miembro of
+      grupo.miembros
+    ) {
+      if (
+        miembro.diaIngreso >
+        dia
+      ) {
+        continue;
+      }
+
+      participantesDia++;
+
+      const seguimiento =
+        miembro.seguimiento;
+
+      const cumplimiento =
+        cumplimientoRango(
+          seguimiento.actividades,
+          dia,
+          dia,
+          grupo.duracionDias
+        );
+
+      checksCompletados +=
+        cumplimiento.completados;
+
+      checksTotales +=
+        cumplimiento.total;
+
+      const registroDia =
+        seguimiento.registrosDiarios.find(
+          (registro) =>
+            registro.diaPlan ===
+            dia
+        );
+
+      if (
+        registroDia?.peso !==
+        null &&
+        registroDia?.peso !==
+        undefined
+      ) {
+        pesosDia.push(
+          Number(
+            registroDia.peso
+          )
+        );
+      }
+
+      if (
+        registroDia?.cinturaCm !==
+        null &&
+        registroDia?.cinturaCm !==
+        undefined
+      ) {
+        cinturasDia.push(
+          Number(
+            registroDia.cinturaCm
+          )
+        );
+      }
+
+      if (
+        registroDia?.glucemiaAyunas !==
+        null &&
+        registroDia?.glucemiaAyunas !==
+        undefined
+      ) {
+        glucemiasDia.push(
+          Number(
+            registroDia.glucemiaAyunas
+          )
+        );
+      }
+    }
+
+    graficaCumplimiento.push({
+      diaPlan:
+        dia,
+
+      porcentaje:
+        porcentaje(
+          checksCompletados,
+          checksTotales
+        ),
+
+      completados:
+        checksCompletados,
+
+      total:
+        checksTotales,
+
+      participantes:
+        participantesDia,
+    });
+
+    if (
+      pesosDia.length >
+      0
+    ) {
+      graficaPeso.push({
+        diaPlan:
+          dia,
+
+        promedio:
+          redondear2(
+            pesosDia.reduce(
+              (
+                suma,
+                valor
+              ) =>
+                suma +
+                valor,
+              0
+            ) /
+              pesosDia.length
+          ),
+
+        registros:
+          pesosDia.length,
+      });
+    }
+
+    if (
+      cinturasDia.length >
+      0
+    ) {
+      graficaCintura.push({
+        diaPlan:
+          dia,
+
+        promedio:
+          redondear2(
+            cinturasDia.reduce(
+              (
+                suma,
+                valor
+              ) =>
+                suma +
+                valor,
+              0
+            ) /
+              cinturasDia.length
+          ),
+
+        registros:
+          cinturasDia.length,
+      });
+    }
+
+    if (
+      glucemiasDia.length >
+      0
+    ) {
+      graficaGlucemia.push({
+        diaPlan:
+          dia,
+
+        promedio:
+          redondear2(
+            glucemiasDia.reduce(
+              (
+                suma,
+                valor
+              ) =>
+                suma +
+                valor,
+              0
+            ) /
+              glucemiasDia.length
+          ),
+
+        registros:
+          glucemiasDia.length,
+      });
+    }
+  }
+
+
   const promedioHoy =
     participantes.length >
     0
@@ -872,6 +1074,20 @@ export async function GET(
 
       peso:
         rankingPeso,
+    },
+
+    graficas: {
+      cumplimiento:
+        graficaCumplimiento,
+
+      peso:
+        graficaPeso,
+
+      cintura:
+        graficaCintura,
+
+      glucemia:
+        graficaGlucemia,
     },
   });
 }

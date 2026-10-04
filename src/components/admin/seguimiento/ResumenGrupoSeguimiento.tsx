@@ -12,6 +12,16 @@ import {
   Trophy,
 } from "lucide-react";
 
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
 type RankingCumplimiento = {
   puesto: number;
   seguimientoId: string;
@@ -121,6 +131,34 @@ type Respuesta = {
     peso:
       RankingPeso[];
   };
+
+  graficas: {
+    cumplimiento: {
+      diaPlan: number;
+      porcentaje: number;
+      completados: number;
+      total: number;
+      participantes: number;
+    }[];
+
+    peso: {
+      diaPlan: number;
+      promedio: number;
+      registros: number;
+    }[];
+
+    cintura: {
+      diaPlan: number;
+      promedio: number;
+      registros: number;
+    }[];
+
+    glucemia: {
+      diaPlan: number;
+      promedio: number;
+      registros: number;
+    }[];
+  };
 };
 
 function numero(
@@ -139,6 +177,129 @@ function numero(
     }
   )} ${sufijo}`;
 }
+
+function GraficoGrupo({
+  titulo,
+  subtitulo,
+  datos,
+  dataKey,
+  unidad,
+}: {
+  titulo: string;
+  subtitulo: string;
+  datos: Record<string, number>[];
+  dataKey: string;
+  unidad: string;
+}) {
+  return (
+    <div className="admin-card p-4 sm:p-5">
+
+      <div>
+        <h3 className="font-semibold text-gray-900">
+          {titulo}
+        </h3>
+
+        <p className="mt-1 text-xs text-gray-500">
+          {subtitulo}
+        </p>
+      </div>
+
+
+      {datos.length > 0 ? (
+
+        <div className="mt-4 h-56 w-full">
+
+          <ResponsiveContainer
+            width="100%"
+            height="100%"
+          >
+            <LineChart
+              data={datos.map(
+                (item) => ({
+                  ...item,
+                  dia:
+                    `D${item.diaPlan}`,
+                })
+              )}
+              margin={{
+                top: 8,
+                right: 8,
+                left: -10,
+                bottom: 0,
+              }}
+            >
+
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                opacity={0.25}
+              />
+
+              <XAxis
+                dataKey="dia"
+                axisLine={false}
+                tickLine={false}
+                fontSize={11}
+              />
+
+              <YAxis
+                dataKey={dataKey}
+                domain={[
+                  "auto",
+                  "auto",
+                ]}
+                axisLine={false}
+                tickLine={false}
+                fontSize={11}
+                width={48}
+              />
+
+              <Tooltip />
+
+              <Line
+                type="monotone"
+                dataKey={dataKey}
+                name={titulo}
+                unit={
+                  unidad
+                }
+                stroke="#6750A4"
+                strokeWidth={3}
+                dot={{
+                  r: 4,
+                  fill:
+                    "#FFFFFF",
+                  stroke:
+                    "#6750A4",
+                  strokeWidth:
+                    2,
+                }}
+                activeDot={{
+                  r: 6,
+                }}
+              />
+
+            </LineChart>
+          </ResponsiveContainer>
+
+        </div>
+
+      ) : (
+
+        <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-5 text-center">
+
+          <p className="text-sm font-medium text-gray-500">
+            Todavía no hay datos suficientes.
+          </p>
+
+        </div>
+
+      )}
+
+    </div>
+  );
+}
+
 
 function RankingCumplimiento({
   titulo,
@@ -335,6 +496,68 @@ export default function ResumenGrupoSeguimiento({
             {data.grupo.promedioAcumulado}%
           </p>
         </div>
+
+      </div>
+
+
+      <div>
+
+        <h2 className="text-lg font-semibold text-gray-900">
+          Evolución del grupo
+        </h2>
+
+        <p className="mt-1 text-sm text-gray-500">
+          Promedios diarios de cumplimiento y mediciones registradas.
+        </p>
+
+      </div>
+
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+
+        <GraficoGrupo
+          titulo="Cumplimiento"
+          subtitulo="Porcentaje diario de checks completados por el grupo."
+          datos={
+            data.graficas
+              .cumplimiento
+          }
+          dataKey="porcentaje"
+          unidad="%"
+        />
+
+        <GraficoGrupo
+          titulo="Peso"
+          subtitulo="Promedio de los pesos registrados en cada día."
+          datos={
+            data.graficas
+              .peso
+          }
+          dataKey="promedio"
+          unidad=" kg"
+        />
+
+        <GraficoGrupo
+          titulo="Cintura"
+          subtitulo="Promedio de las mediciones de cintura registradas."
+          datos={
+            data.graficas
+              .cintura
+          }
+          dataKey="promedio"
+          unidad=" cm"
+        />
+
+        <GraficoGrupo
+          titulo="Glucemia en ayunas"
+          subtitulo="Promedio de los registros de glucemia en ayunas."
+          datos={
+            data.graficas
+              .glucemia
+          }
+          dataKey="promedio"
+          unidad=" mg/dL"
+        />
 
       </div>
 
