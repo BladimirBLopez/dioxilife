@@ -496,6 +496,9 @@ export default async function SeguimientoClientePage({
               seguimiento.telefonoCliente
             )}
             haEnviado={Boolean(ultimoEnvio)}
+            puedeDescargarInforme={
+              seguimiento.estado !== "PENDIENTE"
+            }
           />
         )}
 

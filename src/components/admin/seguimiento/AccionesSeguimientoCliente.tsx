@@ -5,15 +5,18 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { abrirWhatsApp } from "@/lib/whatsapp-cliente";
+import BotonInformeSeguimiento from "@/components/admin/seguimiento/BotonInformeSeguimiento";
 
 export default function AccionesSeguimientoCliente({
   seguimientoId,
   tieneTelefono,
   haEnviado,
+  puedeDescargarInforme,
 }: {
   seguimientoId: string;
   tieneTelefono: boolean;
   haEnviado: boolean;
+  puedeDescargarInforme: boolean;
 }) {
   const router = useRouter();
 
@@ -122,6 +125,15 @@ export default function AccionesSeguimientoCliente({
           ? "📱 Reenviar por WhatsApp"
           : "📱 Generar enlace y enviar"}
       </button>
+
+
+      {puedeDescargarInforme && (
+        <BotonInformeSeguimiento
+          seguimientoId={
+            seguimientoId
+          }
+        />
+      )}
 
 
       {haEnviado && (
