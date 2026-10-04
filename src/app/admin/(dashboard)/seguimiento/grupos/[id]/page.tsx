@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import AgregarParticipanteGrupo from "@/components/admin/seguimiento/AgregarParticipanteGrupo";
 import GestionGrupoSeguimiento from "@/components/admin/seguimiento/GestionGrupoSeguimiento";
+import ResumenGrupoSeguimiento from "@/components/admin/seguimiento/ResumenGrupoSeguimiento";
 
 function fecha(
   valor: Date
@@ -199,6 +200,11 @@ export default async function GrupoSeguimientoDetallePage({
 
         </div>
       )}
+
+
+      <ResumenGrupoSeguimiento
+        grupoId={grupo.id}
+      />
 
 
       <section className="admin-card p-5">
