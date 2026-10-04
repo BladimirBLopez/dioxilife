@@ -227,58 +227,6 @@ export default function PrepararSeguimientoCliente({
     }
   }
 
-  const principalesOrdenados =
-    [...resumenPrincipales].sort(
-      (a, b) => {
-        if (
-          a.hora &&
-          b.hora
-        ) {
-          return a.hora.localeCompare(
-            b.hora
-          );
-        }
-
-        if (a.hora) {
-          return -1;
-        }
-
-        if (b.hora) {
-          return 1;
-        }
-
-        return a.titulo.localeCompare(
-          b.titulo
-        );
-      }
-    );
-
-  const filasAdicionales =
-    [...resumenAdicionales].sort(
-      (a, b) => {
-        if (
-          a.hora &&
-          b.hora
-        ) {
-          return a.hora.localeCompare(
-            b.hora
-          );
-        }
-
-        if (a.hora) {
-          return -1;
-        }
-
-        if (b.hora) {
-          return 1;
-        }
-
-        return a.titulo.localeCompare(
-          b.titulo
-        );
-      }
-    );
-
   const revisionValida =
     erroresRevision.length ===
     0;
@@ -768,403 +716,91 @@ export default function PrepararSeguimientoCliente({
           <div className="min-w-0 flex-1">
 
             <h2 className="font-semibold text-gray-900">
-              Revisar y finalizar
+              Finalizar protocolo
             </h2>
 
             <p className="mt-1 text-sm leading-6 text-gray-500">
-              Verifica el resumen antes de generar el enlace privado.
+              Genera el acceso privado cuando hayas terminado de preparar el protocolo.
             </p>
 
 
-            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            <div
+              className={`mt-4 rounded-xl border p-4 ${
+                revisionValida
+                  ? "border-emerald-200 bg-emerald-50"
+                  : "border-amber-200 bg-amber-50"
+              }`}
+            >
 
-              <div className="rounded-xl bg-gray-50 p-3">
-
-                <p className="text-xs text-gray-500">
-                  Peso inicial
-                </p>
-
-                <p className="mt-1 font-semibold text-gray-900">
-                  {pesoGuardado ===
-                  null
-                    ? "Pendiente"
-                    : `${pesoGuardado} kg`}
-                </p>
-
-              </div>
-
-
-              <div className="rounded-xl bg-blue-50 p-3">
-
-                <p className="text-xs text-blue-700">
-                  Principal
-                </p>
-
-                <p className="mt-1 font-semibold text-blue-900">
-                  {cantidadPrincipales} actividades
-                </p>
-
-              </div>
-
-
-              <div className="rounded-xl bg-purple-50 p-3">
-
-                <p className="text-xs text-purple-700">
-                  Adicionales
-                </p>
-
-                <p className="mt-1 font-semibold text-purple-900">
-                  {cantidadAdicionales} protocolos
-                </p>
-
-              </div>
-
-            </div>
-
-
-            <div className="mt-5 space-y-4">
-
-              <div
-                className={`rounded-xl border p-4 ${
+              <p
+                className={`text-sm font-bold ${
                   revisionValida
-                    ? "border-emerald-200 bg-emerald-50"
-                    : "border-red-200 bg-red-50"
+                    ? "text-emerald-800"
+                    : "text-amber-800"
                 }`}
               >
-
-                <p
-                  className={`text-sm font-semibold ${
-                    revisionValida
-                      ? "text-emerald-800"
-                      : "text-red-800"
-                  }`}
-                >
-                  {revisionValida
-                    ? "✓ Protocolo listo para finalizar"
-                    : "Hay datos pendientes antes de finalizar"}
-                </p>
+                {revisionValida
+                  ? "✓ Todo listo para generar el acceso"
+                  : "⚠ Hay datos pendientes"}
+              </p>
 
 
-                {erroresRevision.length >
-                  0 && (
+              {revisionValida ? (
 
-                  <div className="mt-2 space-y-1">
+                <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-emerald-800">
 
-                    {erroresRevision.map(
-                      (
-                        error,
-                        indice
-                      ) => (
+                  <span>
+                    {pesoGuardado ===
+                    null
+                      ? "Peso sin registrar"
+                      : `${pesoGuardado} kg`}
+                  </span>
 
-                      <p
-                        key={`${error}-${indice}`}
-                        className="text-xs leading-5 text-red-700"
-                      >
-                        • {error}
-                      </p>
+                  <span className="text-emerald-400">
+                    ·
+                  </span>
 
-                    ))}
+                  <span>
+                    {cantidadPrincipales}{" "}
+                    {cantidadPrincipales ===
+                    1
+                      ? "actividad"
+                      : "actividades"}
+                  </span>
 
-                  </div>
+                  <span className="text-emerald-400">
+                    ·
+                  </span>
 
-                )}
-
-
-              </div>
-
-
-              <div className="overflow-hidden rounded-xl border border-gray-200">
-
-                <div className="border-b border-gray-100 bg-gray-50 px-4 py-3">
-
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-gray-500">
-                    Vista previa del protocolo principal
-                  </p>
+                  <span>
+                    {cantidadAdicionales}{" "}
+                    {cantidadAdicionales ===
+                    1
+                      ? "adicional"
+                      : "adicionales"}
+                  </span>
 
                 </div>
 
+              ) : (
 
-                <div className="divide-y divide-gray-100">
+                <div className="mt-3 space-y-1.5">
 
-                  {principalesOrdenados.map(
+                  {erroresRevision.map(
                     (
-                      actividad
-                    ) => {
-                      const descripcionTitulo =
-                        actividad.descripcion
-                          ?.trim() ||
-                        "";
+                      error,
+                      indice
+                    ) => (
 
-                      const textoIndicaciones =
-                        actividad.indicaciones
-                          .map(
-                            (
-                              indicacion
-                            ) =>
-                              indicacion.texto
-                                .trim()
-                          )
-                          .filter(
-                            Boolean
-                          )
-                          .join(
-                            "\n"
-                          )
-                          .trim();
-
-                      const instruccionTitulo =
-                        descripcionTitulo &&
-                        (
-                          actividad.indicaciones.length ===
-                            0 ||
-                          descripcionTitulo !==
-                            textoIndicaciones
-                        )
-                          ? descripcionTitulo
-                          : null;
-
-                      return (
-
-                        <div
-                          key={
-                            actividad.id
-                          }
-                          className="px-4 py-4"
-                        >
-
-                          <div className="flex gap-3">
-
-                            <div className="w-14 shrink-0">
-
-                              <span className="inline-flex rounded-lg bg-violet-50 px-2 py-1 font-mono text-xs font-bold text-violet-700">
-                                {actividad.hora ||
-                                  "—"}
-                              </span>
-
-                            </div>
-
-
-                            <div className="min-w-0 flex-1">
-
-                              <p className="text-sm font-bold text-gray-900">
-                                {
-                                  actividad.titulo
-                                }
-                              </p>
-
-
-                              {instruccionTitulo && (
-
-                                <div className="mt-2 rounded-lg bg-gray-50 px-3 py-2">
-
-                                  <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-gray-400">
-                                    Instrucciones
-                                  </p>
-
-                                  <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-gray-600">
-                                    {
-                                      instruccionTitulo
-                                    }
-                                  </p>
-
-                                </div>
-
-                              )}
-
-
-                              <p className="mt-2 text-[11px] text-gray-400">
-                                Día{" "}
-                                {
-                                  actividad.diaInicio
-                                }
-                                {actividad.diaFin &&
-                                actividad.diaFin !==
-                                  actividad.diaInicio
-                                  ? ` al ${actividad.diaFin}`
-                                  : ""}
-                              </p>
-
-
-                              {actividad.indicaciones.length >
-                                0 && (
-
-                                <div className="mt-3 overflow-hidden rounded-xl border border-violet-100">
-
-                                  {actividad.indicaciones.map(
-                                    (
-                                      indicacion
-                                    ) => (
-
-                                    <div
-                                      key={
-                                        indicacion.id
-                                      }
-                                      className="grid gap-2 border-b border-violet-100 bg-violet-50/30 px-3 py-2.5 last:border-b-0 sm:grid-cols-[64px_minmax(0,1fr)]"
-                                    >
-
-                                      <span className="font-mono text-xs font-bold text-violet-700">
-                                        {
-                                          indicacion.hora
-                                        }
-                                      </span>
-
-                                      <p className="whitespace-pre-wrap text-xs leading-5 text-gray-600">
-                                        {
-                                          indicacion.texto
-                                        }
-                                      </p>
-
-                                    </div>
-
-                                    )
-                                  )}
-
-                                </div>
-
-                              )}
-
-                            </div>
-
-                          </div>
-
-                        </div>
-
-                      );
-                    }
-                  )}
-
-
-                  {principalesOrdenados.length ===
-                    0 && (
-
-                    <div className="px-4 py-6 text-center">
-
-                      <p className="text-sm font-medium text-gray-700">
-                        Todavía no hay actividades principales.
-                      </p>
-
-                      <p className="mt-1 text-xs leading-5 text-gray-500">
-                        Agrega actividades en la sección anterior antes de finalizar.
-                      </p>
-
-                    </div>
-
-                  )}
-
-                </div>
-
-              </div>
-
-
-              {filasAdicionales.length >
-                0 && (
-
-                <div className="overflow-hidden rounded-xl border border-purple-200">
-
-                  <div className="border-b border-purple-100 bg-purple-50 px-4 py-3">
-
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-purple-700">
-                      Protocolos adicionales
+                    <p
+                      key={`${error}-${indice}`}
+                      className="text-xs leading-5 text-amber-800"
+                    >
+                      • {error}
                     </p>
 
-                  </div>
-
-
-                  <div className="divide-y divide-purple-100">
-
-                    {filasAdicionales.map(
-                      (actividad) => (
-
-                      <div
-                        key={
-                          actividad.id
-                        }
-                        className="flex gap-3 px-4 py-3"
-                      >
-
-                        <div className="w-14 shrink-0">
-
-                          <span className="inline-flex rounded-lg bg-purple-50 px-2 py-1 text-xs font-bold text-purple-700">
-                            {actividad.hora ||
-                              "—"}
-                          </span>
-
-                        </div>
-
-
-                        <div className="min-w-0 flex-1">
-
-                          <p className="text-sm font-semibold text-gray-900">
-                            {actividad.titulo}
-                          </p>
-
-                          {actividad.descripcion && (
-
-                            <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-gray-600">
-                              {actividad.descripcion}
-                            </p>
-
-                          )}
-
-
-                          {actividad.indicaciones.length >
-                            0 && (
-
-                            <div className="mt-3 space-y-2">
-
-                              {actividad.indicaciones.map(
-                                (
-                                  indicacion,
-                                  indice
-                                ) => (
-
-                                <div
-                                  key={
-                                    indicacion.id
-                                  }
-                                  className="flex items-start gap-2 rounded-lg border border-purple-100 bg-purple-50/50 px-3 py-2"
-                                >
-
-                                  <span className="shrink-0 rounded-md bg-white px-2 py-1 font-mono text-[11px] font-bold text-purple-700">
-                                    {indicacion.hora}
-                                  </span>
-
-                                  <div className="min-w-0 flex-1">
-
-                                    <p className="text-[10px] font-bold uppercase tracking-wide text-purple-500">
-                                      Indicación {indice + 1}
-                                    </p>
-
-                                    <p className="mt-0.5 whitespace-pre-wrap text-xs leading-5 text-gray-600">
-                                      {indicacion.texto}
-                                    </p>
-
-                                  </div>
-
-                                </div>
-
-                                )
-                              )}
-
-                            </div>
-
-                          )}
-
-
-                          <p className="mt-1 text-[11px] text-gray-400">
-                            Desde día {actividad.diaInicio}
-                            {actividad.diaFin
-                              ? ` hasta día ${actividad.diaFin}`
-                              : " hasta finalizar el seguimiento"}
-                          </p>
-
-                        </div>
-
-                      </div>
-
-                    ))}
-
-                  </div>
+                    )
+                  )}
 
                 </div>
 
@@ -1182,7 +818,7 @@ export default function PrepararSeguimientoCliente({
               onClick={() =>
                 void finalizarPreparacion()
               }
-              className="admin-btn-primary mt-5 w-full py-3 disabled:opacity-60 sm:w-auto"
+              className="admin-btn-primary mt-4 w-full py-3 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {finalizando
                 ? "Finalizando..."
@@ -1190,6 +826,11 @@ export default function PrepararSeguimientoCliente({
                 ? "Ver enlace generado"
                 : "Finalizar y generar enlace"}
             </button>
+
+
+            <p className="mt-2 text-center text-[11px] leading-5 text-gray-400">
+              Después de finalizar se generará el enlace privado del cliente.
+            </p>
 
           </div>
 
