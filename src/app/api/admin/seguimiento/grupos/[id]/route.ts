@@ -261,6 +261,91 @@ export async function PATCH(
 
   if (
     accion ===
+    "FINALIZAR"
+  ) {
+    if (
+      grupo.estado ===
+      "FINALIZADO"
+    ) {
+      return NextResponse.json({
+        ok: true,
+        estado:
+          "FINALIZADO",
+      });
+    }
+
+    if (
+      grupo.estado !==
+      "ACTIVO"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Solo un grupo activo puede finalizarse.",
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
+    const ids =
+      grupo.miembros.map(
+        (miembro) =>
+          miembro.seguimientoId
+      );
+
+    const ahora =
+      new Date();
+
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.grupoSeguimiento.update({
+          where: {
+            id,
+          },
+
+          data: {
+            estado:
+              "FINALIZADO",
+          },
+        });
+
+        if (
+          ids.length > 0
+        ) {
+          await tx.seguimientoCliente.updateMany({
+            where: {
+              id: {
+                in: ids,
+              },
+
+              estado:
+                "ACTIVO",
+            },
+
+            data: {
+              estado:
+                "COMPLETADO",
+
+              fechaFinalizado:
+                ahora,
+            },
+          });
+        }
+      }
+    );
+
+    return NextResponse.json({
+      ok: true,
+      estado:
+        "FINALIZADO",
+    });
+  }
+
+
+  if (
+    accion ===
     "ACTUALIZAR_DURACION"
   ) {
     if (

@@ -6,6 +6,7 @@ import {
 
 import {
   CalendarClock,
+  CheckCircle2,
   Play,
 } from "lucide-react";
 
@@ -44,6 +45,11 @@ export default function GestionGrupoSeguimiento({
   const [
     editandoDuracion,
     setEditandoDuracion,
+  ] = useState(false);
+
+  const [
+    confirmandoFinalizacion,
+    setConfirmandoFinalizacion,
   ] = useState(false);
 
   const [
@@ -114,6 +120,62 @@ export default function GestionGrupoSeguimiento({
       setProcesando(false);
     }
   }
+
+  async function finalizarGrupo() {
+    setProcesando(true);
+
+    try {
+      const res =
+        await fetch(
+          `/api/admin/seguimiento/grupos/${grupoId}`,
+          {
+            method:
+              "PATCH",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                accion:
+                  "FINALIZAR",
+              }),
+          }
+        );
+
+      const data =
+        await res
+          .json()
+          .catch(() => null);
+
+      if (!res.ok) {
+        toast.error(
+          data?.error ||
+            "No se pudo finalizar el grupo."
+        );
+        return;
+      }
+
+      toast.success(
+        "Grupo finalizado correctamente."
+      );
+
+      setConfirmandoFinalizacion(
+        false
+      );
+
+      router.refresh();
+    } catch {
+      toast.error(
+        "No se pudo conectar con el servidor."
+      );
+    } finally {
+      setProcesando(false);
+    }
+  }
+
 
   function abrirDuracion() {
     setNuevaDuracion(
@@ -242,6 +304,22 @@ export default function GestionGrupoSeguimiento({
           </button>
         )}
 
+        {estado ===
+          "ACTIVO" && (
+          <button
+            type="button"
+            onClick={() =>
+              setConfirmandoFinalizacion(
+                true
+              )
+            }
+            className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            Finalizar grupo
+          </button>
+        )}
+
       </div>
 
 
@@ -309,6 +387,82 @@ export default function GestionGrupoSeguimiento({
                 {procesando
                   ? "Iniciando..."
                   : "Confirmar inicio"}
+              </button>
+
+            </div>
+
+          </div>
+        </Modal>
+      )}
+
+
+      {confirmandoFinalizacion && (
+        <Modal
+          title="Finalizar grupo"
+          onClose={() =>
+            !procesando &&
+            setConfirmandoFinalizacion(
+              false
+            )
+          }
+          maxWidthClassName="max-w-md"
+        >
+          <div className="space-y-5">
+
+            <div className="rounded-2xl bg-emerald-50 p-4">
+
+              <p className="font-semibold text-emerald-900">
+                Se cerrará el seguimiento grupal
+              </p>
+
+              <p className="mt-1 text-sm leading-6 text-emerald-700">
+                Los seguimientos activos de los {participantes} participante{participantes === 1 ? "" : "s"} pasarán a completados y conservarán todos sus registros, mediciones, gráficas y resultados.
+              </p>
+
+            </div>
+
+
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+
+              <p className="text-xs leading-5 text-amber-800">
+                Después de finalizar el grupo ya no se podrá modificar su duración ni agregar nuevos participantes.
+              </p>
+
+            </div>
+
+
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+
+              <button
+                type="button"
+                disabled={
+                  procesando
+                }
+                onClick={() =>
+                  setConfirmandoFinalizacion(
+                    false
+                  )
+                }
+                className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-600"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                disabled={
+                  procesando
+                }
+                onClick={
+                  finalizarGrupo
+                }
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+
+                {procesando
+                  ? "Finalizando..."
+                  : "Confirmar finalización"}
               </button>
 
             </div>
