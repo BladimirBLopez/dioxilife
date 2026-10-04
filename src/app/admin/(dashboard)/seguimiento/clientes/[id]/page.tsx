@@ -189,6 +189,31 @@ export default async function SeguimientoClientePage({
             orden: true,
             activo: true,
 
+            indicaciones: {
+              where: {
+                activo: true,
+              },
+
+              orderBy: [
+                {
+                  hora: "asc",
+                },
+                {
+                  orden: "asc",
+                },
+                {
+                  createdAt: "asc",
+                },
+              ],
+
+              select: {
+                id: true,
+                hora: true,
+                texto: true,
+                orden: true,
+              },
+            },
+
             _count: {
               select: {
                 progresos: true,
@@ -591,6 +616,10 @@ export default async function SeguimientoClientePage({
             diaFin: actividad.diaFin,
             orden: actividad.orden,
             activo: actividad.activo,
+
+            indicaciones:
+              actividad.indicaciones,
+
             cantidadProgresos:
               actividad._count.progresos,
           })

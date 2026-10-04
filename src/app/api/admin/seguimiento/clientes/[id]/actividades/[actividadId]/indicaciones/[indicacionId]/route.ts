@@ -5,14 +5,41 @@ import {
 
 import { prisma } from "@/lib/prisma";
 import { obtenerAdminActual } from "@/lib/admin-auth";
+import { obtenerDiaSeguimiento } from "@/lib/seguimiento-publico";
 
-function horaValida(valor: string) {
+function horaValida(
+  valor: string
+) {
   return /^([01]\d|2[0-3]):([0-5]\d)$/.test(
     valor
   );
 }
 
-async function validarEdicion({
+function diaDelCambio({
+  fechaInicio,
+  duracionDias,
+  diaInicio,
+}: {
+  fechaInicio: Date | null;
+  duracionDias: number;
+  diaInicio: number;
+}) {
+  if (!fechaInicio) {
+    return diaInicio;
+  }
+
+  return Math.min(
+    Math.max(
+      obtenerDiaSeguimiento(
+        fechaInicio
+      ),
+      1
+    ),
+    duracionDias
+  );
+}
+
+async function obtenerContexto({
   seguimientoId,
   actividadId,
   indicacionId,
@@ -24,11 +51,13 @@ async function validarEdicion({
   const seguimiento =
     await prisma.seguimientoCliente.findFirst({
       where: {
-        id: seguimientoId,
+        id:
+          seguimientoId,
 
         actividades: {
           some: {
-            id: actividadId,
+            id:
+              actividadId,
           },
         },
       },
@@ -37,10 +66,69 @@ async function validarEdicion({
         id: true,
         estado: true,
         preparadoAt: true,
+        fechaInicio: true,
+        duracionDias: true,
+
+        actividades: {
+          where: {
+            id:
+              actividadId,
+          },
+
+          select: {
+            id: true,
+            tipo: true,
+            recordatorio: true,
+            seccion: true,
+            titulo: true,
+            descripcion: true,
+            momento: true,
+            hora: true,
+            diaInicio: true,
+            diaFin: true,
+            orden: true,
+            activo: true,
+
+            indicaciones: {
+              where: {
+                activo: true,
+              },
+
+              orderBy: [
+                {
+                  hora:
+                    "asc",
+                },
+                {
+                  orden:
+                    "asc",
+                },
+                {
+                  createdAt:
+                    "asc",
+                },
+              ],
+
+              select: {
+                id: true,
+                hora: true,
+                texto: true,
+                orden: true,
+                activo: true,
+              },
+            },
+          },
+
+          take: 1,
+        },
       },
     });
 
-  if (!seguimiento) {
+  if (
+    !seguimiento ||
+    seguimiento.actividades.length ===
+      0
+  ) {
     return {
       error:
         "Actividad no encontrada.",
@@ -48,20 +136,15 @@ async function validarEdicion({
     } as const;
   }
 
+  const actividad =
+    seguimiento.actividades[0];
+
   const indicacion =
-    await prisma.indicacionActividadSeguimiento.findFirst({
-      where: {
-        id: indicacionId,
-
-        actividadSeguimientoId:
-          actividadId,
-      },
-
-      select: {
-        id: true,
-        orden: true,
-      },
-    });
+    actividad.indicaciones.find(
+      (item) =>
+        item.id ===
+        indicacionId
+    );
 
   if (!indicacion) {
     return {
@@ -72,20 +155,48 @@ async function validarEdicion({
   }
 
   if (
-    seguimiento.estado !==
-      "PENDIENTE" ||
-    seguimiento.preparadoAt
+    seguimiento.estado ===
+      "COMPLETADO" ||
+    seguimiento.estado ===
+      "CANCELADO"
   ) {
     return {
       error:
-        "Las indicaciones solo pueden modificarse durante la preparación del seguimiento.",
+        "No se puede modificar un seguimiento finalizado.",
+      status: 409,
+    } as const;
+  }
+
+  const enPreparacion =
+    seguimiento.estado ===
+      "PENDIENTE" &&
+    !seguimiento.preparadoAt;
+
+  if (
+    !enPreparacion &&
+    actividad.seccion !==
+      "ADICIONAL"
+  ) {
+    return {
+      error:
+        "Las indicaciones del protocolo principal solo pueden modificarse durante la preparación.",
+      status: 409,
+    } as const;
+  }
+
+  if (!actividad.activo) {
+    return {
+      error:
+        "Esta actividad ya no está activa.",
       status: 409,
     } as const;
   }
 
   return {
     seguimiento,
+    actividad,
     indicacion,
+    enPreparacion,
   };
 }
 
@@ -107,7 +218,8 @@ export async function PUT(
   if (!admin) {
     return NextResponse.json(
       {
-        error: "No autorizado",
+        error:
+          "No autorizado",
       },
       {
         status: 401,
@@ -121,22 +233,25 @@ export async function PUT(
     indicacionId,
   } = await params;
 
-  const validacion =
-    await validarEdicion({
-      seguimientoId: id,
+  const contexto =
+    await obtenerContexto({
+      seguimientoId:
+        id,
+
       actividadId,
+
       indicacionId,
     });
 
-  if ("error" in validacion) {
+  if ("error" in contexto) {
     return NextResponse.json(
       {
         error:
-          validacion.error,
+          contexto.error,
       },
       {
         status:
-          validacion.status,
+          contexto.status,
       }
     );
   }
@@ -157,7 +272,10 @@ export async function PUT(
     "string"
       ? body.texto
           .trim()
-          .slice(0, 5000)
+          .slice(
+            0,
+            5000
+          )
       : "";
 
   if (!horaValida(hora)) {
@@ -185,32 +303,216 @@ export async function PUT(
   }
 
   const ordenSolicitado =
-    Number(body?.orden);
+    Number(
+      body?.orden
+    );
 
-  const indicacion =
-    await prisma.indicacionActividadSeguimiento.update({
-      where: {
-        id: indicacionId,
-      },
+  const nuevoOrden =
+    Number.isInteger(
+      ordenSolicitado
+    )
+      ? ordenSolicitado
+      : contexto
+          .indicacion
+          .orden;
 
-      data: {
-        hora,
-        texto,
+  /*
+   * Preparación o protocolo adicional
+   * todavía sin historial.
+   */
+  if (
+    contexto.enPreparacion ||
+    !contexto.seguimiento
+      .fechaInicio
+  ) {
+    const indicacion =
+      await prisma.indicacionActividadSeguimiento.update({
+        where: {
+          id:
+            indicacionId,
+        },
 
-        orden:
-          Number.isInteger(
-            ordenSolicitado
-          )
-            ? ordenSolicitado
-            : validacion
-                .indicacion
-                .orden,
-      },
+        data: {
+          hora,
+          texto,
+          orden:
+            nuevoOrden,
+        },
+      });
+
+    return NextResponse.json(
+      indicacion
+    );
+  }
+
+  const diaCambio =
+    diaDelCambio({
+      fechaInicio:
+        contexto.seguimiento
+          .fechaInicio,
+
+      duracionDias:
+        contexto.seguimiento
+          .duracionDias,
+
+      diaInicio:
+        contexto.actividad
+          .diaInicio,
     });
 
-  return NextResponse.json(
-    indicacion
-  );
+  const ultimoDia =
+    contexto.actividad
+      .diaFin ??
+    contexto.seguimiento
+      .duracionDias;
+
+  if (
+    diaCambio >
+    ultimoDia
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Esta versión del protocolo adicional ya terminó.",
+      },
+      {
+        status: 409,
+      }
+    );
+  }
+
+  if (
+    diaCambio <=
+    contexto.actividad
+      .diaInicio
+  ) {
+    const indicacion =
+      await prisma.indicacionActividadSeguimiento.update({
+        where: {
+          id:
+            indicacionId,
+        },
+
+        data: {
+          hora,
+          texto,
+          orden:
+            nuevoOrden,
+        },
+      });
+
+    return NextResponse.json(
+      indicacion
+    );
+  }
+
+  const nuevaActividad =
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.actividadSeguimiento.update({
+          where: {
+            id:
+              contexto.actividad
+                .id,
+          },
+
+          data: {
+            diaFin:
+              diaCambio - 1,
+
+            activo:
+              true,
+          },
+        });
+
+        return tx.actividadSeguimiento.create({
+          data: {
+            seguimientoId:
+              contexto.seguimiento
+                .id,
+
+            tipo:
+              contexto.actividad
+                .tipo,
+
+            recordatorio:
+              contexto.actividad
+                .recordatorio,
+
+            seccion:
+              "ADICIONAL",
+
+            titulo:
+              contexto.actividad
+                .titulo,
+
+            descripcion:
+              contexto.actividad
+                .descripcion,
+
+            momento:
+              contexto.actividad
+                .momento,
+
+            hora:
+              contexto.actividad
+                .hora,
+
+            diaInicio:
+              diaCambio,
+
+            diaFin:
+              contexto.actividad
+                .diaFin,
+
+            orden:
+              contexto.actividad
+                .orden,
+
+            activo:
+              true,
+
+            indicaciones: {
+              create:
+                contexto.actividad
+                  .indicaciones.map(
+                    (
+                      indicacion
+                    ) => ({
+                      hora:
+                        indicacion.id ===
+                        indicacionId
+                          ? hora
+                          : indicacion.hora,
+
+                      texto:
+                        indicacion.id ===
+                        indicacionId
+                          ? texto
+                          : indicacion.texto,
+
+                      orden:
+                        indicacion.id ===
+                        indicacionId
+                          ? nuevoOrden
+                          : indicacion.orden,
+
+                      activo:
+                        true,
+                    })
+                  ),
+            },
+          },
+        });
+      }
+    );
+
+  return NextResponse.json({
+    ok: true,
+    versionada: true,
+    actividadId:
+      nuevaActividad.id,
+  });
 }
 
 export async function DELETE(
@@ -231,7 +533,8 @@ export async function DELETE(
   if (!admin) {
     return NextResponse.json(
       {
-        error: "No autorizado",
+        error:
+          "No autorizado",
       },
       {
         status: 401,
@@ -245,38 +548,206 @@ export async function DELETE(
     indicacionId,
   } = await params;
 
-  const validacion =
-    await validarEdicion({
-      seguimientoId: id,
+  const contexto =
+    await obtenerContexto({
+      seguimientoId:
+        id,
+
       actividadId,
+
       indicacionId,
     });
 
-  if ("error" in validacion) {
+  if ("error" in contexto) {
     return NextResponse.json(
       {
         error:
-          validacion.error,
+          contexto.error,
       },
       {
         status:
-          validacion.status,
+          contexto.status,
       }
     );
   }
 
-  /*
-   * Durante la preparación todavía
-   * no existe historial del cliente.
-   * Por eso es seguro eliminarla.
-   */
-  await prisma.indicacionActividadSeguimiento.delete({
-    where: {
-      id: indicacionId,
-    },
-  });
+  if (
+    contexto.enPreparacion ||
+    !contexto.seguimiento
+      .fechaInicio
+  ) {
+    await prisma.indicacionActividadSeguimiento.delete({
+      where: {
+        id:
+          indicacionId,
+      },
+    });
+
+    return NextResponse.json({
+      ok: true,
+    });
+  }
+
+  const diaCambio =
+    diaDelCambio({
+      fechaInicio:
+        contexto.seguimiento
+          .fechaInicio,
+
+      duracionDias:
+        contexto.seguimiento
+          .duracionDias,
+
+      diaInicio:
+        contexto.actividad
+          .diaInicio,
+    });
+
+  const ultimoDia =
+    contexto.actividad
+      .diaFin ??
+    contexto.seguimiento
+      .duracionDias;
+
+  if (
+    diaCambio >
+    ultimoDia
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Esta versión del protocolo adicional ya terminó.",
+      },
+      {
+        status: 409,
+      }
+    );
+  }
+
+  if (
+    diaCambio <=
+    contexto.actividad
+      .diaInicio
+  ) {
+    await prisma.indicacionActividadSeguimiento.delete({
+      where: {
+        id:
+          indicacionId,
+      },
+    });
+
+    return NextResponse.json({
+      ok: true,
+    });
+  }
+
+  const indicacionesRestantes =
+    contexto.actividad
+      .indicaciones.filter(
+        (indicacion) =>
+          indicacion.id !==
+          indicacionId
+      );
+
+  const nuevaActividad =
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.actividadSeguimiento.update({
+          where: {
+            id:
+              contexto.actividad
+                .id,
+          },
+
+          data: {
+            diaFin:
+              diaCambio - 1,
+
+            activo:
+              true,
+          },
+        });
+
+        return tx.actividadSeguimiento.create({
+          data: {
+            seguimientoId:
+              contexto.seguimiento
+                .id,
+
+            tipo:
+              contexto.actividad
+                .tipo,
+
+            recordatorio:
+              contexto.actividad
+                .recordatorio,
+
+            seccion:
+              "ADICIONAL",
+
+            titulo:
+              contexto.actividad
+                .titulo,
+
+            descripcion:
+              contexto.actividad
+                .descripcion,
+
+            momento:
+              contexto.actividad
+                .momento,
+
+            hora:
+              contexto.actividad
+                .hora,
+
+            diaInicio:
+              diaCambio,
+
+            diaFin:
+              contexto.actividad
+                .diaFin,
+
+            orden:
+              contexto.actividad
+                .orden,
+
+            activo:
+              true,
+
+            indicaciones:
+              indicacionesRestantes.length >
+              0
+                ? {
+                    create:
+                      indicacionesRestantes.map(
+                        (
+                          indicacion
+                        ) => ({
+                          hora:
+                            indicacion.hora,
+
+                          texto:
+                            indicacion.texto,
+
+                          orden:
+                            indicacion.orden,
+
+                          activo:
+                            true,
+                        })
+                      ),
+                  }
+                : undefined,
+          },
+        });
+      }
+    );
 
   return NextResponse.json({
     ok: true,
+    versionada: true,
+    actividadId:
+      nuevaActividad.id,
   });
 }

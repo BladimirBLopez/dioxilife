@@ -130,33 +130,10 @@ function actividadAInstrucciones(
   }
 
   /*
-   * Compatibilidad con plantillas
-   * antiguas: recuperamos las líneas
-   * de descripcion, pero NO inventamos
-   * sus horarios.
+   * descripcion pertenece al título.
+   * Ya no la convertimos automáticamente
+   * en indicaciones con horario.
    */
-  const legacy =
-    actividad?.descripcion
-      ?.split(/\r?\n/)
-      .map(
-        (linea) =>
-          linea.trim()
-      )
-      .filter(Boolean) ??
-    [];
-
-  if (
-    legacy.length >
-    0
-  ) {
-    return legacy.map(
-      (texto) => ({
-        hora: "",
-        texto,
-      })
-    );
-  }
-
   return [
     {
       hora: "",
@@ -233,11 +210,11 @@ function descripcionPrincipalActividad(
   }
 
   /*
-   * Si aún no existen indicaciones
-   * estructuradas, descripcion puede
-   * pertenecer al formato antiguo.
+   * Sin indicaciones estructuradas,
+   * descripcion sigue siendo la
+   * instrucción propia del título.
    */
-  return "";
+  return descripcion;
 }
 
 
@@ -1062,41 +1039,36 @@ export default function PlanActividadesPage() {
 
                   <div className="p-4 sm:p-5">
 
-                    {actividad.nombre !==
-                      "Importante" && (
+                    <div className="mb-5">
 
-                      <div className="mb-5">
+                      <label className="admin-label">
+                        Instrucciones del título
+                      </label>
 
-                        <label className="admin-label">
-                          Instrucción principal
-                        </label>
+                      <p className="mb-2 text-xs leading-5 text-[#8A8790]">
+                        Escribe las instrucciones propias de {actividad.nombre}. Son independientes de las indicaciones con horario que aparecen debajo.
+                      </p>
 
-                        <p className="mb-2 text-xs leading-5 text-[#8A8790]">
-                          Describe aquí la indicación propia de {actividad.nombre}. Esta información es independiente de las indicaciones con horario.
-                        </p>
+                      <textarea
+                        value={
+                          actividad.descripcion
+                        }
+                        onChange={(e) =>
+                          actualizarActividad(
+                            actividad.nombre,
+                            {
+                              descripcion:
+                                e.target.value,
+                            }
+                          )
+                        }
+                        className="admin-input min-h-24 w-full"
+                        rows={3}
+                        maxLength={5000}
+                        placeholder={`Escribe las instrucciones de ${actividad.nombre}...`}
+                      />
 
-                        <textarea
-                          value={
-                            actividad.descripcion
-                          }
-                          onChange={(e) =>
-                            actualizarActividad(
-                              actividad.nombre,
-                              {
-                                descripcion:
-                                  e.target.value,
-                              }
-                            )
-                          }
-                          className="admin-input min-h-24 w-full"
-                          rows={3}
-                          maxLength={5000}
-                          placeholder={`Escribe la instrucción principal de ${actividad.nombre}...`}
-                        />
-
-                      </div>
-
-                    )}
+                    </div>
 
 
                     <label className="admin-label">

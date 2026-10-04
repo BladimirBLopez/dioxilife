@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Modal from "@/components/Modal";
 import SelectorHora from "@/components/admin/seguimiento/SelectorHora";
+import IndicacionesActividadPreparacion from "@/components/admin/seguimiento/IndicacionesActividadPreparacion";
 
 type Recordatorio =
   | "NINGUNO"
@@ -22,6 +23,13 @@ type ActividadAdicional = {
   diaFin: number | null;
   orden: number;
   recordatorio: Recordatorio;
+
+  indicaciones: Array<{
+    id: string;
+    hora: string;
+    texto: string;
+    orden: number;
+  }>;
 };
 
 type Props = {
@@ -534,6 +542,19 @@ export default function ProtocolosAdicionalesPreparacion({
                             )}
                           </p>
 
+
+                          <IndicacionesActividadPreparacion
+                            seguimientoId={
+                              seguimientoId
+                            }
+                            actividadId={
+                              actividad.id
+                            }
+                            indicaciones={
+                              actividad.indicaciones
+                            }
+                          />
+
                         </div>
 
 
@@ -661,8 +682,12 @@ export default function ProtocolosAdicionalesPreparacion({
             <div>
 
               <label className="admin-label">
-                Indicaciones
+                Instrucciones del protocolo
               </label>
+
+              <p className="mb-2 text-xs leading-5 text-gray-500">
+                Estas instrucciones pertenecen al título del protocolo. Las indicaciones con horario se agregan después de guardar.
+              </p>
 
               <textarea
                 value={

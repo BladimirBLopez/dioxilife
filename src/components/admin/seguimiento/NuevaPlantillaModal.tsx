@@ -8,6 +8,7 @@ import {
 import { toast } from "sonner";
 import Modal from "@/components/Modal";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import SelectorHora from "@/components/admin/seguimiento/SelectorHora";
 
 type EstadoPlantilla =
   | "BORRADOR"
@@ -20,10 +21,16 @@ type NombreActividad =
   | "Cena"
   | "Importante";
 
+type IndicacionPlantilla = {
+  hora: string;
+  texto: string;
+};
+
 type ActividadPlantilla = {
   nombre: NombreActividad;
   hora: string;
-  instrucciones: string[];
+  instruccionesTitulo: string;
+  indicaciones: IndicacionPlantilla[];
 };
 
 type Props = {
@@ -46,54 +53,67 @@ function crearActividadesIniciales():
     {
       nombre: "Ayunas",
       hora: "",
-      instrucciones: [""],
+      instruccionesTitulo: "",
+      indicaciones: [
+        {
+          hora: "",
+          texto: "",
+        },
+      ],
     },
     {
       nombre: "Desayuno",
       hora: "",
-      instrucciones: [""],
+      instruccionesTitulo: "",
+      indicaciones: [
+        {
+          hora: "",
+          texto: "",
+        },
+      ],
     },
     {
       nombre: "Almuerzo",
       hora: "13:00",
-      instrucciones: [""],
+      instruccionesTitulo: "",
+      indicaciones: [
+        {
+          hora: "",
+          texto: "",
+        },
+      ],
     },
     {
       nombre: "Cena",
       hora: "18:00",
-      instrucciones: [""],
+      instruccionesTitulo: "",
+      indicaciones: [
+        {
+          hora: "",
+          texto: "",
+        },
+      ],
     },
     {
       nombre: "Importante",
       hora: "",
-      instrucciones: [""],
+      instruccionesTitulo: "",
+      indicaciones: [
+        {
+          hora: "",
+          texto: "",
+        },
+      ],
     },
   ];
 }
 
-function limpiarInstruccion(
+function limpiarTexto(
   valor: string
 ) {
   return valor
     .replace(/\r?\n/g, " ")
     .trim();
-}
-
-function instruccionesATexto(
-  instrucciones: string[]
-) {
-  return instrucciones
-    .map(limpiarInstruccion)
-    .filter(Boolean)
-    .join("\n");
-}
-
-function totalCaracteres(
-  instrucciones: string[]
-) {
-  return instruccionesATexto(
-    instrucciones
-  ).length;
 }
 
 export default function NuevaPlantillaModal({
@@ -177,10 +197,10 @@ export default function NuevaPlantillaModal({
     );
   }
 
-  function actualizarInstruccion(
+  function actualizarIndicacion(
     nombre: NombreActividad,
     indice: number,
-    valor: string
+    cambios: Partial<IndicacionPlantilla>
   ) {
     setActividades(
       (actuales) =>
@@ -193,26 +213,25 @@ export default function NuevaPlantillaModal({
               return actividad;
             }
 
-            const instrucciones = [
-              ...actividad.instrucciones,
+            const indicaciones = [
+              ...actividad.indicaciones,
             ];
 
-            instrucciones[indice] =
-              valor.replace(
-                /\r?\n/g,
-                " "
-              );
+            indicaciones[indice] = {
+              ...indicaciones[indice],
+              ...cambios,
+            };
 
             return {
               ...actividad,
-              instrucciones,
+              indicaciones,
             };
           }
         )
     );
   }
 
-  function agregarInstruccion(
+  function agregarIndicacion(
     nombre: NombreActividad
   ) {
     setActividades(
@@ -223,9 +242,12 @@ export default function NuevaPlantillaModal({
             nombre
               ? {
                   ...actividad,
-                  instrucciones: [
-                    ...actividad.instrucciones,
-                    "",
+                  indicaciones: [
+                    ...actividad.indicaciones,
+                    {
+                      hora: "",
+                      texto: "",
+                    },
                   ],
                 }
               : actividad
@@ -233,7 +255,7 @@ export default function NuevaPlantillaModal({
     );
   }
 
-  function eliminarInstruccion(
+  function eliminarIndicacion(
     nombre: NombreActividad,
     indice: number
   ) {
@@ -244,7 +266,7 @@ export default function NuevaPlantillaModal({
             if (
               actividad.nombre !==
                 nombre ||
-              actividad.instrucciones
+              actividad.indicaciones
                 .length <= 1
             ) {
               return actividad;
@@ -252,8 +274,8 @@ export default function NuevaPlantillaModal({
 
             return {
               ...actividad,
-              instrucciones:
-                actividad.instrucciones.filter(
+              indicaciones:
+                actividad.indicaciones.filter(
                   (
                     _item,
                     posicion
@@ -333,19 +355,77 @@ export default function NuevaPlantillaModal({
       return;
     }
 
-    const actividadDemasiadoLarga =
-      actividades.find(
-        (actividad) =>
-          totalCaracteres(
-            actividad.instrucciones
-          ) > 5000
-      );
+    for (
+      const actividad of
+      actividades
+    ) {
+      const instruccionesTitulo =
+        actividad.instruccionesTitulo.trim();
 
-    if (actividadDemasiadoLarga) {
-      toast.error(
-        `Las instrucciones de ${actividadDemasiadoLarga.nombre} superan los 5000 caracteres.`
-      );
-      return;
+      if (
+        instruccionesTitulo.length >
+        5000
+      ) {
+        toast.error(
+          `Las instrucciones del título ${actividad.nombre} superan los 5000 caracteres.`
+        );
+        return;
+      }
+
+      for (
+        let indice = 0;
+        indice <
+        actividad.indicaciones.length;
+        indice++
+      ) {
+        const indicacion =
+          actividad.indicaciones[
+            indice
+          ];
+
+        const texto =
+          indicacion.texto.trim();
+
+        const tieneHora =
+          Boolean(
+            indicacion.hora
+          );
+
+        const tieneTexto =
+          Boolean(
+            texto
+          );
+
+        if (
+          tieneTexto &&
+          !tieneHora
+        ) {
+          toast.error(
+            `Define la hora de la indicación ${indice + 1} de ${actividad.nombre}.`
+          );
+          return;
+        }
+
+        if (
+          tieneHora &&
+          !tieneTexto
+        ) {
+          toast.error(
+            `Escribe el texto de la indicación ${indice + 1} de ${actividad.nombre}.`
+          );
+          return;
+        }
+
+        if (
+          texto.length >
+          5000
+        ) {
+          toast.error(
+            `La indicación ${indice + 1} de ${actividad.nombre} supera los 5000 caracteres.`
+          );
+          return;
+        }
+      }
     }
 
     setGuardando(true);
@@ -399,8 +479,8 @@ export default function NuevaPlantillaModal({
                       actividad.nombre,
 
                     descripcion:
-                      instruccionesATexto(
-                        actividad.instrucciones
+                      limpiarTexto(
+                        actividad.instruccionesTitulo
                       ) ||
                       null,
 
@@ -423,6 +503,33 @@ export default function NuevaPlantillaModal({
 
                     orden:
                       indice + 1,
+
+                    indicaciones:
+                      actividad.indicaciones
+                        .map(
+                          (
+                            indicacion,
+                            ordenIndicacion
+                          ) => ({
+                            hora:
+                              indicacion.hora,
+
+                            texto:
+                              limpiarTexto(
+                                indicacion.texto
+                              ),
+
+                            orden:
+                              ordenIndicacion,
+                          })
+                        )
+                        .filter(
+                          (indicacion) =>
+                            Boolean(
+                              indicacion.hora ||
+                              indicacion.texto
+                            )
+                        ),
                   })
                 ),
             }),
@@ -713,87 +820,182 @@ export default function NuevaPlantillaModal({
                       <div className="mt-4">
 
                         <label className="admin-label">
-                          Instrucciones
+                          Instrucciones del título
                         </label>
 
+                        <p className="mb-2 text-xs leading-5 text-[#8A8790]">
+                          Estas instrucciones pertenecen directamente a {actividad.nombre} y son independientes de las indicaciones con horario.
+                        </p>
+
+                        <textarea
+                          value={
+                            actividad.instruccionesTitulo
+                          }
+                          onChange={(e) =>
+                            actualizarActividad(
+                              actividad.nombre,
+                              {
+                                instruccionesTitulo:
+                                  e.target.value,
+                              }
+                            )
+                          }
+                          className="admin-input min-h-24 w-full"
+                          rows={3}
+                          maxLength={5000}
+                          placeholder={`Escribe las instrucciones de ${actividad.nombre}...`}
+                        />
+
+                      </div>
+
+
+                      <div className="mt-5 border-t border-gray-100 pt-5">
+
+                        <div className="mb-3">
+
+                          <label className="admin-label">
+                            Indicaciones con horario
+                          </label>
+
+                          <p className="mt-1 text-xs leading-5 text-[#8A8790]">
+                            Cada indicación tendrá su propia hora, texto y posteriormente su propio check.
+                          </p>
+
+                        </div>
+
+
                         <div className="space-y-3">
-                          {actividad.instrucciones.map(
+
+                          {actividad.indicaciones.map(
                             (
-                              instruccion,
+                              indicacion,
                               indice
                             ) => (
+
                               <div
                                 key={indice}
-                                className="flex items-start gap-2"
+                                className="rounded-2xl border border-gray-200 bg-[#FAFAFC] p-4"
                               >
-                                <span className="mt-3 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#F8F6FF] text-xs font-bold text-brand-pink">
-                                  {indice + 1}
-                                </span>
 
-                                <textarea
-                                  value={
-                                    instruccion
-                                  }
-                                  onChange={(e) =>
-                                    actualizarInstruccion(
-                                      actividad.nombre,
-                                      indice,
-                                      e.target.value
-                                    )
-                                  }
-                                  className="admin-input min-h-20 flex-1"
-                                  rows={2}
-                                  maxLength={5000}
-                                  placeholder={`Instrucción ${indice + 1}...`}
-                                />
+                                <div className="flex items-center justify-between gap-3">
 
-                                {actividad.instrucciones.length >
+                                  <p className="text-xs font-bold uppercase tracking-[0.1em] text-[#6B6870]">
+                                    Indicación
+                                  </p>
+
+                                  <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-[#F8F6FF] px-2 text-xs font-bold text-brand-pink">
+                                    #{indice + 1}
+                                  </span>
+
+                                </div>
+
+
+                                <div className="mt-4 space-y-4">
+
+                                  <div>
+
+                                    <label className="mb-1.5 block text-xs font-semibold text-[#6B6870]">
+                                      Hora
+                                    </label>
+
+                                    <div className="w-full sm:max-w-48">
+
+                                      <SelectorHora
+                                        value={
+                                          indicacion.hora
+                                        }
+                                        onChange={(hora) =>
+                                          actualizarIndicacion(
+                                            actividad.nombre,
+                                            indice,
+                                            {
+                                              hora,
+                                            }
+                                          )
+                                        }
+                                        permitirVacio={false}
+                                      />
+
+                                    </div>
+
+                                  </div>
+
+
+                                  <div>
+
+                                    <label className="mb-1.5 block text-xs font-semibold text-[#6B6870]">
+                                      Texto de la indicación
+                                    </label>
+
+                                    <textarea
+                                      value={
+                                        indicacion.texto
+                                      }
+                                      onChange={(e) =>
+                                        actualizarIndicacion(
+                                          actividad.nombre,
+                                          indice,
+                                          {
+                                            texto:
+                                              e.target.value,
+                                          }
+                                        )
+                                      }
+                                      className="admin-input min-h-24 w-full"
+                                      rows={3}
+                                      maxLength={5000}
+                                      placeholder={`Escribe la indicación ${indice + 1}...`}
+                                    />
+
+                                  </div>
+
+                                </div>
+
+
+                                {actividad.indicaciones.length >
                                   1 && (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      eliminarInstruccion(
-                                        actividad.nombre,
-                                        indice
-                                      )
-                                    }
-                                    className="mt-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-lg font-bold text-red-500 transition hover:bg-red-100"
-                                    aria-label={`Eliminar instrucción ${indice + 1}`}
-                                  >
-                                    ×
-                                  </button>
+
+                                  <div className="mt-4 flex justify-end border-t border-gray-200 pt-3">
+
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        eliminarIndicacion(
+                                          actividad.nombre,
+                                          indice
+                                        )
+                                      }
+                                      className="rounded-lg px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50"
+                                    >
+                                      Eliminar indicación
+                                    </button>
+
+                                  </div>
+
                                 )}
+
                               </div>
+
                             )
                           )}
+
 
                           <button
                             type="button"
                             onClick={() =>
-                              agregarInstruccion(
+                              agregarIndicacion(
                                 actividad.nombre
                               )
                             }
-                            className="inline-flex items-center gap-2 rounded-xl border border-brand-pink bg-white px-3 py-2 text-sm font-semibold text-brand-pink transition hover:bg-brand-pink/5"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-brand-pink bg-white px-4 py-3 text-sm font-semibold text-brand-pink transition hover:bg-brand-pink/5 sm:w-auto sm:justify-start sm:py-2"
                           >
                             <span className="text-lg leading-none">
                               +
                             </span>
-                            Agregar instrucción
+
+                            Agregar indicación
                           </button>
-                        </div>
 
-                        <div className="mt-2 flex items-center justify-between gap-3">
-                          <p className="text-xs text-[#8A8790]">
-                            Cada indicación se guardará como un punto independiente.
-                          </p>
-
-                          <span className="shrink-0 text-[11px] text-[#AAA7AF]">
-                            {totalCaracteres(
-                              actividad.instrucciones
-                            )}
-                            /5000
-                          </span>
                         </div>
 
                       </div>

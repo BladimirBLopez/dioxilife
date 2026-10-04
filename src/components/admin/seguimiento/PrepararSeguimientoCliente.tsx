@@ -42,6 +42,7 @@ type AdicionalRevision = {
   hora: string | null;
   diaInicio: number;
   diaFin: number | null;
+  indicaciones: IndicacionRevision[];
 };
 
 function horaValida(
@@ -191,27 +192,70 @@ export default function PrepararSeguimientoCliente({
         `${actividad.titulo}: el protocolo adicional necesita un horario.`
       );
     }
-  }
 
-  const actividadesLegacy =
-    resumenPrincipales.filter(
-      (actividad) =>
-        actividad.indicaciones.length ===
-          0 &&
-        Boolean(
-          actividad.descripcion?.trim()
+    for (
+      const indicacion of
+      actividad.indicaciones
+    ) {
+      if (
+        !horaValida(
+          indicacion.hora
         )
-    );
+      ) {
+        erroresRevision.push(
+          `${actividad.titulo}: hay una indicación sin horario válido.`
+        );
+      }
+
+      if (
+        !indicacion.texto.trim()
+      ) {
+        erroresRevision.push(
+          `${actividad.titulo}: hay una indicación vacía.`
+        );
+      }
+    }
+  }
 
   const filasPrincipales =
     resumenPrincipales.flatMap(
       (actividad) => {
+        const descripcionTitulo =
+          actividad.descripcion
+            ?.trim() ||
+          "";
+
+        const textoIndicaciones =
+          actividad.indicaciones
+            .map(
+              (indicacion) =>
+                indicacion.texto
+                  .trim()
+            )
+            .filter(Boolean)
+            .join("\n")
+            .trim();
+
+        const instruccionTitulo =
+          descripcionTitulo &&
+          (
+            actividad.indicaciones.length ===
+              0 ||
+            descripcionTitulo !==
+              textoIndicaciones
+          )
+            ? descripcionTitulo
+            : null;
+
         if (
           actividad.indicaciones.length >
           0
         ) {
           return actividad.indicaciones.map(
-            (indicacion) => ({
+            (
+              indicacion,
+              indice
+            ) => ({
               id:
                 `${actividad.id}-${indicacion.id}`,
 
@@ -223,6 +267,11 @@ export default function PrepararSeguimientoCliente({
 
               texto:
                 indicacion.texto,
+
+              instruccionTitulo:
+                indice === 0
+                  ? instruccionTitulo
+                  : null,
 
               diaInicio:
                 actividad.diaInicio,
@@ -236,7 +285,7 @@ export default function PrepararSeguimientoCliente({
         return [
           {
             id:
-              `${actividad.id}-legacy`,
+              `${actividad.id}-titulo`,
 
             hora:
               actividad.hora,
@@ -245,8 +294,9 @@ export default function PrepararSeguimientoCliente({
               actividad.titulo,
 
             texto:
-              actividad.descripcion ||
               "",
+
+            instruccionTitulo,
 
             diaInicio:
               actividad.diaInicio,
@@ -908,23 +958,6 @@ export default function PrepararSeguimientoCliente({
                 )}
 
 
-                {actividadesLegacy.length >
-                  0 && (
-
-                  <p className="mt-2 text-xs leading-5 text-amber-700">
-                    {actividadesLegacy.length} actividad
-                    {actividadesLegacy.length ===
-                    1
-                      ? ""
-                      : "es"} todavía utiliza
-                    {actividadesLegacy.length ===
-                    1
-                      ? ""
-                      : "n"} la descripción antigua. Puede finalizarse, pero conviene convertirla a indicaciones con horario.
-                  </p>
-
-                )}
-
               </div>
 
 
@@ -967,11 +1000,36 @@ export default function PrepararSeguimientoCliente({
                           {fila.titulo}
                         </p>
 
+                        {fila.instruccionTitulo && (
+
+                          <div className="mt-2 rounded-lg bg-gray-50 px-3 py-2">
+
+                            <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-gray-400">
+                              Instrucciones del título
+                            </p>
+
+                            <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-gray-600">
+                              {fila.instruccionTitulo}
+                            </p>
+
+                          </div>
+
+                        )}
+
+
                         {fila.texto && (
 
-                          <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-gray-600">
-                            {fila.texto}
-                          </p>
+                          <div className="mt-2">
+
+                            <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-violet-500">
+                              Indicación
+                            </p>
+
+                            <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-gray-600">
+                              {fila.texto}
+                            </p>
+
+                          </div>
 
                         )}
 
@@ -1053,6 +1111,50 @@ export default function PrepararSeguimientoCliente({
                             <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-gray-600">
                               {actividad.descripcion}
                             </p>
+
+                          )}
+
+
+                          {actividad.indicaciones.length >
+                            0 && (
+
+                            <div className="mt-3 space-y-2">
+
+                              {actividad.indicaciones.map(
+                                (
+                                  indicacion,
+                                  indice
+                                ) => (
+
+                                <div
+                                  key={
+                                    indicacion.id
+                                  }
+                                  className="flex items-start gap-2 rounded-lg border border-purple-100 bg-purple-50/50 px-3 py-2"
+                                >
+
+                                  <span className="shrink-0 rounded-md bg-white px-2 py-1 font-mono text-[11px] font-bold text-purple-700">
+                                    {indicacion.hora}
+                                  </span>
+
+                                  <div className="min-w-0 flex-1">
+
+                                    <p className="text-[10px] font-bold uppercase tracking-wide text-purple-500">
+                                      Indicación {indice + 1}
+                                    </p>
+
+                                    <p className="mt-0.5 whitespace-pre-wrap text-xs leading-5 text-gray-600">
+                                      {indicacion.texto}
+                                    </p>
+
+                                  </div>
+
+                                </div>
+
+                                )
+                              )}
+
+                            </div>
 
                           )}
 

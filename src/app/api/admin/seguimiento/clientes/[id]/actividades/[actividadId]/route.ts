@@ -119,6 +119,31 @@ export async function PUT(
         diaFin: true,
         orden: true,
         activo: true,
+
+        indicaciones: {
+          where: {
+            activo: true,
+          },
+
+          orderBy: [
+            {
+              hora: "asc",
+            },
+            {
+              orden: "asc",
+            },
+            {
+              createdAt: "asc",
+            },
+          ],
+
+          select: {
+            hora: true,
+            texto: true,
+            orden: true,
+            activo: true,
+          },
+        },
       },
     });
 
@@ -604,6 +629,31 @@ export async function PUT(
 
               activo:
                 true,
+
+              indicaciones:
+                actividad.indicaciones.length >
+                0
+                  ? {
+                      create:
+                        actividad.indicaciones.map(
+                          (
+                            indicacion
+                          ) => ({
+                            hora:
+                              indicacion.hora,
+
+                            texto:
+                              indicacion.texto,
+
+                            orden:
+                              indicacion.orden,
+
+                            activo:
+                              indicacion.activo,
+                          })
+                        ),
+                    }
+                  : undefined,
             },
           }),
         ]);

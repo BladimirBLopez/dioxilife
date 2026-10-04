@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Modal from "@/components/Modal";
 import SelectorHora from "@/components/admin/seguimiento/SelectorHora";
+import IndicacionesActividadPreparacion from "@/components/admin/seguimiento/IndicacionesActividadPreparacion";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import {
   aplicaEnDia,
@@ -36,6 +37,14 @@ type Actividad = {
   diaFin: number | null;
   orden: number;
   activo: boolean;
+
+  indicaciones: Array<{
+    id: string;
+    hora: string;
+    texto: string;
+    orden: number;
+  }>;
+
   cantidadProgresos: number;
 };
 
@@ -625,10 +634,46 @@ export default function AgendaCliente({
 
 
                       {actividad.descripcion && (
-                        <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-gray-600">
-                          {actividad.descripcion}
-                        </p>
+                        <div className="mt-2 rounded-xl bg-gray-50 px-3 py-2.5">
+
+                          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400">
+                            Instrucciones del título
+                          </p>
+
+                          <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-gray-600">
+                            {actividad.descripcion}
+                          </p>
+
+                        </div>
                       )}
+
+
+                      <IndicacionesActividadPreparacion
+                        seguimientoId={
+                          seguimientoId
+                        }
+                        actividadId={
+                          actividad.id
+                        }
+                        indicaciones={
+                          actividad.indicaciones
+                        }
+                        editable={
+                          !bloqueado &&
+                          actividad.activo &&
+                          actividad.seccion ===
+                            "ADICIONAL" &&
+                          (
+                            diaActual === null ||
+                            aplicaEnDia(
+                              actividad,
+                              diaActual
+                            ) ||
+                            actividad.diaInicio >
+                              diaActual
+                          )
+                        }
+                      />
 
 
                       <p className="mt-2 text-xs text-gray-400">

@@ -27,12 +27,14 @@ type Props = {
   seguimientoId: string;
   actividadId: string;
   indicaciones: Indicacion[];
+  editable?: boolean;
 };
 
 export default function IndicacionesActividadPreparacion({
   seguimientoId,
   actividadId,
   indicaciones,
+  editable = true,
 }: Props) {
   const router =
     useRouter();
@@ -303,15 +305,17 @@ export default function IndicacionesActividadPreparacion({
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={
-              abrirNueva
-            }
-            className="shrink-0 rounded-lg border border-violet-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-violet-700 hover:bg-violet-50"
-          >
-            + Agregar
-          </button>
+          {editable && (
+            <button
+              type="button"
+              onClick={
+                abrirNueva
+              }
+              className="shrink-0 rounded-lg border border-violet-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-violet-700 hover:bg-violet-50"
+            >
+              + Agregar
+            </button>
+          )}
 
         </div>
 
@@ -367,36 +371,38 @@ export default function IndicacionesActividadPreparacion({
                   </p>
 
 
-                  <div className="mt-4 flex items-center justify-between gap-3 border-t border-gray-100 pt-3">
+                  {editable && (
+                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-gray-100 pt-3">
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        abrirEditar(
-                          indicacion
-                        )
-                      }
-                      className="rounded-lg px-2 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-50"
-                    >
-                      Editar
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          abrirEditar(
+                            indicacion
+                          )
+                        }
+                        className="rounded-lg px-2 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                      >
+                        Editar
+                      </button>
 
-                    <button
-                      type="button"
-                      disabled={
-                        procesando
-                      }
-                      onClick={() =>
-                        void eliminar(
-                          indicacion
-                        )
-                      }
-                      className="rounded-lg px-2 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
-                    >
-                      Eliminar
-                    </button>
+                      <button
+                        type="button"
+                        disabled={
+                          procesando
+                        }
+                        onClick={() =>
+                          void eliminar(
+                            indicacion
+                          )
+                        }
+                        className="rounded-lg px-2 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                      >
+                        Eliminar
+                      </button>
 
-                  </div>
+                    </div>
+                  )}
 
                 </div>
 

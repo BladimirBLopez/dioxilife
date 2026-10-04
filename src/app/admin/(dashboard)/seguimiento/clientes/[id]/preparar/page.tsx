@@ -278,6 +278,9 @@ export default async function PrepararSeguimientoPage({
 
               diaFin:
                 actividad.diaFin,
+
+              indicaciones:
+                actividad.indicaciones,
             })
           )
         }
@@ -339,6 +342,9 @@ export default async function PrepararSeguimientoPage({
 
                 recordatorio:
                   actividad.recordatorio,
+
+                indicaciones:
+                  actividad.indicaciones,
               })
             )
           }

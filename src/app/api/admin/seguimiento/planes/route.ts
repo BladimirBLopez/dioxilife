@@ -22,6 +22,12 @@ type TipoActividad =
 type RecordatorioActividad =
   (typeof RECORDATORIOS)[number];
 
+type IndicacionPreparada = {
+  hora: string;
+  texto: string;
+  orden: number;
+};
+
 type ActividadPreparada = {
   tipo: TipoActividad;
   recordatorio: RecordatorioActividad;
@@ -33,6 +39,7 @@ type ActividadPreparada = {
   diaInicio: number;
   diaFin: number | null;
   orden: number;
+  indicaciones: IndicacionPreparada[];
 };
 
 function esRegistro(
@@ -157,6 +164,117 @@ function normalizarActividad(
       ? "ADICIONAL" as const
       : "PRINCIPAL" as const;
 
+  const indicacionesRecibidas =
+    Array.isArray(valor.indicaciones)
+      ? valor.indicaciones
+      : [];
+
+  if (indicacionesRecibidas.length > 100) {
+    return {
+      ok: false,
+      error:
+        `"${titulo}" no puede tener más de 100 indicaciones.`,
+    };
+  }
+
+  const indicaciones:
+    IndicacionPreparada[] = [];
+
+  for (
+    let indiceIndicacion = 0;
+    indiceIndicacion <
+    indicacionesRecibidas.length;
+    indiceIndicacion++
+  ) {
+    const item =
+      indicacionesRecibidas[
+        indiceIndicacion
+      ];
+
+    if (!esRegistro(item)) {
+      return {
+        ok: false,
+        error:
+          `La indicación ${indiceIndicacion + 1} de "${titulo}" no tiene un formato válido.`,
+      };
+    }
+
+    const textoIndicacion =
+      typeof item.texto === "string"
+        ? item.texto
+            .replace(/\r?\n/g, " ")
+            .trim()
+        : "";
+
+    const horaIndicacion =
+      typeof item.hora === "string"
+        ? item.hora.trim()
+        : "";
+
+    /*
+     * Una fila completamente vacía
+     * simplemente se ignora.
+     */
+    if (
+      !textoIndicacion &&
+      !horaIndicacion
+    ) {
+      continue;
+    }
+
+    if (!textoIndicacion) {
+      return {
+        ok: false,
+        error:
+          `Escribe el texto de la indicación ${indiceIndicacion + 1} de "${titulo}".`,
+      };
+    }
+
+    if (
+      textoIndicacion.length >
+      5000
+    ) {
+      return {
+        ok: false,
+        error:
+          `La indicación ${indiceIndicacion + 1} de "${titulo}" supera los 5000 caracteres.`,
+      };
+    }
+
+    if (
+      !horaIndicacion ||
+      !horaValida(
+        horaIndicacion
+      )
+    ) {
+      return {
+        ok: false,
+        error:
+          `Define un horario válido para la indicación ${indiceIndicacion + 1} de "${titulo}".`,
+      };
+    }
+
+    const ordenSolicitado =
+      Number(
+        item.orden
+      );
+
+    indicaciones.push({
+      hora:
+        horaIndicacion,
+
+      texto:
+        textoIndicacion,
+
+      orden:
+        Number.isInteger(
+          ordenSolicitado
+        )
+          ? ordenSolicitado
+          : indicaciones.length,
+    });
+  }
+
   if (
     recordatorio !== "NINGUNO" &&
     !hora
@@ -231,6 +349,7 @@ function normalizarActividad(
       diaInicio,
       diaFin,
       orden,
+      indicaciones,
     },
   };
 }
@@ -498,6 +617,29 @@ export async function POST(
 
                       activo:
                         true,
+
+                      indicaciones:
+                        actividad.indicaciones.length >
+                        0
+                          ? {
+                              create:
+                                actividad.indicaciones.map(
+                                  (indicacion) => ({
+                                    hora:
+                                      indicacion.hora,
+
+                                    texto:
+                                      indicacion.texto,
+
+                                    orden:
+                                      indicacion.orden,
+
+                                    activo:
+                                      true,
+                                  })
+                                ),
+                            }
+                          : undefined,
                     })
                   ),
               }
