@@ -30,6 +30,7 @@ import {
 
 import { toast } from "sonner";
 import MedicionesSeguimientoPublico from "@/components/seguimiento/MedicionesSeguimientoPublico";
+import RankingGrupoPublico from "@/components/seguimiento/RankingGrupoPublico";
 
 import {
   CartesianGrid,
@@ -2204,9 +2205,15 @@ export default function SeguimientoPublico({
 
         {pestana === "hoy" &&
           seguimiento.estado === "ACTIVO" && (
-          <MedicionesSeguimientoPublico
-            token={token}
-          />
+          <>
+            <MedicionesSeguimientoPublico
+              token={token}
+            />
+
+            <RankingGrupoPublico
+              token={token}
+            />
+          </>
         )}
 
 
