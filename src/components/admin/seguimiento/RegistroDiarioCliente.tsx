@@ -28,6 +28,8 @@ type RegistroDia = {
   id: string | null;
   diaPlan: number;
   peso: number | null;
+  cinturaCm: number | null;
+  glucemiaAyunas: number | null;
   observacion: string | null;
   createdAt: string | null;
   updatedAt: string | null;
@@ -154,6 +156,16 @@ export default function RegistroDiarioCliente({
     useState("");
 
   const [
+    cinturaCm,
+    setCinturaCm,
+  ] = useState("");
+
+  const [
+    glucemiaAyunas,
+    setGlucemiaAyunas,
+  ] = useState("");
+
+  const [
     observacion,
     setObservacion,
   ] = useState("");
@@ -224,6 +236,26 @@ export default function RegistroDiarioCliente({
               : String(
                   datos.registro
                     .peso
+                )
+          );
+
+          setCinturaCm(
+            datos.registro
+              .cinturaCm === null
+              ? ""
+              : String(
+                  datos.registro
+                    .cinturaCm
+                )
+          );
+
+          setGlucemiaAyunas(
+            datos.registro
+              .glucemiaAyunas === null
+              ? ""
+              : String(
+                  datos.registro
+                    .glucemiaAyunas
                 )
           );
 
@@ -323,6 +355,14 @@ export default function RegistroDiarioCliente({
                   peso.trim() ||
                   null,
 
+                cinturaCm:
+                  cinturaCm.trim() ||
+                  null,
+
+                glucemiaAyunas:
+                  glucemiaAyunas.trim() ||
+                  null,
+
                 observacion:
                   observacion.trim() ||
                   null,
@@ -369,6 +409,26 @@ export default function RegistroDiarioCliente({
           : String(
               respuesta.registro
                 .peso
+            )
+      );
+
+      setCinturaCm(
+        respuesta.registro
+          .cinturaCm === null
+          ? ""
+          : String(
+              respuesta.registro
+                .cinturaCm
+            )
+      );
+
+      setGlucemiaAyunas(
+        respuesta.registro
+          .glucemiaAyunas === null
+          ? ""
+          : String(
+              respuesta.registro
+                .glucemiaAyunas
             )
       );
 
@@ -680,7 +740,7 @@ export default function RegistroDiarioCliente({
           </h2>
 
           <p className="text-sm text-gray-500">
-            Registra el peso, observaciones y cumplimiento de cada día.
+            Registra peso, cintura, glucemia en ayunas, observaciones y cumplimiento de cada día.
           </p>
 
         </div>
@@ -902,37 +962,131 @@ export default function RegistroDiarioCliente({
 
           <div>
 
-            <label className="admin-label">
-              Peso del día
-              <span className="ml-1 font-normal text-gray-400">
-                (opcional)
-              </span>
-            </label>
+            <div className="mb-3">
 
-            <div className="relative max-w-xs">
+              <h3 className="text-sm font-bold uppercase tracking-wide text-gray-800">
+                Mediciones del día
+              </h3>
 
-              <input
-                type="text"
-                inputMode="decimal"
-                disabled={
-                  bloqueado
-                }
-                value={peso}
-                onChange={(e) => {
-                  setPeso(
-                    e.target.value
-                  );
-                  setSucio(
-                    true
-                  );
-                }}
-                placeholder="Ej. 85.40"
-                className="admin-input pr-12"
-              />
+              <p className="mt-0.5 text-xs text-gray-500">
+                Todos los campos son opcionales y pueden registrarse de forma independiente.
+              </p>
 
-              <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-gray-500">
-                kg
-              </span>
+            </div>
+
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+
+              <div>
+
+                <label className="admin-label">
+                  Peso
+                </label>
+
+                <div className="relative">
+
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    disabled={
+                      bloqueado
+                    }
+                    value={peso}
+                    onChange={(e) => {
+                      setPeso(
+                        e.target.value
+                      );
+                      setSucio(
+                        true
+                      );
+                    }}
+                    placeholder="Ej. 85.40"
+                    className="admin-input pr-12"
+                  />
+
+                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-gray-500">
+                    kg
+                  </span>
+
+                </div>
+
+              </div>
+
+
+              <div>
+
+                <label className="admin-label">
+                  Cintura
+                </label>
+
+                <div className="relative">
+
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    disabled={
+                      bloqueado
+                    }
+                    value={
+                      cinturaCm
+                    }
+                    onChange={(e) => {
+                      setCinturaCm(
+                        e.target.value
+                      );
+                      setSucio(
+                        true
+                      );
+                    }}
+                    placeholder="Ej. 92.50"
+                    className="admin-input pr-12"
+                  />
+
+                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-gray-500">
+                    cm
+                  </span>
+
+                </div>
+
+              </div>
+
+
+              <div>
+
+                <label className="admin-label">
+                  Glucemia en ayunas
+                </label>
+
+                <div className="relative">
+
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    disabled={
+                      bloqueado
+                    }
+                    value={
+                      glucemiaAyunas
+                    }
+                    onChange={(e) => {
+                      setGlucemiaAyunas(
+                        e.target.value
+                      );
+                      setSucio(
+                        true
+                      );
+                    }}
+                    placeholder="Ej. 102"
+                    className="admin-input pr-16"
+                  />
+
+                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-gray-500">
+                    mg/dL
+                  </span>
+
+                </div>
+
+              </div>
 
             </div>
 

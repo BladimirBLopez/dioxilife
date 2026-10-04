@@ -64,6 +64,110 @@ function obtenerPeso(
   };
 }
 
+function obtenerCintura(
+  valor: unknown
+):
+  | {
+      ok: true;
+      cinturaCm: number | null;
+    }
+  | {
+      ok: false;
+      error: string;
+    } {
+  if (
+    valor === null ||
+    valor === undefined ||
+    valor === ""
+  ) {
+    return {
+      ok: true,
+      cinturaCm: null,
+    };
+  }
+
+  const cinturaCm =
+    typeof valor === "number"
+      ? valor
+      : Number(
+          String(valor)
+            .replace(",", ".")
+            .trim()
+        );
+
+  if (
+    !Number.isFinite(cinturaCm) ||
+    cinturaCm <= 0 ||
+    cinturaCm > 9999.99
+  ) {
+    return {
+      ok: false,
+      error:
+        "La medida de cintura debe ser un número válido mayor que 0.",
+    };
+  }
+
+  return {
+    ok: true,
+    cinturaCm:
+      Math.round(
+        cinturaCm * 100
+      ) / 100,
+  };
+}
+
+function obtenerGlucemia(
+  valor: unknown
+):
+  | {
+      ok: true;
+      glucemiaAyunas: number | null;
+    }
+  | {
+      ok: false;
+      error: string;
+    } {
+  if (
+    valor === null ||
+    valor === undefined ||
+    valor === ""
+  ) {
+    return {
+      ok: true,
+      glucemiaAyunas: null,
+    };
+  }
+
+  const glucemiaAyunas =
+    typeof valor === "number"
+      ? valor
+      : Number(
+          String(valor)
+            .replace(",", ".")
+            .trim()
+        );
+
+  if (
+    !Number.isFinite(glucemiaAyunas) ||
+    glucemiaAyunas <= 0 ||
+    glucemiaAyunas > 99999.99
+  ) {
+    return {
+      ok: false,
+      error:
+        "La glucemia debe ser un número válido mayor que 0.",
+    };
+  }
+
+  return {
+    ok: true,
+    glucemiaAyunas:
+      Math.round(
+        glucemiaAyunas * 100
+      ) / 100,
+  };
+}
+
 async function obtenerSeguimiento(
   id: string
 ) {
@@ -178,6 +282,8 @@ export async function GET(
         id: true,
         diaPlan: true,
         peso: true,
+        cinturaCm: true,
+        glucemiaAyunas: true,
         observacion: true,
         createdAt: true,
         updatedAt: true,
@@ -487,11 +593,29 @@ export async function GET(
                   registro.peso
                 )
               : null,
+
+          cinturaCm:
+            registro.cinturaCm !==
+            null
+              ? Number(
+                  registro.cinturaCm
+                )
+              : null,
+
+          glucemiaAyunas:
+            registro.glucemiaAyunas !==
+            null
+              ? Number(
+                  registro.glucemiaAyunas
+                )
+              : null,
         }
       : {
           id: null,
           diaPlan,
           peso: null,
+          cinturaCm: null,
+          glucemiaAyunas: null,
           observacion: null,
           createdAt: null,
           updatedAt: null,
@@ -653,6 +777,40 @@ export async function PUT(
     );
   }
 
+  const resultadoCintura =
+    obtenerCintura(
+      datos.cinturaCm
+    );
+
+  if (!resultadoCintura.ok) {
+    return NextResponse.json(
+      {
+        error:
+          resultadoCintura.error,
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+
+  const resultadoGlucemia =
+    obtenerGlucemia(
+      datos.glucemiaAyunas
+    );
+
+  if (!resultadoGlucemia.ok) {
+    return NextResponse.json(
+      {
+        error:
+          resultadoGlucemia.error,
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+
   const observacion =
     typeof datos.observacion ===
       "string" &&
@@ -678,12 +836,26 @@ export async function PUT(
         diaPlan,
         peso:
           resultadoPeso.peso,
+
+        cinturaCm:
+          resultadoCintura.cinturaCm,
+
+        glucemiaAyunas:
+          resultadoGlucemia.glucemiaAyunas,
+
         observacion,
       },
 
       update: {
         peso:
           resultadoPeso.peso,
+
+        cinturaCm:
+          resultadoCintura.cinturaCm,
+
+        glucemiaAyunas:
+          resultadoGlucemia.glucemiaAyunas,
+
         observacion,
       },
 
@@ -691,6 +863,8 @@ export async function PUT(
         id: true,
         diaPlan: true,
         peso: true,
+        cinturaCm: true,
+        glucemiaAyunas: true,
         observacion: true,
         createdAt: true,
         updatedAt: true,
@@ -707,6 +881,20 @@ export async function PUT(
         registro.peso !== null
           ? Number(
               registro.peso
+            )
+          : null,
+
+      cinturaCm:
+        registro.cinturaCm !== null
+          ? Number(
+              registro.cinturaCm
+            )
+          : null,
+
+      glucemiaAyunas:
+        registro.glucemiaAyunas !== null
+          ? Number(
+              registro.glucemiaAyunas
             )
           : null,
     },
