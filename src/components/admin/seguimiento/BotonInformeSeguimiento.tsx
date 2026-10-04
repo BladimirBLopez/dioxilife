@@ -449,6 +449,8 @@ export default function BotonInformeSeguimiento({
         sufijo,
         maximoDia,
         conectarSaltos,
+        usarFechas = false,
+        fechaInicio = null,
       }: {
         puntos: PuntoGrafico[];
         minimoY: number;
@@ -456,6 +458,8 @@ export default function BotonInformeSeguimiento({
         sufijo: string;
         maximoDia: number;
         conectarSaltos: boolean;
+        usarFechas?: boolean;
+        fechaInicio?: string | null;
       }) {
         if (
           puntos.length === 0
@@ -563,6 +567,40 @@ export default function BotonInformeSeguimiento({
         }
 
 
+        function fechaDeDia(
+          dia: number
+        ) {
+          if (
+            !fechaInicio
+          ) {
+            return `Dia ${dia}`;
+          }
+
+          const fecha =
+            new Date(
+              fechaInicio
+            );
+
+          fecha.setUTCDate(
+            fecha.getUTCDate() +
+              dia -
+              1
+          );
+
+          return fecha.toLocaleDateString(
+            "es-BO",
+            {
+              timeZone:
+                "America/La_Paz",
+              day:
+                "2-digit",
+              month:
+                "2-digit",
+            }
+          );
+        }
+
+
         function formatoValor(
           valor: number
         ) {
@@ -658,7 +696,11 @@ export default function BotonInformeSeguimiento({
         doc.text(
           esPorcentaje
             ? `Ultimo registro · Dia ${ultimoPunto.dia}`
-            : `Ultimo pesaje · Dia ${ultimoPunto.dia}`,
+            : usarFechas
+              ? `Ultimo pesaje · ${fechaDeDia(
+                  ultimoPunto.dia
+                )}`
+              : `Ultimo pesaje · Dia ${ultimoPunto.dia}`,
           margen + 5,
           y + 11.5
         );
@@ -898,7 +940,11 @@ export default function BotonInformeSeguimiento({
           );
 
           doc.text(
-            `Dia ${dia}`,
+            usarFechas
+              ? fechaDeDia(
+                  dia
+                )
+              : `Dia ${dia}`,
             posX,
             graficoY +
               graficoH +
@@ -1856,6 +1902,14 @@ export default function BotonInformeSeguimiento({
 
           conectarSaltos:
             true,
+
+          usarFechas:
+            true,
+
+          fechaInicio:
+            informe
+              .seguimiento
+              .fechaInicio,
         });
       } else {
         texto(
