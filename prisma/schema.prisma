@@ -121,6 +121,7 @@ model PlanSeguimiento {
 
   actividades  ActividadPlan[]
   seguimientos SeguimientoCliente[]
+  grupos       GrupoSeguimiento[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -239,6 +240,8 @@ model SeguimientoCliente {
   suscripcionesPush SuscripcionPush[]
   enviosWhatsApp    SeguimientoEnvioWhatsApp[]
 
+  miembroGrupo MiembroGrupoSeguimiento?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -337,6 +340,68 @@ model SuscripcionPush {
   @@index([activa])
 }
 
+enum EstadoGrupoSeguimiento {
+  BORRADOR
+  ACTIVO
+  FINALIZADO
+  CANCELADO
+}
+
+enum EstadoMiembroGrupoSeguimiento {
+  ACTIVO
+  RETIRADO
+}
+
+model GrupoSeguimiento {
+  id String @id @default(cuid())
+
+  planId String
+  plan   PlanSeguimiento @relation(fields: [planId], references: [id], onDelete: Restrict)
+
+  nombre      String
+  objetivo    String
+  descripcion String?
+
+  fechaInicio  DateTime @db.Date
+  duracionDias Int
+
+  estado EstadoGrupoSeguimiento @default(BORRADOR)
+
+  tokenRankingHash String   @unique
+  tokenCreadoAt    DateTime @default(now())
+
+  miembros MiembroGrupoSeguimiento[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([planId])
+  @@index([estado])
+  @@index([fechaInicio])
+}
+
+model MiembroGrupoSeguimiento {
+  id String @id @default(cuid())
+
+  grupoId String
+  grupo   GrupoSeguimiento @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+
+  seguimientoId String             @unique
+  seguimiento   SeguimientoCliente @relation(fields: [seguimientoId], references: [id], onDelete: Cascade)
+
+  fechaIngreso DateTime @db.Date
+  diaIngreso   Int
+
+  estado EstadoMiembroGrupoSeguimiento @default(ACTIVO)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([grupoId])
+  @@index([estado])
+  @@index([fechaIngreso])
+}
+
 model RegistroDiaSeguimiento {
   id String @id @default(cuid())
 
@@ -345,8 +410,10 @@ model RegistroDiaSeguimiento {
 
   diaPlan Int
 
-  peso        Decimal? @db.Decimal(6, 2)
-  observacion String?
+  peso           Decimal? @db.Decimal(6, 2)
+  cinturaCm      Decimal? @db.Decimal(6, 2)
+  glucemiaAyunas Decimal? @db.Decimal(7, 2)
+  observacion    String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
