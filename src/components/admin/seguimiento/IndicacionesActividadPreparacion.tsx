@@ -379,7 +379,7 @@ export default function IndicacionesActividadPreparacion({
                       </summary>
 
 
-                      <div className="absolute right-0 z-40 mt-1 w-36 overflow-hidden rounded-xl border border-gray-200 bg-white p-1 shadow-xl">
+                      <div className="absolute bottom-full right-0 z-50 mb-1 w-36 overflow-hidden rounded-xl border border-gray-200 bg-white p-1 shadow-xl">
 
                         <button
                           type="button"

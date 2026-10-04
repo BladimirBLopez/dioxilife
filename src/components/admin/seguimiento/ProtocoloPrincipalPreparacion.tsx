@@ -867,7 +867,7 @@ export default function ProtocoloPrincipalPreparacion({
             </div>
 
 
-            <div className="mt-5 overflow-hidden rounded-2xl border border-gray-200">
+            <div className="mt-5 overflow-visible rounded-2xl border border-gray-200">
 
               {actividadesOrdenadas.length ===
               0 ? (
