@@ -121,6 +121,26 @@ function sumarMinutos(
   )}`;
 }
 
+function actividadDestacada(
+  actividad: Actividad
+) {
+  const valor =
+    `${actividad.momento || ""} ${actividad.titulo}`
+      .toLowerCase();
+
+  return [
+    "desayuno",
+    "almuerzo",
+    "cena",
+  ].some(
+    (nombre) =>
+      valor.includes(
+        nombre
+      )
+  );
+}
+
+
 export default function ProtocoloPrincipalPreparacion({
   seguimientoId,
   duracionDias,
@@ -160,6 +180,39 @@ export default function ProtocoloPrincipalPreparacion({
     setProcesando,
   ] =
     useState(false);
+
+
+  const actividadesOrdenadas =
+    useMemo(
+      () =>
+        [...actividades].sort(
+          (a, b) => {
+            if (
+              a.hora &&
+              b.hora
+            ) {
+              const porHora =
+                a.hora.localeCompare(
+                  b.hora
+                );
+
+              if (porHora !== 0) {
+                return porHora;
+              }
+            } else if (a.hora) {
+              return -1;
+            } else if (b.hora) {
+              return 1;
+            }
+
+            return (
+              a.orden -
+              b.orden
+            );
+          }
+        ),
+      [actividades]
+    );
 
 
   function abrirNueva() {
@@ -779,7 +832,7 @@ export default function ProtocoloPrincipalPreparacion({
                 </h2>
 
                 <p className="mt-1 text-sm leading-6 text-gray-500">
-                  Ajusta fácilmente los horarios e instrucciones antes de enviar el seguimiento.
+                  Agrega las actividades tal como aparecen en el protocolo del cliente: hora, título, instrucciones e indicaciones.
                 </p>
 
               </div>
@@ -796,7 +849,7 @@ export default function ProtocoloPrincipalPreparacion({
                   }
                   className="rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-semibold text-violet-700 hover:bg-violet-100"
                 >
-                  ⚡ Generar serie
+                  ⚡ Serie de horarios
                 </button>
 
                 <button
@@ -806,7 +859,7 @@ export default function ProtocoloPrincipalPreparacion({
                   }
                   className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
                 >
-                  + Actividad
+                  + Agregar actividad
                 </button>
 
               </div>
@@ -814,132 +867,289 @@ export default function ProtocoloPrincipalPreparacion({
             </div>
 
 
-            <div className="mt-4 overflow-hidden rounded-xl border border-gray-200">
+            <div className="mt-5 overflow-hidden rounded-2xl border border-gray-200">
 
-              {actividades.length ===
+              <div className="hidden border-b border-gray-200 bg-gray-50 px-4 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 sm:grid sm:grid-cols-[130px_minmax(0,1fr)_150px] sm:gap-4">
+
+                <div>
+                  Hora
+                </div>
+
+                <div>
+                  Actividad / instrucciones
+                </div>
+
+                <div className="text-right">
+                  Estado
+                </div>
+
+              </div>
+
+
+              {actividadesOrdenadas.length ===
               0 ? (
 
-                <div className="p-5 text-sm text-gray-500">
-                  No hay actividades principales.
+                <div className="p-7 text-center">
+
+                  <p className="font-semibold text-gray-800">
+                    El protocolo todavía está vacío
+                  </p>
+
+                  <p className="mt-1 text-sm leading-6 text-gray-500">
+                    Agrega la primera actividad para comenzar a construir el protocolo del cliente.
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={
+                      abrirNueva
+                    }
+                    className="mt-4 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+                  >
+                    + Agregar primera actividad
+                  </button>
+
                 </div>
 
               ) : (
 
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-gray-200">
 
-                  {actividades.map(
+                  {actividadesOrdenadas.map(
                     (
                       actividad
-                    ) => (
+                    ) => {
+                      const destacada =
+                        actividadDestacada(
+                          actividad
+                        );
 
-                      <div
-                        key={
-                          actividad.id
-                        }
-                        className="p-3"
-                      >
+                      const descripcionVisible =
+                        actividad.descripcion &&
+                        actividad.descripcion.trim() !==
+                          actividad.indicaciones
+                            .map(
+                              (
+                                indicacion
+                              ) =>
+                                indicacion.texto.trim()
+                            )
+                            .filter(Boolean)
+                            .join("\n")
+                            .trim();
 
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                      return (
 
-                          <div className="w-full sm:w-36">
+                        <article
+                          key={
+                            actividad.id
+                          }
+                          className={`relative ${
+                            destacada
+                              ? "bg-amber-50/60"
+                              : "bg-white"
+                          }`}
+                        >
 
-                            <SelectorHora
-                              value={
-                                actividad.hora ||
-                                ""
-                              }
-                              onChange={(hora) =>
-                                void cambiarHora(
-                                  actividad,
-                                  hora
-                                )
-                              }
-                            />
-
-                          </div>
+                          {destacada && (
+                            <div className="absolute inset-y-0 left-0 w-1 bg-amber-400" />
+                          )}
 
 
-                          <div className="min-w-0 flex-1">
+                          <div className="grid gap-4 p-4 sm:grid-cols-[130px_minmax(0,1fr)_150px] sm:p-5">
 
-                            <p className="font-semibold text-gray-900">
-                              {
-                                actividad.titulo
-                              }
-                            </p>
 
-                            {actividad.descripcion &&
-                              actividad.descripcion.trim() !==
-                                actividad.indicaciones
-                                  .map(
-                                    (indicacion) =>
-                                      indicacion.texto.trim()
+                            <div>
+
+                              <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400 sm:hidden">
+                                Hora
+                              </p>
+
+                              <SelectorHora
+                                value={
+                                  actividad.hora ||
+                                  ""
+                                }
+                                onChange={(hora) =>
+                                  void cambiarHora(
+                                    actividad,
+                                    hora
                                   )
-                                  .filter(Boolean)
-                                  .join("\n")
-                                  .trim() && (
+                                }
+                              />
 
-                              <div className="mt-2 rounded-xl bg-gray-50 px-3 py-2.5">
+                            </div>
 
-                                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400">
-                                  Instrucción principal
-                                </p>
 
-                                <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-gray-600">
+                            <div className="min-w-0">
+
+                              <div className="flex flex-wrap items-center gap-2">
+
+                                <h3
+                                  className={`text-base font-bold ${
+                                    destacada
+                                      ? "text-amber-950"
+                                      : "text-gray-900"
+                                  }`}
+                                >
                                   {
-                                    actividad.descripcion
+                                    actividad.titulo
                                   }
-                                </p>
+                                </h3>
+
+
+                                {destacada && (
+
+                                  <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                                    Comida
+                                  </span>
+
+                                )}
 
                               </div>
 
-                            )}
+
+                              {descripcionVisible && (
+
+                                <div className={`mt-2 rounded-xl px-3 py-2.5 ${
+                                  destacada
+                                    ? "bg-white/70"
+                                    : "bg-gray-50"
+                                }`}>
+
+                                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400">
+                                    Instrucciones
+                                  </p>
+
+                                  <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-gray-600">
+                                    {
+                                      actividad.descripcion
+                                    }
+                                  </p>
+
+                                </div>
+
+                              )}
 
 
-                            <IndicacionesActividadPreparacion
-                              seguimientoId={seguimientoId}
-                              actividadId={actividad.id}
-                              indicaciones={actividad.indicaciones}
-                            />
-
-
-                            <div className="mt-3 flex flex-wrap gap-2">
-
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  abrirEditar(
-                                    actividad
-                                  )
+                              <IndicacionesActividadPreparacion
+                                seguimientoId={
+                                  seguimientoId
                                 }
-                                className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-                              >
-                                Editar
-                              </button>
+                                actividadId={
+                                  actividad.id
+                                }
+                                indicaciones={
+                                  actividad.indicaciones
+                                }
+                              />
 
-                              <button
-                                type="button"
-                                disabled={
-                                  procesando
-                                }
-                                onClick={() =>
-                                  void eliminar(
-                                    actividad
-                                  )
-                                }
-                                className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
-                              >
-                                Eliminar
-                              </button>
+
+                              <div className="mt-3 flex flex-wrap gap-2 sm:hidden">
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    abrirEditar(
+                                      actividad
+                                    )
+                                  }
+                                  className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700"
+                                >
+                                  Editar
+                                </button>
+
+                                <button
+                                  type="button"
+                                  disabled={
+                                    procesando
+                                  }
+                                  onClick={() =>
+                                    void eliminar(
+                                      actividad
+                                    )
+                                  }
+                                  className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 disabled:opacity-50"
+                                >
+                                  Eliminar
+                                </button>
+
+                              </div>
+
+                            </div>
+
+
+                            <div className="hidden sm:block">
+
+                              <div className="flex justify-end">
+
+                                {actividad.tipo ===
+                                "TAREA" ? (
+
+                                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
+                                    <span>
+                                      ✓
+                                    </span>
+                                    Check
+                                  </span>
+
+                                ) : actividad.tipo ===
+                                  "INFORMACION" ? (
+
+                                  <span className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">
+                                    Información
+                                  </span>
+
+                                ) : (
+
+                                  <span className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-700">
+                                    Control
+                                  </span>
+
+                                )}
+
+                              </div>
+
+
+                              <div className="mt-4 flex flex-col items-end gap-2">
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    abrirEditar(
+                                      actividad
+                                    )
+                                  }
+                                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                                >
+                                  Editar
+                                </button>
+
+                                <button
+                                  type="button"
+                                  disabled={
+                                    procesando
+                                  }
+                                  onClick={() =>
+                                    void eliminar(
+                                      actividad
+                                    )
+                                  }
+                                  className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                                >
+                                  Eliminar
+                                </button>
+
+                              </div>
 
                             </div>
 
                           </div>
 
-                        </div>
+                        </article>
 
-                      </div>
-
-                    )
+                      );
+                    }
                   )}
 
                 </div>
@@ -948,9 +1158,10 @@ export default function ProtocoloPrincipalPreparacion({
 
             </div>
 
+            </div>
+
           </div>
 
-        </div>
 
       </section>
 
@@ -961,7 +1172,7 @@ export default function ProtocoloPrincipalPreparacion({
           title={
             editando
               ? "Editar actividad"
-              : "Agregar actividad"
+              : "Nueva actividad"
           }
           onClose={() =>
             !procesando &&
@@ -969,131 +1180,377 @@ export default function ProtocoloPrincipalPreparacion({
               false
             )
           }
-          maxWidthClassName="max-w-xl"
+          maxWidthClassName="max-w-2xl"
         >
 
-          <div className="space-y-4">
-
-            <div>
-
-              <label className="admin-label">
-                Título *
-              </label>
-
-              <input
-                value={
-                  form.titulo
-                }
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    titulo:
-                      e.target.value,
-                  })
-                }
-                className="admin-input"
-              />
-
-            </div>
+          <div className="space-y-5">
 
 
-            <div>
+            <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
 
-              <label className="admin-label">
-                Horario
-              </label>
-
-              <SelectorHora
-                value={
-                  form.hora
-                }
-                onChange={(hora) =>
-                  setForm({
-                    ...form,
-                    hora,
-                  })
-                }
-              />
-
-            </div>
+              <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
 
 
-            <div>
+                <div>
 
-              <label className="admin-label">
-                Indicaciones
-              </label>
+                  <label className="admin-label">
+                    Hora
+                  </label>
 
-              <textarea
-                value={
-                  form.descripcion
-                }
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    descripcion:
-                      e.target.value,
-                  })
-                }
-                className="admin-input min-h-28"
-                maxLength={5000}
-              />
+                  <SelectorHora
+                    value={
+                      form.hora
+                    }
+                    onChange={(hora) =>
+                      setForm({
+                        ...form,
+                        hora,
+                      })
+                    }
+                  />
 
-            </div>
+                </div>
 
 
-            <div className="grid grid-cols-2 gap-3">
+                <div>
 
-              <div>
+                  <label className="admin-label">
+                    Actividad / título *
+                  </label>
+
+                  <input
+                    value={
+                      form.titulo
+                    }
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        titulo:
+                          e.target.value,
+                      })
+                    }
+                    className="admin-input"
+                    maxLength={200}
+                    placeholder="Ej. Desayuno, Zeolita, Control..."
+                    autoFocus
+                  />
+
+                </div>
+
+              </div>
+
+
+              <div className="mt-5">
+
                 <label className="admin-label">
-                  Desde día
+                  Instrucciones
                 </label>
 
-                <input
-                  type="number"
-                  min={1}
-                  max={
-                    duracionDias
-                  }
+                <p className="mb-2 text-xs leading-5 text-gray-500">
+                  Escribe aquí las instrucciones que corresponden directamente a esta actividad.
+                </p>
+
+                <textarea
                   value={
-                    form.diaInicio
+                    form.descripcion
                   }
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      diaInicio:
+                      descripcion:
                         e.target.value,
                     })
                   }
-                  className="admin-input"
+                  className="admin-input min-h-32 resize-y"
+                  maxLength={5000}
+                  placeholder="Escribe las instrucciones que verá el cliente..."
                 />
+
+                <p className="mt-1 text-right text-[11px] text-gray-400">
+                  {form.descripcion.length}/5000
+                </p>
+
               </div>
 
-              <div>
-                <label className="admin-label">
-                  Hasta día
-                </label>
+            </div>
 
-                <input
-                  type="number"
-                  min={1}
-                  max={
-                    duracionDias
-                  }
-                  value={
-                    form.diaFin
-                  }
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      diaFin:
-                        e.target.value,
-                    })
-                  }
-                  className="admin-input"
-                  placeholder="Opcional"
-                />
+
+            <details className="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
+
+              <summary className="cursor-pointer list-none px-4 py-3.5 text-sm font-semibold text-gray-700">
+
+                Opciones avanzadas
+
+                <span className="ml-2 text-xs font-normal text-gray-400">
+                  días, recordatorio, momento y tipo
+                </span>
+
+              </summary>
+
+
+              <div className="space-y-5 border-t border-gray-200 bg-white p-4">
+
+
+                <div className="grid grid-cols-2 gap-3">
+
+                  <div>
+
+                    <label className="admin-label">
+                      Desde el día
+                    </label>
+
+                    <input
+                      type="number"
+                      min={1}
+                      max={
+                        duracionDias
+                      }
+                      value={
+                        form.diaInicio
+                      }
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          diaInicio:
+                            e.target.value,
+                        })
+                      }
+                      className="admin-input"
+                    />
+
+                  </div>
+
+
+                  <div>
+
+                    <label className="admin-label">
+                      Hasta el día
+                    </label>
+
+                    <input
+                      type="number"
+                      min={1}
+                      max={
+                        duracionDias
+                      }
+                      value={
+                        form.diaFin
+                      }
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          diaFin:
+                            e.target.value,
+                        })
+                      }
+                      className="admin-input"
+                      placeholder="Opcional"
+                    />
+
+                  </div>
+
+                </div>
+
+
+                <p className="-mt-3 text-xs leading-5 text-gray-500">
+                  Si dejas el día final vacío, la actividad continuará hasta finalizar el seguimiento.
+                </p>
+
+
+                <div>
+
+                  <label className="admin-label">
+                    Momento
+                  </label>
+
+                  <select
+                    value={
+                      form.momento
+                    }
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        momento:
+                          e.target.value,
+                      })
+                    }
+                    className="admin-input"
+                  >
+
+                    <option value="">
+                      Sin especificar
+                    </option>
+
+                    <option value="Ayunas">
+                      Ayunas
+                    </option>
+
+                    <option value="Desayuno">
+                      Desayuno
+                    </option>
+
+                    <option value="Media mañana">
+                      Media mañana
+                    </option>
+
+                    <option value="Almuerzo">
+                      Almuerzo
+                    </option>
+
+                    <option value="Tarde">
+                      Tarde
+                    </option>
+
+                    <option value="Cena">
+                      Cena
+                    </option>
+
+                    <option value="Antes de dormir">
+                      Antes de dormir
+                    </option>
+
+                    <option value="Noche">
+                      Noche
+                    </option>
+
+                  </select>
+
+                </div>
+
+
+                <div>
+
+                  <label className="admin-label">
+                    Recordatorio
+                  </label>
+
+                  <select
+                    value={
+                      form.recordatorio
+                    }
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        recordatorio:
+                          e.target.value as Recordatorio,
+                      })
+                    }
+                    className="admin-input"
+                  >
+
+                    <option value="NINGUNO">
+                      Sin recordatorio
+                    </option>
+
+                    <option value="A_LA_HORA">
+                      A la hora indicada
+                    </option>
+
+                    <option value="MIN_15_ANTES">
+                      15 minutos antes
+                    </option>
+
+                    <option value="MIN_30_ANTES">
+                      30 minutos antes
+                    </option>
+
+                    <option value="MIN_60_ANTES">
+                      1 hora antes
+                    </option>
+
+                  </select>
+
+
+                  {form.recordatorio !==
+                    "NINGUNO" &&
+                    !form.hora && (
+
+                    <p className="mt-1 text-xs text-amber-600">
+                      Para utilizar un recordatorio debes seleccionar una hora.
+                    </p>
+
+                  )}
+
+                </div>
+
+
+                <div>
+
+                  <label className="admin-label">
+                    Tipo
+                  </label>
+
+                  <select
+                    value={
+                      form.tipo
+                    }
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        tipo:
+                          e.target.value as
+                            | "TAREA"
+                            | "INFORMACION"
+                            | "CONTROL",
+                      })
+                    }
+                    className="admin-input"
+                  >
+
+                    <option value="TAREA">
+                      Actividad que el cliente debe marcar
+                    </option>
+
+                    <option value="INFORMACION">
+                      Solo información
+                    </option>
+
+                    <option value="CONTROL">
+                      Control
+                    </option>
+
+                  </select>
+
+                </div>
+
+
+                <div>
+
+                  <label className="admin-label">
+                    Orden manual
+                  </label>
+
+                  <input
+                    type="number"
+                    value={
+                      form.orden
+                    }
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        orden:
+                          e.target.value,
+                      })
+                    }
+                    className="admin-input"
+                  />
+
+                  <p className="mt-1 text-xs leading-5 text-gray-500">
+                    Normalmente no necesitas modificarlo. El horario será la referencia principal para mostrar el protocolo.
+                  </p>
+
+                </div>
+
               </div>
+
+            </details>
+
+
+            <div className="rounded-xl border border-violet-100 bg-violet-50 px-4 py-3">
+
+              <p className="text-xs leading-5 text-violet-800">
+                Después de guardar podrás agregar debajo todas las indicaciones que necesites, cada una con su propio horario.
+              </p>
 
             </div>
 
@@ -1106,11 +1563,13 @@ export default function ProtocoloPrincipalPreparacion({
               onClick={() =>
                 void guardarActividad()
               }
-              className="admin-btn-primary w-full"
+              className="admin-btn-primary w-full py-3 disabled:opacity-60"
             >
               {procesando
                 ? "Guardando..."
-                : "Guardar actividad"}
+                : editando
+                ? "Guardar cambios"
+                : "Agregar actividad"}
             </button>
 
           </div>
@@ -1267,8 +1726,12 @@ export default function ProtocoloPrincipalPreparacion({
             <div>
 
               <label className="admin-label">
-                Indicaciones
+                Instrucciones
               </label>
+
+              <p className="mb-2 text-xs leading-5 text-gray-500">
+                Estas instrucciones se aplicarán a las actividades generadas.
+              </p>
 
               <textarea
                 value={
