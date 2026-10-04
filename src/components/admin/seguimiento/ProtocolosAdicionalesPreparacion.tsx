@@ -418,6 +418,35 @@ export default function ProtocolosAdicionalesPreparacion({
     }
   }
 
+  const actividadesOrdenadas =
+    [...actividades].sort(
+      (a, b) => {
+        if (
+          a.hora &&
+          b.hora
+        ) {
+          const porHora =
+            a.hora.localeCompare(
+              b.hora
+            );
+
+          if (porHora !== 0) {
+            return porHora;
+          }
+        } else if (a.hora) {
+          return -1;
+        } else if (b.hora) {
+          return 1;
+        }
+
+        return (
+          a.orden -
+          b.orden
+        );
+      }
+    );
+
+
   return (
     <>
 
@@ -441,7 +470,7 @@ export default function ProtocolosAdicionalesPreparacion({
                 </h2>
 
                 <p className="mt-1 text-sm leading-6 text-gray-500">
-                  Agrega aquí los protocolos personalizados que acompañarán al protocolo principal.
+                  Agrega únicamente los protocolos complementarios que necesita este cliente.
                 </p>
 
               </div>
@@ -460,52 +489,124 @@ export default function ProtocolosAdicionalesPreparacion({
             </div>
 
 
-            {actividades.length ===
-            0 ? (
+            <div className="mt-5 overflow-hidden rounded-2xl border border-gray-200">
 
-              <div className="mt-4 rounded-xl border border-dashed border-purple-200 bg-purple-50/50 p-5 text-center">
+              <div className="hidden border-b border-gray-200 bg-gray-50 px-4 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 sm:grid sm:grid-cols-[110px_minmax(0,1fr)_140px] sm:gap-4">
 
-                <p className="text-sm font-medium text-purple-900">
-                  Sin protocolos adicionales
-                </p>
+                <div>
+                  Hora
+                </div>
 
-                <p className="mt-1 text-xs leading-5 text-purple-700">
-                  No son obligatorios. Puedes agregarlos ahora si este cliente los necesita.
-                </p>
+                <div>
+                  Protocolo / instrucciones
+                </div>
+
+                <div className="text-right">
+                  Acciones
+                </div>
 
               </div>
 
-            ) : (
 
-              <div className="mt-4 space-y-3">
+              {actividadesOrdenadas.length ===
+              0 ? (
 
-                {actividades.map(
-                  (
-                    actividad
-                  ) => (
+                <div className="p-7 text-center">
 
-                    <div
+                  <p className="font-semibold text-gray-800">
+                    Sin protocolos adicionales
+                  </p>
+
+                  <p className="mt-1 text-sm leading-6 text-gray-500">
+                    Esta sección es opcional. Agrégala únicamente cuando el cliente tenga un protocolo complementario.
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={
+                      abrirNuevo
+                    }
+                    className="mt-4 rounded-xl border border-purple-200 bg-purple-50 px-4 py-2.5 text-sm font-semibold text-purple-700 hover:bg-purple-100"
+                  >
+                    + Agregar protocolo adicional
+                  </button>
+
+                </div>
+
+              ) : (
+
+                <div className="divide-y divide-gray-200">
+
+                  {actividadesOrdenadas.map(
+                    (
+                      actividad
+                    ) => (
+
+                    <article
                       key={
                         actividad.id
                       }
-                      className="rounded-xl border border-purple-100 bg-purple-50/40 p-4"
+                      className="bg-white"
                     >
 
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="grid gap-4 p-4 sm:grid-cols-[110px_minmax(0,1fr)_140px] sm:p-5">
+
+
+                        <div>
+
+                          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400 sm:hidden">
+                            Hora
+                          </p>
+
+                          <div className="inline-flex rounded-xl bg-purple-50 px-3 py-2 font-mono text-sm font-bold text-purple-700">
+                            {
+                              actividad.hora ||
+                              "—"
+                            }
+                          </div>
+
+                        </div>
+
 
                         <div className="min-w-0">
 
                           <div className="flex flex-wrap items-center gap-2">
 
-                            {actividad.hora && (
-                              <span className="rounded-lg bg-purple-600 px-2.5 py-1 text-xs font-bold text-white">
-                                {
-                                  actividad.hora
-                                }
-                              </span>
-                            )}
+                            <h3 className="font-bold text-gray-900">
+                              {
+                                actividad.titulo
+                              }
+                            </h3>
 
-                            <span className="rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-purple-700">
+                            <span className="rounded-full bg-purple-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-purple-700">
+                              Adicional
+                            </span>
+
+                          </div>
+
+
+                          {actividad.descripcion && (
+
+                            <div className="mt-2 rounded-xl bg-gray-50 px-3 py-2.5">
+
+                              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400">
+                                Instrucciones
+                              </p>
+
+                              <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-gray-600">
+                                {
+                                  actividad.descripcion
+                                }
+                              </p>
+
+                            </div>
+
+                          )}
+
+
+                          <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
+
+                            <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">
                               Día{" "}
                               {
                                 actividad.diaInicio
@@ -516,31 +617,20 @@ export default function ProtocolosAdicionalesPreparacion({
                                 : " en adelante"}
                             </span>
 
-                          </div>
 
+                            {actividad.recordatorio !==
+                              "NINGUNO" && (
 
-                          <h3 className="mt-2 font-semibold text-gray-900">
-                            {
-                              actividad.titulo
-                            }
-                          </h3>
+                              <span className="rounded-full bg-blue-50 px-2.5 py-1 font-medium text-blue-700">
+                                🔔{" "}
+                                {textoRecordatorio(
+                                  actividad.recordatorio
+                                )}
+                              </span>
 
-
-                          {actividad.descripcion && (
-                            <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-gray-600">
-                              {
-                                actividad.descripcion
-                              }
-                            </p>
-                          )}
-
-
-                          <p className="mt-2 text-xs text-gray-500">
-                            🔔{" "}
-                            {textoRecordatorio(
-                              actividad.recordatorio
                             )}
-                          </p>
+
+                          </div>
 
 
                           <IndicacionesActividadPreparacion
@@ -555,54 +645,94 @@ export default function ProtocolosAdicionalesPreparacion({
                             }
                           />
 
+
+                          <div className="mt-3 flex flex-wrap gap-2 sm:hidden">
+
+                            <button
+                              type="button"
+                              disabled={
+                                procesando
+                              }
+                              onClick={() =>
+                                abrirEditar(
+                                  actividad
+                                )
+                              }
+                              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 disabled:opacity-50"
+                            >
+                              Editar
+                            </button>
+
+                            <button
+                              type="button"
+                              disabled={
+                                procesando
+                              }
+                              onClick={() =>
+                                void quitar(
+                                  actividad
+                                )
+                              }
+                              className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 disabled:opacity-50"
+                            >
+                              Quitar
+                            </button>
+
+                          </div>
+
                         </div>
 
 
-                        <div className="flex shrink-0 gap-2">
+                        <div className="hidden sm:block">
 
-                          <button
-                            type="button"
-                            disabled={
-                              procesando
-                            }
-                            onClick={() =>
-                              abrirEditar(
-                                actividad
-                              )
-                            }
-                            className="rounded-lg border border-purple-200 bg-white px-3 py-2 text-xs font-semibold text-purple-700 hover:bg-purple-50 disabled:opacity-50"
-                          >
-                            Editar
-                          </button>
+                          <div className="flex flex-col items-end gap-2">
 
+                            <button
+                              type="button"
+                              disabled={
+                                procesando
+                              }
+                              onClick={() =>
+                                abrirEditar(
+                                  actividad
+                                )
+                              }
+                              className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                            >
+                              Editar
+                            </button>
 
-                          <button
-                            type="button"
-                            disabled={
-                              procesando
-                            }
-                            onClick={() =>
-                              void quitar(
-                                actividad
-                              )
-                            }
-                            className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
-                          >
-                            Quitar
-                          </button>
+                            <button
+                              type="button"
+                              disabled={
+                                procesando
+                              }
+                              onClick={() =>
+                                void quitar(
+                                  actividad
+                                )
+                              }
+                              className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                            >
+                              Quitar
+                            </button>
+
+                          </div>
 
                         </div>
 
                       </div>
 
-                    </div>
+                    </article>
 
-                  )
-                )}
+                    )
+                  )}
 
-              </div>
+                </div>
 
-            )}
+              )}
+
+            </div>
 
           </div>
 
@@ -617,7 +747,7 @@ export default function ProtocolosAdicionalesPreparacion({
           title={
             actividadEditando
               ? "Editar protocolo adicional"
-              : "Agregar protocolo adicional"
+              : "Nuevo protocolo adicional"
           }
           onClose={() => {
             if (
@@ -628,203 +758,241 @@ export default function ProtocolosAdicionalesPreparacion({
               );
             }
           }}
-          maxWidthClassName="max-w-xl"
+          maxWidthClassName="max-w-2xl"
         >
 
-          <div className="space-y-4">
+          <div className="space-y-5">
 
-            <div>
 
-              <label className="admin-label">
-                Nombre del protocolo *
-              </label>
+            <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
 
-              <input
-                value={
-                  form.titulo
-                }
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    titulo:
-                      e.target
-                        .value,
-                  })
-                }
-                className="admin-input"
-                placeholder="Ej. Protocolo E limpieza"
-                maxLength={200}
-              />
+              <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
+
+
+                <div>
+
+                  <label className="admin-label">
+                    Hora *
+                  </label>
+
+                  <SelectorHora
+                    value={
+                      form.hora
+                    }
+                    onChange={(hora) =>
+                      setForm({
+                        ...form,
+                        hora,
+                      })
+                    }
+                    permitirVacio={
+                      false
+                    }
+                  />
+
+                </div>
+
+
+                <div>
+
+                  <label className="admin-label">
+                    Nombre del protocolo *
+                  </label>
+
+                  <input
+                    value={
+                      form.titulo
+                    }
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        titulo:
+                          e.target.value,
+                      })
+                    }
+                    className="admin-input"
+                    placeholder="Ej. Protocolo E limpieza"
+                    maxLength={200}
+                    autoFocus
+                  />
+
+                </div>
+
+              </div>
+
+
+              <div className="mt-5">
+
+                <label className="admin-label">
+                  Instrucciones
+                </label>
+
+                <p className="mb-2 text-xs leading-5 text-gray-500">
+                  Escribe las instrucciones generales de este protocolo. Después de guardarlo podrás agregar indicaciones con horarios propios.
+                </p>
+
+                <textarea
+                  value={
+                    form.descripcion
+                  }
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      descripcion:
+                        e.target.value,
+                    })
+                  }
+                  className="admin-input min-h-32 resize-y"
+                  placeholder="Escribe las instrucciones que verá el cliente..."
+                  maxLength={5000}
+                />
+
+                <p className="mt-1 text-right text-[11px] text-gray-400">
+                  {form.descripcion.length}/5000
+                </p>
+
+              </div>
 
             </div>
 
 
-            <div>
+            <details className="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
 
-              <label className="admin-label">
-                Hora *
-              </label>
+              <summary className="cursor-pointer list-none px-4 py-3.5 text-sm font-semibold text-gray-700">
 
-              <SelectorHora
-                value={form.hora}
-                onChange={(hora) =>
-                  setForm({
-                    ...form,
-                    hora,
-                  })
-                }
-                permitirVacio={false}
-              />
+                Opciones avanzadas
 
-            </div>
+                <span className="ml-2 text-xs font-normal text-gray-400">
+                  vigencia y recordatorio
+                </span>
+
+              </summary>
 
 
-            <div>
+              <div className="space-y-5 border-t border-gray-200 bg-white p-4">
 
-              <label className="admin-label">
-                Instrucciones del protocolo
-              </label>
 
-              <p className="mb-2 text-xs leading-5 text-gray-500">
-                Estas instrucciones pertenecen al título del protocolo. Las indicaciones con horario se agregan después de guardar.
+                <div className="grid grid-cols-2 gap-3">
+
+                  <div>
+
+                    <label className="admin-label">
+                      Desde el día
+                    </label>
+
+                    <input
+                      type="number"
+                      min={1}
+                      max={
+                        duracionDias
+                      }
+                      value={
+                        form.diaInicio
+                      }
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          diaInicio:
+                            e.target.value,
+                        })
+                      }
+                      className="admin-input"
+                    />
+
+                  </div>
+
+
+                  <div>
+
+                    <label className="admin-label">
+                      Hasta el día
+                    </label>
+
+                    <input
+                      type="number"
+                      min={1}
+                      max={
+                        duracionDias
+                      }
+                      value={
+                        form.diaFin
+                      }
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          diaFin:
+                            e.target.value,
+                        })
+                      }
+                      className="admin-input"
+                      placeholder="Opcional"
+                    />
+
+                  </div>
+
+                </div>
+
+
+                <p className="-mt-3 text-xs leading-5 text-gray-500">
+                  Si dejas el día final vacío, seguirá activo hasta terminar el seguimiento o hasta que sea retirado.
+                </p>
+
+
+                <div>
+
+                  <label className="admin-label">
+                    Recordatorio
+                  </label>
+
+                  <select
+                    value={
+                      form.recordatorio
+                    }
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        recordatorio:
+                          e.target.value as Recordatorio,
+                      })
+                    }
+                    className="admin-input"
+                  >
+
+                    <option value="NINGUNO">
+                      Sin recordatorio
+                    </option>
+
+                    <option value="A_LA_HORA">
+                      A la hora indicada
+                    </option>
+
+                    <option value="MIN_15_ANTES">
+                      15 minutos antes
+                    </option>
+
+                    <option value="MIN_30_ANTES">
+                      30 minutos antes
+                    </option>
+
+                    <option value="MIN_60_ANTES">
+                      1 hora antes
+                    </option>
+
+                  </select>
+
+                </div>
+
+              </div>
+
+            </details>
+
+
+            <div className="rounded-xl border border-purple-100 bg-purple-50 px-4 py-3">
+
+              <p className="text-xs leading-5 text-purple-800">
+                Después de guardar podrás agregar todas las indicaciones con horario que necesite este protocolo.
               </p>
 
-              <textarea
-                value={
-                  form.descripcion
-                }
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    descripcion:
-                      e.target
-                        .value,
-                  })
-                }
-                className="admin-input min-h-28 resize-y"
-                placeholder="Escribe las indicaciones que verá el cliente..."
-                maxLength={5000}
-              />
-
-            </div>
-
-
-            <div className="grid grid-cols-2 gap-3">
-
-              <div>
-
-                <label className="admin-label">
-                  Desde el día
-                </label>
-
-                <input
-                  type="number"
-                  min={1}
-                  max={
-                    duracionDias
-                  }
-                  value={
-                    form.diaInicio
-                  }
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      diaInicio:
-                        e.target
-                          .value,
-                    })
-                  }
-                  className="admin-input"
-                />
-
-              </div>
-
-
-              <div>
-
-                <label className="admin-label">
-                  Hasta el día
-                </label>
-
-                <input
-                  type="number"
-                  min={1}
-                  max={
-                    duracionDias
-                  }
-                  value={
-                    form.diaFin
-                  }
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      diaFin:
-                        e.target
-                          .value,
-                    })
-                  }
-                  className="admin-input"
-                  placeholder="Opcional"
-                />
-
-              </div>
-
-            </div>
-
-
-            <p className="-mt-2 text-xs text-gray-500">
-              Si dejas el día final vacío, continuará aplicándose hasta que sea retirado o termine el seguimiento.
-            </p>
-
-
-            <div>
-
-              <label className="admin-label">
-                Recordatorio
-              </label>
-
-              <select
-                value={
-                  form.recordatorio
-                }
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    recordatorio:
-                      e.target
-                        .value as Recordatorio,
-                  })
-                }
-                className="admin-input"
-              >
-
-                <option value="NINGUNO">
-                  Sin recordatorio
-                </option>
-
-                <option value="A_LA_HORA">
-                  A la hora indicada
-                </option>
-
-                <option value="MIN_15_ANTES">
-                  15 minutos antes
-                </option>
-
-                <option value="MIN_30_ANTES">
-                  30 minutos antes
-                </option>
-
-                <option value="MIN_60_ANTES">
-                  1 hora antes
-                </option>
-
-              </select>
-
-            </div>
-
-
-            <div className="rounded-xl border border-purple-100 bg-purple-50 p-3 text-xs leading-5 text-purple-800">
-              Este protocolo aparecerá separado del protocolo principal. El cliente podrá marcarlo como Realizado o Pendiente y contará para la calificación diaria.
             </div>
 
 
@@ -836,7 +1004,7 @@ export default function ProtocolosAdicionalesPreparacion({
               onClick={() =>
                 void guardar()
               }
-              className="admin-btn-primary w-full disabled:opacity-60"
+              className="admin-btn-primary w-full py-3 disabled:opacity-60"
             >
               {procesando
                 ? "Guardando..."
@@ -850,6 +1018,7 @@ export default function ProtocolosAdicionalesPreparacion({
         </Modal>
 
       )}
+
 
     </>
   );
