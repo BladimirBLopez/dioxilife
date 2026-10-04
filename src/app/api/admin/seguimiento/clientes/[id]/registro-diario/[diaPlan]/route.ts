@@ -385,6 +385,56 @@ export async function GET(
         activo: true,
         createdAt: true,
 
+        indicaciones: {
+          where: {
+            OR: [
+              {
+                activo: true,
+              },
+              {
+                progresos: {
+                  some: {
+                    diaPlan,
+                  },
+                },
+              },
+            ],
+          },
+
+          orderBy: [
+            {
+              hora: "asc",
+            },
+            {
+              orden: "asc",
+            },
+            {
+              createdAt: "asc",
+            },
+          ],
+
+          select: {
+            id: true,
+            hora: true,
+            texto: true,
+            orden: true,
+            activo: true,
+
+            progresos: {
+              where: {
+                diaPlan,
+              },
+
+              select: {
+                completado: true,
+                completadoAt: true,
+              },
+
+              take: 1,
+            },
+          },
+        },
+
         progresos: {
           where: {
             diaPlan,
@@ -536,6 +586,45 @@ export async function GET(
             activo:
               actividad.activo,
 
+            indicaciones:
+              actividad.tipo ===
+              "TAREA"
+                ? actividad.indicaciones.map(
+                    (indicacion) => {
+                      const progresoIndicacion =
+                        indicacion.progresos[0] ??
+                        null;
+
+                      return {
+                        id:
+                          indicacion.id,
+
+                        hora:
+                          indicacion.hora,
+
+                        texto:
+                          indicacion.texto,
+
+                        orden:
+                          indicacion.orden,
+
+                        activo:
+                          indicacion.activo,
+
+                        completado:
+                          progresoIndicacion
+                            ?.completado ??
+                          false,
+
+                        completadoAt:
+                          progresoIndicacion
+                            ?.completadoAt ??
+                          null,
+                      };
+                    }
+                  )
+                : [],
+
             completado:
               actividad.tipo ===
               "TAREA"
@@ -559,15 +648,49 @@ export async function GET(
         "TAREA"
     );
 
-  const realizadas =
+  const actividadesRealizadas =
     tareasDia.filter(
       (actividad) =>
         actividad.completado ===
         true
     ).length;
 
-  const total =
+  const actividadesTotal =
     tareasDia.length;
+
+  const indicacionesTotal =
+    tareasDia.reduce(
+      (
+        total,
+        actividad
+      ) =>
+        total +
+        actividad.indicaciones.length,
+      0
+    );
+
+  const indicacionesRealizadas =
+    tareasDia.reduce(
+      (
+        total,
+        actividad
+      ) =>
+        total +
+        actividad.indicaciones.filter(
+          (indicacion) =>
+            indicacion.completado ===
+            true
+        ).length,
+      0
+    );
+
+  const realizadas =
+    actividadesRealizadas +
+    indicacionesRealizadas;
+
+  const total =
+    actividadesTotal +
+    indicacionesTotal;
 
   const porcentaje =
     total > 0
@@ -644,11 +767,19 @@ export async function GET(
 
     resumen: {
       realizadas,
+
       pendientes:
         total -
         realizadas,
+
       total,
       porcentaje,
+
+      actividadesRealizadas,
+      actividadesTotal,
+
+      indicacionesRealizadas,
+      indicacionesTotal,
     },
   });
 }

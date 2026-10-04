@@ -189,32 +189,35 @@ function cumplimientoRango(
         continue;
       }
 
-      /*
-       * El título principal cuenta
-       * como check cuando es TAREA.
-       */
       if (
-        actividad.tipo ===
+        actividad.tipo !==
         "TAREA"
       ) {
-        total++;
+        continue;
+      }
 
-        const progreso =
-          actividad.progresos.find(
-            (item) =>
-              item.diaPlan ===
-                dia &&
-              item.completado
-          );
+      /*
+       * El título principal
+       * cuenta como un check.
+       */
+      total++;
 
-        if (progreso) {
-          completados++;
-        }
+      const progreso =
+        actividad.progresos.find(
+          (item) =>
+            item.diaPlan ===
+              dia &&
+            item.completado
+        );
+
+      if (progreso) {
+        completados++;
       }
 
       /*
        * Cada indicación visible
-       * cuenta independientemente.
+       * cuenta como otro check
+       * independiente.
        */
       for (
         const indicacion of
@@ -226,7 +229,7 @@ function cumplimientoRango(
 
         total++;
 
-        const progreso =
+        const progresoIndicacion =
           indicacion.progresos.find(
             (item) =>
               item.diaPlan ===
@@ -234,7 +237,9 @@ function cumplimientoRango(
               item.completado
           );
 
-        if (progreso) {
+        if (
+          progresoIndicacion
+        ) {
           completados++;
         }
       }

@@ -8,6 +8,16 @@ import {
 } from "react";
 import { toast } from "sonner";
 
+type IndicacionDia = {
+  id: string;
+  hora: string;
+  texto: string;
+  orden: number;
+  activo: boolean;
+  completado: boolean;
+  completadoAt: string | null;
+};
+
 type ActividadDia = {
   id: string;
   tipo: "TAREA" | "INFORMACION" | "CONTROL";
@@ -20,6 +30,7 @@ type ActividadDia = {
   diaFin: number | null;
   orden: number;
   activo: boolean;
+  indicaciones: IndicacionDia[];
   completado: boolean | null;
   completadoAt: string | null;
 };
@@ -73,6 +84,12 @@ type RespuestaDia = {
     pendientes: number;
     total: number;
     porcentaje: number;
+
+    actividadesRealizadas: number;
+    actividadesTotal: number;
+
+    indicacionesRealizadas: number;
+    indicacionesTotal: number;
   };
 };
 
@@ -88,24 +105,62 @@ function calcularResumen(
   const tareas =
     actividades.filter(
       (actividad) =>
-        actividad.tipo === "TAREA"
+        actividad.tipo ===
+        "TAREA"
+    );
+
+  const actividadesRealizadas =
+    tareas.filter(
+      (actividad) =>
+        actividad.completado ===
+        true
+    ).length;
+
+  const actividadesTotal =
+    tareas.length;
+
+  const indicacionesTotal =
+    tareas.reduce(
+      (
+        total,
+        actividad
+      ) =>
+        total +
+        actividad.indicaciones.length,
+      0
+    );
+
+  const indicacionesRealizadas =
+    tareas.reduce(
+      (
+        total,
+        actividad
+      ) =>
+        total +
+        actividad.indicaciones.filter(
+          (indicacion) =>
+            indicacion.completado
+        ).length,
+      0
     );
 
   const realizadas =
-    tareas.filter(
-      (actividad) =>
-        actividad.completado === true
-    ).length;
+    actividadesRealizadas +
+    indicacionesRealizadas;
 
   const total =
-    tareas.length;
+    actividadesTotal +
+    indicacionesTotal;
 
   return {
     realizadas,
+
     pendientes:
       total -
       realizadas,
+
     total,
+
     porcentaje:
       total > 0
         ? Math.round(
@@ -115,6 +170,12 @@ function calcularResumen(
             ) * 100
           )
         : 0,
+
+    actividadesRealizadas,
+    actividadesTotal,
+
+    indicacionesRealizadas,
+    indicacionesTotal,
   };
 }
 
@@ -609,6 +670,133 @@ export default function RegistroDiarioCliente({
     }
   }
 
+  async function cambiarIndicacion(
+    actividad: ActividadDia,
+    indicacion: IndicacionDia
+  ) {
+    const clave =
+      `indicacion:${indicacion.id}`;
+
+    if (
+      actividad.tipo !==
+        "TAREA" ||
+      actividadProcesando ||
+      bloqueado
+    ) {
+      return;
+    }
+
+    const nuevoEstado =
+      !indicacion.completado;
+
+    setActividadProcesando(
+      clave
+    );
+
+    try {
+      const res =
+        await fetch(
+          `/api/admin/seguimiento/clientes/${seguimientoId}/registro-diario/${diaPlan}/actividades/${actividad.id}/indicaciones/${indicacion.id}`,
+          {
+            method: "PUT",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                completado:
+                  nuevoEstado,
+              }),
+          }
+        );
+
+      const respuesta =
+        await res
+          .json()
+          .catch(
+            () => null
+          );
+
+      if (!res.ok) {
+        toast.error(
+          "No se pudo cambiar la indicación",
+          {
+            description:
+              respuesta?.error ||
+              "Inténtalo nuevamente.",
+          }
+        );
+
+        return;
+      }
+
+      setData(
+        (actual) => {
+          if (!actual) {
+            return actual;
+          }
+
+          const actividades =
+            actual.actividades.map(
+              (item) =>
+                item.id ===
+                actividad.id
+                  ? {
+                      ...item,
+
+                      indicaciones:
+                        item.indicaciones.map(
+                          (
+                            itemIndicacion
+                          ) =>
+                            itemIndicacion.id ===
+                            indicacion.id
+                              ? {
+                                  ...itemIndicacion,
+
+                                  completado:
+                                    respuesta
+                                      .progreso
+                                      .completado,
+
+                                  completadoAt:
+                                    respuesta
+                                      .progreso
+                                      .completadoAt,
+                                }
+                              : itemIndicacion
+                        ),
+                    }
+                  : item
+            );
+
+          return {
+            ...actual,
+
+            actividades,
+
+            resumen:
+              calcularResumen(
+                actividades
+              ),
+          };
+        }
+      );
+    } catch {
+      toast.error(
+        "No se pudo conectar con el servidor"
+      );
+    } finally {
+      setActividadProcesando(
+        null
+      );
+    }
+  }
+
+
   function renderActividad(
     actividad: ActividadDia
   ) {
@@ -720,6 +908,96 @@ export default function RegistroDiarioCliente({
               )}
 
             </div>
+
+
+            {actividad.tipo ===
+              "TAREA" &&
+              actividad.indicaciones.length >
+                0 && (
+
+              <div className="mt-4 space-y-2 border-t border-gray-100 pt-3">
+
+                <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">
+                  Indicaciones
+                </p>
+
+                {actividad.indicaciones.map(
+                  (indicacion) => {
+                    const clave =
+                      `indicacion:${indicacion.id}`;
+
+                    return (
+                      <div
+                        key={
+                          indicacion.id
+                        }
+                        className={`flex items-start gap-3 rounded-lg border p-3 ${
+                          indicacion.activo
+                            ? "border-gray-100 bg-gray-50"
+                            : "border-gray-200 bg-gray-100"
+                        }`}
+                      >
+
+                        <div className="w-12 shrink-0">
+
+                          <p className="text-xs font-bold text-gray-700">
+                            {indicacion.hora ||
+                              "—"}
+                          </p>
+
+                        </div>
+
+
+                        <div className="min-w-0 flex-1">
+
+                          <p className="whitespace-pre-wrap text-sm leading-5 text-gray-700">
+                            {indicacion.texto}
+                          </p>
+
+                          {!indicacion.activo && (
+                            <span className="mt-1 inline-flex rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-medium text-gray-600">
+                              Histórica
+                            </span>
+                          )}
+
+                        </div>
+
+
+                        <button
+                          type="button"
+                          disabled={
+                            bloqueado ||
+                            actividadProcesando ===
+                              clave
+                          }
+                          onClick={() =>
+                            void cambiarIndicacion(
+                              actividad,
+                              indicacion
+                            )
+                          }
+                          className={`shrink-0 rounded-lg px-2.5 py-2 text-[11px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                            indicacion.completado
+                              ? "bg-green-100 text-green-800 hover:bg-green-200"
+                              : "bg-amber-100 text-amber-800 hover:bg-amber-200"
+                          }`}
+                        >
+                          {actividadProcesando ===
+                          clave
+                            ? "..."
+                            : indicacion.completado
+                            ? "✓ Realizada"
+                            : "Pendiente"}
+                        </button>
+
+                      </div>
+                    );
+                  }
+                )}
+
+              </div>
+
+            )}
 
           </div>
 
@@ -1192,7 +1470,7 @@ export default function RegistroDiarioCliente({
                     .realizadas}{" "}
                   de{" "}
                   {data.resumen.total}{" "}
-                  tareas realizadas
+                  checks realizados
                 </p>
 
               </div>
@@ -1203,6 +1481,27 @@ export default function RegistroDiarioCliente({
                   .porcentaje}
                 %
               </p>
+
+            </div>
+
+
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
+
+              <span>
+                Actividades{" "}
+                <strong className="text-gray-700">
+                  {data.resumen.actividadesRealizadas}/
+                  {data.resumen.actividadesTotal}
+                </strong>
+              </span>
+
+              <span>
+                Indicaciones{" "}
+                <strong className="text-gray-700">
+                  {data.resumen.indicacionesRealizadas}/
+                  {data.resumen.indicacionesTotal}
+                </strong>
+              </span>
 
             </div>
 
