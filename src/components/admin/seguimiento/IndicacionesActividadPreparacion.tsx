@@ -291,30 +291,39 @@ export default function IndicacionesActividadPreparacion({
   return (
     <>
 
-      <div className="mt-3 w-full rounded-2xl border border-gray-200 bg-gray-50/70 p-3 sm:p-4">
+      <div className="mt-4 w-full">
 
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
 
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-gray-600">
-              Indicaciones con horario
+          <div className="flex items-center gap-2">
+
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500">
+              Indicaciones
             </p>
 
-            <p className="mt-0.5 text-[11px] text-gray-400">
-              Cada indicación tiene su propia hora.
-            </p>
+            {indicaciones.length > 0 && (
+
+              <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-bold text-violet-600">
+                {indicaciones.length}
+              </span>
+
+            )}
+
           </div>
 
+
           {editable && (
+
             <button
               type="button"
               onClick={
                 abrirNueva
               }
-              className="shrink-0 rounded-lg border border-violet-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-violet-700 hover:bg-violet-50"
+              className="rounded-lg border border-violet-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-50"
             >
-              + Agregar
+              + Agregar indicación
             </button>
+
           )}
 
         </div>
@@ -323,56 +332,56 @@ export default function IndicacionesActividadPreparacion({
         {indicaciones.length ===
         0 ? (
 
-          <div className="mt-3 rounded-lg border border-dashed border-gray-200 bg-white p-3">
+          <div className="mt-2 rounded-xl border border-dashed border-gray-200 bg-gray-50/60 px-3 py-2.5">
 
-            <p className="text-xs leading-5 text-gray-500">
-              Esta actividad todavía no tiene indicaciones estructuradas.
+            <p className="text-xs leading-5 text-gray-400">
+              Sin indicaciones adicionales.
             </p>
 
           </div>
 
         ) : (
 
-          <div className="mt-3 space-y-2">
+          <div className="mt-2 overflow-hidden rounded-xl border border-gray-200 bg-white">
 
             {indicaciones.map(
               (
-                indicacion,
-                indice
+                indicacion
               ) => (
 
                 <div
                   key={
                     indicacion.id
                   }
-                  className="w-full rounded-2xl border border-gray-200 bg-white p-4"
+                  className="grid gap-2 border-b border-gray-100 px-3 py-3 last:border-b-0 sm:grid-cols-[78px_minmax(0,1fr)_auto] sm:items-start sm:gap-3"
                 >
 
-                  <div className="flex items-center justify-between gap-3">
 
-                    <div className="rounded-xl bg-violet-50 px-3.5 py-2 font-mono text-base font-bold text-violet-700">
+                  <div className="flex items-center">
+
+                    <span className="inline-flex rounded-lg bg-violet-50 px-2.5 py-1.5 font-mono text-sm font-bold text-violet-700">
                       {
                         indicacion.hora
                       }
-                    </div>
-
-
-                    <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-gray-100 px-2 text-xs font-bold text-gray-500">
-                      #{indice + 1}
                     </span>
 
                   </div>
 
 
-                  <p className="mt-3 w-full whitespace-pre-wrap break-words text-sm leading-6 text-gray-700">
-                    {
-                      indicacion.texto
-                    }
-                  </p>
+                  <div className="min-w-0">
+
+                    <p className="whitespace-pre-wrap break-words text-sm leading-6 text-gray-700">
+                      {
+                        indicacion.texto
+                      }
+                    </p>
+
+                  </div>
 
 
                   {editable && (
-                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-gray-100 pt-3">
+
+                    <div className="flex items-center gap-1 sm:justify-end">
 
                       <button
                         type="button"
@@ -381,7 +390,7 @@ export default function IndicacionesActividadPreparacion({
                             indicacion
                           )
                         }
-                        className="rounded-lg px-2 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                        className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-blue-600 transition hover:bg-blue-50"
                       >
                         Editar
                       </button>
@@ -396,12 +405,15 @@ export default function IndicacionesActividadPreparacion({
                             indicacion
                           )
                         }
-                        className="rounded-lg px-2 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                        title="Eliminar indicación"
+                        aria-label={`Eliminar indicación de las ${indicacion.hora}`}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold text-red-500 transition hover:bg-red-50 disabled:opacity-50"
                       >
-                        Eliminar
+                        ×
                       </button>
 
                     </div>
+
                   )}
 
                 </div>
