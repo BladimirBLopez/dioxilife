@@ -5,6 +5,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
+import AgregarParticipanteGrupo from "@/components/admin/seguimiento/AgregarParticipanteGrupo";
 
 function fecha(
   valor: Date
@@ -194,22 +195,30 @@ export default async function GrupoSeguimientoDetallePage({
 
       <section className="admin-card p-5">
 
-        <div>
-          <h2 className="font-semibold text-gray-900">
-            Participantes
-          </h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 
-          <p className="mt-1 text-sm text-gray-500">
-            {grupo.miembros.length ===
-            0
-              ? "Todavía no hay participantes en este grupo."
-              : `${grupo.miembros.length} participante${
-                  grupo.miembros.length ===
-                  1
-                    ? ""
-                    : "s"
-                } en el grupo.`}
-          </p>
+          <div>
+            <h2 className="font-semibold text-gray-900">
+              Participantes
+            </h2>
+
+            <p className="mt-1 text-sm text-gray-500">
+              {grupo.miembros.length ===
+              0
+                ? "Todavía no hay participantes en este grupo."
+                : `${grupo.miembros.length} participante${
+                    grupo.miembros.length ===
+                    1
+                      ? ""
+                      : "s"
+                  } en el grupo.`}
+            </p>
+          </div>
+
+          <AgregarParticipanteGrupo
+            grupoId={grupo.id}
+          />
+
         </div>
 
 
