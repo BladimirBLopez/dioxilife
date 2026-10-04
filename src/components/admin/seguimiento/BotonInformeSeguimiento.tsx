@@ -464,20 +464,51 @@ export default function BotonInformeSeguimiento({
         }
 
         asegurar(
-          72
+          82
         );
 
+        const puntosOrdenados =
+          [...puntos].sort(
+            (
+              a,
+              b
+            ) =>
+              a.dia -
+              b.dia
+          );
+
+        const ultimoPunto =
+          puntosOrdenados[
+            puntosOrdenados.length -
+              1
+          ];
+
+        const esPorcentaje =
+          sufijo === "%";
+
+        const tarjetaX =
+          margen;
+
+        const tarjetaY =
+          y;
+
+        const tarjetaW =
+          anchoUtil;
+
+        const tarjetaH =
+          73;
+
         const graficoX =
-          margen + 14;
+          margen + 16;
 
         const graficoY =
-          y + 4;
+          y + 18;
 
         const graficoW =
-          anchoUtil - 20;
+          anchoUtil - 22;
 
         const graficoH =
-          48;
+          42;
 
         const rangoY =
           Math.max(
@@ -491,6 +522,7 @@ export default function BotonInformeSeguimiento({
             maximoDia,
             1
           );
+
 
         function posicionX(
           dia: number
@@ -514,6 +546,7 @@ export default function BotonInformeSeguimiento({
           );
         }
 
+
         function posicionY(
           valor: number
         ) {
@@ -530,8 +563,28 @@ export default function BotonInformeSeguimiento({
         }
 
 
+        function formatoValor(
+          valor: number
+        ) {
+          if (
+            esPorcentaje
+          ) {
+            return `${Math.round(
+              valor
+            )}%`;
+          }
+
+          return `${valor
+            .toFixed(1)
+            .replace(
+              ".0",
+              ""
+            )} kg`;
+        }
+
+
         /*
-         * Fondo
+         * Tarjeta
          */
         doc.setFillColor(
           252,
@@ -539,20 +592,113 @@ export default function BotonInformeSeguimiento({
           254
         );
 
+        doc.setDrawColor(
+          232,
+          227,
+          240
+        );
+
+        doc.setLineWidth(
+          0.35
+        );
+
         doc.roundedRect(
-          margen,
-          y,
-          anchoUtil,
-          62,
-          3,
-          3,
-          "F"
+          tarjetaX,
+          tarjetaY,
+          tarjetaW,
+          tarjetaH,
+          3.5,
+          3.5,
+          "FD"
         );
 
 
         /*
-         * Lineas horizontales y
-         * etiquetas del eje Y
+         * Encabezado interno
+         */
+        doc.setFont(
+          "helvetica",
+          "bold"
+        );
+
+        doc.setFontSize(
+          8.5
+        );
+
+        doc.setTextColor(
+          66,
+          55,
+          82
+        );
+
+        doc.text(
+          esPorcentaje
+            ? "Evolucion del cumplimiento"
+            : "Tendencia del peso",
+          margen + 5,
+          y + 7
+        );
+
+
+        doc.setFont(
+          "helvetica",
+          "normal"
+        );
+
+        doc.setFontSize(
+          6.8
+        );
+
+        doc.setTextColor(
+          135,
+          128,
+          145
+        );
+
+        doc.text(
+          esPorcentaje
+            ? `Ultimo registro · Dia ${ultimoPunto.dia}`
+            : `Ultimo pesaje · Dia ${ultimoPunto.dia}`,
+          margen + 5,
+          y + 11.5
+        );
+
+
+        /*
+         * Valor destacado
+         */
+        doc.setFont(
+          "helvetica",
+          "bold"
+        );
+
+        doc.setFontSize(
+          11
+        );
+
+        doc.setTextColor(
+          79,
+          46,
+          145
+        );
+
+        doc.text(
+          formatoValor(
+            ultimoPunto.valor
+          ),
+          ancho -
+            margen -
+            5,
+          y + 8.5,
+          {
+            align:
+              "right",
+          }
+        );
+
+
+        /*
+         * Cuadricula horizontal
          */
         for (
           let i = 0;
@@ -573,13 +719,21 @@ export default function BotonInformeSeguimiento({
             );
 
           doc.setDrawColor(
-            231,
-            227,
-            238
+            i === 0
+              ? 215
+              : 237,
+            i === 0
+              ? 210
+              : 233,
+            i === 0
+              ? 225
+              : 241
           );
 
           doc.setLineWidth(
-            0.25
+            i === 0
+              ? 0.35
+              : 0.2
           );
 
           doc.line(
@@ -590,29 +744,31 @@ export default function BotonInformeSeguimiento({
             posY
           );
 
+
           doc.setFont(
             "helvetica",
             "normal"
           );
 
           doc.setFontSize(
-            7
+            6.5
           );
 
           doc.setTextColor(
-            130,
-            125,
-            140
+            145,
+            139,
+            154
           );
 
-          const etiquetaY =
-            sufijo === "%"
+          const etiqueta =
+            esPorcentaje
               ? `${Math.round(
                   valor
                 )}%`
               : valor
                   .toFixed(
-                    rangoY < 10
+                    rangoY <
+                    10
                       ? 1
                       : 0
                   )
@@ -622,9 +778,9 @@ export default function BotonInformeSeguimiento({
                   );
 
           doc.text(
-            etiquetaY,
-            graficoX - 2,
-            posY + 1.8,
+            etiqueta,
+            graficoX - 2.5,
+            posY + 1.6,
             {
               align:
                 "right",
@@ -634,15 +790,13 @@ export default function BotonInformeSeguimiento({
 
 
         /*
-         * Etiquetas del eje X
+         * Dias que se mostrarán
+         * en el eje horizontal
          */
-        const cantidadIntervalos =
+        const maxEtiquetas =
           Math.min(
-            5,
-            Math.max(
-              1,
-              ultimoDiaEje - 1
-            )
+            6,
+            ultimoDiaEje
           );
 
         const diasEtiqueta =
@@ -656,23 +810,32 @@ export default function BotonInformeSeguimiento({
           ultimoDiaEje
         );
 
-        for (
-          let i = 1;
-          i <
-          cantidadIntervalos;
-          i++
+        if (
+          maxEtiquetas >
+          2
         ) {
-          diasEtiqueta.add(
-            Math.round(
-              1 +
-                (
-                  (ultimoDiaEje -
-                    1) *
-                  i
-                ) /
-                  cantidadIntervalos
-            )
-          );
+          for (
+            let i = 1;
+            i <
+            maxEtiquetas -
+              1;
+            i++
+          ) {
+            diasEtiqueta.add(
+              Math.round(
+                1 +
+                  (
+                    (ultimoDiaEje -
+                      1) *
+                    i
+                  ) /
+                    (
+                      maxEtiquetas -
+                      1
+                    )
+              )
+            );
+          }
         }
 
         const diasOrdenados =
@@ -686,6 +849,11 @@ export default function BotonInformeSeguimiento({
               a - b
           );
 
+
+        /*
+         * Guias verticales y
+         * etiquetas Dia N
+         */
         for (
           const dia of
           diasOrdenados
@@ -696,20 +864,23 @@ export default function BotonInformeSeguimiento({
             );
 
           doc.setDrawColor(
-            225,
-            221,
-            233
+            244,
+            241,
+            247
+          );
+
+          doc.setLineWidth(
+            0.15
           );
 
           doc.line(
             posX,
-            graficoY +
-              graficoH,
+            graficoY,
             posX,
             graficoY +
-              graficoH +
-              1.5
+              graficoH
           );
+
 
           doc.setFont(
             "helvetica",
@@ -717,21 +888,21 @@ export default function BotonInformeSeguimiento({
           );
 
           doc.setFontSize(
-            6.8
+            6.5
           );
 
           doc.setTextColor(
-            125,
-            120,
-            135
+            135,
+            129,
+            145
           );
 
           doc.text(
-            `D${dia}`,
+            `Dia ${dia}`,
             posX,
             graficoY +
               graficoH +
-              5,
+              5.5,
             {
               align:
                 "center",
@@ -741,26 +912,16 @@ export default function BotonInformeSeguimiento({
 
 
         /*
-         * Linea del grafico
+         * Linea principal
          */
-        const puntosOrdenados =
-          [...puntos].sort(
-            (
-              a,
-              b
-            ) =>
-              a.dia -
-              b.dia
-          );
-
         doc.setDrawColor(
-          111,
-          74,
-          191
+          93,
+          61,
+          174
         );
 
         doc.setLineWidth(
-          0.8
+          1
         );
 
         for (
@@ -806,7 +967,7 @@ export default function BotonInformeSeguimiento({
 
 
         /*
-         * Puntos y valores
+         * Puntos
          */
         puntosOrdenados.forEach(
           (
@@ -823,59 +984,167 @@ export default function BotonInformeSeguimiento({
                 punto.valor
               );
 
+            const esUltimo =
+              indice ===
+              puntosOrdenados.length -
+                1;
+
+
+            /*
+             * Halo blanco
+             */
             doc.setFillColor(
-              218,
-              55,
-              126
+              255,
+              255,
+              255
             );
 
             doc.circle(
               posX,
               posY,
-              1.5,
+              esUltimo
+                ? 2.6
+                : 2.1,
               "F"
             );
 
+
+            /*
+             * Punto de color
+             */
+            doc.setFillColor(
+              esUltimo
+                ? 218
+                : 111,
+              esUltimo
+                ? 55
+                : 74,
+              esUltimo
+                ? 126
+                : 191
+            );
+
+            doc.circle(
+              posX,
+              posY,
+              esUltimo
+                ? 1.8
+                : 1.35,
+              "F"
+            );
+
+
+            /*
+             * Valores visibles:
+             * todos hasta 7 puntos.
+             * Después solo primero y último.
+             */
             const mostrarValor =
               puntosOrdenados.length <=
-                10 ||
+                7 ||
               indice === 0 ||
-              indice ===
-                puntosOrdenados.length -
-                  1;
+              esUltimo;
 
             if (
               mostrarValor
             ) {
+              const valor =
+                formatoValor(
+                  punto.valor
+                );
+
+              const anchoEtiqueta =
+                Math.max(
+                  13,
+                  doc.getTextWidth(
+                    valor
+                  ) +
+                    5
+                );
+
+              const etiquetaX =
+                Math.min(
+                  Math.max(
+                    posX,
+                    margen +
+                      anchoEtiqueta /
+                        2 +
+                      2
+                  ),
+                  ancho -
+                    margen -
+                    anchoEtiqueta /
+                      2 -
+                    2
+                );
+
+              let etiquetaY =
+                posY - 4;
+
+              if (
+                etiquetaY <
+                graficoY + 3
+              ) {
+                etiquetaY =
+                  posY + 7;
+              }
+
+
+              doc.setFillColor(
+                255,
+                255,
+                255
+              );
+
+              doc.setDrawColor(
+                229,
+                224,
+                237
+              );
+
+              doc.setLineWidth(
+                0.25
+              );
+
+              doc.roundedRect(
+                etiquetaX -
+                  anchoEtiqueta /
+                    2,
+                etiquetaY -
+                  4,
+                anchoEtiqueta,
+                6,
+                2,
+                2,
+                "FD"
+              );
+
+
               doc.setFont(
                 "helvetica",
                 "bold"
               );
 
               doc.setFontSize(
-                6.8
+                6.3
               );
 
               doc.setTextColor(
-                80,
-                70,
-                95
+                esUltimo
+                  ? 180
+                  : 78,
+                esUltimo
+                  ? 46
+                  : 66,
+                esUltimo
+                  ? 105
+                  : 95
               );
 
-              const etiqueta =
-                sufijo === "%"
-                  ? `${Math.round(
-                      punto.valor
-                    )}%`
-                  : `${punto.valor} kg`;
-
               doc.text(
-                etiqueta,
-                posX,
-                Math.max(
-                  graficoY + 3,
-                  posY - 3
-                ),
+                valor,
+                etiquetaX,
+                etiquetaY,
                 {
                   align:
                     "center",
@@ -885,7 +1154,10 @@ export default function BotonInformeSeguimiento({
           }
         );
 
-        y += 67;
+
+        y +=
+          tarjetaH +
+          5;
       }
 
 
@@ -1173,49 +1445,306 @@ export default function BotonInformeSeguimiento({
         "EVOLUCION DE PESO"
       );
 
-      texto(
-        `Peso inicial: ${
-          informe.resumen
-            .pesoInicial
-            ? `${informe.resumen.pesoInicial.peso} kg (Dia ${informe.resumen.pesoInicial.diaPlan})`
-            : "Sin registro"
-        }`
+
+      /*
+       * Tarjetas resumen de peso
+       */
+      asegurar(
+        30
       );
 
-      texto(
-        `Ultimo peso: ${
-          informe.resumen
-            .ultimoPeso
-            ? `${informe.resumen.ultimoPeso.peso} kg (Dia ${informe.resumen.ultimoPeso.diaPlan})`
-            : "Sin registro"
-        }`
+      const pesoInicialValor =
+        informe.resumen
+          .pesoInicial
+          ?.peso ??
+        null;
+
+      const pesoActualValor =
+        informe.resumen
+          .ultimoPeso
+          ?.peso ??
+        null;
+
+      const pesoPromedioValor =
+        informe.resumen
+          .pesoPromedio;
+
+      const cambioPesoValor =
+        informe.resumen
+          .cambioPeso;
+
+
+      const tarjetasPeso = [
+        {
+          etiqueta:
+            "INICIAL",
+
+          valor:
+            pesoInicialValor !==
+            null
+              ? `${pesoInicialValor} kg`
+              : "Sin registro",
+
+          detalle:
+            informe.resumen
+              .pesoInicial
+              ? `Dia ${informe.resumen.pesoInicial.diaPlan}`
+              : "—",
+        },
+
+        {
+          etiqueta:
+            informe.seguimiento
+              .estado ===
+            "COMPLETADO"
+              ? "FINAL"
+              : "ACTUAL",
+
+          valor:
+            pesoActualValor !==
+            null
+              ? `${pesoActualValor} kg`
+              : "Sin registro",
+
+          detalle:
+            informe.resumen
+              .ultimoPeso
+              ? `Dia ${informe.resumen.ultimoPeso.diaPlan}`
+              : "—",
+        },
+
+        {
+          etiqueta:
+            "CAMBIO",
+
+          valor:
+            cambioPesoValor !==
+            null
+              ? `${
+                  cambioPesoValor >
+                  0
+                    ? "+"
+                    : ""
+                }${cambioPesoValor} kg`
+              : "—",
+
+          detalle:
+            cambioPesoValor !==
+            null
+              ? "Desde el inicio"
+              : "Sin datos",
+        },
+
+        {
+          etiqueta:
+            "PROMEDIO",
+
+          valor:
+            pesoPromedioValor !==
+            null
+              ? `${pesoPromedioValor} kg`
+              : "Sin registro",
+
+          detalle:
+            informe.resumen
+              .cantidadPesajes >
+            0
+              ? `${informe.resumen.cantidadPesajes} pesaje${
+                  informe.resumen
+                    .cantidadPesajes ===
+                  1
+                    ? ""
+                    : "s"
+                }`
+              : "Sin pesajes",
+        },
+      ];
+
+
+      const separacionTarjeta =
+        3;
+
+      const anchoTarjeta =
+        (
+          anchoUtil -
+          separacionTarjeta *
+            3
+        ) /
+        4;
+
+      const altoTarjeta =
+        22;
+
+      const tarjetasY =
+        y;
+
+
+      tarjetasPeso.forEach(
+        (
+          tarjeta,
+          indice
+        ) => {
+          const tarjetaX =
+            margen +
+            indice *
+              (
+                anchoTarjeta +
+                separacionTarjeta
+              );
+
+
+          /*
+           * Fondo y borde
+           */
+          doc.setFillColor(
+            250,
+            248,
+            253
+          );
+
+          doc.setDrawColor(
+            232,
+            226,
+            240
+          );
+
+          doc.setLineWidth(
+            0.3
+          );
+
+          doc.roundedRect(
+            tarjetaX,
+            tarjetasY,
+            anchoTarjeta,
+            altoTarjeta,
+            2.5,
+            2.5,
+            "FD"
+          );
+
+
+          /*
+           * Etiqueta
+           */
+          doc.setFont(
+            "helvetica",
+            "bold"
+          );
+
+          doc.setFontSize(
+            6.5
+          );
+
+          doc.setTextColor(
+            130,
+            120,
+            145
+          );
+
+          doc.text(
+            tarjeta.etiqueta,
+            tarjetaX + 3,
+            tarjetasY + 5
+          );
+
+
+          /*
+           * Valor principal
+           */
+          doc.setFont(
+            "helvetica",
+            "bold"
+          );
+
+          doc.setFontSize(
+            tarjeta.valor.length >
+              12
+              ? 8
+              : 10
+          );
+
+          if (
+            tarjeta.etiqueta ===
+              "CAMBIO" &&
+            cambioPesoValor !==
+              null
+          ) {
+            if (
+              cambioPesoValor <
+              0
+            ) {
+              doc.setTextColor(
+                40,
+                145,
+                95
+              );
+            } else if (
+              cambioPesoValor >
+              0
+            ) {
+              doc.setTextColor(
+                205,
+                105,
+                45
+              );
+            } else {
+              doc.setTextColor(
+                79,
+                46,
+                145
+              );
+            }
+          } else {
+            doc.setTextColor(
+              55,
+              45,
+              68
+            );
+          }
+
+          const valorLineas =
+            doc.splitTextToSize(
+              tarjeta.valor,
+              anchoTarjeta -
+                6
+            );
+
+          doc.text(
+            valorLineas,
+            tarjetaX + 3,
+            tarjetasY + 11
+          );
+
+
+          /*
+           * Detalle
+           */
+          doc.setFont(
+            "helvetica",
+            "normal"
+          );
+
+          doc.setFontSize(
+            6
+          );
+
+          doc.setTextColor(
+            145,
+            138,
+            154
+          );
+
+          doc.text(
+            tarjeta.detalle,
+            tarjetaX + 3,
+            tarjetasY + 18
+          );
+        }
       );
 
-      texto(
-        `Peso promedio: ${
-          informe.resumen
-            .pesoPromedio !==
-          null
-            ? `${informe.resumen.pesoPromedio} kg`
-            : "Sin registro"
-        }`
-      );
-
-      texto(
-        `Variacion: ${
-          informe.resumen
-            .cambioPeso !==
-          null
-            ? `${
-                informe.resumen
-                  .cambioPeso >
-                0
-                  ? "+"
-                  : ""
-              }${informe.resumen.cambioPeso} kg`
-            : "-"
-        }`
-      );
+      y +=
+        altoTarjeta +
+        6;
 
 
       const puntosPeso =
