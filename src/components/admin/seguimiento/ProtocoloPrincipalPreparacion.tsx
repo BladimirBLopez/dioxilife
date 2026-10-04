@@ -1010,7 +1010,10 @@ export default function ProtocoloPrincipalPreparacion({
                               </div>
 
 
-                              <details className="relative shrink-0">
+                              <details
+                                name="seguimiento-opciones"
+                                className="relative shrink-0"
+                              >
 
                                 <summary
                                   className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg border border-gray-200 bg-white text-xl font-bold leading-none text-gray-500 hover:bg-gray-50"
@@ -1047,7 +1050,7 @@ export default function ProtocoloPrincipalPreparacion({
                                     }
                                     className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
                                   >
-                                    Eliminar
+                                    Eliminar actividad
                                   </button>
 
                                 </div>

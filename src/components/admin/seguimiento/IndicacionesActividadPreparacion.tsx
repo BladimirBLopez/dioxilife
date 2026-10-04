@@ -369,7 +369,10 @@ export default function IndicacionesActividadPreparacion({
 
                   {editable && (
 
-                    <details className="relative shrink-0">
+                    <details
+                      name="seguimiento-opciones"
+                      className="relative shrink-0"
+                    >
 
                       <summary
                         className="flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded-lg text-lg font-bold leading-none text-gray-400 hover:bg-gray-100 hover:text-gray-700"
@@ -390,7 +393,7 @@ export default function IndicacionesActividadPreparacion({
                           }
                           className="w-full rounded-lg px-3 py-2 text-left text-xs font-semibold text-gray-700 hover:bg-gray-50"
                         >
-                          Editar
+                          Editar indicación
                         </button>
 
                         <button
@@ -405,7 +408,7 @@ export default function IndicacionesActividadPreparacion({
                           }
                           className="w-full rounded-lg px-3 py-2 text-left text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
                         >
-                          Eliminar
+                          Eliminar indicación
                         </button>
 
                       </div>
