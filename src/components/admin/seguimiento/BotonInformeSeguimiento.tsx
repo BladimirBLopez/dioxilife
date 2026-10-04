@@ -437,6 +437,458 @@ export default function BotonInformeSeguimiento({
       }
 
 
+      type PuntoGrafico = {
+        dia: number;
+        valor: number;
+      };
+
+      function dibujarGraficoLinea({
+        puntos,
+        minimoY,
+        maximoY,
+        sufijo,
+        maximoDia,
+        conectarSaltos,
+      }: {
+        puntos: PuntoGrafico[];
+        minimoY: number;
+        maximoY: number;
+        sufijo: string;
+        maximoDia: number;
+        conectarSaltos: boolean;
+      }) {
+        if (
+          puntos.length === 0
+        ) {
+          return;
+        }
+
+        asegurar(
+          72
+        );
+
+        const graficoX =
+          margen + 14;
+
+        const graficoY =
+          y + 4;
+
+        const graficoW =
+          anchoUtil - 20;
+
+        const graficoH =
+          48;
+
+        const rangoY =
+          Math.max(
+            maximoY -
+              minimoY,
+            1
+          );
+
+        const ultimoDiaEje =
+          Math.max(
+            maximoDia,
+            1
+          );
+
+        function posicionX(
+          dia: number
+        ) {
+          if (
+            ultimoDiaEje <= 1
+          ) {
+            return (
+              graficoX +
+              graficoW / 2
+            );
+          }
+
+          return (
+            graficoX +
+            (
+              (dia - 1) /
+              (ultimoDiaEje - 1)
+            ) *
+              graficoW
+          );
+        }
+
+        function posicionY(
+          valor: number
+        ) {
+          return (
+            graficoY +
+            graficoH -
+            (
+              (valor -
+                minimoY) /
+              rangoY
+            ) *
+              graficoH
+          );
+        }
+
+
+        /*
+         * Fondo
+         */
+        doc.setFillColor(
+          252,
+          251,
+          254
+        );
+
+        doc.roundedRect(
+          margen,
+          y,
+          anchoUtil,
+          62,
+          3,
+          3,
+          "F"
+        );
+
+
+        /*
+         * Lineas horizontales y
+         * etiquetas del eje Y
+         */
+        for (
+          let i = 0;
+          i <= 4;
+          i++
+        ) {
+          const valor =
+            minimoY +
+            (
+              rangoY *
+              i
+            ) /
+              4;
+
+          const posY =
+            posicionY(
+              valor
+            );
+
+          doc.setDrawColor(
+            231,
+            227,
+            238
+          );
+
+          doc.setLineWidth(
+            0.25
+          );
+
+          doc.line(
+            graficoX,
+            posY,
+            graficoX +
+              graficoW,
+            posY
+          );
+
+          doc.setFont(
+            "helvetica",
+            "normal"
+          );
+
+          doc.setFontSize(
+            7
+          );
+
+          doc.setTextColor(
+            130,
+            125,
+            140
+          );
+
+          const etiquetaY =
+            sufijo === "%"
+              ? `${Math.round(
+                  valor
+                )}%`
+              : valor
+                  .toFixed(
+                    rangoY < 10
+                      ? 1
+                      : 0
+                  )
+                  .replace(
+                    ".0",
+                    ""
+                  );
+
+          doc.text(
+            etiquetaY,
+            graficoX - 2,
+            posY + 1.8,
+            {
+              align:
+                "right",
+            }
+          );
+        }
+
+
+        /*
+         * Etiquetas del eje X
+         */
+        const cantidadIntervalos =
+          Math.min(
+            5,
+            Math.max(
+              1,
+              ultimoDiaEje - 1
+            )
+          );
+
+        const diasEtiqueta =
+          new Set<number>();
+
+        diasEtiqueta.add(
+          1
+        );
+
+        diasEtiqueta.add(
+          ultimoDiaEje
+        );
+
+        for (
+          let i = 1;
+          i <
+          cantidadIntervalos;
+          i++
+        ) {
+          diasEtiqueta.add(
+            Math.round(
+              1 +
+                (
+                  (ultimoDiaEje -
+                    1) *
+                  i
+                ) /
+                  cantidadIntervalos
+            )
+          );
+        }
+
+        const diasOrdenados =
+          Array.from(
+            diasEtiqueta
+          ).sort(
+            (
+              a,
+              b
+            ) =>
+              a - b
+          );
+
+        for (
+          const dia of
+          diasOrdenados
+        ) {
+          const posX =
+            posicionX(
+              dia
+            );
+
+          doc.setDrawColor(
+            225,
+            221,
+            233
+          );
+
+          doc.line(
+            posX,
+            graficoY +
+              graficoH,
+            posX,
+            graficoY +
+              graficoH +
+              1.5
+          );
+
+          doc.setFont(
+            "helvetica",
+            "normal"
+          );
+
+          doc.setFontSize(
+            6.8
+          );
+
+          doc.setTextColor(
+            125,
+            120,
+            135
+          );
+
+          doc.text(
+            `D${dia}`,
+            posX,
+            graficoY +
+              graficoH +
+              5,
+            {
+              align:
+                "center",
+            }
+          );
+        }
+
+
+        /*
+         * Linea del grafico
+         */
+        const puntosOrdenados =
+          [...puntos].sort(
+            (
+              a,
+              b
+            ) =>
+              a.dia -
+              b.dia
+          );
+
+        doc.setDrawColor(
+          111,
+          74,
+          191
+        );
+
+        doc.setLineWidth(
+          0.8
+        );
+
+        for (
+          let i = 1;
+          i <
+          puntosOrdenados.length;
+          i++
+        ) {
+          const anterior =
+            puntosOrdenados[
+              i - 1
+            ];
+
+          const actual =
+            puntosOrdenados[
+              i
+            ];
+
+          if (
+            !conectarSaltos &&
+            actual.dia -
+              anterior.dia >
+              1
+          ) {
+            continue;
+          }
+
+          doc.line(
+            posicionX(
+              anterior.dia
+            ),
+            posicionY(
+              anterior.valor
+            ),
+            posicionX(
+              actual.dia
+            ),
+            posicionY(
+              actual.valor
+            )
+          );
+        }
+
+
+        /*
+         * Puntos y valores
+         */
+        puntosOrdenados.forEach(
+          (
+            punto,
+            indice
+          ) => {
+            const posX =
+              posicionX(
+                punto.dia
+              );
+
+            const posY =
+              posicionY(
+                punto.valor
+              );
+
+            doc.setFillColor(
+              218,
+              55,
+              126
+            );
+
+            doc.circle(
+              posX,
+              posY,
+              1.5,
+              "F"
+            );
+
+            const mostrarValor =
+              puntosOrdenados.length <=
+                10 ||
+              indice === 0 ||
+              indice ===
+                puntosOrdenados.length -
+                  1;
+
+            if (
+              mostrarValor
+            ) {
+              doc.setFont(
+                "helvetica",
+                "bold"
+              );
+
+              doc.setFontSize(
+                6.8
+              );
+
+              doc.setTextColor(
+                80,
+                70,
+                95
+              );
+
+              const etiqueta =
+                sufijo === "%"
+                  ? `${Math.round(
+                      punto.valor
+                    )}%`
+                  : `${punto.valor} kg`;
+
+              doc.text(
+                etiqueta,
+                posX,
+                Math.max(
+                  graficoY + 3,
+                  posY - 3
+                ),
+                {
+                  align:
+                    "center",
+                }
+              );
+            }
+          }
+        );
+
+        y += 67;
+      }
+
+
       /*
        * CABECERA
        */
@@ -645,6 +1097,76 @@ export default function BotonInformeSeguimiento({
 
 
       /*
+       * GRAFICO DE CUMPLIMIENTO
+       */
+      tituloSeccion(
+        "CUMPLIMIENTO DIARIO"
+      );
+
+      const puntosCumplimiento =
+        informe.dias
+          .filter(
+            (
+              dia
+            ) =>
+              dia.porcentaje !==
+              null
+          )
+          .map(
+            (
+              dia
+            ) => ({
+              dia:
+                dia.diaPlan,
+
+              valor:
+                dia.porcentaje as number,
+            })
+          );
+
+      if (
+        puntosCumplimiento.length >
+        0
+      ) {
+        dibujarGraficoLinea({
+          puntos:
+            puntosCumplimiento,
+
+          minimoY:
+            0,
+
+          maximoY:
+            100,
+
+          sufijo:
+            "%",
+
+          maximoDia:
+            Math.max(
+              informe
+                .seguimiento
+                .diaActual,
+              1
+            ),
+
+          conectarSaltos:
+            false,
+        });
+      } else {
+        texto(
+          "Aun no hay datos de cumplimiento para graficar.",
+          {
+            color: [
+              120,
+              115,
+              130,
+            ],
+          }
+        );
+      }
+
+
+      /*
        * PESO
        */
       tituloSeccion(
@@ -694,6 +1216,130 @@ export default function BotonInformeSeguimiento({
             : "-"
         }`
       );
+
+
+      const puntosPeso =
+        informe.dias
+          .filter(
+            (
+              dia
+            ) =>
+              dia.peso !==
+              null
+          )
+          .map(
+            (
+              dia
+            ) => ({
+              dia:
+                dia.diaPlan,
+
+              valor:
+                dia.peso as number,
+            })
+          );
+
+      if (
+        puntosPeso.length >
+        0
+      ) {
+        const valoresPeso =
+          puntosPeso.map(
+            (
+              punto
+            ) =>
+              punto.valor
+          );
+
+        const pesoMinimoDato =
+          Math.min(
+            ...valoresPeso
+          );
+
+        const pesoMaximoDato =
+          Math.max(
+            ...valoresPeso
+          );
+
+        const diferenciaPeso =
+          pesoMaximoDato -
+          pesoMinimoDato;
+
+        const margenPeso =
+          diferenciaPeso ===
+          0
+            ? 1
+            : Math.max(
+                0.5,
+                diferenciaPeso *
+                  0.2
+              );
+
+        let minimoPeso =
+          Math.floor(
+            (
+              pesoMinimoDato -
+              margenPeso
+            ) *
+              2
+          ) / 2;
+
+        let maximoPeso =
+          Math.ceil(
+            (
+              pesoMaximoDato +
+              margenPeso
+            ) *
+              2
+          ) / 2;
+
+        if (
+          maximoPeso <=
+          minimoPeso
+        ) {
+          minimoPeso -=
+            1;
+
+          maximoPeso +=
+            1;
+        }
+
+        dibujarGraficoLinea({
+          puntos:
+            puntosPeso,
+
+          minimoY:
+            minimoPeso,
+
+          maximoY:
+            maximoPeso,
+
+          sufijo:
+            "kg",
+
+          maximoDia:
+            Math.max(
+              informe
+                .seguimiento
+                .diaActual,
+              1
+            ),
+
+          conectarSaltos:
+            true,
+        });
+      } else {
+        texto(
+          "Sin registros de peso para graficar.",
+          {
+            color: [
+              120,
+              115,
+              130,
+            ],
+          }
+        );
+      }
 
 
       /*
