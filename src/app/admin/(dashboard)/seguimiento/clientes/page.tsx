@@ -78,12 +78,21 @@ export default async function SeguimientosClientesPage() {
           </p>
         </div>
 
-        <Link
-          href="/admin/seguimiento/clientes/nuevo"
-          className="inline-flex w-fit items-center justify-center rounded-xl bg-brand-pink px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
-        >
-          + Nuevo seguimiento
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/admin/seguimiento/grupos"
+            className="inline-flex items-center justify-center rounded-xl border border-violet-200 bg-white px-4 py-2.5 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
+          >
+            Grupos
+          </Link>
+
+          <Link
+            href="/admin/seguimiento/clientes/nuevo"
+            className="inline-flex items-center justify-center rounded-xl bg-brand-pink px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
+          >
+            + Nuevo seguimiento
+          </Link>
+        </div>
 
       </div>
 
