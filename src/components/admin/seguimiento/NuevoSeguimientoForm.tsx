@@ -13,6 +13,8 @@ import {
   toast,
 } from "sonner";
 
+import SelectorFecha from "@/components/admin/seguimiento/SelectorFecha";
+
 type Plan = {
   id: string;
   nombre: string;
@@ -446,17 +448,13 @@ export default function NuevoSeguimientoForm({
               Inicio previsto
             </label>
 
-            <input
-              type="date"
+            <SelectorFecha
               value={
                 fechaInicioPrevista
               }
-              onChange={(e) =>
-                setFechaInicioPrevista(
-                  e.target.value
-                )
+              onChange={
+                setFechaInicioPrevista
               }
-              className="admin-input"
             />
 
           </div>

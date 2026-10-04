@@ -832,7 +832,7 @@ export default function ProtocoloPrincipalPreparacion({
                 </h2>
 
                 <p className="mt-1 text-sm leading-6 text-gray-500">
-                  Agrega las actividades tal como aparecen en el protocolo del cliente: hora, título, instrucciones e indicaciones.
+                  Organiza las actividades e indicaciones del cliente.
                 </p>
 
               </div>
@@ -849,7 +849,7 @@ export default function ProtocoloPrincipalPreparacion({
                   }
                   className="rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-semibold text-violet-700 hover:bg-violet-100"
                 >
-                  ⚡ Serie de horarios
+                  Serie
                 </button>
 
                 <button
@@ -859,7 +859,7 @@ export default function ProtocoloPrincipalPreparacion({
                   }
                   className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
                 >
-                  + Agregar actividad
+                  + Actividad
                 </button>
 
               </div>
@@ -868,23 +868,6 @@ export default function ProtocoloPrincipalPreparacion({
 
 
             <div className="mt-5 overflow-hidden rounded-2xl border border-gray-200">
-
-              <div className="hidden border-b border-gray-200 bg-gray-50 px-4 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 sm:grid sm:grid-cols-[130px_minmax(0,1fr)_150px] sm:gap-4">
-
-                <div>
-                  Hora
-                </div>
-
-                <div>
-                  Actividad / instrucciones
-                </div>
-
-                <div className="text-right">
-                  Estado
-                </div>
-
-              </div>
-
 
               {actividadesOrdenadas.length ===
               0 ? (
@@ -956,193 +939,135 @@ export default function ProtocoloPrincipalPreparacion({
                           )}
 
 
-                          <div className="grid gap-4 p-4 sm:grid-cols-[130px_minmax(0,1fr)_150px] sm:p-5">
+                          <div className="p-4 sm:p-5">
+
+                            <div className="flex items-start gap-3">
 
 
-                            <div>
+                              <div className="min-w-0 flex-1">
 
-                              <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400 sm:hidden">
-                                Hora
-                              </p>
+                                <div className="flex flex-wrap items-start gap-2">
 
-                              <SelectorHora
-                                value={
-                                  actividad.hora ||
-                                  ""
-                                }
-                                onChange={(hora) =>
-                                  void cambiarHora(
-                                    actividad,
-                                    hora
-                                  )
-                                }
-                              />
+                                  {actividad.hora ? (
 
-                            </div>
+                                    <span className="inline-flex shrink-0 rounded-lg bg-violet-50 px-2.5 py-1.5 font-mono text-sm font-bold text-violet-700">
+                                      {
+                                        actividad.hora
+                                      }
+                                    </span>
 
+                                  ) : (
 
-                            <div className="min-w-0">
+                                    <span className="inline-flex shrink-0 rounded-lg bg-gray-100 px-2.5 py-1.5 text-[11px] font-semibold text-gray-500">
+                                      Sin hora principal
+                                    </span>
 
-                              <div className="flex flex-wrap items-center gap-2">
-
-                                <h3
-                                  className={`text-base font-bold ${
-                                    destacada
-                                      ? "text-amber-950"
-                                      : "text-gray-900"
-                                  }`}
-                                >
-                                  {
-                                    actividad.titulo
-                                  }
-                                </h3>
+                                  )}
 
 
-                                {destacada && (
+                                  <div className="min-w-0 flex-1">
 
-                                  <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">
-                                    Comida
-                                  </span>
+                                    <div className="flex flex-wrap items-center gap-2">
 
-                                )}
+                                      <h3
+                                        className={`text-base font-bold ${
+                                          destacada
+                                            ? "text-amber-950"
+                                            : "text-gray-900"
+                                        }`}
+                                      >
+                                        {
+                                          actividad.titulo
+                                        }
+                                      </h3>
 
-                              </div>
+
+                                      {destacada && (
+
+                                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-700">
+                                          Comida
+                                        </span>
+
+                                      )}
+
+                                    </div>
+
+                                  </div>
+
+                                </div>
 
 
-                              {descripcionVisible && (
+                                {descripcionVisible && (
 
-                                <div className={`mt-2 rounded-xl px-3 py-2.5 ${
-                                  destacada
-                                    ? "bg-white/70"
-                                    : "bg-gray-50"
-                                }`}>
-
-                                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400">
-                                    Instrucciones
-                                  </p>
-
-                                  <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-gray-600">
+                                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-gray-600">
                                     {
                                       actividad.descripcion
                                     }
                                   </p>
 
-                                </div>
-
-                              )}
-
-
-                              <IndicacionesActividadPreparacion
-                                seguimientoId={
-                                  seguimientoId
-                                }
-                                actividadId={
-                                  actividad.id
-                                }
-                                indicaciones={
-                                  actividad.indicaciones
-                                }
-                              />
-
-
-                              <div className="mt-3 flex flex-wrap gap-2 sm:hidden">
-
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    abrirEditar(
-                                      actividad
-                                    )
-                                  }
-                                  className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700"
-                                >
-                                  Editar
-                                </button>
-
-                                <button
-                                  type="button"
-                                  disabled={
-                                    procesando
-                                  }
-                                  onClick={() =>
-                                    void eliminar(
-                                      actividad
-                                    )
-                                  }
-                                  className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 disabled:opacity-50"
-                                >
-                                  Eliminar
-                                </button>
-
-                              </div>
-
-                            </div>
-
-
-                            <div className="hidden sm:block">
-
-                              <div className="flex justify-end">
-
-                                {actividad.tipo ===
-                                "TAREA" ? (
-
-                                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
-                                    <span>
-                                      ✓
-                                    </span>
-                                    Check
-                                  </span>
-
-                                ) : actividad.tipo ===
-                                  "INFORMACION" ? (
-
-                                  <span className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">
-                                    Información
-                                  </span>
-
-                                ) : (
-
-                                  <span className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-700">
-                                    Control
-                                  </span>
-
                                 )}
 
                               </div>
 
 
-                              <div className="mt-4 flex flex-col items-end gap-2">
+                              <details className="relative shrink-0">
 
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    abrirEditar(
-                                      actividad
-                                    )
-                                  }
-                                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                                <summary
+                                  className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg border border-gray-200 bg-white text-xl font-bold leading-none text-gray-500 hover:bg-gray-50"
+                                  aria-label="Opciones de la actividad"
                                 >
-                                  Editar
-                                </button>
+                                  ⋮
+                                </summary>
 
-                                <button
-                                  type="button"
-                                  disabled={
-                                    procesando
-                                  }
-                                  onClick={() =>
-                                    void eliminar(
-                                      actividad
-                                    )
-                                  }
-                                  className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
-                                >
-                                  Eliminar
-                                </button>
 
-                              </div>
+                                <div className="absolute right-0 z-30 mt-2 w-44 overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl">
+
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      abrirEditar(
+                                        actividad
+                                      )
+                                    }
+                                    className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                                  >
+                                    Editar actividad
+                                  </button>
+
+
+                                  <button
+                                    type="button"
+                                    disabled={
+                                      procesando
+                                    }
+                                    onClick={() =>
+                                      void eliminar(
+                                        actividad
+                                      )
+                                    }
+                                    className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                                  >
+                                    Eliminar
+                                  </button>
+
+                                </div>
+
+                              </details>
 
                             </div>
+
+
+                            <IndicacionesActividadPreparacion
+                              seguimientoId={
+                                seguimientoId
+                              }
+                              actividadId={
+                                actividad.id
+                              }
+                              indicaciones={
+                                actividad.indicaciones
+                              }
+                            />
 
                           </div>
 
