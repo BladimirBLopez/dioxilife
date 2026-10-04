@@ -151,6 +151,16 @@ export default function PrepararSeguimientoCliente({
 
   const erroresRevision: string[] = [];
 
+  if (
+    cantidadPrincipales +
+      cantidadAdicionales ===
+    0
+  ) {
+    erroresRevision.push(
+      "Agrega al menos una actividad antes de finalizar el protocolo."
+    );
+  }
+
   for (
     const actividad of
     resumenPrincipales
@@ -217,106 +227,8 @@ export default function PrepararSeguimientoCliente({
     }
   }
 
-  const filasPrincipales =
-    resumenPrincipales.flatMap(
-      (actividad) => {
-        const descripcionTitulo =
-          actividad.descripcion
-            ?.trim() ||
-          "";
-
-        const textoIndicaciones =
-          actividad.indicaciones
-            .map(
-              (indicacion) =>
-                indicacion.texto
-                  .trim()
-            )
-            .filter(Boolean)
-            .join("\n")
-            .trim();
-
-        const instruccionTitulo =
-          descripcionTitulo &&
-          (
-            actividad.indicaciones.length ===
-              0 ||
-            descripcionTitulo !==
-              textoIndicaciones
-          )
-            ? descripcionTitulo
-            : null;
-
-        if (
-          actividad.indicaciones.length >
-          0
-        ) {
-          return actividad.indicaciones.map(
-            (
-              indicacion,
-              indice
-            ) => ({
-              id:
-                `${actividad.id}-${indicacion.id}`,
-
-              hora:
-                indicacion.hora,
-
-              titulo:
-                actividad.titulo,
-
-              texto:
-                indicacion.texto,
-
-              instruccionTitulo:
-                indice === 0
-                  ? instruccionTitulo
-                  : null,
-
-              diaInicio:
-                actividad.diaInicio,
-
-              diaFin:
-                actividad.diaFin,
-            })
-          );
-        }
-
-        return [
-          {
-            id:
-              `${actividad.id}-titulo`,
-
-            hora:
-              actividad.hora,
-
-            titulo:
-              actividad.titulo,
-
-            texto:
-              "",
-
-            instruccionTitulo,
-
-            diaInicio:
-              actividad.diaInicio,
-
-            diaFin:
-              actividad.diaFin,
-          },
-        ];
-      }
-    )
-    .filter(
-      (fila) =>
-        Boolean(
-          fila.texto.trim()
-        ) ||
-        Boolean(
-          fila.titulo.trim()
-        )
-    )
-    .sort(
+  const principalesOrdenados =
+    [...resumenPrincipales].sort(
       (a, b) => {
         if (
           a.hora &&
@@ -744,7 +656,7 @@ export default function PrepararSeguimientoCliente({
           <div className="rounded-xl bg-gray-50 p-4">
 
             <p className="text-xs text-gray-500">
-              Plan
+              Protocolo
             </p>
 
             <p className="mt-1 font-semibold text-gray-900">
@@ -974,87 +886,167 @@ export default function PrepararSeguimientoCliente({
 
                 <div className="divide-y divide-gray-100">
 
-                  {filasPrincipales.map(
-                    (fila) => (
+                  {principalesOrdenados.map(
+                    (
+                      actividad
+                    ) => {
+                      const descripcionTitulo =
+                        actividad.descripcion
+                          ?.trim() ||
+                        "";
 
-                    <div
-                      key={
-                        fila.id
-                      }
-                      className="flex gap-3 px-4 py-3"
-                    >
+                      const textoIndicaciones =
+                        actividad.indicaciones
+                          .map(
+                            (
+                              indicacion
+                            ) =>
+                              indicacion.texto
+                                .trim()
+                          )
+                          .filter(
+                            Boolean
+                          )
+                          .join(
+                            "\n"
+                          )
+                          .trim();
 
-                      <div className="w-14 shrink-0">
+                      const instruccionTitulo =
+                        descripcionTitulo &&
+                        (
+                          actividad.indicaciones.length ===
+                            0 ||
+                          descripcionTitulo !==
+                            textoIndicaciones
+                        )
+                          ? descripcionTitulo
+                          : null;
 
-                        <span className="inline-flex rounded-lg bg-violet-50 px-2 py-1 text-xs font-bold text-violet-700">
-                          {fila.hora ||
-                            "—"}
-                        </span>
+                      return (
 
-                      </div>
+                        <div
+                          key={
+                            actividad.id
+                          }
+                          className="px-4 py-4"
+                        >
+
+                          <div className="flex gap-3">
+
+                            <div className="w-14 shrink-0">
+
+                              <span className="inline-flex rounded-lg bg-violet-50 px-2 py-1 font-mono text-xs font-bold text-violet-700">
+                                {actividad.hora ||
+                                  "—"}
+                              </span>
+
+                            </div>
 
 
-                      <div className="min-w-0 flex-1">
+                            <div className="min-w-0 flex-1">
 
-                        <p className="text-sm font-semibold text-gray-900">
-                          {fila.titulo}
-                        </p>
+                              <p className="text-sm font-bold text-gray-900">
+                                {
+                                  actividad.titulo
+                                }
+                              </p>
 
-                        {fila.instruccionTitulo && (
 
-                          <div className="mt-2 rounded-lg bg-gray-50 px-3 py-2">
+                              {instruccionTitulo && (
 
-                            <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-gray-400">
-                              Instrucciones del título
-                            </p>
+                                <div className="mt-2 rounded-lg bg-gray-50 px-3 py-2">
 
-                            <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-gray-600">
-                              {fila.instruccionTitulo}
-                            </p>
+                                  <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-gray-400">
+                                    Instrucciones
+                                  </p>
+
+                                  <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-gray-600">
+                                    {
+                                      instruccionTitulo
+                                    }
+                                  </p>
+
+                                </div>
+
+                              )}
+
+
+                              <p className="mt-2 text-[11px] text-gray-400">
+                                Día{" "}
+                                {
+                                  actividad.diaInicio
+                                }
+                                {actividad.diaFin &&
+                                actividad.diaFin !==
+                                  actividad.diaInicio
+                                  ? ` al ${actividad.diaFin}`
+                                  : ""}
+                              </p>
+
+
+                              {actividad.indicaciones.length >
+                                0 && (
+
+                                <div className="mt-3 overflow-hidden rounded-xl border border-violet-100">
+
+                                  {actividad.indicaciones.map(
+                                    (
+                                      indicacion
+                                    ) => (
+
+                                    <div
+                                      key={
+                                        indicacion.id
+                                      }
+                                      className="grid gap-2 border-b border-violet-100 bg-violet-50/30 px-3 py-2.5 last:border-b-0 sm:grid-cols-[64px_minmax(0,1fr)]"
+                                    >
+
+                                      <span className="font-mono text-xs font-bold text-violet-700">
+                                        {
+                                          indicacion.hora
+                                        }
+                                      </span>
+
+                                      <p className="whitespace-pre-wrap text-xs leading-5 text-gray-600">
+                                        {
+                                          indicacion.texto
+                                        }
+                                      </p>
+
+                                    </div>
+
+                                    )
+                                  )}
+
+                                </div>
+
+                              )}
+
+                            </div>
 
                           </div>
 
-                        )}
+                        </div>
+
+                      );
+                    }
+                  )}
 
 
-                        {fila.texto && (
-
-                          <div className="mt-2">
-
-                            <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-violet-500">
-                              Indicación
-                            </p>
-
-                            <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-gray-600">
-                              {fila.texto}
-                            </p>
-
-                          </div>
-
-                        )}
-
-
-                        <p className="mt-1 text-[11px] text-gray-400">
-                          Día {fila.diaInicio}
-                          {fila.diaFin &&
-                          fila.diaFin !==
-                            fila.diaInicio
-                            ? ` al ${fila.diaFin}`
-                            : ""}
-                        </p>
-
-                      </div>
-
-                    </div>
-
-                  ))}
-
-
-                  {filasPrincipales.length ===
+                  {principalesOrdenados.length ===
                     0 && (
 
-                    <div className="px-4 py-5 text-sm text-gray-500">
-                      No hay actividades principales para mostrar.
+                    <div className="px-4 py-6 text-center">
+
+                      <p className="text-sm font-medium text-gray-700">
+                        Todavía no hay actividades principales.
+                      </p>
+
+                      <p className="mt-1 text-xs leading-5 text-gray-500">
+                        Agrega actividades en la sección anterior antes de finalizar.
+                      </p>
+
                     </div>
 
                   )}
@@ -1256,7 +1248,7 @@ export default function PrepararSeguimientoCliente({
                 <div>
 
                   <p className="text-xs text-gray-500">
-                    Plan
+                    Protocolo
                   </p>
 
                   <p className="mt-1 font-semibold text-gray-900">

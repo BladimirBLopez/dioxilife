@@ -178,11 +178,11 @@ export default async function PrepararSeguimientoPage({
         </Link>
 
         <h1 className="mt-3 text-2xl font-semibold text-gray-900">
-          Preparar seguimiento
+          Preparar protocolo
         </h1>
 
         <p className="mt-1 text-sm text-gray-500">
-          Personaliza el protocolo de{" "}
+          Prepara el protocolo personalizado de{" "}
           {seguimiento.nombreCliente ||
             "este cliente"} antes de enviar su acceso.
         </p>
