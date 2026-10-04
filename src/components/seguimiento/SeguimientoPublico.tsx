@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 
 import { toast } from "sonner";
+import MedicionesSeguimientoPublico from "@/components/seguimiento/MedicionesSeguimientoPublico";
 
 import {
   CartesianGrid,
@@ -2199,6 +2200,14 @@ export default function SeguimientoPublico({
             Tu seguimiento de hoy
           </h1>
         </section>
+
+
+        {pestana === "hoy" &&
+          seguimiento.estado === "ACTIVO" && (
+          <MedicionesSeguimientoPublico
+            token={token}
+          />
+        )}
 
 
           {pestana === "hoy" && (
