@@ -1668,7 +1668,7 @@ export default function SeguimientoPublico({
 
                   <Sparkles className="h-4 w-4" />
 
-                  Todo listo para comenzar
+                  Tu seguimiento está listo
 
                 </div>
 
@@ -1686,6 +1686,50 @@ export default function SeguimientoPublico({
                 <p className="mt-3 max-w-md text-sm leading-6 text-white/80">
                   Tu espacio personal de seguimiento ya está preparado. Desde aquí podrás consultar tu agenda y registrar tus avances día a día.
                 </p>
+
+
+                <div className="mt-6">
+
+                  <button
+                    type="button"
+                    onClick={
+                      iniciarSeguimiento
+                    }
+                    disabled={
+                      iniciando
+                    }
+                    className="group inline-flex w-full items-center justify-center gap-3 rounded-2xl border border-white/20 bg-brand-pink px-5 py-4.5 text-base font-extrabold text-white shadow-[0_16px_35px_rgba(219,63,133,0.42)] transition duration-200 hover:-translate-y-0.5 hover:brightness-105 disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-60"
+                  >
+
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15">
+
+                      {iniciando ? (
+                        <LoaderCircle className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <Play className="h-5 w-5 fill-current" />
+                      )}
+
+                    </span>
+
+
+                    <span>
+                      {iniciando
+                        ? "Preparando tu seguimiento..."
+                        : "Iniciar mi seguimiento"}
+                    </span>
+
+                  </button>
+
+
+                  {!iniciando && (
+
+                    <p className="mt-2 text-center text-xs font-semibold text-white/65">
+                      Comenzar Día 1
+                    </p>
+
+                  )}
+
+                </div>
 
               </div>
 
@@ -1825,31 +1869,6 @@ export default function SeguimientoPublico({
                 </div>
 
               </div>
-
-
-              <button
-                type="button"
-                onClick={
-                  iniciarSeguimiento
-                }
-                disabled={
-                  iniciando
-                }
-                className="mt-7 inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-brand-pink px-6 py-4 text-base font-extrabold text-white shadow-[0_12px_30px_rgba(219,63,133,0.28)] transition duration-200 hover:-translate-y-0.5 hover:opacity-95 disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-60"
-              >
-
-                {iniciando ? (
-                  <LoaderCircle className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Play className="h-5 w-5" />
-                )}
-
-
-                {iniciando
-                  ? "Preparando tu seguimiento..."
-                  : "Iniciar mi seguimiento"}
-
-              </button>
 
 
               <div className="mt-5 flex items-start gap-3 rounded-2xl border border-[#E9E4F2] bg-[#FAF9FC] p-4">
