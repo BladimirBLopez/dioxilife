@@ -356,9 +356,17 @@ export async function GET(
       select: {
         id: true,
         nombre: true,
+        objetivo: true,
+        descripcion: true,
         estado: true,
         fechaInicio: true,
         duracionDias: true,
+
+        plan: {
+          select: {
+            nombre: true,
+          },
+        },
 
         miembros: {
           where: {
@@ -1045,6 +1053,9 @@ export async function GET(
       : 0;
 
   return NextResponse.json({
+    generadoAt:
+      new Date().toISOString(),
+
     grupo: {
       id:
         grupo.id,
@@ -1052,8 +1063,20 @@ export async function GET(
       nombre:
         grupo.nombre,
 
+      objetivo:
+        grupo.objetivo,
+
+      descripcion:
+        grupo.descripcion,
+
+      protocolo:
+        grupo.plan.nombre,
+
       estado:
         grupo.estado,
+
+      fechaInicio:
+        grupo.fechaInicio,
 
       diaActual,
 

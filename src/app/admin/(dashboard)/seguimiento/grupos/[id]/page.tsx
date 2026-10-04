@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import AgregarParticipanteGrupo from "@/components/admin/seguimiento/AgregarParticipanteGrupo";
 import GestionGrupoSeguimiento from "@/components/admin/seguimiento/GestionGrupoSeguimiento";
 import ResumenGrupoSeguimiento from "@/components/admin/seguimiento/ResumenGrupoSeguimiento";
+import BotonInformeGrupoSeguimiento from "@/components/admin/seguimiento/BotonInformeGrupoSeguimiento";
 
 function fecha(
   valor: Date
@@ -138,12 +139,25 @@ export default async function GrupoSeguimientoDetallePage({
 
           </div>
 
-          <GestionGrupoSeguimiento
-            grupoId={grupo.id}
-            estado={grupo.estado}
-            duracionDias={grupo.duracionDias}
-            participantes={grupo.miembros.length}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+
+            {(grupo.estado ===
+              "ACTIVO" ||
+              grupo.estado ===
+              "FINALIZADO") && (
+              <BotonInformeGrupoSeguimiento
+                grupoId={grupo.id}
+              />
+            )}
+
+            <GestionGrupoSeguimiento
+              grupoId={grupo.id}
+              estado={grupo.estado}
+              duracionDias={grupo.duracionDias}
+              participantes={grupo.miembros.length}
+            />
+
+          </div>
 
         </div>
 
