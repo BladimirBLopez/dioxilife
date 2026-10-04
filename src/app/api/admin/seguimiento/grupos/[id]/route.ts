@@ -230,9 +230,15 @@ export async function PATCH(
             id: {
               in: ids,
             },
+
+            estado:
+              "PENDIENTE",
           },
 
           data: {
+            estado:
+              "ACTIVO",
+
             duracionDias:
               grupo.duracionDias,
 

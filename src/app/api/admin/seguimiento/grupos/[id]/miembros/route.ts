@@ -449,7 +449,10 @@ export async function POST(
                 grupo.fechaInicio,
 
               estado:
-                "PENDIENTE",
+                grupo.estado ===
+                "ACTIVO"
+                  ? "ACTIVO"
+                  : "PENDIENTE",
 
               observacionInterna:
                 `Participante del grupo: ${grupo.nombre}`,

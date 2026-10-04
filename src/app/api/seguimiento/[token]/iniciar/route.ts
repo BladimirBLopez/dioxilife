@@ -20,8 +20,9 @@ export async function POST(
     }>;
   }
 ) {
-  const { token } =
-    await params;
+  const {
+    token,
+  } = await params;
 
   if (
     !tokenSeguimientoValido(
@@ -51,8 +52,21 @@ export async function POST(
       select: {
         id: true,
         estado: true,
-        fechaInicio:
-          true,
+        fechaInicio: true,
+
+        miembroGrupo: {
+          select: {
+            estado: true,
+
+            grupo: {
+              select: {
+                estado: true,
+                fechaInicio: true,
+                duracionDias: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -100,6 +114,132 @@ export async function POST(
     );
   }
 
+  const miembroGrupo =
+    seguimiento.miembroGrupo;
+
+  if (miembroGrupo) {
+    if (
+      miembroGrupo.estado !==
+      "ACTIVO"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Ya no formas parte de este grupo.",
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
+    const grupo =
+      miembroGrupo.grupo;
+
+    if (
+      grupo.estado ===
+      "BORRADOR"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "El grupo todavía no ha sido iniciado por el administrador.",
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
+    if (
+      grupo.estado ===
+      "CANCELADO"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Este grupo fue cancelado.",
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
+    if (
+      grupo.estado ===
+      "FINALIZADO"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Este grupo ya finalizó.",
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
+    if (
+      seguimiento.estado ===
+      "ACTIVO"
+    ) {
+      return NextResponse.json({
+        estado:
+          "ACTIVO",
+
+        fechaInicio:
+          seguimiento.fechaInicio,
+      });
+    }
+
+    const ahora =
+      new Date();
+
+    const actualizado =
+      await prisma.seguimientoCliente.update({
+        where: {
+          id:
+            seguimiento.id,
+        },
+
+        data: {
+          estado:
+            "ACTIVO",
+
+          fechaInicio:
+            grupo.fechaInicio,
+
+          fechaInicioPrevista:
+            grupo.fechaInicio,
+
+          duracionDias:
+            grupo.duracionDias,
+
+          ultimoAccesoAt:
+            ahora,
+        },
+
+        select: {
+          estado:
+            true,
+
+          fechaInicio:
+            true,
+        },
+      });
+
+    return NextResponse.json(
+      actualizado
+    );
+  }
+
+  /*
+   * Seguimientos individuales:
+   * conservan el comportamiento
+   * original.
+   */
   if (
     seguimiento.estado ===
     "ACTIVO"
