@@ -7,6 +7,7 @@ import {
 
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import NuevaPlantillaModal from "@/components/admin/seguimiento/NuevaPlantillaModal";
 
 type Plan = {
   id: string;
@@ -19,6 +20,10 @@ type Origen =
   | "LLAMADA"
   | "TIENDA"
   | "OTRO";
+
+type ModoPlantilla =
+  | "EXISTENTE"
+  | "NUEVA";
 
 export default function NuevoSeguimientoForm({
   planes,
@@ -39,8 +44,27 @@ export default function NuevoSeguimientoForm({
   const [referenciaCompra, setReferenciaCompra] =
     useState("");
 
+  const [
+    planesDisponibles,
+    setPlanesDisponibles,
+  ] = useState<Plan[]>(planes);
+
+  const [
+    modoPlantilla,
+    setModoPlantilla,
+  ] = useState<ModoPlantilla>(
+    planes.length > 0
+      ? "EXISTENTE"
+      : "NUEVA"
+  );
+
   const [planId, setPlanId] =
     useState(planes[0]?.id || "");
+
+  const [
+    nuevaPlantillaAbierta,
+    setNuevaPlantillaAbierta,
+  ] = useState(false);
 
   const [
     fechaInicioPrevista,
@@ -186,8 +210,85 @@ export default function NuevoSeguimientoForm({
     }
   }
 
+  async function plantillaCreada(
+    valor?: unknown
+  ) {
+    if (
+      !valor ||
+      typeof valor !== "object"
+    ) {
+      router.refresh();
+      return;
+    }
+
+    const dato =
+      valor as {
+        id?: unknown;
+        nombre?: unknown;
+        duracionDias?: unknown;
+        estado?: unknown;
+      };
+
+    if (
+      typeof dato.id !== "string" ||
+      typeof dato.nombre !== "string" ||
+      typeof dato.duracionDias !== "number"
+    ) {
+      router.refresh();
+      return;
+    }
+
+    if (
+      typeof dato.estado === "string" &&
+      dato.estado !== "ACTIVO"
+    ) {
+      toast.info(
+        "La plantilla fue creada, pero debe estar activa para usarla en un seguimiento."
+      );
+
+      router.refresh();
+      return;
+    }
+
+    const nueva: Plan = {
+      id: dato.id,
+      nombre: dato.nombre,
+      duracionDias:
+        dato.duracionDias,
+    };
+
+    setPlanesDisponibles(
+      (actuales) => {
+        const restantes =
+          actuales.filter(
+            (plan) =>
+              plan.id !==
+              nueva.id
+          );
+
+        return [
+          ...restantes,
+          nueva,
+        ].sort(
+          (a, b) =>
+            a.nombre.localeCompare(
+              b.nombre,
+              "es"
+            )
+        );
+      }
+    );
+
+    setPlanId(
+      nueva.id
+    );
+
+    router.refresh();
+  }
+
+
   const planSeleccionado =
-    planes.find(
+    planesDisponibles.find(
       (plan) =>
         plan.id === planId
     ) || null;
@@ -297,39 +398,265 @@ export default function NuevoSeguimientoForm({
           </div>
 
 
-          <div>
+          <div className="md:col-span-2">
+
             <label className="admin-label">
-              Plantilla de seguimiento *
+              ¿Cómo quieres preparar el seguimiento?
             </label>
 
-            <select
-              value={planId}
-              onChange={(e) =>
-                setPlanId(
-                  e.target.value
-                )
-              }
-              className="admin-input"
-              required
-            >
-              {planes.length === 0 ? (
-                <option value="">
-                  No hay planes activos
-                </option>
-              ) : (
-                planes.map(
-                  (plan) => (
-                    <option
-                      key={plan.id}
-                      value={plan.id}
+            <div className="mt-2 grid gap-3 md:grid-cols-2">
+
+              <button
+                type="button"
+                disabled={
+                  planesDisponibles.length === 0
+                }
+                onClick={() => {
+                  setModoPlantilla(
+                    "EXISTENTE"
+                  );
+
+                  setPlanId(
+                    planesDisponibles[0]?.id ||
+                      ""
+                  );
+                }}
+                className={`rounded-xl border p-4 text-left transition ${
+                  modoPlantilla ===
+                  "EXISTENTE"
+                    ? "border-violet-500 bg-violet-50 ring-2 ring-violet-100"
+                    : "border-gray-200 bg-white hover:border-violet-200"
+                } ${
+                  planesDisponibles.length ===
+                  0
+                    ? "cursor-not-allowed opacity-50"
+                    : ""
+                }`}
+              >
+
+                <div className="flex items-start gap-3">
+
+                  <span
+                    className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+                      modoPlantilla ===
+                      "EXISTENTE"
+                        ? "border-violet-600"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    {modoPlantilla ===
+                      "EXISTENTE" && (
+                      <span className="h-2.5 w-2.5 rounded-full bg-violet-600" />
+                    )}
+                  </span>
+
+                  <div>
+
+                    <p className="font-semibold text-gray-900">
+                      Elegir plantilla existente
+                    </p>
+
+                    <p className="mt-1 text-xs leading-5 text-gray-500">
+                      Usa una plantilla que ya tienes preparada.
+                    </p>
+
+                  </div>
+
+                </div>
+
+              </button>
+
+
+              <button
+                type="button"
+                onClick={() => {
+                  setModoPlantilla(
+                    "NUEVA"
+                  );
+
+                  setPlanId("");
+                }}
+                className={`rounded-xl border p-4 text-left transition ${
+                  modoPlantilla ===
+                  "NUEVA"
+                    ? "border-violet-500 bg-violet-50 ring-2 ring-violet-100"
+                    : "border-gray-200 bg-white hover:border-violet-200"
+                }`}
+              >
+
+                <div className="flex items-start gap-3">
+
+                  <span
+                    className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+                      modoPlantilla ===
+                      "NUEVA"
+                        ? "border-violet-600"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    {modoPlantilla ===
+                      "NUEVA" && (
+                      <span className="h-2.5 w-2.5 rounded-full bg-violet-600" />
+                    )}
+                  </span>
+
+                  <div>
+
+                    <p className="font-semibold text-gray-900">
+                      Crear nueva plantilla
+                    </p>
+
+                    <p className="mt-1 text-xs leading-5 text-gray-500">
+                      Crea un nuevo protocolo sin perder los datos del cliente.
+                    </p>
+
+                  </div>
+
+                </div>
+
+              </button>
+
+            </div>
+
+
+            {modoPlantilla ===
+              "EXISTENTE" && (
+
+              <div className="mt-4 rounded-xl border border-violet-100 bg-[#FBFAFF] p-4">
+
+                {planesDisponibles.length >
+                0 ? (
+                  <>
+
+                    <label className="admin-label">
+                      Plantilla de seguimiento *
+                    </label>
+
+                    <select
+                      value={planId}
+                      onChange={(e) =>
+                        setPlanId(
+                          e.target.value
+                        )
+                      }
+                      className="admin-input"
+                      required
                     >
-                      {plan.nombre} ·{" "}
-                      {plan.duracionDias} días
-                    </option>
-                  )
-                )
-              )}
-            </select>
+
+                      {planesDisponibles.map(
+                        (plan) => (
+
+                          <option
+                            key={
+                              plan.id
+                            }
+                            value={
+                              plan.id
+                            }
+                          >
+                            {plan.nombre} ·{" "}
+                            {plan.duracionDias} días
+                          </option>
+
+                        )
+                      )}
+
+                    </select>
+
+
+                    {planSeleccionado && (
+
+                      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+
+                        <span className="rounded-full bg-violet-100 px-2.5 py-1 font-semibold text-violet-700">
+                          {planSeleccionado.nombre}
+                        </span>
+
+                        <span className="text-gray-500">
+                          {planSeleccionado.duracionDias} días
+                        </span>
+
+                      </div>
+
+                    )}
+
+                  </>
+                ) : (
+
+                  <p className="text-sm text-amber-700">
+                    No hay plantillas activas disponibles.
+                  </p>
+
+                )}
+
+              </div>
+
+            )}
+
+
+            {modoPlantilla ===
+              "NUEVA" && (
+
+              <div className="mt-4 rounded-xl border border-violet-200 bg-violet-50 p-4">
+
+                {planSeleccionado ? (
+                  <>
+
+                    <p className="text-xs font-bold uppercase tracking-wide text-violet-600">
+                      Nueva plantilla seleccionada
+                    </p>
+
+                    <p className="mt-2 font-semibold text-gray-900">
+                      {planSeleccionado.nombre}
+                    </p>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                      {planSeleccionado.duracionDias} días
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setNuevaPlantillaAbierta(
+                          true
+                        )
+                      }
+                      className="mt-4 rounded-lg border border-violet-200 bg-white px-4 py-2 text-sm font-semibold text-violet-700 hover:bg-violet-100"
+                    >
+                      Crear otra plantilla
+                    </button>
+
+                  </>
+                ) : (
+                  <>
+
+                    <p className="font-semibold text-gray-900">
+                      Crea la plantilla que necesita este cliente
+                    </p>
+
+                    <p className="mt-1 text-sm leading-6 text-gray-500">
+                      Los datos que ya escribiste del cliente permanecerán guardados en este formulario.
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setNuevaPlantillaAbierta(
+                          true
+                        )
+                      }
+                      className="mt-4 rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-700"
+                    >
+                      + Crear nueva plantilla
+                    </button>
+
+                  </>
+                )}
+
+              </div>
+
+            )}
+
           </div>
 
 
@@ -397,7 +724,7 @@ export default function NuevoSeguimientoForm({
             type="submit"
             disabled={
               procesando ||
-              planes.length === 0
+              !planId
             }
             className="admin-btn-primary"
           >
@@ -449,6 +776,22 @@ export default function NuevoSeguimientoForm({
         )}
 
       </aside>
+
+
+      {nuevaPlantillaAbierta && (
+
+        <NuevaPlantillaModal
+          onClose={() =>
+            setNuevaPlantillaAbierta(
+              false
+            )
+          }
+          onCreada={
+            plantillaCreada
+          }
+        />
+
+      )}
 
     </div>
   );

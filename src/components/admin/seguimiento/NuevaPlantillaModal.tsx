@@ -28,7 +28,9 @@ type ActividadPlantilla = {
 
 type Props = {
   onClose: () => void;
-  onCreada: () => void | Promise<void>;
+  onCreada: (
+    planCreado?: unknown
+  ) => void | Promise<void>;
 };
 
 const FORM_INICIAL = {
@@ -454,7 +456,16 @@ export default function NuevaPlantillaModal({
         }
       );
 
-      await onCreada();
+      const planCreado =
+        data?.plan &&
+        typeof data.plan === "object"
+          ? data.plan
+          : data;
+
+      await onCreada(
+        planCreado
+      );
+
       onClose();
     } catch {
       toast.error(
