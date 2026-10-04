@@ -71,6 +71,14 @@ export default function IndicacionesActividadPreparacion({
   ] =
     useState(false);
 
+  const [
+    indicacionAEliminar,
+    setIndicacionAEliminar,
+  ] =
+    useState<Indicacion | null>(
+      null
+    );
+
   function abrirNueva() {
     setEditando(null);
 
@@ -221,10 +229,7 @@ export default function IndicacionesActividadPreparacion({
     indicacion: Indicacion
   ) {
     if (
-      procesando ||
-      !window.confirm(
-        `¿Eliminar la indicación de las ${indicacion.hora}?`
-      )
+      procesando
     ) {
       return;
     }
@@ -267,6 +272,10 @@ export default function IndicacionesActividadPreparacion({
         {
           id: toastId,
         }
+      );
+
+      setIndicacionAEliminar(
+        null
       );
 
       router.refresh();
@@ -401,11 +410,17 @@ export default function IndicacionesActividadPreparacion({
                           disabled={
                             procesando
                           }
-                          onClick={() =>
-                            void eliminar(
+                          onClick={(event) => {
+                            event.currentTarget
+                              .closest("details")
+                              ?.removeAttribute(
+                                "open"
+                              );
+
+                            setIndicacionAEliminar(
                               indicacion
-                            )
-                          }
+                            );
+                          }}
                           className="w-full rounded-lg px-3 py-2 text-left text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
                         >
                           Eliminar indicación
@@ -521,6 +536,114 @@ export default function IndicacionesActividadPreparacion({
                   ? "Guardar cambios"
                   : "Agregar indicación"}
             </button>
+
+          </div>
+
+        </Modal>
+
+      )}
+
+
+      {indicacionAEliminar && (
+
+        <Modal
+          title="Eliminar indicación"
+          onClose={() =>
+            !procesando &&
+            setIndicacionAEliminar(
+              null
+            )
+          }
+          maxWidthClassName="max-w-md"
+        >
+
+          <div className="space-y-5">
+
+            <div className="flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50 p-4">
+
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-lg font-extrabold text-red-600">
+                !
+              </div>
+
+
+              <div className="min-w-0">
+
+                <p className="text-sm font-bold text-red-900">
+                  ¿Eliminar esta indicación?
+                </p>
+
+                <p className="mt-1 text-sm leading-6 text-red-700">
+                  Se eliminará la indicación programada para las{" "}
+                  <span className="font-extrabold">
+                    {
+                      indicacionAEliminar.hora
+                    }
+                  </span>
+                  .
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-red-600">
+                  Esta acción no se puede deshacer.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div className="rounded-xl bg-gray-50 p-3">
+
+              <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">
+                Indicación
+              </p>
+
+              <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-5 text-gray-700">
+                {
+                  indicacionAEliminar.texto
+                }
+              </p>
+
+            </div>
+
+
+            <div className="grid grid-cols-2 gap-3">
+
+              <button
+                type="button"
+                disabled={
+                  procesando
+                }
+                onClick={() =>
+                  setIndicacionAEliminar(
+                    null
+                  )
+                }
+                className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+
+
+              <button
+                type="button"
+                disabled={
+                  procesando
+                }
+                onClick={() =>
+                  void eliminar(
+                    indicacionAEliminar
+                  )
+                }
+                className="rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {
+                  procesando
+                    ? "Eliminando..."
+                    : "Eliminar"
+                }
+              </button>
+
+            </div>
 
           </div>
 
