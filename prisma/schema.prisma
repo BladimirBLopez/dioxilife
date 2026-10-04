@@ -210,8 +210,8 @@ model SeguimientoCliente {
   pedidoId String?
   pedido   Pedido? @relation(fields: [pedidoId], references: [id], onDelete: SetNull)
 
-  planId String
-  plan   PlanSeguimiento @relation(fields: [planId], references: [id], onDelete: Restrict)
+  planId String?
+  plan   PlanSeguimiento? @relation(fields: [planId], references: [id], onDelete: Restrict)
 
   nombreCliente    String?
   telefonoCliente  String?

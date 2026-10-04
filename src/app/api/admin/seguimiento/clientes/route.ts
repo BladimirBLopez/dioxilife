@@ -24,16 +24,22 @@ const ORIGENES_MANUALES = [
 ] as const;
 
 export async function POST(req: NextRequest) {
-  const admin = await obtenerAdminActual();
+  const admin =
+    await obtenerAdminActual();
 
   if (!admin) {
     return NextResponse.json(
-      { error: "No autorizado" },
-      { status: 401 }
+      {
+        error: "No autorizado",
+      },
+      {
+        status: 401,
+      }
     );
   }
 
-  const body = await req.json();
+  const body =
+    await req.json();
 
   const pedidoId =
     typeof body.pedidoId === "string" &&
@@ -42,29 +48,51 @@ export async function POST(req: NextRequest) {
       : null;
 
   const planId =
-    typeof body.planId === "string"
+    typeof body.planId === "string" &&
+    body.planId.trim()
       ? body.planId.trim()
-      : "";
+      : null;
+
+  const nombreProtocolo =
+    typeof body.nombreProtocolo === "string" &&
+    body.nombreProtocolo.trim()
+      ? body.nombreProtocolo
+          .trim()
+          .slice(0, 200)
+      : "Protocolo personalizado";
+
+  const duracionPersonalizada =
+    Number(
+      body.duracionDias
+    );
 
   const nombreManual =
     typeof body.nombreCliente === "string"
-      ? body.nombreCliente.trim().slice(0, 120)
+      ? body.nombreCliente
+          .trim()
+          .slice(0, 120)
       : "";
 
   const telefonoManual =
     typeof body.telefonoCliente === "string"
-      ? body.telefonoCliente.replace(/\D/g, "")
+      ? body.telefonoCliente.replace(
+          /\D/g,
+          ""
+        )
       : "";
-
 
   const referenciaCompra =
     typeof body.referenciaCompra === "string"
-      ? body.referenciaCompra.trim().slice(0, 500)
+      ? body.referenciaCompra
+          .trim()
+          .slice(0, 500)
       : "";
 
   const observacion =
     typeof body.observacionInterna === "string"
-      ? body.observacionInterna.trim().slice(0, 1500)
+      ? body.observacionInterna
+          .trim()
+          .slice(0, 1500)
       : "";
 
   const fechaInicioPrevista =
@@ -72,45 +100,71 @@ export async function POST(req: NextRequest) {
 
   if (
     telefonoManual &&
-    !/^[0-9]{8}$/.test(telefonoManual)
+    !/^[0-9]{8}$/.test(
+      telefonoManual
+    )
   ) {
     return NextResponse.json(
       {
         error:
           "El WhatsApp debe contener exactamente 8 números.",
       },
-      { status: 400 }
-    );
-  }
-
-  if (!planId) {
-    return NextResponse.json(
       {
-        error:
-          "El plan de seguimiento es obligatorio.",
-      },
-      { status: 400 }
+        status: 400,
+      }
     );
   }
 
   if (
     fechaInicioPrevista &&
-    !fechaValida(fechaInicioPrevista)
+    !fechaValida(
+      fechaInicioPrevista
+    )
   ) {
     return NextResponse.json(
       {
         error:
           "La fecha prevista de inicio no es válida.",
       },
-      { status: 400 }
+      {
+        status: 400,
+      }
     );
   }
 
-  let nombreCliente: string | null =
-    null;
+  /*
+   * Sin plantilla, el administrador
+   * define directamente la duración
+   * del seguimiento.
+   */
+  if (
+    !planId &&
+    (
+      !Number.isInteger(
+        duracionPersonalizada
+      ) ||
+      duracionPersonalizada < 1 ||
+      duracionPersonalizada > 365
+    )
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "La duración debe estar entre 1 y 365 días.",
+      },
+      {
+        status: 400,
+      }
+    );
+  }
 
-  let telefonoCliente: string | null =
-    null;
+  let nombreCliente:
+    | string
+    | null = null;
+
+  let telefonoCliente:
+    | string
+    | null = null;
 
   let origen:
     | "PEDIDO_WEB"
@@ -147,7 +201,9 @@ export async function POST(req: NextRequest) {
           error:
             "Pedido no encontrado.",
         },
-        { status: 404 }
+        {
+          status: 404,
+        }
       );
     }
 
@@ -160,7 +216,9 @@ export async function POST(req: NextRequest) {
           error:
             "El seguimiento desde un pedido solo puede crearse después de aprobar el pago.",
         },
-        { status: 409 }
+        {
+          status: 409,
+        }
       );
     }
 
@@ -189,19 +247,23 @@ export async function POST(req: NextRequest) {
           error:
             "Este pedido ya tiene un seguimiento vigente.",
         },
-        { status: 409 }
+        {
+          status: 409,
+        }
       );
     }
 
     nombreCliente =
       pedido.nombreCliente ||
-      (pedido.miembro
-        ? `${pedido.miembro.nombres}${
-            pedido.miembro.apellidos
-              ? ` ${pedido.miembro.apellidos}`
-              : ""
-          }`
-        : null);
+      (
+        pedido.miembro
+          ? `${pedido.miembro.nombres}${
+              pedido.miembro.apellidos
+                ? ` ${pedido.miembro.apellidos}`
+                : ""
+            }`
+          : null
+      );
 
     telefonoCliente =
       pedido.telefonoCliente ||
@@ -209,6 +271,7 @@ export async function POST(req: NextRequest) {
 
     origen =
       "PEDIDO_WEB";
+
   } else {
     if (!nombreManual) {
       return NextResponse.json(
@@ -216,7 +279,9 @@ export async function POST(req: NextRequest) {
           error:
             "El nombre del cliente es obligatorio.",
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
 
@@ -226,7 +291,9 @@ export async function POST(req: NextRequest) {
           error:
             "El WhatsApp del cliente es obligatorio.",
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
 
@@ -246,7 +313,9 @@ export async function POST(req: NextRequest) {
           error:
             "El origen del seguimiento no es válido.",
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
 
@@ -261,126 +330,159 @@ export async function POST(req: NextRequest) {
         (typeof ORIGENES_MANUALES)[number];
   }
 
+  /*
+   * La plantilla es opcional.
+   * Si existe, copiamos su estructura.
+   * Si no existe, el seguimiento nace
+   * vacío y se arma directamente en la
+   * preparación del cliente.
+   */
   const plan =
-    await prisma.planSeguimiento.findUnique({
-      where: {
-        id: planId,
-      },
-
-      select: {
-        id: true,
-        nombre: true,
-        estado: true,
-        duracionDias: true,
-
-        actividades: {
+    planId
+      ? await prisma.planSeguimiento.findUnique({
           where: {
-            activo: true,
+            id: planId,
           },
 
-          orderBy: [
-            {
-              diaInicio: "asc",
-            },
-            {
-              orden: "asc",
-            },
-            {
-              hora: {
-                sort: "asc",
-                nulls: "last",
-              },
-            },
-            {
-              createdAt: "asc",
-            },
-          ],
-
           select: {
-            tipo: true,
-            recordatorio: true,
-            seccion: true,
-            titulo: true,
-            descripcion: true,
-            momento: true,
-            hora: true,
-            diaInicio: true,
-            diaFin: true,
-            orden: true,
-            activo: true,
+            id: true,
+            nombre: true,
+            estado: true,
+            duracionDias: true,
 
-            indicaciones: {
+            actividades: {
               where: {
                 activo: true,
               },
 
               orderBy: [
                 {
-                  hora: "asc",
+                  diaInicio:
+                    "asc",
                 },
                 {
-                  orden: "asc",
+                  orden:
+                    "asc",
+                },
+                {
+                  hora: {
+                    sort:
+                      "asc",
+                    nulls:
+                      "last",
+                  },
+                },
+                {
+                  createdAt:
+                    "asc",
                 },
               ],
 
               select: {
+                tipo: true,
+                recordatorio: true,
+                seccion: true,
+                titulo: true,
+                descripcion: true,
+                momento: true,
                 hora: true,
-                texto: true,
+                diaInicio: true,
+                diaFin: true,
                 orden: true,
                 activo: true,
+
+                indicaciones: {
+                  where: {
+                    activo:
+                      true,
+                  },
+
+                  orderBy: [
+                    {
+                      hora:
+                        "asc",
+                    },
+                    {
+                      orden:
+                        "asc",
+                    },
+                  ],
+
+                  select: {
+                    hora: true,
+                    texto: true,
+                    orden: true,
+                    activo: true,
+                  },
+                },
               },
             },
           },
-        },
-      },
-    });
-
-  if (!plan) {
-    return NextResponse.json(
-      {
-        error:
-          "Plan no encontrado.",
-      },
-      { status: 404 }
-    );
-  }
+        })
+      : null;
 
   if (
-    plan.estado !== "ACTIVO"
+    planId &&
+    !plan
   ) {
     return NextResponse.json(
       {
         error:
-          "Solo se pueden asignar planes activos.",
+          "Plantilla no encontrada.",
       },
-      { status: 409 }
+      {
+        status: 404,
+      }
     );
   }
 
   if (
-    plan.actividades.length === 0
+    plan &&
+    plan.estado !==
+      "ACTIVO"
   ) {
     return NextResponse.json(
       {
         error:
-          "El plan debe tener al menos una actividad activa antes de asignarlo.",
+          "Solo se pueden asignar plantillas activas.",
       },
-      { status: 409 }
+      {
+        status: 409,
+      }
+    );
+  }
+
+  if (
+    plan &&
+    plan.actividades.length ===
+      0
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "La plantilla debe tener al menos una actividad activa.",
+      },
+      {
+        status: 409,
+      }
     );
   }
 
   const token =
-    randomBytes(32).toString("hex");
+    randomBytes(32)
+      .toString("hex");
 
   const seguimiento =
     await prisma.seguimientoCliente.create({
       data: {
         pedidoId,
-        planId,
+
+        planId:
+          plan?.id ??
+          null,
 
         nombreCliente,
         telefonoCliente,
-
         origen,
 
         referenciaCompra:
@@ -388,13 +490,17 @@ export async function POST(req: NextRequest) {
           null,
 
         nombrePlan:
-          plan.nombre,
+          plan?.nombre ??
+          nombreProtocolo,
 
         duracionDias:
-          plan.duracionDias,
+          plan?.duracionDias ??
+          duracionPersonalizada,
 
         tokenAccesoHash:
-          hashToken(token),
+          hashToken(
+            token
+          ),
 
         tokenCreadoAt:
           new Date(),
@@ -413,64 +519,71 @@ export async function POST(req: NextRequest) {
         estado:
           "PENDIENTE",
 
-        actividades: {
-          create:
-            plan.actividades.map(
-              (actividad) => ({
-                tipo:
-                  actividad.tipo,
+        actividades:
+          plan
+            ? {
+                create:
+                  plan.actividades.map(
+                    (
+                      actividad
+                    ) => ({
+                      tipo:
+                        actividad.tipo,
 
-                recordatorio:
-                  actividad.recordatorio,
+                      recordatorio:
+                        actividad.recordatorio,
 
-                seccion:
-                  actividad.seccion,
+                      seccion:
+                        actividad.seccion,
 
-                titulo:
-                  actividad.titulo,
+                      titulo:
+                        actividad.titulo,
 
-                descripcion:
-                  actividad.descripcion,
+                      descripcion:
+                        actividad.descripcion,
 
-                momento:
-                  actividad.momento,
+                      momento:
+                        actividad.momento,
 
-                hora:
-                  actividad.hora,
+                      hora:
+                        actividad.hora,
 
-                diaInicio:
-                  actividad.diaInicio,
+                      diaInicio:
+                        actividad.diaInicio,
 
-                diaFin:
-                  actividad.diaFin,
+                      diaFin:
+                        actividad.diaFin,
 
-                orden:
-                  actividad.orden,
+                      orden:
+                        actividad.orden,
 
-                activo:
-                  actividad.activo,
+                      activo:
+                        actividad.activo,
 
-                indicaciones: {
-                  create:
-                    actividad.indicaciones.map(
-                      (indicacion) => ({
-                        hora:
-                          indicacion.hora,
+                      indicaciones: {
+                        create:
+                          actividad.indicaciones.map(
+                            (
+                              indicacion
+                            ) => ({
+                              hora:
+                                indicacion.hora,
 
-                        texto:
-                          indicacion.texto,
+                              texto:
+                                indicacion.texto,
 
-                        orden:
-                          indicacion.orden,
+                              orden:
+                                indicacion.orden,
 
-                        activo:
-                          indicacion.activo,
-                      })
-                    ),
-                },
-              })
-            ),
-        },
+                              activo:
+                                indicacion.activo,
+                            })
+                          ),
+                      },
+                    })
+                  ),
+              }
+            : undefined,
       },
 
       select: {

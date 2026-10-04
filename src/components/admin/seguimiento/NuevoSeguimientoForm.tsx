@@ -5,9 +5,13 @@ import {
   useState,
 } from "react";
 
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import NuevaPlantillaModal from "@/components/admin/seguimiento/NuevaPlantillaModal";
+import {
+  useRouter,
+} from "next/navigation";
+
+import {
+  toast,
+} from "sonner";
 
 type Plan = {
   id: string;
@@ -21,63 +25,102 @@ type Origen =
   | "TIENDA"
   | "OTRO";
 
-type ModoPlantilla =
-  | "EXISTENTE"
-  | "NUEVA";
+type ModoInicio =
+  | "CERO"
+  | "PLANTILLA";
 
 export default function NuevoSeguimientoForm({
   planes,
 }: {
   planes: Plan[];
 }) {
-  const router = useRouter();
+  const router =
+    useRouter();
 
-  const [nombreCliente, setNombreCliente] =
-    useState("");
-
-  const [telefonoCliente, setTelefonoCliente] =
-    useState("");
-
-  const [origen, setOrigen] =
-    useState<Origen>("WHATSAPP");
-
-  const [referenciaCompra, setReferenciaCompra] =
+  const [
+    nombreCliente,
+    setNombreCliente,
+  ] =
     useState("");
 
   const [
-    planesDisponibles,
-    setPlanesDisponibles,
-  ] = useState<Plan[]>(planes);
+    telefonoCliente,
+    setTelefonoCliente,
+  ] =
+    useState("");
 
   const [
-    modoPlantilla,
-    setModoPlantilla,
-  ] = useState<ModoPlantilla>(
-    planes.length > 0
-      ? "EXISTENTE"
-      : "NUEVA"
-  );
-
-  const [planId, setPlanId] =
-    useState(planes[0]?.id || "");
+    origen,
+    setOrigen,
+  ] =
+    useState<Origen>(
+      "WHATSAPP"
+    );
 
   const [
-    nuevaPlantillaAbierta,
-    setNuevaPlantillaAbierta,
-  ] = useState(false);
+    referenciaCompra,
+    setReferenciaCompra,
+  ] =
+    useState("");
 
   const [
     fechaInicioPrevista,
     setFechaInicioPrevista,
-  ] = useState("");
+  ] =
+    useState("");
 
   const [
     observacionInterna,
     setObservacionInterna,
-  ] = useState("");
+  ] =
+    useState("");
 
-  const [procesando, setProcesando] =
+  const [
+    modoInicio,
+    setModoInicio,
+  ] =
+    useState<ModoInicio>(
+      "CERO"
+    );
+
+  const [
+    nombreProtocolo,
+    setNombreProtocolo,
+  ] =
+    useState(
+      "Protocolo personalizado"
+    );
+
+  const [
+    duracionDias,
+    setDuracionDias,
+  ] =
+    useState(
+      "30"
+    );
+
+  const [
+    planId,
+    setPlanId,
+  ] =
+    useState(
+      planes[0]?.id ||
+      ""
+    );
+
+  const [
+    procesando,
+    setProcesando,
+  ] =
     useState(false);
+
+  const planSeleccionado =
+    planes.find(
+      (plan) =>
+        plan.id ===
+        planId
+    ) ||
+    null;
 
   async function crear(
     e: FormEvent
@@ -88,35 +131,72 @@ export default function NuevoSeguimientoForm({
       return;
     }
 
-    if (
-      !nombreCliente.trim() ||
-      !telefonoCliente.trim() ||
-      !planId
-    ) {
-      toast.error(
-        "Completa nombre, WhatsApp y plan."
+    const telefono =
+      telefonoCliente.replace(
+        /\D/g,
+        ""
       );
 
+    if (
+      !nombreCliente.trim()
+    ) {
+      toast.error(
+        "Escribe el nombre del cliente."
+      );
       return;
     }
 
     if (
       !/^[0-9]{8}$/.test(
-        telefonoCliente
+        telefono
       )
     ) {
       toast.error(
         "El WhatsApp debe tener exactamente 8 números."
       );
-
       return;
     }
 
-    setProcesando(true);
+    if (
+      modoInicio ===
+        "PLANTILLA" &&
+      !planId
+    ) {
+      toast.error(
+        "Selecciona una plantilla."
+      );
+      return;
+    }
+
+    const duracion =
+      Number(
+        duracionDias
+      );
+
+    if (
+      modoInicio ===
+        "CERO" &&
+      (
+        !Number.isInteger(
+          duracion
+        ) ||
+        duracion < 1 ||
+        duracion > 365
+      )
+    ) {
+      toast.error(
+        "La duración debe estar entre 1 y 365 días."
+      );
+      return;
+    }
+
+    setProcesando(
+      true
+    );
 
     const toastId =
       toast.loading(
-        "Registrando cliente..."
+        "Creando seguimiento..."
       );
 
     try {
@@ -124,7 +204,8 @@ export default function NuevoSeguimientoForm({
         await fetch(
           "/api/admin/seguimiento/clientes",
           {
-            method: "POST",
+            method:
+              "POST",
 
             headers: {
               "Content-Type":
@@ -133,16 +214,14 @@ export default function NuevoSeguimientoForm({
 
             body:
               JSON.stringify({
-                pedidoId: null,
+                pedidoId:
+                  null,
 
                 nombreCliente:
                   nombreCliente.trim(),
 
                 telefonoCliente:
-                  telefonoCliente.replace(
-                    /\D/g,
-                    ""
-                  ),
+                  telefono,
 
                 origen,
 
@@ -150,7 +229,25 @@ export default function NuevoSeguimientoForm({
                   referenciaCompra.trim() ||
                   null,
 
-                planId,
+                planId:
+                  modoInicio ===
+                  "PLANTILLA"
+                    ? planId
+                    : null,
+
+                nombreProtocolo:
+                  modoInicio ===
+                  "CERO"
+                    ? nombreProtocolo
+                        .trim() ||
+                      "Protocolo personalizado"
+                    : null,
+
+                duracionDias:
+                  modoInicio ===
+                  "CERO"
+                    ? duracion
+                    : null,
 
                 fechaInicioPrevista:
                   fechaInicioPrevista ||
@@ -166,17 +263,21 @@ export default function NuevoSeguimientoForm({
       const data =
         await res
           .json()
-          .catch(() => null);
+          .catch(
+            () =>
+              null
+          );
 
       if (!res.ok) {
         toast.error(
-          "No se pudo registrar el seguimiento",
+          "No se pudo crear el seguimiento",
           {
-            id: toastId,
+            id:
+              toastId,
 
             description:
               data?.error ||
-              "Inténtalo nuevamente.",
+              "Revisa los datos e inténtalo nuevamente.",
           }
         );
 
@@ -184,12 +285,16 @@ export default function NuevoSeguimientoForm({
       }
 
       toast.success(
-        "Cliente registrado",
+        modoInicio ===
+          "CERO"
+          ? "Seguimiento creado"
+          : "Plantilla aplicada",
         {
-          id: toastId,
+          id:
+            toastId,
 
           description:
-            "Ahora prepara su protocolo antes de enviar el enlace.",
+            "Ahora prepara el protocolo del cliente.",
         }
       );
 
@@ -201,118 +306,40 @@ export default function NuevoSeguimientoForm({
       toast.error(
         "No se pudo conectar con el servidor",
         {
-          id: toastId,
+          id:
+            toastId,
         }
       );
 
     } finally {
-      setProcesando(false);
-    }
-  }
-
-  async function plantillaCreada(
-    valor?: unknown
-  ) {
-    if (
-      !valor ||
-      typeof valor !== "object"
-    ) {
-      router.refresh();
-      return;
-    }
-
-    const dato =
-      valor as {
-        id?: unknown;
-        nombre?: unknown;
-        duracionDias?: unknown;
-        estado?: unknown;
-      };
-
-    if (
-      typeof dato.id !== "string" ||
-      typeof dato.nombre !== "string" ||
-      typeof dato.duracionDias !== "number"
-    ) {
-      router.refresh();
-      return;
-    }
-
-    if (
-      typeof dato.estado === "string" &&
-      dato.estado !== "ACTIVO"
-    ) {
-      toast.info(
-        "La plantilla fue creada, pero debe estar activa para usarla en un seguimiento."
+      setProcesando(
+        false
       );
-
-      router.refresh();
-      return;
     }
-
-    const nueva: Plan = {
-      id: dato.id,
-      nombre: dato.nombre,
-      duracionDias:
-        dato.duracionDias,
-    };
-
-    setPlanesDisponibles(
-      (actuales) => {
-        const restantes =
-          actuales.filter(
-            (plan) =>
-              plan.id !==
-              nueva.id
-          );
-
-        return [
-          ...restantes,
-          nueva,
-        ].sort(
-          (a, b) =>
-            a.nombre.localeCompare(
-              b.nombre,
-              "es"
-            )
-        );
-      }
-    );
-
-    setPlanId(
-      nueva.id
-    );
-
-    router.refresh();
   }
-
-
-  const planSeleccionado =
-    planesDisponibles.find(
-      (plan) =>
-        plan.id === planId
-    ) || null;
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
+    <form
+      onSubmit={
+        crear
+      }
+      className="mx-auto max-w-4xl space-y-5"
+    >
 
-      <form
-        onSubmit={crear}
-        className="rounded-xl bg-white p-6 shadow"
-      >
+      <section className="rounded-2xl bg-white p-5 shadow sm:p-6">
 
         <div className="mb-5">
 
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-600">
-            Paso 1 de 2
+            Paso 1
           </p>
 
-          <h2 className="mt-1 text-lg font-semibold text-gray-900">
-            Datos del cliente
+          <h2 className="mt-1 text-xl font-semibold text-gray-900">
+            Cliente
           </h2>
 
-          <p className="mt-1 text-sm text-gray-500">
-            Primero registra al cliente y selecciona la plantilla que servirá de base.
+          <p className="mt-1 text-sm leading-6 text-gray-500">
+            Registra los datos básicos. El protocolo se prepara en el siguiente paso.
           </p>
 
         </div>
@@ -321,12 +348,15 @@ export default function NuevoSeguimientoForm({
         <div className="grid gap-5 md:grid-cols-2">
 
           <div>
+
             <label className="admin-label">
               Nombre del cliente *
             </label>
 
             <input
-              value={nombreCliente}
+              value={
+                nombreCliente
+              }
               onChange={(e) =>
                 setNombreCliente(
                   e.target.value
@@ -337,10 +367,12 @@ export default function NuevoSeguimientoForm({
               maxLength={120}
               required
             />
+
           </div>
 
 
           <div>
+
             <label className="admin-label">
               WhatsApp *
             </label>
@@ -348,7 +380,9 @@ export default function NuevoSeguimientoForm({
             <input
               type="tel"
               inputMode="numeric"
-              value={telefonoCliente}
+              value={
+                telefonoCliente
+              }
               onChange={(e) =>
                 setTelefonoCliente(
                   e.target.value.replace(
@@ -362,23 +396,29 @@ export default function NuevoSeguimientoForm({
               maxLength={8}
               required
             />
+
           </div>
 
 
           <div>
+
             <label className="admin-label">
-              Origen *
+              Origen
             </label>
 
             <select
-              value={origen}
+              value={
+                origen
+              }
               onChange={(e) =>
                 setOrigen(
-                  e.target.value as Origen
+                  e.target
+                    .value as Origen
                 )
               }
               className="admin-input"
             >
+
               <option value="WHATSAPP">
                 WhatsApp
               </option>
@@ -394,279 +434,311 @@ export default function NuevoSeguimientoForm({
               <option value="OTRO">
                 Otro
               </option>
+
             </select>
+
           </div>
 
 
-          <div className="md:col-span-2">
+          <div>
 
             <label className="admin-label">
-              ¿Cómo quieres preparar el seguimiento?
+              Inicio previsto
             </label>
 
-            <div className="mt-2 grid gap-3 md:grid-cols-2">
+            <input
+              type="date"
+              value={
+                fechaInicioPrevista
+              }
+              onChange={(e) =>
+                setFechaInicioPrevista(
+                  e.target.value
+                )
+              }
+              className="admin-input"
+            />
 
-              <button
-                type="button"
-                disabled={
-                  planesDisponibles.length === 0
-                }
-                onClick={() => {
-                  setModoPlantilla(
-                    "EXISTENTE"
-                  );
+          </div>
 
-                  setPlanId(
-                    planesDisponibles[0]?.id ||
-                      ""
-                  );
-                }}
-                className={`rounded-xl border p-4 text-left transition ${
-                  modoPlantilla ===
-                  "EXISTENTE"
-                    ? "border-violet-500 bg-violet-50 ring-2 ring-violet-100"
-                    : "border-gray-200 bg-white hover:border-violet-200"
-                } ${
-                  planesDisponibles.length ===
-                  0
-                    ? "cursor-not-allowed opacity-50"
-                    : ""
+        </div>
+
+      </section>
+
+
+      <section className="rounded-2xl bg-white p-5 shadow sm:p-6">
+
+        <div>
+
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-600">
+            Paso 2
+          </p>
+
+          <h2 className="mt-1 text-xl font-semibold text-gray-900">
+            ¿Cómo quieres comenzar?
+          </h2>
+
+          <p className="mt-1 text-sm leading-6 text-gray-500">
+            Puedes preparar el protocolo directamente o ahorrar tiempo usando una plantilla existente.
+          </p>
+
+        </div>
+
+
+        <div className="mt-5 grid gap-3 md:grid-cols-2">
+
+          <button
+            type="button"
+            onClick={() =>
+              setModoInicio(
+                "CERO"
+              )
+            }
+            className={`rounded-2xl border p-5 text-left transition ${
+              modoInicio ===
+              "CERO"
+                ? "border-violet-500 bg-violet-50 ring-2 ring-violet-100"
+                : "border-gray-200 bg-white hover:border-violet-200"
+            }`}
+          >
+
+            <div className="flex items-start gap-3">
+
+              <div
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${
+                  modoInicio ===
+                  "CERO"
+                    ? "bg-violet-600 text-white"
+                    : "bg-gray-100"
                 }`}
               >
+                +
+              </div>
 
-                <div className="flex items-start gap-3">
+              <div>
 
-                  <span
-                    className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
-                      modoPlantilla ===
-                      "EXISTENTE"
-                        ? "border-violet-600"
-                        : "border-gray-300"
-                    }`}
-                  >
-                    {modoPlantilla ===
-                      "EXISTENTE" && (
-                      <span className="h-2.5 w-2.5 rounded-full bg-violet-600" />
-                    )}
+                <p className="font-semibold text-gray-900">
+                  Crear protocolo desde cero
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-gray-500">
+                  Recomendado para protocolos personalizados.
+                </p>
+
+              </div>
+
+            </div>
+
+          </button>
+
+
+          <button
+            type="button"
+            disabled={
+              planes.length ===
+              0
+            }
+            onClick={() =>
+              setModoInicio(
+                "PLANTILLA"
+              )
+            }
+            className={`rounded-2xl border p-5 text-left transition ${
+              modoInicio ===
+              "PLANTILLA"
+                ? "border-violet-500 bg-violet-50 ring-2 ring-violet-100"
+                : "border-gray-200 bg-white hover:border-violet-200"
+            } ${
+              planes.length ===
+              0
+                ? "cursor-not-allowed opacity-50"
+                : ""
+            }`}
+          >
+
+            <div className="flex items-start gap-3">
+
+              <div
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${
+                  modoInicio ===
+                  "PLANTILLA"
+                    ? "bg-violet-600 text-white"
+                    : "bg-gray-100"
+                }`}
+              >
+                ≡
+              </div>
+
+              <div>
+
+                <p className="font-semibold text-gray-900">
+                  Usar una plantilla
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-gray-500">
+                  Carga un protocolo previamente guardado.
+                </p>
+
+              </div>
+
+            </div>
+
+          </button>
+
+        </div>
+
+
+        {modoInicio ===
+          "CERO" && (
+
+          <div className="mt-5 rounded-2xl border border-violet-100 bg-[#FBFAFF] p-4">
+
+            <div className="grid gap-4 md:grid-cols-[1fr_180px]">
+
+              <div>
+
+                <label className="admin-label">
+                  Nombre del protocolo
+                </label>
+
+                <input
+                  value={
+                    nombreProtocolo
+                  }
+                  onChange={(e) =>
+                    setNombreProtocolo(
+                      e.target.value
+                    )
+                  }
+                  className="admin-input"
+                  maxLength={200}
+                  placeholder="Protocolo personalizado"
+                />
+
+              </div>
+
+
+              <div>
+
+                <label className="admin-label">
+                  Duración *
+                </label>
+
+                <div className="relative">
+
+                  <input
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={
+                      duracionDias
+                    }
+                    onChange={(e) =>
+                      setDuracionDias(
+                        e.target.value
+                      )
+                    }
+                    className="admin-input pr-14"
+                  />
+
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                    días
                   </span>
-
-                  <div>
-
-                    <p className="font-semibold text-gray-900">
-                      Elegir plantilla existente
-                    </p>
-
-                    <p className="mt-1 text-xs leading-5 text-gray-500">
-                      Usa una plantilla que ya tienes preparada.
-                    </p>
-
-                  </div>
 
                 </div>
 
-              </button>
-
-
-              <button
-                type="button"
-                onClick={() => {
-                  setModoPlantilla(
-                    "NUEVA"
-                  );
-
-                  setPlanId("");
-                }}
-                className={`rounded-xl border p-4 text-left transition ${
-                  modoPlantilla ===
-                  "NUEVA"
-                    ? "border-violet-500 bg-violet-50 ring-2 ring-violet-100"
-                    : "border-gray-200 bg-white hover:border-violet-200"
-                }`}
-              >
-
-                <div className="flex items-start gap-3">
-
-                  <span
-                    className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
-                      modoPlantilla ===
-                      "NUEVA"
-                        ? "border-violet-600"
-                        : "border-gray-300"
-                    }`}
-                  >
-                    {modoPlantilla ===
-                      "NUEVA" && (
-                      <span className="h-2.5 w-2.5 rounded-full bg-violet-600" />
-                    )}
-                  </span>
-
-                  <div>
-
-                    <p className="font-semibold text-gray-900">
-                      Crear nueva plantilla
-                    </p>
-
-                    <p className="mt-1 text-xs leading-5 text-gray-500">
-                      Crea un nuevo protocolo sin perder los datos del cliente.
-                    </p>
-
-                  </div>
-
-                </div>
-
-              </button>
+              </div>
 
             </div>
 
 
-            {modoPlantilla ===
-              "EXISTENTE" && (
+            <p className="mt-3 text-xs leading-5 text-violet-700">
+              En el siguiente paso agregarás las actividades, horarios, instrucciones y protocolos adicionales.
+            </p>
 
-              <div className="mt-4 rounded-xl border border-violet-100 bg-[#FBFAFF] p-4">
+          </div>
 
-                {planesDisponibles.length >
-                0 ? (
-                  <>
-
-                    <label className="admin-label">
-                      Plantilla de seguimiento *
-                    </label>
-
-                    <select
-                      value={planId}
-                      onChange={(e) =>
-                        setPlanId(
-                          e.target.value
-                        )
-                      }
-                      className="admin-input"
-                      required
-                    >
-
-                      {planesDisponibles.map(
-                        (plan) => (
-
-                          <option
-                            key={
-                              plan.id
-                            }
-                            value={
-                              plan.id
-                            }
-                          >
-                            {plan.nombre} ·{" "}
-                            {plan.duracionDias} días
-                          </option>
-
-                        )
-                      )}
-
-                    </select>
+        )}
 
 
-                    {planSeleccionado && (
+        {modoInicio ===
+          "PLANTILLA" && (
 
-                      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+          <div className="mt-5 rounded-2xl border border-gray-200 bg-gray-50 p-4">
 
-                        <span className="rounded-full bg-violet-100 px-2.5 py-1 font-semibold text-violet-700">
-                          {planSeleccionado.nombre}
-                        </span>
+            <label className="admin-label">
+              Plantilla
+            </label>
 
-                        <span className="text-gray-500">
-                          {planSeleccionado.duracionDias} días
-                        </span>
+            <select
+              value={
+                planId
+              }
+              onChange={(e) =>
+                setPlanId(
+                  e.target.value
+                )
+              }
+              className="admin-input"
+            >
 
-                      </div>
+              {planes.map(
+                (plan) => (
 
-                    )}
+                <option
+                  key={
+                    plan.id
+                  }
+                  value={
+                    plan.id
+                  }
+                >
+                  {plan.nombre} · {plan.duracionDias} días
+                </option>
 
-                  </>
-                ) : (
+                )
+              )}
 
-                  <p className="text-sm text-amber-700">
-                    No hay plantillas activas disponibles.
-                  </p>
-
-                )}
-
-              </div>
-
-            )}
+            </select>
 
 
-            {modoPlantilla ===
-              "NUEVA" && (
+            {planSeleccionado && (
 
-              <div className="mt-4 rounded-xl border border-violet-200 bg-violet-50 p-4">
-
-                {planSeleccionado ? (
-                  <>
-
-                    <p className="text-xs font-bold uppercase tracking-wide text-violet-600">
-                      Nueva plantilla seleccionada
-                    </p>
-
-                    <p className="mt-2 font-semibold text-gray-900">
-                      {planSeleccionado.nombre}
-                    </p>
-
-                    <p className="mt-1 text-sm text-gray-500">
-                      {planSeleccionado.duracionDias} días
-                    </p>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setNuevaPlantillaAbierta(
-                          true
-                        )
-                      }
-                      className="mt-4 rounded-lg border border-violet-200 bg-white px-4 py-2 text-sm font-semibold text-violet-700 hover:bg-violet-100"
-                    >
-                      Crear otra plantilla
-                    </button>
-
-                  </>
-                ) : (
-                  <>
-
-                    <p className="font-semibold text-gray-900">
-                      Crea la plantilla que necesita este cliente
-                    </p>
-
-                    <p className="mt-1 text-sm leading-6 text-gray-500">
-                      Los datos que ya escribiste del cliente permanecerán guardados en este formulario.
-                    </p>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setNuevaPlantillaAbierta(
-                          true
-                        )
-                      }
-                      className="mt-4 rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-700"
-                    >
-                      + Crear nueva plantilla
-                    </button>
-
-                  </>
-                )}
-
-              </div>
+              <p className="mt-2 text-xs text-gray-500">
+                Se copiará la plantilla y luego podrás personalizarla para este cliente.
+              </p>
 
             )}
 
           </div>
 
+        )}
 
-          <div className="md:col-span-2">
+      </section>
+
+
+      <details className="rounded-2xl bg-white shadow">
+
+        <summary className="cursor-pointer list-none p-5 text-sm font-semibold text-gray-700">
+          Opciones adicionales
+          <span className="ml-2 text-xs font-normal text-gray-400">
+            compra, referencia y nota interna
+          </span>
+        </summary>
+
+
+        <div className="space-y-4 border-t border-gray-100 p-5">
+
+          <div>
+
             <label className="admin-label">
               Producto o referencia de compra
             </label>
 
             <input
-              value={referenciaCompra}
+              value={
+                referenciaCompra
+              }
               onChange={(e) =>
                 setReferenciaCompra(
                   e.target.value
@@ -676,123 +748,58 @@ export default function NuevoSeguimientoForm({
               placeholder="Ej. Kit, compra por WhatsApp..."
               maxLength={500}
             />
+
           </div>
 
 
           <div>
-            <label className="admin-label">
-              Inicio previsto
-            </label>
 
-            <input
-              type="date"
-              value={fechaInicioPrevista}
-              onChange={(e) =>
-                setFechaInicioPrevista(
-                  e.target.value
-                )
-              }
-              className="admin-input"
-            />
-          </div>
-
-
-          <div className="md:col-span-2">
             <label className="admin-label">
               Nota interna
             </label>
 
             <textarea
-              value={observacionInterna}
+              value={
+                observacionInterna
+              }
               onChange={(e) =>
                 setObservacionInterna(
                   e.target.value
                 )
               }
-              className="admin-input min-h-28 resize-y"
+              className="admin-input min-h-24 resize-y"
               placeholder="Información interna..."
               maxLength={1500}
             />
+
           </div>
 
         </div>
 
+      </details>
 
-        <div className="mt-6">
 
-          <button
-            type="submit"
-            disabled={
-              procesando ||
+      <div className="sticky bottom-3 rounded-2xl border border-gray-200 bg-white/95 p-3 shadow-lg backdrop-blur">
+
+        <button
+          type="submit"
+          disabled={
+            procesando ||
+            (
+              modoInicio ===
+                "PLANTILLA" &&
               !planId
-            }
-            className="admin-btn-primary"
-          >
-            {procesando
-              ? "Registrando..."
-              : "Continuar y preparar →"}
-          </button>
-
-        </div>
-
-      </form>
-
-
-      <aside className="space-y-4">
-
-        <div className="rounded-xl border border-violet-100 bg-[#F8F6FF] p-5">
-
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-600">
-            Flujo recomendado
-          </p>
-
-          <h2 className="mt-2 font-semibold text-gray-900">
-            Primero registra, luego prepara
-          </h2>
-
-          <p className="mt-2 text-sm leading-6 text-gray-600">
-            El enlace del cliente se mostrará después de revisar su protocolo, peso inicial y protocolos adicionales.
-          </p>
-
-        </div>
-
-
-        {planSeleccionado && (
-          <div className="rounded-xl border border-gray-200 bg-white p-5">
-
-            <p className="text-xs font-medium text-gray-500">
-              Plantilla seleccionada
-            </p>
-
-            <p className="mt-1 font-semibold text-gray-900">
-              {planSeleccionado.nombre}
-            </p>
-
-            <p className="mt-1 text-sm text-gray-500">
-              {planSeleccionado.duracionDias} días
-            </p>
-
-          </div>
-        )}
-
-      </aside>
-
-
-      {nuevaPlantillaAbierta && (
-
-        <NuevaPlantillaModal
-          onClose={() =>
-            setNuevaPlantillaAbierta(
-              false
             )
           }
-          onCreada={
-            plantillaCreada
-          }
-        />
+          className="admin-btn-primary w-full py-3 disabled:opacity-50"
+        >
+          {procesando
+            ? "Creando seguimiento..."
+            : "Crear y preparar protocolo →"}
+        </button>
 
-      )}
+      </div>
 
-    </div>
+    </form>
   );
 }

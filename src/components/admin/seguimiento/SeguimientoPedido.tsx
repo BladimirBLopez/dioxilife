@@ -36,7 +36,7 @@ type Seguimiento = {
     id: string;
     nombre: string;
     duracionDias: number;
-  };
+  } | null;
 };
 
 type Props = {
@@ -221,7 +221,7 @@ export default function SeguimientoPedido({
 
               <div>
                 <p className="text-xs font-medium text-gray-500">
-                  Plantilla asignada
+                  Protocolo
                 </p>
 
                 <p className="mt-1 font-semibold text-gray-900">
