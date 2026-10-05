@@ -7,6 +7,8 @@ import {
 } from "react";
 import {
   useParams,
+  useRouter,
+  useSearchParams,
 } from "next/navigation";
 import { toast } from "sonner";
 import SelectorHora from "@/components/admin/seguimiento/SelectorHora";
@@ -366,6 +368,25 @@ export default function PlanActividadesPage() {
   const id =
     params.id;
 
+  const router =
+    useRouter();
+
+  const searchParams =
+    useSearchParams();
+
+  const grupoId =
+    searchParams.get(
+      "grupoId"
+    );
+
+  const flujoGrupo =
+    searchParams.get(
+      "flujo"
+    ) === "grupo" &&
+    Boolean(
+      grupoId
+    );
+
   const [
     plan,
     setPlan,
@@ -629,6 +650,16 @@ export default function PlanActividadesPage() {
         )
       : [];
 
+  function continuarFlujoGrupo() {
+    if (!grupoId) {
+      return;
+    }
+
+    router.push(
+      `/admin/seguimiento/grupos/${grupoId}?paso=participantes`
+    );
+  }
+
   async function guardar() {
     if (
       !plan ||
@@ -806,6 +837,13 @@ export default function PlanActividadesPage() {
       );
 
       await cargar();
+
+      if (
+        flujoGrupo &&
+        grupoId
+      ) {
+        continuarFlujoGrupo();
+      }
     } catch {
       toast.error(
         "No se pudo conectar con el servidor.",
@@ -851,12 +889,38 @@ export default function PlanActividadesPage() {
 
       <div className="mb-5">
         <Link
-          href="/admin/seguimiento/planes"
+          href={
+            flujoGrupo &&
+            grupoId
+              ? `/admin/seguimiento/grupos/${grupoId}`
+              : "/admin/seguimiento/planes"
+          }
           className="text-sm font-medium text-brand-blue hover:underline"
         >
-          ← Volver a plantillas
+          {flujoGrupo
+            ? "← Volver al grupo"
+            : "← Volver a plantillas"}
         </Link>
       </div>
+
+
+      {flujoGrupo && (
+        <div className="mb-5 rounded-2xl border border-violet-200 bg-violet-50 p-4">
+
+          <p className="text-xs font-bold uppercase tracking-wide text-violet-600">
+            Paso 2 de 4 · Protocolo
+          </p>
+
+          <p className="mt-1 font-semibold text-violet-950">
+            Configura el protocolo propio de este grupo
+          </p>
+
+          <p className="mt-1 text-sm leading-6 text-violet-700">
+            Puedes modificar horarios, instrucciones e indicaciones. La plantilla original no será modificada.
+          </p>
+
+        </div>
+      )}
 
 
       <div className="admin-card p-5">
@@ -941,16 +1005,25 @@ export default function PlanActividadesPage() {
           <button
             type="button"
             onClick={
-              guardar
+              pendienteGuardar
+                ? guardar
+                : continuarFlujoGrupo
             }
             disabled={
               guardando ||
-              !pendienteGuardar
+              (
+                !flujoGrupo &&
+                !pendienteGuardar
+              )
             }
             className="admin-btn-primary hidden disabled:opacity-50 sm:block"
           >
             {guardando
               ? "Guardando..."
+              : flujoGrupo
+              ? pendienteGuardar
+                ? "Guardar y continuar"
+                : "Continuar"
               : "Guardar cambios"}
           </button>
 
@@ -1340,16 +1413,25 @@ export default function PlanActividadesPage() {
         <button
           type="button"
           onClick={
-            guardar
+            pendienteGuardar
+              ? guardar
+              : continuarFlujoGrupo
           }
           disabled={
             guardando ||
-            !pendienteGuardar
+            (
+              !flujoGrupo &&
+              !pendienteGuardar
+            )
           }
           className="admin-btn-primary w-full disabled:opacity-50"
         >
           {guardando
             ? "Guardando..."
+            : flujoGrupo
+            ? pendienteGuardar
+              ? "Guardar y continuar"
+              : "Continuar"
             : pendienteGuardar
             ? "Guardar cambios"
             : "Todo guardado"}

@@ -107,7 +107,11 @@ export async function GET() {
 
     prisma.planSeguimiento.findMany({
       where: {
-        estado: "ACTIVO",
+        estado:
+          "ACTIVO",
+
+        esCopiaGrupo:
+          false,
       },
 
       orderBy: {
@@ -286,23 +290,69 @@ export async function POST(
   const plan =
     await prisma.planSeguimiento.findUnique({
       where: {
-        id: planId,
+        id:
+          planId,
       },
 
       select: {
         id: true,
         nombre: true,
+        descripcion: true,
         estado: true,
+        esCopiaGrupo: true,
 
         actividades: {
           where: {
-            activo: true,
+            activo:
+              true,
           },
 
-          take: 1,
+          orderBy: [
+            {
+              diaInicio:
+                "asc",
+            },
+            {
+              orden:
+                "asc",
+            },
+          ],
 
           select: {
-            id: true,
+            tipo: true,
+            recordatorio: true,
+            seccion: true,
+            titulo: true,
+            descripcion: true,
+            momento: true,
+            hora: true,
+            diaInicio: true,
+            diaFin: true,
+            orden: true,
+
+            indicaciones: {
+              where: {
+                activo:
+                  true,
+              },
+
+              orderBy: [
+                {
+                  hora:
+                    "asc",
+                },
+                {
+                  orden:
+                    "asc",
+                },
+              ],
+
+              select: {
+                hora: true,
+                texto: true,
+                orden: true,
+              },
+            },
           },
         },
       },
@@ -316,6 +366,20 @@ export async function POST(
       },
       {
         status: 404,
+      }
+    );
+  }
+
+  if (
+    plan.esCopiaGrupo
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Selecciona una plantilla original.",
+      },
+      {
+        status: 409,
       }
     );
   }
@@ -353,63 +417,184 @@ export async function POST(
     randomBytes(32)
       .toString("hex");
 
-  const grupo =
-    await prisma.grupoSeguimiento.create({
-      data: {
-        nombre,
-        objetivo,
-        descripcion,
+  const resultado =
+    await prisma.$transaction(
+      async (tx) => {
+        const planGrupo =
+          await tx.planSeguimiento.create({
+            data: {
+              nombre:
+                plan.nombre,
 
-        planId:
-          plan.id,
+              descripcion:
+                plan.descripcion,
 
-        fechaInicio:
-          new Date(
-            `${fechaInicio}T00:00:00.000Z`
-          ),
+              duracionDias,
 
-        duracionDias,
+              estado:
+                "BORRADOR",
 
-        estado:
-          "BORRADOR",
+              esCopiaGrupo:
+                true,
 
-        tokenRankingHash:
-          hashToken(
-            tokenRanking
-          ),
+              actividades: {
+                create:
+                  plan.actividades
+                    .filter(
+                      (actividad) =>
+                        actividad.diaInicio <=
+                        duracionDias
+                    )
+                    .map(
+                      (actividad) => ({
+                        tipo:
+                          actividad.tipo,
 
-        tokenCreadoAt:
-          new Date(),
-      },
+                        recordatorio:
+                          actividad.recordatorio,
 
-      select: {
-        id: true,
-        nombre: true,
-        objetivo: true,
-        descripcion: true,
-        fechaInicio: true,
-        duracionDias: true,
-        estado: true,
+                        seccion:
+                          actividad.seccion,
 
-        plan: {
-          select: {
-            id: true,
-            nombre: true,
-            duracionDias: true,
-          },
-        },
+                        titulo:
+                          actividad.titulo,
 
-        _count: {
-          select: {
-            miembros: true,
-          },
-        },
-      },
-    });
+                        descripcion:
+                          actividad.descripcion,
+
+                        momento:
+                          actividad.momento,
+
+                        hora:
+                          actividad.hora,
+
+                        diaInicio:
+                          actividad.diaInicio,
+
+                        diaFin:
+                          actividad.diaFin ===
+                            null
+                            ? null
+                            : Math.min(
+                                actividad.diaFin,
+                                duracionDias
+                              ),
+
+                        orden:
+                          actividad.orden,
+
+                        activo:
+                          true,
+
+                        indicaciones: {
+                          create:
+                            actividad.indicaciones.map(
+                              (
+                                indicacion
+                              ) => ({
+                                hora:
+                                  indicacion.hora,
+
+                                texto:
+                                  indicacion.texto,
+
+                                orden:
+                                  indicacion.orden,
+
+                                activo:
+                                  true,
+                              })
+                            ),
+                        },
+                      })
+                    ),
+              },
+            },
+
+            select: {
+              id: true,
+              nombre: true,
+            },
+          });
+
+        const grupo =
+          await tx.grupoSeguimiento.create({
+            data: {
+              nombre,
+              objetivo,
+              descripcion,
+
+              planId:
+                planGrupo.id,
+
+              fechaInicio:
+                new Date(
+                  `${fechaInicio}T00:00:00.000Z`
+                ),
+
+              duracionDias,
+
+              estado:
+                "BORRADOR",
+
+              tokenRankingHash:
+                hashToken(
+                  tokenRanking
+                ),
+
+              tokenCreadoAt:
+                new Date(),
+            },
+
+            select: {
+              id: true,
+              nombre: true,
+              objetivo: true,
+              descripcion: true,
+              fechaInicio: true,
+              duracionDias: true,
+              estado: true,
+
+              plan: {
+                select: {
+                  id: true,
+                  nombre: true,
+                  duracionDias: true,
+                },
+              },
+
+              _count: {
+                select: {
+                  miembros: true,
+                },
+              },
+            },
+          });
+
+        return {
+          grupo,
+          planGrupoId:
+            planGrupo.id,
+        };
+      }
+    );
+
+  const {
+    grupo,
+    planGrupoId,
+  } = resultado;
 
   return NextResponse.json(
     {
       grupo,
+
+      siguientePaso: {
+        tipo:
+          "CONFIGURAR_PROTOCOLO",
+
+        planId:
+          planGrupoId,
+      },
     },
     {
       status: 201,

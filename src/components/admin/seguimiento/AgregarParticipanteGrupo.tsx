@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useEffect,
   useState,
   type FormEvent,
 } from "react";
@@ -17,8 +18,12 @@ import Modal from "@/components/Modal";
 
 export default function AgregarParticipanteGrupo({
   grupoId,
+  abrirAutomatico = false,
+  modoFlujo = false,
 }: {
   grupoId: string;
+  abrirAutomatico?: boolean;
+  modoFlujo?: boolean;
 }) {
   const router =
     useRouter();
@@ -59,6 +64,21 @@ export default function AgregarParticipanteGrupo({
     copiado,
     setCopiado,
   ] = useState(false);
+
+  useEffect(() => {
+    if (
+      abrirAutomatico
+    ) {
+      setNombreCliente("");
+      setTelefonoCliente("");
+      setEnlaceCreado(null);
+      setNombreCreado("");
+      setCopiado(false);
+      setAbierto(true);
+    }
+  }, [
+    abrirAutomatico,
+  ]);
 
   function limpiar() {
     setNombreCliente("");
@@ -201,6 +221,13 @@ export default function AgregarParticipanteGrupo({
     }
   }
 
+  function agregarOtro() {
+    limpiar();
+    setEnlaceCreado(null);
+    setNombreCreado("");
+    setCopiado(false);
+  }
+
   function cerrar() {
     if (guardando) {
       return;
@@ -209,6 +236,14 @@ export default function AgregarParticipanteGrupo({
     setAbierto(false);
     setEnlaceCreado(null);
     setNombreCreado("");
+
+    if (
+      modoFlujo
+    ) {
+      router.replace(
+        `/admin/seguimiento/grupos/${grupoId}?paso=revisar`
+      );
+    }
   }
 
   return (
@@ -313,15 +348,31 @@ export default function AgregarParticipanteGrupo({
               </div>
 
 
-              <button
-                type="button"
-                onClick={
-                  cerrar
-                }
-                className="w-full rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white"
-              >
-                Listo
-              </button>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+
+                <button
+                  type="button"
+                  onClick={
+                    agregarOtro
+                  }
+                  className="rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm font-semibold text-violet-700 hover:bg-violet-50"
+                >
+                  + Agregar otro
+                </button>
+
+                <button
+                  type="button"
+                  onClick={
+                    cerrar
+                  }
+                  className="rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white"
+                >
+                  {modoFlujo
+                    ? "Continuar"
+                    : "Listo"}
+                </button>
+
+              </div>
 
             </div>
           ) : (

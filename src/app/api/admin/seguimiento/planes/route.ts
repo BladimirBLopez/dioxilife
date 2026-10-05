@@ -372,6 +372,11 @@ export async function GET() {
 
   const planes =
     await prisma.planSeguimiento.findMany({
+      where: {
+        esCopiaGrupo:
+          false,
+      },
+
       orderBy: {
         createdAt: "desc",
       },

@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import {
+  useRouter,
+} from "next/navigation";
+import {
   useEffect,
   useState,
   type FormEvent,
@@ -182,6 +185,9 @@ function diaGrupo(
 }
 
 export default function GruposSeguimientoPage() {
+  const router =
+    useRouter();
+
   const [
     grupos,
     setGrupos,
@@ -411,13 +417,31 @@ export default function GruposSeguimientoPage() {
       }
 
       toast.success(
-        "Grupo creado correctamente."
+        "Grupo creado. Ahora configura su protocolo."
       );
 
       setModalAbierto(false);
       setForm(
         FORM_VACIO
       );
+
+      const grupoId =
+        data?.grupo?.id;
+
+      const planGrupoId =
+        data?.siguientePaso
+          ?.planId;
+
+      if (
+        grupoId &&
+        planGrupoId
+      ) {
+        router.push(
+          `/admin/seguimiento/planes/${planGrupoId}?flujo=grupo&grupoId=${grupoId}`
+        );
+
+        return;
+      }
 
       await cargar();
     } catch {
@@ -692,7 +716,7 @@ export default function GruposSeguimientoPage() {
 
       {modalAbierto && (
         <Modal
-          title="Crear grupo de seguimiento"
+          title="Paso 1 de 4 · Datos del grupo"
           onClose={() =>
             !guardando &&
             setModalAbierto(
@@ -981,7 +1005,7 @@ export default function GruposSeguimientoPage() {
               >
                 {guardando
                   ? "Creando..."
-                  : "Crear grupo"}
+                  : "Continuar"}
               </button>
 
             </div>

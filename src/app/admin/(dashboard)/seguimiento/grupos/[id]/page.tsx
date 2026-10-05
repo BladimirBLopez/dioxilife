@@ -41,14 +41,25 @@ function claseEstado(
 
 export default async function GrupoSeguimientoDetallePage({
   params,
+  searchParams,
 }: {
   params: Promise<{
     id: string;
+  }>;
+
+  searchParams: Promise<{
+    paso?: string;
   }>;
 }) {
   const {
     id,
   } = await params;
+
+  const consulta =
+    await searchParams;
+
+  const paso =
+    consulta.paso ?? "";
 
   const grupo =
     await prisma.grupoSeguimiento.findUnique({
@@ -103,6 +114,36 @@ export default async function GrupoSeguimientoDetallePage({
 
   return (
     <div className="space-y-6">
+
+      {(paso ===
+        "participantes" ||
+        paso ===
+        "revisar") && (
+        <div className="rounded-2xl border border-violet-200 bg-violet-50 p-4">
+
+          <p className="text-xs font-bold uppercase tracking-wide text-violet-600">
+            {paso ===
+            "participantes"
+              ? "Paso 3 de 4 · Participantes"
+              : "Paso 4 de 4 · Revisar"}
+          </p>
+
+          <p className="mt-1 font-semibold text-violet-950">
+            {paso ===
+            "participantes"
+              ? "Agrega las personas que formarán parte del grupo"
+              : "Revisa el grupo antes de iniciarlo"}
+          </p>
+
+          <p className="mt-1 text-sm leading-6 text-violet-700">
+            {paso ===
+            "participantes"
+              ? "Puedes agregar varios participantes seguidos y continuar cuando termines."
+              : "Comprueba el protocolo, duración y participantes. Si todo está correcto, usa Iniciar grupo."}
+          </p>
+
+        </div>
+      )}
 
       <div>
 
@@ -249,6 +290,16 @@ export default async function GrupoSeguimientoDetallePage({
             "ACTIVO") && (
             <AgregarParticipanteGrupo
               grupoId={grupo.id}
+              abrirAutomatico={
+                paso ===
+                "participantes"
+              }
+              modoFlujo={
+                paso ===
+                  "participantes" ||
+                paso ===
+                  "revisar"
+              }
             />
           )}
 

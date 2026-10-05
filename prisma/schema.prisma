@@ -119,6 +119,13 @@ model PlanSeguimiento {
   duracionDias Int
   estado       EstadoPlanSeguimiento @default(BORRADOR)
 
+  /**
+   * Las copias internas de grupos no
+   * aparecen en la biblioteca normal
+   * de plantillas.
+   */
+  esCopiaGrupo Boolean @default(false)
+
   actividades  ActividadPlan[]
   seguimientos SeguimientoCliente[]
   grupos       GrupoSeguimiento[]
