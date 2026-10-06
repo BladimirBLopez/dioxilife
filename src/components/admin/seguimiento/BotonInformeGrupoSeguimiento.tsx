@@ -33,7 +33,24 @@ type Medicion = {
 type Participante = {
   seguimientoId: string;
   nombre: string;
+
+  estadoMiembro:
+    | "ACTIVO"
+    | "RETIRADO";
+
   diaIngreso: number;
+
+  fechaRetiro:
+    | string
+    | null;
+
+  diaRetiro:
+    | number
+    | null;
+
+  hastaDia: number;
+  participaHoy: boolean;
+
   ultimoRegistro:
     | number
     | null;
@@ -105,9 +122,16 @@ type DatosInformeGrupo = {
     protocolo: string;
     estado: string;
     fechaInicio: string;
+
+    fechaFinalizado:
+      | string
+      | null;
+
     diaActual: number;
     duracionDias: number;
     participantes: number;
+    activos: number;
+    retirados: number;
     promedioHoy: number;
     promedioAcumulado: number;
   };
@@ -125,6 +149,41 @@ type DatosInformeGrupo = {
     peso:
       RankingPeso[];
   };
+
+  graficas: {
+    cumplimiento: {
+      diaPlan: number;
+      porcentaje: number;
+      acumulado: number;
+      completados: number;
+      total: number;
+      participantes: number;
+    }[];
+
+    peso: {
+      diaPlan: number;
+      promedio: number;
+      registros: number;
+    }[];
+
+    cintura: {
+      diaPlan: number;
+      promedio: number;
+      registros: number;
+    }[];
+
+    glucemia: {
+      diaPlan: number;
+      promedio: number;
+      registros: number;
+    }[];
+  };
+};
+
+type PuntoGraficoPdf = {
+  diaPlan: number;
+  principal: number;
+  secundaria?: number;
 };
 
 function fechaVisible(
@@ -474,6 +533,610 @@ export default function BotonInformeGrupoSeguimiento({
           3;
       }
 
+      function graficoLineas({
+        titulo,
+        subtitulo,
+        datos,
+        unidad,
+        etiquetaPrincipal,
+        etiquetaSecundaria,
+      }: {
+        titulo: string;
+        subtitulo: string;
+        datos: PuntoGraficoPdf[];
+        unidad: string;
+        etiquetaPrincipal: string;
+        etiquetaSecundaria?: string;
+      }) {
+        asegurar(78);
+
+        tituloSeccion(
+          titulo
+        );
+
+        doc.setFont(
+          "helvetica",
+          "normal"
+        );
+
+        doc.setFontSize(
+          7.2
+        );
+
+        doc.setTextColor(
+          115,
+          108,
+          122
+        );
+
+        const descripcion =
+          doc.splitTextToSize(
+            subtitulo,
+            anchoUtil
+          );
+
+        doc.text(
+          descripcion,
+          margen,
+          y
+        );
+
+        y +=
+          descripcion.length *
+            3.4 +
+          4;
+
+        if (
+          datos.length ===
+          0
+        ) {
+          doc.setFontSize(
+            8.5
+          );
+
+          doc.setTextColor(
+            110,
+            105,
+            115
+          );
+
+          doc.text(
+            "Todavía no hay datos suficientes.",
+            margen,
+            y
+          );
+
+          y += 10;
+
+          return;
+        }
+
+        const valores =
+          datos.flatMap(
+            (
+              punto
+            ) => {
+              const resultado =
+                [
+                  punto.principal,
+                ];
+
+              if (
+                punto.secundaria !==
+                undefined
+              ) {
+                resultado.push(
+                  punto.secundaria
+                );
+              }
+
+              return resultado;
+            }
+          ).filter(
+            (
+              valor
+            ) =>
+              Number.isFinite(
+                valor
+              )
+          );
+
+        let minimo =
+          Math.min(
+            ...valores
+          );
+
+        let maximo =
+          Math.max(
+            ...valores
+          );
+
+        if (
+          unidad === "%"
+        ) {
+          minimo = 0;
+          maximo = 100;
+        } else if (
+          minimo === maximo
+        ) {
+          const margenValor =
+            Math.max(
+              Math.abs(
+                minimo
+              ) * 0.05,
+              1
+            );
+
+          minimo -=
+            margenValor;
+
+          maximo +=
+            margenValor;
+        } else {
+          const margenValor =
+            (
+              maximo -
+              minimo
+            ) * 0.08;
+
+          minimo -=
+            margenValor;
+
+          maximo +=
+            margenValor;
+        }
+
+        const plotX =
+          margen + 15;
+
+        const plotY =
+          y + 8;
+
+        const plotW =
+          anchoUtil - 22;
+
+        const plotH =
+          43;
+
+        doc.setFont(
+          "helvetica",
+          "normal"
+        );
+
+        doc.setFontSize(
+          6.5
+        );
+
+        doc.setTextColor(
+          100,
+          95,
+          110
+        );
+
+        doc.text(
+          etiquetaPrincipal,
+          plotX,
+          y + 2
+        );
+
+        if (
+          etiquetaSecundaria
+        ) {
+          doc.setTextColor(
+            180,
+            60,
+            125
+          );
+
+          doc.text(
+            `· ${etiquetaSecundaria}`,
+            plotX + 45,
+            y + 2
+          );
+        }
+
+        doc.setDrawColor(
+          230,
+          226,
+          236
+        );
+
+        for (
+          let linea = 0;
+          linea <= 4;
+          linea++
+        ) {
+          const yy =
+            plotY +
+            (
+              plotH *
+              linea
+            ) /
+              4;
+
+          doc.line(
+            plotX,
+            yy,
+            plotX +
+              plotW,
+            yy
+          );
+        }
+
+        doc.setDrawColor(
+          160,
+          155,
+          170
+        );
+
+        doc.line(
+          plotX,
+          plotY,
+          plotX,
+          plotY +
+            plotH
+        );
+
+        doc.line(
+          plotX,
+          plotY +
+            plotH,
+          plotX +
+            plotW,
+          plotY +
+            plotH
+        );
+
+        const primerDia =
+          Math.min(
+            ...datos.map(
+              (
+                punto
+              ) =>
+                punto.diaPlan
+            )
+          );
+
+        const ultimoDia =
+          Math.max(
+            ...datos.map(
+              (
+                punto
+              ) =>
+                punto.diaPlan
+            )
+          );
+
+        function xDia(
+          dia: number
+        ) {
+          if (
+            ultimoDia ===
+            primerDia
+          ) {
+            return (
+              plotX +
+              plotW / 2
+            );
+          }
+
+          return (
+            plotX +
+            (
+              (
+                dia -
+                primerDia
+              ) /
+              (
+                ultimoDia -
+                primerDia
+              )
+            ) *
+              plotW
+          );
+        }
+
+        function yValor(
+          valor: number
+        ) {
+          if (
+            maximo ===
+            minimo
+          ) {
+            return (
+              plotY +
+              plotH / 2
+            );
+          }
+
+          return (
+            plotY +
+            plotH -
+            (
+              (
+                valor -
+                minimo
+              ) /
+              (
+                maximo -
+                minimo
+              )
+            ) *
+              plotH
+          );
+        }
+
+        function dibujarSerie(
+          clave:
+            | "principal"
+            | "secundaria",
+          color: [
+            number,
+            number,
+            number
+          ],
+          discontinua = false
+        ) {
+          const puntos =
+            datos.filter(
+              (
+                punto
+              ) =>
+                punto[
+                  clave
+                ] !==
+                  undefined &&
+                Number.isFinite(
+                  Number(
+                    punto[
+                      clave
+                    ]
+                  )
+                )
+            );
+
+          if (
+            puntos.length ===
+            0
+          ) {
+            return;
+          }
+
+          doc.setDrawColor(
+            ...color
+          );
+
+          doc.setFillColor(
+            ...color
+          );
+
+          doc.setLineWidth(
+            clave ===
+              "principal"
+              ? 0.7
+              : 0.45
+          );
+
+          if (
+            discontinua
+          ) {
+            doc.setLineDashPattern(
+              [
+                2,
+                1.5,
+              ],
+              0
+            );
+          } else {
+            doc.setLineDashPattern(
+              [],
+              0
+            );
+          }
+
+          for (
+            let indice = 1;
+            indice <
+            puntos.length;
+            indice++
+          ) {
+            const anterior =
+              puntos[
+                indice - 1
+              ];
+
+            const actual =
+              puntos[
+                indice
+              ];
+
+            doc.line(
+              xDia(
+                anterior.diaPlan
+              ),
+              yValor(
+                Number(
+                  anterior[
+                    clave
+                  ]
+                )
+              ),
+              xDia(
+                actual.diaPlan
+              ),
+              yValor(
+                Number(
+                  actual[
+                    clave
+                  ]
+                )
+              )
+            );
+          }
+
+          doc.setLineDashPattern(
+            [],
+            0
+          );
+
+          for (
+            const punto of
+            puntos
+          ) {
+            doc.circle(
+              xDia(
+                punto.diaPlan
+              ),
+              yValor(
+                Number(
+                  punto[
+                    clave
+                  ]
+                )
+              ),
+              0.75,
+              "F"
+            );
+          }
+        }
+
+        dibujarSerie(
+          "principal",
+          [
+            103,
+            80,
+            164,
+          ]
+        );
+
+        if (
+          etiquetaSecundaria
+        ) {
+          dibujarSerie(
+            "secundaria",
+            [
+              219,
+              63,
+              133,
+            ],
+            true
+          );
+        }
+
+        doc.setFontSize(
+          6.2
+        );
+
+        doc.setTextColor(
+          115,
+          110,
+          120
+        );
+
+        const formato =
+          (
+            valor: number
+          ) =>
+            `${redondearGrafico(
+              valor
+            )}${unidad}`;
+
+        doc.text(
+          formato(
+            maximo
+          ),
+          plotX - 2,
+          plotY + 2,
+          {
+            align:
+              "right",
+          }
+        );
+
+        doc.text(
+          formato(
+            minimo
+          ),
+          plotX - 2,
+          plotY +
+            plotH,
+          {
+            align:
+              "right",
+          }
+        );
+
+        const diaMedio =
+          Math.round(
+            (
+              primerDia +
+              ultimoDia
+            ) / 2
+          );
+
+        doc.text(
+          `D${primerDia}`,
+          plotX,
+          plotY +
+            plotH +
+            5
+        );
+
+        if (
+          ultimoDia !==
+          primerDia
+        ) {
+          doc.text(
+            `D${diaMedio}`,
+            xDia(
+              diaMedio
+            ),
+            plotY +
+              plotH +
+              5,
+            {
+              align:
+                "center",
+            }
+          );
+
+          doc.text(
+            `D${ultimoDia}`,
+            plotX +
+              plotW,
+            plotY +
+              plotH +
+              5,
+            {
+              align:
+                "right",
+            }
+          );
+        }
+
+        y =
+          plotY +
+          plotH +
+          11;
+      }
+
+      function redondearGrafico(
+        valor: number
+      ) {
+        return (
+          Math.round(
+            valor * 10
+          ) / 10
+        ).toLocaleString(
+          "es-BO",
+          {
+            maximumFractionDigits:
+              1,
+          }
+        );
+      }
+
+
       /*
        * ENCABEZADO
        */
@@ -621,6 +1284,15 @@ export default function BotonInformeGrupoSeguimiento({
           },
           {
             titulo:
+              "Cierre",
+            valor:
+              fechaVisible(
+                informe.grupo
+                  .fechaFinalizado
+              ),
+          },
+          {
+            titulo:
               "Duración",
             valor:
               `${informe.grupo.duracionDias} días`,
@@ -635,10 +1307,7 @@ export default function BotonInformeGrupoSeguimiento({
             titulo:
               "Participantes",
             valor:
-              String(
-                informe.grupo
-                  .participantes
-              ),
+              `${informe.grupo.participantes} (${informe.grupo.activos} activos · ${informe.grupo.retirados} retirados)`,
           },
         ];
 
@@ -679,7 +1348,7 @@ export default function BotonInformeGrupoSeguimiento({
           );
 
           doc.setFontSize(
-            9
+            8
           );
 
           doc.setTextColor(
@@ -738,10 +1407,7 @@ export default function BotonInformeGrupoSeguimiento({
               "PARTICIPANTES",
 
             valor:
-              String(
-                informe.grupo
-                  .participantes
-              ),
+              `${informe.grupo.participantes} total`,
           },
         ];
 
@@ -842,6 +1508,128 @@ export default function BotonInformeGrupoSeguimiento({
       y +=
         tarjetaH +
         8;
+
+
+      /*
+       * GRÁFICAS
+       */
+      graficoLineas({
+        titulo:
+          "EVOLUCIÓN DEL CUMPLIMIENTO",
+
+        subtitulo:
+          "Línea continua: cumplimiento diario. Línea discontinua: cumplimiento acumulado del grupo.",
+
+        datos:
+          informe.graficas
+            .cumplimiento.map(
+              (
+                punto
+              ) => ({
+                diaPlan:
+                  punto.diaPlan,
+
+                principal:
+                  punto.porcentaje,
+
+                secundaria:
+                  punto.acumulado,
+              })
+            ),
+
+        unidad:
+          "%",
+
+        etiquetaPrincipal:
+          "Cumplimiento diario",
+
+        etiquetaSecundaria:
+          "Cumplimiento acumulado",
+      });
+
+      graficoLineas({
+        titulo:
+          "EVOLUCIÓN DEL PESO",
+
+        subtitulo:
+          "Promedio de los pesos registrados por los participantes en cada jornada.",
+
+        datos:
+          informe.graficas
+            .peso.map(
+              (
+                punto
+              ) => ({
+                diaPlan:
+                  punto.diaPlan,
+
+                principal:
+                  punto.promedio,
+              })
+            ),
+
+        unidad:
+          " kg",
+
+        etiquetaPrincipal:
+          "Peso promedio",
+      });
+
+      graficoLineas({
+        titulo:
+          "EVOLUCIÓN DE CINTURA",
+
+        subtitulo:
+          "Promedio de las mediciones de cintura registradas en cada jornada.",
+
+        datos:
+          informe.graficas
+            .cintura.map(
+              (
+                punto
+              ) => ({
+                diaPlan:
+                  punto.diaPlan,
+
+                principal:
+                  punto.promedio,
+              })
+            ),
+
+        unidad:
+          " cm",
+
+        etiquetaPrincipal:
+          "Cintura promedio",
+      });
+
+      graficoLineas({
+        titulo:
+          "GLUCEMIA EN AYUNAS",
+
+        subtitulo:
+          "Promedio descriptivo de los registros informados en cada jornada. No corresponde a una clasificación competitiva.",
+
+        datos:
+          informe.graficas
+            .glucemia.map(
+              (
+                punto
+              ) => ({
+                diaPlan:
+                  punto.diaPlan,
+
+                principal:
+                  punto.promedio,
+              })
+            ),
+
+        unidad:
+          " mg/dL",
+
+        etiquetaPrincipal:
+          "Promedio registrado",
+      });
 
 
       function tablaCumplimiento(
@@ -1041,7 +1829,10 @@ export default function BotonInformeGrupoSeguimiento({
 
 
       tablaCumplimiento(
-        "RANKING DE CUMPLIMIENTO - HOY",
+        informe.grupo.estado ===
+          "FINALIZADO"
+          ? "RANKING DE CUMPLIMIENTO - ÚLTIMO DÍA"
+          : "RANKING DE CUMPLIMIENTO - HOY",
         informe.rankings
           .cumplimientoHoy
       );
@@ -1307,10 +2098,10 @@ export default function BotonInformeGrupoSeguimiento({
         const participante of
         informe.participantes
       ) {
-        asegurar(43);
+        asegurar(51);
 
         const altoCaja =
-          37;
+          45;
 
         doc.setFillColor(
           250,
@@ -1366,7 +2157,7 @@ export default function BotonInformeGrupoSeguimiento({
         );
 
         doc.text(
-          `Ingreso día ${participante.diaIngreso}`,
+          participante.estadoMiembro,
           ancho -
             margen -
             4,
@@ -1394,9 +2185,22 @@ export default function BotonInformeGrupoSeguimiento({
         );
 
         doc.text(
-          `Cumplimiento: hoy ${participante.cumplimientoHoy.porcentaje}% (${participante.cumplimientoHoy.completados}/${participante.cumplimientoHoy.total}) · acumulado ${participante.cumplimientoAcumulado.porcentaje}% (${participante.cumplimientoAcumulado.completados}/${participante.cumplimientoAcumulado.total})`,
+          participante.estadoMiembro ===
+              "RETIRADO"
+            ? `Periodo: día ${participante.diaIngreso} al ${participante.hastaDia} · retiro ${fechaVisible(
+                participante.fechaRetiro
+              )}`
+            : `Periodo: desde día ${participante.diaIngreso} hasta día ${participante.hastaDia}`,
           margen + 4,
           y + 13
+        );
+
+        doc.text(
+          participante.participaHoy
+            ? `Cumplimiento: hoy ${participante.cumplimientoHoy.porcentaje}% (${participante.cumplimientoHoy.completados}/${participante.cumplimientoHoy.total}) · acumulado ${participante.cumplimientoAcumulado.porcentaje}% (${participante.cumplimientoAcumulado.completados}/${participante.cumplimientoAcumulado.total})`
+            : `Cumplimiento acumulado: ${participante.cumplimientoAcumulado.porcentaje}% (${participante.cumplimientoAcumulado.completados}/${participante.cumplimientoAcumulado.total})`,
+          margen + 4,
+          y + 20
         );
 
         doc.text(
@@ -1416,7 +2220,7 @@ export default function BotonInformeGrupoSeguimiento({
             "kg"
           )} (${participante.peso.perdidaPorcentaje !== null ? `${numero(participante.peso.perdidaPorcentaje)}%` : "—"})`,
           margen + 4,
-          y + 20
+          y + 27
         );
 
         doc.text(
@@ -1433,7 +2237,7 @@ export default function BotonInformeGrupoSeguimiento({
             "cm"
           )}`,
           margen + 4,
-          y + 27
+          y + 34
         );
 
         doc.text(
@@ -1450,7 +2254,7 @@ export default function BotonInformeGrupoSeguimiento({
             "mg/dL"
           )}`,
           margen + 4,
-          y + 34
+          y + 41
         );
 
         y +=
@@ -1505,7 +2309,7 @@ export default function BotonInformeGrupoSeguimiento({
 
       const nota =
         doc.splitTextToSize(
-          "Las mediciones de glucemia se presentan como información descriptiva de seguimiento. No forman parte de un ranking competitivo entre participantes.",
+          "Las mediciones incluidas en este informe corresponden a registros del seguimiento. La glucemia en ayunas se presenta únicamente como información descriptiva y no forma parte de ningún ranking competitivo ni implica una interpretación clínica.",
           anchoUtil - 8
         );
 

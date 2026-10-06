@@ -1346,6 +1346,9 @@ export async function GET(
       fechaInicio:
         grupo.fechaInicio,
 
+      fechaFinalizado:
+        grupo.fechaFinalizado,
+
       diaActual,
 
       duracionDias:
