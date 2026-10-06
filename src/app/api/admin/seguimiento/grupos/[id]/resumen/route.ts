@@ -39,15 +39,43 @@ function hoyBoliviaUtc() {
   );
 }
 
-function diaActualGrupo(
-  fechaInicio: Date,
-  duracionDias: number,
-  finalizado: boolean
+function fechaHoraBoliviaUtc(
+  fecha: Date
 ) {
-  if (finalizado) {
-    return duracionDias;
-  }
+  const partes =
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone:
+          "America/La_Paz",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }
+    ).formatToParts(
+      fecha
+    );
 
+  const valor = (
+    tipo: string
+  ) =>
+    partes.find(
+      (parte) =>
+        parte.type === tipo
+    )?.value || "";
+
+  return Date.UTC(
+    Number(valor("year")),
+    Number(valor("month")) - 1,
+    Number(valor("day"))
+  );
+}
+
+function diaDesdeFechaDate(
+  fechaInicio: Date,
+  fechaReferencia: Date,
+  duracionDias: number
+) {
   const inicio =
     Date.UTC(
       fechaInicio.getUTCFullYear(),
@@ -55,10 +83,58 @@ function diaActualGrupo(
       fechaInicio.getUTCDate()
     );
 
+  /*
+   * fechaInicio y fechaRetiro son DATE
+   * en PostgreSQL. Se leen por UTC para
+   * no desplazarlos un día por zona horaria.
+   */
+  const referencia =
+    Date.UTC(
+      fechaReferencia.getUTCFullYear(),
+      fechaReferencia.getUTCMonth(),
+      fechaReferencia.getUTCDate()
+    );
+
+  const dia =
+    Math.floor(
+      (
+        referencia -
+        inicio
+      ) / MS_DIA
+    ) + 1;
+
+  return Math.max(
+    0,
+    Math.min(
+      dia,
+      duracionDias
+    )
+  );
+}
+
+function diaActualGrupo(
+  fechaInicio: Date,
+  duracionDias: number,
+  fechaFinalizado: Date | null
+) {
+  const inicio =
+    Date.UTC(
+      fechaInicio.getUTCFullYear(),
+      fechaInicio.getUTCMonth(),
+      fechaInicio.getUTCDate()
+    );
+
+  const referencia =
+    fechaFinalizado
+      ? fechaHoraBoliviaUtc(
+          fechaFinalizado
+        )
+      : hoyBoliviaUtc();
+
   const diferencia =
     Math.floor(
       (
-        hoyBoliviaUtc() -
+        referencia -
         inicio
       ) / MS_DIA
     ) + 1;
@@ -360,6 +436,7 @@ export async function GET(
         descripcion: true,
         estado: true,
         fechaInicio: true,
+        fechaFinalizado: true,
         duracionDias: true,
 
         plan: {
@@ -369,11 +446,6 @@ export async function GET(
         },
 
         miembros: {
-          where: {
-            estado:
-              "ACTIVO",
-          },
-
           orderBy: {
             createdAt:
               "asc",
@@ -383,6 +455,8 @@ export async function GET(
             id: true,
             diaIngreso: true,
             fechaIngreso: true,
+            fechaRetiro: true,
+            estado: true,
 
             seguimiento: {
               select: {
@@ -469,7 +543,9 @@ export async function GET(
       grupo.fechaInicio,
       grupo.duracionDias,
       grupo.estado ===
-        "FINALIZADO"
+          "FINALIZADO"
+        ? grupo.fechaFinalizado
+        : null
     );
 
   const participantes =
@@ -484,18 +560,41 @@ export async function GET(
             miembro.diaIngreso
           );
 
+        const diaRetiro =
+          miembro.estado ===
+              "RETIRADO" &&
+            miembro.fechaRetiro
+            ? diaDesdeFechaDate(
+                grupo.fechaInicio,
+                miembro.fechaRetiro,
+                grupo.duracionDias
+              )
+            : null;
+
         const hasta =
           Math.max(
             0,
-            diaActual
+            Math.min(
+              diaActual,
+              diaRetiro ??
+                diaActual
+            )
           );
 
+        const participaHoy =
+          miembro.estado ===
+            "ACTIVO" &&
+          diaActual >=
+            desde &&
+          diaActual <=
+            grupo.duracionDias;
+
         const cumplimientoHoy =
-          hasta >= desde
+          participaHoy
             ? cumplimientoRango(
                 seguimiento.actividades,
-                hasta,
-                hasta,
+                diaActual,
+                diaActual,
                 grupo.duracionDias
               )
             : {
@@ -505,12 +604,18 @@ export async function GET(
               };
 
         const cumplimientoAcumulado =
-          cumplimientoRango(
-            seguimiento.actividades,
-            desde,
-            hasta,
-            grupo.duracionDias
-          );
+          hasta >= desde
+            ? cumplimientoRango(
+                seguimiento.actividades,
+                desde,
+                hasta,
+                grupo.duracionDias
+              )
+            : {
+                completados: 0,
+                total: 0,
+                porcentaje: 0,
+              };
 
         const registrosValidos =
           seguimiento.registrosDiarios.filter(
@@ -647,11 +752,24 @@ export async function GET(
           estadoSeguimiento:
             seguimiento.estado,
 
+          estadoMiembro:
+            miembro.estado,
+
           diaIngreso:
             miembro.diaIngreso,
 
           fechaIngreso:
             miembro.fechaIngreso,
+
+          fechaRetiro:
+            miembro.fechaRetiro,
+
+          diaRetiro,
+
+          hastaDia:
+            hasta,
+
+          participaHoy,
 
           ultimoRegistro,
 
@@ -675,22 +793,76 @@ export async function GET(
       }
     );
 
-  const rankingHoy =
-    [...participantes]
-      .sort(
-        (a, b) =>
-          b.cumplimientoHoy
-            .porcentaje -
-          a.cumplimientoHoy
-            .porcentaje
-      )
-      .map(
-        (
-          participante,
-          indice
-        ) => ({
-          puesto:
-            indice + 1,
+  function rankingCumplimiento(
+    fuente:
+      typeof participantes,
+
+    tipo:
+      | "cumplimientoHoy"
+      | "cumplimientoAcumulado"
+  ) {
+    const ordenados =
+      [...fuente].sort(
+        (a, b) => {
+          const diferenciaPorcentaje =
+            b[tipo].porcentaje -
+            a[tipo].porcentaje;
+
+          if (
+            diferenciaPorcentaje !==
+            0
+          ) {
+            return diferenciaPorcentaje;
+          }
+
+          const diferenciaChecks =
+            b[tipo].completados -
+            a[tipo].completados;
+
+          if (
+            diferenciaChecks !==
+            0
+          ) {
+            return diferenciaChecks;
+          }
+
+          return a.nombre.localeCompare(
+            b.nombre,
+            "es"
+          );
+        }
+      );
+
+    let puestoAnterior = 0;
+
+    let porcentajeAnterior:
+      number | null = null;
+
+    return ordenados.map(
+      (
+        participante,
+        indice
+      ) => {
+        const resultado =
+          participante[tipo];
+
+        const empate =
+          porcentajeAnterior ===
+          resultado.porcentaje;
+
+        const puesto =
+          empate
+            ? puestoAnterior
+            : indice + 1;
+
+        puestoAnterior =
+          puesto;
+
+        porcentajeAnterior =
+          resultado.porcentaje;
+
+        return {
+          puesto,
 
           seguimientoId:
             participante
@@ -700,64 +872,37 @@ export async function GET(
             participante.nombre,
 
           porcentaje:
-            participante
-              .cumplimientoHoy
-              .porcentaje,
+            resultado.porcentaje,
 
           completados:
-            participante
-              .cumplimientoHoy
-              .completados,
+            resultado.completados,
 
           total:
-            participante
-              .cumplimientoHoy
-              .total,
-        })
-      );
+            resultado.total,
+        };
+      }
+    );
+  }
+
+  const participantesHoy =
+    participantes.filter(
+      (participante) =>
+        participante.participaHoy
+    );
+
+  const rankingHoy =
+    rankingCumplimiento(
+      participantesHoy,
+      "cumplimientoHoy"
+    );
 
   const rankingAcumulado =
-    [...participantes]
-      .sort(
-        (a, b) =>
-          b.cumplimientoAcumulado
-            .porcentaje -
-          a.cumplimientoAcumulado
-            .porcentaje
-      )
-      .map(
-        (
-          participante,
-          indice
-        ) => ({
-          puesto:
-            indice + 1,
+    rankingCumplimiento(
+      participantes,
+      "cumplimientoAcumulado"
+    );
 
-          seguimientoId:
-            participante
-              .seguimientoId,
-
-          nombre:
-            participante.nombre,
-
-          porcentaje:
-            participante
-              .cumplimientoAcumulado
-              .porcentaje,
-
-          completados:
-            participante
-              .cumplimientoAcumulado
-              .completados,
-
-          total:
-            participante
-              .cumplimientoAcumulado
-              .total,
-        })
-      );
-
-  const rankingPeso =
+  const participantesPeso =
     participantes
       .filter(
         (participante) =>
@@ -766,25 +911,63 @@ export async function GET(
           null
       )
       .sort(
-        (a, b) =>
-          (
-            b.peso
-              .perdidaPorcentaje ??
-            0
-          ) -
-          (
+        (a, b) => {
+          const porcentajeA =
             a.peso
               .perdidaPorcentaje ??
-            0
-          )
-      )
-      .map(
-        (
-          participante,
-          indice
-        ) => ({
-          puesto:
-            indice + 1,
+            0;
+
+          const porcentajeB =
+            b.peso
+              .perdidaPorcentaje ??
+            0;
+
+          if (
+            porcentajeB !==
+            porcentajeA
+          ) {
+            return (
+              porcentajeB -
+              porcentajeA
+            );
+          }
+
+          return a.nombre.localeCompare(
+            b.nombre,
+            "es"
+          );
+        }
+      );
+
+  let puestoPesoAnterior = 0;
+
+  let porcentajePesoAnterior:
+    number | null = null;
+
+  const rankingPeso =
+    participantesPeso.map(
+      (
+        participante,
+        indice
+      ) => {
+        const valor =
+          participante.peso
+            .perdidaPorcentaje;
+
+        const puesto =
+          porcentajePesoAnterior ===
+            valor
+            ? puestoPesoAnterior
+            : indice + 1;
+
+        puestoPesoAnterior =
+          puesto;
+
+        porcentajePesoAnterior =
+          valor;
+
+        return {
+          puesto,
 
           seguimientoId:
             participante
@@ -807,10 +990,10 @@ export async function GET(
               .perdidaKg,
 
           perdidaPorcentaje:
-            participante.peso
-              .perdidaPorcentaje,
-        })
-      );
+            valor,
+        };
+      }
+    );
 
   const graficaCumplimiento = [];
 
@@ -828,6 +1011,9 @@ export async function GET(
     let checksCompletados = 0;
     let checksTotales = 0;
 
+    let acumuladosCompletados = 0;
+    let acumuladosTotales = 0;
+
     const pesosDia: number[] = [];
     const cinturasDia: number[] = [];
     const glucemiasDia: number[] = [];
@@ -838,10 +1024,61 @@ export async function GET(
       const miembro of
       grupo.miembros
     ) {
+      const desde =
+        Math.max(
+          1,
+          miembro.diaIngreso
+        );
+
       if (
-        miembro.diaIngreso >
-        dia
+        dia < desde
       ) {
+        continue;
+      }
+
+      const diaRetiro =
+        miembro.estado ===
+            "RETIRADO" &&
+          miembro.fechaRetiro
+          ? diaDesdeFechaDate(
+              grupo.fechaInicio,
+              miembro.fechaRetiro,
+              grupo.duracionDias
+            )
+          : null;
+
+      const hastaAcumulado =
+        Math.min(
+          dia,
+          diaRetiro ??
+            dia
+        );
+
+      if (
+        hastaAcumulado >=
+        desde
+      ) {
+        const acumulado =
+          cumplimientoRango(
+            miembro.seguimiento
+              .actividades,
+            desde,
+            hastaAcumulado,
+            grupo.duracionDias
+          );
+
+        acumuladosCompletados +=
+          acumulado.completados;
+
+        acumuladosTotales +=
+          acumulado.total;
+      }
+
+      const activoEseDia =
+        diaRetiro === null ||
+        dia <= diaRetiro;
+
+      if (!activoEseDia) {
         continue;
       }
 
@@ -919,6 +1156,12 @@ export async function GET(
         porcentaje(
           checksCompletados,
           checksTotales
+        ),
+
+      acumulado:
+        porcentaje(
+          acumuladosCompletados,
+          acumuladosTotales
         ),
 
       completados:
@@ -1015,10 +1258,10 @@ export async function GET(
 
 
   const promedioHoy =
-    participantes.length >
+    participantesHoy.length >
     0
       ? Math.round(
-          participantes.reduce(
+          participantesHoy.reduce(
             (
               suma,
               participante
@@ -1029,15 +1272,24 @@ export async function GET(
                 .porcentaje,
             0
           ) /
-            participantes.length
+            participantesHoy.length
         )
       : 0;
 
+  const participantesConAcumulado =
+    participantes.filter(
+      (participante) =>
+        participante
+          .cumplimientoAcumulado
+          .total >
+        0
+    );
+
   const promedioAcumulado =
-    participantes.length >
+    participantesConAcumulado.length >
     0
       ? Math.round(
-          participantes.reduce(
+          participantesConAcumulado.reduce(
             (
               suma,
               participante
@@ -1048,9 +1300,25 @@ export async function GET(
                 .porcentaje,
             0
           ) /
-            participantes.length
+            participantesConAcumulado.length
         )
       : 0;
+
+  const activos =
+    participantes.filter(
+      (participante) =>
+        participante
+          .estadoMiembro ===
+        "ACTIVO"
+    ).length;
+
+  const retirados =
+    participantes.filter(
+      (participante) =>
+        participante
+          .estadoMiembro ===
+        "RETIRADO"
+    ).length;
 
   return NextResponse.json({
     generadoAt:
@@ -1085,6 +1353,10 @@ export async function GET(
 
       participantes:
         participantes.length,
+
+      activos,
+
+      retirados,
 
       promedioHoy,
 

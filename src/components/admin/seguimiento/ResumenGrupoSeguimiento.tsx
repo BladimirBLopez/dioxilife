@@ -47,7 +47,14 @@ type Participante = {
   miembroId: string;
   seguimientoId: string;
   nombre: string;
+  estadoMiembro:
+    | "ACTIVO"
+    | "RETIRADO";
   diaIngreso: number;
+  fechaRetiro: string | null;
+  diaRetiro: number | null;
+  hastaDia: number;
+  participaHoy: boolean;
   ultimoRegistro: number | null;
 
   cumplimientoHoy: {
@@ -113,7 +120,14 @@ type Respuesta = {
   grupo: {
     diaActual: number;
     duracionDias: number;
+    estado:
+      | "BORRADOR"
+      | "ACTIVO"
+      | "FINALIZADO"
+      | "CANCELADO";
     participantes: number;
+    activos: number;
+    retirados: number;
     promedioHoy: number;
     promedioAcumulado: number;
   };
@@ -136,6 +150,7 @@ type Respuesta = {
     cumplimiento: {
       diaPlan: number;
       porcentaje: number;
+      acumulado: number;
       completados: number;
       total: number;
       participantes: number;
@@ -184,12 +199,16 @@ function GraficoGrupo({
   datos,
   dataKey,
   unidad,
+  dataKeySecundario,
+  nombreSecundario,
 }: {
   titulo: string;
   subtitulo: string;
   datos: Record<string, number>[];
   dataKey: string;
   unidad: string;
+  dataKeySecundario?: string;
+  nombreSecundario?: string;
 }) {
   return (
     <div className="admin-card p-4 sm:p-5">
@@ -278,6 +297,31 @@ function GraficoGrupo({
                   r: 6,
                 }}
               />
+
+              {dataKeySecundario && (
+                <Line
+                  type="monotone"
+                  dataKey={
+                    dataKeySecundario
+                  }
+                  name={
+                    nombreSecundario ||
+                    "Acumulado"
+                  }
+                  unit={
+                    unidad
+                  }
+                  stroke="#DB3F85"
+                  strokeWidth={2}
+                  strokeDasharray="6 4"
+                  dot={{
+                    r: 3,
+                  }}
+                  activeDot={{
+                    r: 5,
+                  }}
+                />
+              )}
 
             </LineChart>
           </ResponsiveContainer>
@@ -473,6 +517,13 @@ export default function ResumenGrupoSeguimiento({
           <p className="mt-1 text-xl font-extrabold text-gray-900">
             {data.grupo.participantes}
           </p>
+
+          <p className="text-xs text-gray-500">
+            {data.grupo.activos} activos
+            {data.grupo.retirados > 0
+              ? ` · ${data.grupo.retirados} retirados`
+              : ""}
+          </p>
         </div>
 
 
@@ -517,12 +568,14 @@ export default function ResumenGrupoSeguimiento({
 
         <GraficoGrupo
           titulo="Cumplimiento"
-          subtitulo="Porcentaje diario de checks completados por el grupo."
+          subtitulo="Línea continua: cumplimiento diario. Línea discontinua: cumplimiento acumulado."
           datos={
             data.graficas
               .cumplimiento
           }
           dataKey="porcentaje"
+          dataKeySecundario="acumulado"
+          nombreSecundario="Cumplimiento acumulado"
           unidad="%"
         />
 
@@ -565,7 +618,12 @@ export default function ResumenGrupoSeguimiento({
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
 
         <RankingCumplimiento
-          titulo="Ranking de hoy"
+          titulo={
+            data.grupo.estado ===
+              "FINALIZADO"
+              ? "Ranking del último día"
+              : "Ranking de hoy"
+          }
           items={
             data.rankings
               .cumplimientoHoy
@@ -691,12 +749,20 @@ export default function ResumenGrupoSeguimiento({
 
         <div className="overflow-x-auto">
 
-          <table className="min-w-[1180px] w-full text-left text-xs">
+          <table className="min-w-[1500px] w-full text-left text-xs">
 
             <thead className="bg-gray-50 text-gray-500">
               <tr>
                 <th className="px-4 py-3">
                   Participante
+                </th>
+
+                <th className="px-4 py-3">
+                  Estado
+                </th>
+
+                <th className="px-4 py-3">
+                  Periodo
                 </th>
 
                 <th className="px-4 py-3">
@@ -713,6 +779,10 @@ export default function ResumenGrupoSeguimiento({
 
                 <th className="px-4 py-3">
                   Peso promedio
+                </th>
+
+                <th className="px-4 py-3">
+                  Cambio kg
                 </th>
 
                 <th className="px-4 py-3">
@@ -769,11 +839,42 @@ export default function ResumenGrupoSeguimiento({
                       </p>
                     </td>
 
-                    <td className="px-4 py-3 font-bold">
-                      {participante.cumplimientoHoy.porcentaje}%
+                    <td className="px-4 py-3">
+                      <span
+                        className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase ${
+                          participante.estadoMiembro ===
+                          "ACTIVO"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {
+                          participante.estadoMiembro
+                        }
+                      </span>
+                    </td>
+
+                    <td className="px-4 py-3">
+                      Día{" "}
+                      {
+                        participante.diaIngreso
+                      }
+                      {" – "}
+                      {
+                        participante.hastaDia
+                      }
                     </td>
 
                     <td className="px-4 py-3 font-bold">
+                      {participante.participaHoy
+                        ? `${participante.cumplimientoHoy.completados}/${participante.cumplimientoHoy.total} · ${participante.cumplimientoHoy.porcentaje}%`
+                        : "—"}
+                    </td>
+
+                    <td className="px-4 py-3 font-bold">
+                      {participante.cumplimientoAcumulado.completados}/
+                      {participante.cumplimientoAcumulado.total}
+                      {" · "}
                       {participante.cumplimientoAcumulado.porcentaje}%
                     </td>
 
@@ -788,6 +889,13 @@ export default function ResumenGrupoSeguimiento({
                     <td className="px-4 py-3">
                       {numero(
                         participante.peso.promedio,
+                        "kg"
+                      )}
+                    </td>
+
+                    <td className="px-4 py-3 font-semibold">
+                      {numero(
+                        participante.peso.perdidaKg,
                         "kg"
                       )}
                     </td>

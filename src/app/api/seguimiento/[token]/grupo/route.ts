@@ -88,8 +88,10 @@ function obtenerDiaEnFecha(
     );
 
   const referencia =
-    fechaBoliviaUtc(
-      fechaReferencia
+    Date.UTC(
+      fechaReferencia.getUTCFullYear(),
+      fechaReferencia.getUTCMonth(),
+      fechaReferencia.getUTCDate()
     );
 
   const diferencia =

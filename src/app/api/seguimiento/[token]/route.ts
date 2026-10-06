@@ -77,6 +77,47 @@ function diaGrupoEnFecha({
 }
 
 
+function diaGrupoEnFechaDateOnly({
+  fechaInicio,
+  fechaReferencia,
+  duracionDias,
+}: {
+  fechaInicio: Date;
+  fechaReferencia: Date;
+  duracionDias: number;
+}) {
+  const inicio =
+    Date.UTC(
+      fechaInicio.getUTCFullYear(),
+      fechaInicio.getUTCMonth(),
+      fechaInicio.getUTCDate()
+    );
+
+  const referencia =
+    Date.UTC(
+      fechaReferencia.getUTCFullYear(),
+      fechaReferencia.getUTCMonth(),
+      fechaReferencia.getUTCDate()
+    );
+
+  const dia =
+    Math.floor(
+      (
+        referencia -
+        inicio
+      ) / MS_DIA
+    ) + 1;
+
+  return Math.max(
+    0,
+    Math.min(
+      dia,
+      duracionDias
+    )
+  );
+}
+
+
 export async function GET(
   _req: NextRequest,
   {
@@ -326,7 +367,7 @@ export async function GET(
           miembroGrupo.estado ===
               "RETIRADO" &&
             miembroGrupo.fechaRetiro
-            ? diaGrupoEnFecha({
+            ? diaGrupoEnFechaDateOnly({
                 fechaInicio:
                   grupo.fechaInicio,
 
