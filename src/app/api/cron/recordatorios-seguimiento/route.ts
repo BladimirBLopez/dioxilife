@@ -487,6 +487,9 @@ async function finalizarGruposVencidos(
         data: {
           estado:
             "FINALIZADO",
+
+          fechaFinalizado:
+            ahora,
         },
       });
 

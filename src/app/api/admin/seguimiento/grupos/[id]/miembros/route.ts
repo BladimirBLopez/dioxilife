@@ -10,6 +10,7 @@ import {
 
 import { prisma } from "@/lib/prisma";
 import { obtenerAdminActual } from "@/lib/admin-auth";
+import { sincronizarProtocoloSeguimientoDesdePlan } from "@/lib/seguimiento-grupo-protocolo";
 
 function hashToken(
   token: string
@@ -367,10 +368,13 @@ export async function POST(
   }
 
   const diaIngreso =
-    calcularDiaIngreso(
-      grupo.fechaInicio,
-      grupo.duracionDias
-    );
+    grupo.estado ===
+      "BORRADOR"
+      ? 1
+      : calcularDiaIngreso(
+          grupo.fechaInicio,
+          grupo.duracionDias
+        );
 
   if (
     diaIngreso === null
@@ -446,7 +450,10 @@ export async function POST(
                 grupo.fechaInicio,
 
               fechaInicio:
-                grupo.fechaInicio,
+                grupo.estado ===
+                "ACTIVO"
+                  ? grupo.fechaInicio
+                  : null,
 
               estado:
                 grupo.estado ===
@@ -457,68 +464,6 @@ export async function POST(
               observacionInterna:
                 `Participante del grupo: ${grupo.nombre}`,
 
-              actividades: {
-                create:
-                  grupo.plan.actividades.map(
-                    (
-                      actividad
-                    ) => ({
-                      tipo:
-                        actividad.tipo,
-
-                      recordatorio:
-                        actividad.recordatorio,
-
-                      seccion:
-                        actividad.seccion,
-
-                      titulo:
-                        actividad.titulo,
-
-                      descripcion:
-                        actividad.descripcion,
-
-                      momento:
-                        actividad.momento,
-
-                      hora:
-                        actividad.hora,
-
-                      diaInicio:
-                        actividad.diaInicio,
-
-                      diaFin:
-                        actividad.diaFin,
-
-                      orden:
-                        actividad.orden,
-
-                      activo:
-                        actividad.activo,
-
-                      indicaciones: {
-                        create:
-                          actividad.indicaciones.map(
-                            (
-                              indicacion
-                            ) => ({
-                              hora:
-                                indicacion.hora,
-
-                              texto:
-                                indicacion.texto,
-
-                              orden:
-                                indicacion.orden,
-
-                              activo:
-                                indicacion.activo,
-                            })
-                          ),
-                      },
-                    })
-                  ),
-              },
             },
 
             select: {
@@ -530,6 +475,36 @@ export async function POST(
               preparadoAt: true,
             },
           });
+
+        /*
+         * En BORRADOR el protocolo todavía
+         * puede seguir modificándose.
+         *
+         * En ACTIVO, un participante tardío
+         * recibe inmediatamente la versión
+         * vigente del protocolo grupal.
+         */
+        if (
+          grupo.estado ===
+          "ACTIVO"
+        ) {
+          await sincronizarProtocoloSeguimientoDesdePlan(
+            tx,
+            {
+              seguimientoId:
+                seguimiento.id,
+
+              planId:
+                grupo.plan.id,
+
+              desdeDia:
+                diaIngreso,
+
+              reemplazar:
+                true,
+            }
+          );
+        }
 
         const miembro =
           await tx.miembroGrupoSeguimiento.create({

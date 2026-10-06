@@ -195,7 +195,8 @@ model ActividadPlan {
   orden     Int     @default(0)
   activo    Boolean @default(true)
 
-  indicaciones IndicacionActividadPlan[]
+  indicaciones      IndicacionActividadPlan[]
+  copiasSeguimiento ActividadSeguimiento[]    @relation("ActividadPlanOrigen")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -301,6 +302,9 @@ model ActividadSeguimiento {
   seguimientoId String
   seguimiento   SeguimientoCliente @relation(fields: [seguimientoId], references: [id], onDelete: Cascade)
 
+  actividadPlanOrigenId String?
+  actividadPlanOrigen   ActividadPlan? @relation("ActividadPlanOrigen", fields: [actividadPlanOrigenId], references: [id], onDelete: SetNull)
+
   tipo         TipoActividadSeguimiento    @default(TAREA)
   recordatorio RecordatorioActividad       @default(NINGUNO)
   seccion      SeccionActividadSeguimiento @default(PRINCIPAL)
@@ -321,6 +325,7 @@ model ActividadSeguimiento {
   updatedAt DateTime @updatedAt
 
   @@index([seguimientoId])
+  @@index([actividadPlanOrigenId])
   @@index([diaInicio])
 }
 
@@ -373,6 +378,8 @@ model GrupoSeguimiento {
   duracionDias Int
 
   estado EstadoGrupoSeguimiento @default(BORRADOR)
+
+  fechaFinalizado DateTime?
 
   tokenRankingHash String   @unique
   tokenCreadoAt    DateTime @default(now())
