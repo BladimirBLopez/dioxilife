@@ -73,18 +73,35 @@ const FORM_VACIO: FormGrupo = {
 };
 
 function hoyValor() {
-  const fecha =
-    new Date();
+  const partes =
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone:
+          "America/La_Paz",
+        year:
+          "numeric",
+        month:
+          "2-digit",
+        day:
+          "2-digit",
+      }
+    ).formatToParts(
+      new Date()
+    );
 
-  return [
-    fecha.getFullYear(),
-    String(
-      fecha.getMonth() + 1
-    ).padStart(2, "0"),
-    String(
-      fecha.getDate()
-    ).padStart(2, "0"),
-  ].join("-");
+  const valor = (
+    tipo: string
+  ) =>
+    partes.find(
+      (
+        parte
+      ) =>
+        parte.type ===
+        tipo
+    )?.value || "";
+
+  return `${valor("year")}-${valor("month")}-${valor("day")}`;
 }
 
 function fechaVisible(
@@ -105,12 +122,19 @@ function fechaVisible(
   return `${match[3]}/${match[2]}/${match[1]}`;
 }
 
+type EstadoVisualGrupo =
+  | Grupo["estado"]
+  | "PROGRAMADO";
+
 function claseEstado(
-  estado: Grupo["estado"]
+  estado: EstadoVisualGrupo
 ) {
   switch (estado) {
     case "ACTIVO":
       return "bg-emerald-100 text-emerald-700";
+
+    case "PROGRAMADO":
+      return "bg-violet-100 text-violet-700";
 
     case "FINALIZADO":
       return "bg-blue-100 text-blue-700";
@@ -124,11 +148,14 @@ function claseEstado(
 }
 
 function textoEstado(
-  estado: Grupo["estado"]
+  estado: EstadoVisualGrupo
 ) {
   switch (estado) {
     case "ACTIVO":
       return "Activo";
+
+    case "PROGRAMADO":
+      return "Programado";
 
     case "FINALIZADO":
       return "Finalizado";
@@ -162,13 +189,28 @@ function diaGrupo(
     );
 
   const hoy =
-    new Date();
+    hoyValor();
+
+  const matchHoy =
+    /^(\d{4})-(\d{2})-(\d{2})$/.exec(
+      hoy
+    );
+
+  if (!matchHoy) {
+    return null;
+  }
 
   const actual =
     Date.UTC(
-      hoy.getFullYear(),
-      hoy.getMonth(),
-      hoy.getDate()
+      Number(
+        matchHoy[1]
+      ),
+      Number(
+        matchHoy[2]
+      ) - 1,
+      Number(
+        matchHoy[3]
+      )
     );
 
   const dia =
@@ -573,22 +615,33 @@ export default function GruposSeguimientoPage() {
                   grupo.duracionDias
                 );
 
+              const programado =
+                grupo.estado ===
+                  "ACTIVO" &&
+                dia ===
+                  0;
+
+              const estadoVisual:
+                EstadoVisualGrupo =
+                  programado
+                    ? "PROGRAMADO"
+                    : grupo.estado;
+
               const jornada =
                 grupo.estado ===
                 "BORRADOR"
-                  ? "Por iniciar"
+                  ? "Preparación"
                   : grupo.estado ===
                     "FINALIZADO"
                   ? "Finalizado"
                   : grupo.estado ===
                     "CANCELADO"
                   ? "Cancelado"
+                  : programado
+                  ? "Por iniciar"
                   : dia ===
                     null
                   ? "—"
-                  : dia ===
-                    0
-                  ? "Por iniciar"
                   : `Día ${dia}/${grupo.duracionDias}`;
 
               return (
@@ -613,11 +666,11 @@ export default function GruposSeguimientoPage() {
 
                         <span
                           className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${claseEstado(
-                            grupo.estado
+                            estadoVisual
                           )}`}
                         >
                           {textoEstado(
-                            grupo.estado
+                            estadoVisual
                           )}
                         </span>
 
