@@ -81,6 +81,16 @@ export default async function GrupoSeguimientoDetallePage({
             id: true,
             nombre: true,
             duracionDias: true,
+
+            _count: {
+              select: {
+                actividades: {
+                  where: {
+                    activo: true,
+                  },
+                },
+              },
+            },
           },
         },
 
@@ -215,6 +225,17 @@ export default async function GrupoSeguimientoDetallePage({
           <p className="mt-1 font-semibold text-gray-900">
             {grupo.plan.nombre}
           </p>
+
+          {grupo.estado === "BORRADOR" && (
+            <Link
+              href={`/admin/seguimiento/planes/${grupo.plan.id}?flujo=grupo&grupoId=${grupo.id}`}
+              className="mt-2 inline-block text-sm font-semibold text-violet-700 hover:text-violet-800"
+            >
+              {grupo.plan._count.actividades === 0
+                ? "Configurar protocolo →"
+                : "Editar protocolo →"}
+            </Link>
+          )}
         </div>
 
         <div className="admin-card p-4">
@@ -284,10 +305,28 @@ export default async function GrupoSeguimientoDetallePage({
             </p>
           </div>
 
+          {(grupo.estado === "BORRADOR" ||
+            grupo.estado === "ACTIVO") &&
+            grupo.plan._count.actividades === 0 && (
+              <div className="flex flex-col gap-2 sm:items-end">
+                <Link
+                  href={`/admin/seguimiento/planes/${grupo.plan.id}?flujo=grupo&grupoId=${grupo.id}`}
+                  className="admin-btn-primary"
+                >
+                  Configurar protocolo
+                </Link>
+
+                <p className="text-xs text-amber-600">
+                  Primero configura el protocolo del grupo.
+                </p>
+              </div>
+            )}
+
           {(grupo.estado ===
             "BORRADOR" ||
             grupo.estado ===
-            "ACTIVO") && (
+            "ACTIVO") &&
+            grupo.plan._count.actividades > 0 && (
             <AgregarParticipanteGrupo
               grupoId={grupo.id}
               abrirAutomatico={
