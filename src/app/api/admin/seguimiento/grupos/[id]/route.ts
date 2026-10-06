@@ -6,6 +6,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { obtenerAdminActual } from "@/lib/admin-auth";
 import { sincronizarProtocoloSeguimientoDesdePlan } from "@/lib/seguimiento-grupo-protocolo";
+import { validarProtocoloSeguimiento } from "@/lib/seguimiento-validacion-protocolo";
 
 function fechaBoliviaActual() {
   const partes =
@@ -31,17 +32,6 @@ function fechaBoliviaActual() {
     )?.value || "";
 
   return `${valor("year")}-${valor("month")}-${valor("day")}`;
-}
-
-function horaValida(
-  valor: string | null
-) {
-  return Boolean(
-    valor &&
-      /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(
-        valor
-      )
-  );
 }
 
 function fechaUtc(
@@ -167,6 +157,8 @@ export async function PATCH(
                 titulo: true,
                 seccion: true,
                 hora: true,
+                diaInicio: true,
+                diaFin: true,
 
                 indicaciones: {
                   where: {
@@ -242,64 +234,60 @@ export async function PATCH(
       );
     }
 
+    const revisionProtocolo =
+      validarProtocoloSeguimiento({
+        duracionDias:
+          grupo.duracionDias,
+
+        actividades:
+          grupo.plan.actividades.map(
+            (
+              actividad
+            ) => ({
+              titulo:
+                actividad.titulo,
+
+              seccion:
+                actividad.seccion,
+
+              hora:
+                actividad.hora,
+
+              diaInicio:
+                actividad.diaInicio,
+
+              diaFin:
+                actividad.diaFin,
+
+              indicaciones:
+                actividad.indicaciones.map(
+                  (
+                    indicacion
+                  ) => ({
+                    hora:
+                      indicacion.hora,
+
+                    texto:
+                      indicacion.texto,
+                  })
+                ),
+            })
+          ),
+      });
+
     if (
-      grupo.plan.actividades.length ===
-      0
+      !revisionProtocolo.valida
     ) {
       return NextResponse.json(
         {
           error:
-            "Configura al menos una actividad activa antes de iniciar el grupo.",
+            revisionProtocolo.errores[0] ||
+            "El protocolo todavía tiene datos pendientes.",
         },
         {
           status: 409,
         }
       );
-    }
-
-    for (
-      const actividad of
-      grupo.plan.actividades
-    ) {
-      if (
-        actividad.seccion ===
-          "ADICIONAL" &&
-        !horaValida(
-          actividad.hora
-        )
-      ) {
-        return NextResponse.json(
-          {
-            error:
-              `El protocolo adicional "${actividad.titulo}" necesita un horario válido.`,
-          },
-          {
-            status: 409,
-          }
-        );
-      }
-
-      for (
-        const indicacion of
-        actividad.indicaciones
-      ) {
-        if (
-          !horaValida(
-            indicacion.hora
-          ) ||
-          !indicacion.texto.trim()
-        ) {
-          return NextResponse.json(
-            {
-              error:
-                `Revisa las indicaciones de "${actividad.titulo}". Todas deben tener horario y texto válidos.`,
-            },
-            {
-              status: 409,
-            }
-          );
-        }
-      }
     }
 
     if (

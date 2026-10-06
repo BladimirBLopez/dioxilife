@@ -9,6 +9,7 @@ import {
 } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
+import { validarProtocoloSeguimiento } from "@/lib/seguimiento-validacion-protocolo";
 
 import ProtocoloPrincipalPreparacion from "@/components/admin/seguimiento/ProtocoloPrincipalPreparacion";
 import ProtocolosAdicionalesPreparacion from "@/components/admin/seguimiento/ProtocolosAdicionalesPreparacion";
@@ -156,6 +157,54 @@ export default async function PrepararProtocoloGrupoPage({
 
   const apiBase =
     `/api/admin/seguimiento/planes/${grupo.plan.id}`;
+
+  const revision =
+    validarProtocoloSeguimiento({
+      duracionDias:
+        grupo.duracionDias,
+
+      actividades:
+        grupo.plan.actividades
+          .filter(
+            (
+              actividad
+            ) =>
+              actividad.activo
+          )
+          .map(
+            (
+              actividad
+            ) => ({
+              titulo:
+                actividad.titulo,
+
+              seccion:
+                actividad.seccion,
+
+              hora:
+                actividad.hora,
+
+              diaInicio:
+                actividad.diaInicio,
+
+              diaFin:
+                actividad.diaFin,
+
+              indicaciones:
+                actividad.indicaciones.map(
+                  (
+                    indicacion
+                  ) => ({
+                    hora:
+                      indicacion.hora,
+
+                    texto:
+                      indicacion.texto,
+                  })
+                ),
+            })
+          ),
+    });
 
   return (
     <div className="space-y-6">
@@ -337,24 +386,121 @@ export default async function PrepararProtocoloGrupoPage({
 
       <div className="admin-card p-5">
 
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 
-          <div>
-            <h2 className="font-semibold text-gray-900">
-              Continuar con el grupo
-            </h2>
+          <div className="min-w-0">
 
-            <p className="mt-1 text-sm leading-6 text-gray-500">
-              Los cambios del protocolo se guardan inmediatamente. Después podrás agregar los participantes.
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+
+              <h2 className="font-semibold text-gray-900">
+                Revisión del protocolo
+              </h2>
+
+              <span
+                className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
+                  revision.valida
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-amber-100 text-amber-700"
+                }`}
+              >
+                {revision.valida
+                  ? "Listo"
+                  : "Pendiente"}
+              </span>
+
+            </div>
+
+            {revision.valida ? (
+
+              <p className="mt-2 text-sm leading-6 text-emerald-700">
+                El protocolo está completo y puedes continuar con los participantes.
+              </p>
+
+            ) : (
+
+              <div className="mt-3">
+
+                <p className="text-sm font-medium text-amber-800">
+                  Corrige estos puntos antes de continuar:
+                </p>
+
+                <ul className="mt-2 space-y-1.5 text-sm text-amber-700">
+
+                  {revision.errores
+                    .slice(
+                      0,
+                      8
+                    )
+                    .map(
+                      (
+                        error,
+                        indice
+                      ) => (
+                        <li
+                          key={`${error}-${indice}`}
+                          className="flex gap-2"
+                        >
+                          <span>
+                            •
+                          </span>
+
+                          <span>
+                            {error}
+                          </span>
+                        </li>
+                      )
+                    )}
+
+                </ul>
+
+                {revision.errores.length >
+                  8 && (
+                  <p className="mt-2 text-xs text-amber-600">
+                    Hay{" "}
+                    {revision.errores.length -
+                      8}{" "}
+                    observación
+                    {revision.errores.length -
+                      8 ===
+                    1
+                      ? ""
+                      : "es"}{" "}
+                    adicional
+                    {revision.errores.length -
+                      8 ===
+                    1
+                      ? ""
+                      : "es"}.
+                  </p>
+                )}
+
+              </div>
+
+            )}
+
           </div>
 
-          <Link
-            href={`/admin/seguimiento/grupos/${grupo.id}?paso=participantes`}
-            className="admin-btn-primary shrink-0"
-          >
-            Continuar a participantes →
-          </Link>
+
+          {revision.valida ? (
+
+            <Link
+              href={`/admin/seguimiento/grupos/${grupo.id}?paso=participantes`}
+              className="admin-btn-primary shrink-0"
+            >
+              Continuar a participantes →
+            </Link>
+
+          ) : (
+
+            <button
+              type="button"
+              disabled
+              className="admin-btn-primary shrink-0 cursor-not-allowed opacity-50"
+            >
+              Continuar a participantes →
+            </button>
+
+          )}
 
         </div>
 
