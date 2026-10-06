@@ -43,15 +43,43 @@ function hoyBoliviaUtc() {
   );
 }
 
-function obtenerDiaGrupo(
+function fechaBoliviaUtc(
+  fecha: Date
+) {
+  const partes =
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone:
+          "America/La_Paz",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }
+    ).formatToParts(
+      fecha
+    );
+
+  const valor = (
+    tipo: string
+  ) =>
+    partes.find(
+      (parte) =>
+        parte.type === tipo
+    )?.value || "";
+
+  return Date.UTC(
+    Number(valor("year")),
+    Number(valor("month")) - 1,
+    Number(valor("day"))
+  );
+}
+
+function obtenerDiaEnFecha(
   fechaInicio: Date,
   duracionDias: number,
-  finalizado: boolean
+  fechaReferencia: Date
 ) {
-  if (finalizado) {
-    return duracionDias;
-  }
-
   const inicio =
     Date.UTC(
       fechaInicio.getUTCFullYear(),
@@ -59,10 +87,54 @@ function obtenerDiaGrupo(
       fechaInicio.getUTCDate()
     );
 
+  const referencia =
+    fechaBoliviaUtc(
+      fechaReferencia
+    );
+
   const diferencia =
     Math.floor(
       (
-        hoyBoliviaUtc() -
+        referencia -
+        inicio
+      ) / MS_DIA
+    ) + 1;
+
+  if (diferencia < 1) {
+    return 0;
+  }
+
+  return Math.min(
+    diferencia,
+    duracionDias
+  );
+}
+
+
+function obtenerDiaGrupo(
+  fechaInicio: Date,
+  duracionDias: number,
+  fechaFinalizado:
+    Date | null
+) {
+  const inicio =
+    Date.UTC(
+      fechaInicio.getUTCFullYear(),
+      fechaInicio.getUTCMonth(),
+      fechaInicio.getUTCDate()
+    );
+
+  const referencia =
+    fechaFinalizado
+      ? fechaBoliviaUtc(
+          fechaFinalizado
+        )
+      : hoyBoliviaUtc();
+
+  const diferencia =
+    Math.floor(
+      (
+        referencia -
         inicio
       ) / MS_DIA
     ) + 1;
@@ -319,11 +391,7 @@ export async function GET(
 
   if (
     !seguimientoActual
-      .miembroGrupo ||
-    seguimientoActual
       .miembroGrupo
-      .estado !==
-      "ACTIVO"
   ) {
     return NextResponse.json({
       grupo: null,
@@ -345,14 +413,10 @@ export async function GET(
         objetivo: true,
         estado: true,
         fechaInicio: true,
+        fechaFinalizado: true,
         duracionDias: true,
 
         miembros: {
-          where: {
-            estado:
-              "ACTIVO",
-          },
-
           orderBy: {
             createdAt:
               "asc",
@@ -361,6 +425,8 @@ export async function GET(
           select: {
             seguimientoId: true,
             diaIngreso: true,
+            estado: true,
+            fechaRetiro: true,
 
             seguimiento: {
               select: {
@@ -435,15 +501,42 @@ export async function GET(
       grupo.fechaInicio,
       grupo.duracionDias,
       grupo.estado ===
-        "FINALIZADO"
+          "FINALIZADO"
+        ? grupo.fechaFinalizado
+        : null
     );
 
   const participantes =
     grupo.miembros
       .filter(
-        (miembro) =>
-          miembro.diaIngreso <=
-          diaActual
+        (miembro) => {
+          if (
+            miembro.diaIngreso >
+            diaActual
+          ) {
+            return false;
+          }
+
+          if (
+            miembro.estado ===
+              "RETIRADO" &&
+            miembro.fechaRetiro
+          ) {
+            const diaRetiro =
+              obtenerDiaEnFecha(
+                grupo.fechaInicio,
+                grupo.duracionDias,
+                miembro.fechaRetiro
+              );
+
+            return (
+              diaRetiro >=
+              miembro.diaIngreso
+            );
+          }
+
+          return true;
+        }
       )
       .map(
         (miembro) => {
@@ -451,12 +544,34 @@ export async function GET(
             miembro.seguimientoId ===
             seguimientoActual.id;
 
+          const diaRetiro =
+            miembro.estado ===
+              "RETIRADO" &&
+            miembro.fechaRetiro
+              ? obtenerDiaEnFecha(
+                  grupo.fechaInicio,
+                  grupo.duracionDias,
+                  miembro.fechaRetiro
+                )
+              : null;
+
+          const hastaMiembro =
+            diaRetiro !== null
+              ? Math.min(
+                  diaActual,
+                  Math.max(
+                    miembro.diaIngreso,
+                    diaRetiro
+                  )
+                )
+              : diaActual;
+
           const hoy =
             calcularCumplimiento(
               miembro.seguimiento
                 .actividades,
-              diaActual,
-              diaActual,
+              hastaMiembro,
+              hastaMiembro,
               grupo.duracionDias
             );
 
@@ -468,7 +583,7 @@ export async function GET(
                 1,
                 miembro.diaIngreso
               ),
-              diaActual,
+              hastaMiembro,
               grupo.duracionDias
             );
 
@@ -485,8 +600,15 @@ export async function GET(
 
             esActual,
 
+            estado:
+              miembro.estado,
+
             diaIngreso:
               miembro.diaIngreso,
+
+            diaRetiro,
+
+            hastaMiembro,
 
             hoy,
 
@@ -495,13 +617,30 @@ export async function GET(
         }
       );
 
+  /*
+   * El ranking diario solo representa
+   * participantes que siguen activos.
+   *
+   * Los retirados conservan únicamente
+   * su resultado acumulado congelado.
+   */
+  const participantesHoy =
+    participantes.filter(
+      (participante) =>
+        participante.estado ===
+        "ACTIVO"
+    );
+
   function crearRanking(
     tipo:
       | "hoy"
-      | "acumulado"
+      | "acumulado",
+
+    fuente:
+      typeof participantes
   ) {
     const ordenados =
-      [...participantes].sort(
+      [...fuente].sort(
         (a, b) => {
           const porcentajeA =
             a[tipo].porcentaje;
@@ -576,12 +715,14 @@ export async function GET(
 
   const rankingHoy =
     crearRanking(
-      "hoy"
+      "hoy",
+      participantesHoy
     );
 
   const rankingAcumulado =
     crearRanking(
-      "acumulado"
+      "acumulado",
+      participantes
     );
 
   const posicionHoy =

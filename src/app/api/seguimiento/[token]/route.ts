@@ -11,6 +11,72 @@ import {
   tokenSeguimientoValido,
 } from "@/lib/seguimiento-publico";
 
+const MS_DIA =
+  24 * 60 * 60 * 1000;
+
+function diaGrupoEnFecha({
+  fechaInicio,
+  fechaReferencia,
+  duracionDias,
+}: {
+  fechaInicio: Date;
+  fechaReferencia: Date;
+  duracionDias: number;
+}) {
+  const inicio =
+    Date.UTC(
+      fechaInicio.getUTCFullYear(),
+      fechaInicio.getUTCMonth(),
+      fechaInicio.getUTCDate()
+    );
+
+  const partes =
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone:
+          "America/La_Paz",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }
+    ).formatToParts(
+      fechaReferencia
+    );
+
+  const valor = (
+    tipo: string
+  ) =>
+    partes.find(
+      (parte) =>
+        parte.type === tipo
+    )?.value || "";
+
+  const referencia =
+    Date.UTC(
+      Number(valor("year")),
+      Number(valor("month")) - 1,
+      Number(valor("day"))
+    );
+
+  const dia =
+    Math.floor(
+      (
+        referencia -
+        inicio
+      ) / MS_DIA
+    ) + 1;
+
+  return Math.max(
+    0,
+    Math.min(
+      dia,
+      duracionDias
+    )
+  );
+}
+
+
 export async function GET(
   _req: NextRequest,
   {
@@ -74,6 +140,25 @@ export async function GET(
 
         fechaFinalizado:
           true,
+
+        miembroGrupo: {
+          select: {
+            estado: true,
+            diaIngreso: true,
+            fechaRetiro: true,
+
+            grupo: {
+              select: {
+                id: true,
+                nombre: true,
+                estado: true,
+                fechaInicio: true,
+                duracionDias: true,
+                fechaFinalizado: true,
+              },
+            },
+          },
+        },
 
         registrosDiarios: {
           where: {
@@ -197,25 +282,136 @@ export async function GET(
     },
   });
 
+  const miembroGrupo =
+    seguimiento.miembroGrupo;
+
   let diaActual:
     number | null = null;
 
-  if (
+  let grupoProgramado =
+    false;
+
+  /*
+   * Si pertenece a un grupo, la jornada
+   * oficial siempre sale de la fecha
+   * del grupo.
+   */
+  if (miembroGrupo) {
+    const grupo =
+      miembroGrupo.grupo;
+
+    if (
+      grupo.estado ===
+      "ACTIVO"
+    ) {
+      const diaCalculado =
+        obtenerDiaSeguimiento(
+          grupo.fechaInicio
+        );
+
+      if (
+        diaCalculado <
+        1
+      ) {
+        grupoProgramado =
+          true;
+
+        diaActual =
+          null;
+      } else if (
+        diaCalculado <=
+        grupo.duracionDias
+      ) {
+        const diaRetiro =
+          miembroGrupo.estado ===
+              "RETIRADO" &&
+            miembroGrupo.fechaRetiro
+            ? diaGrupoEnFecha({
+                fechaInicio:
+                  grupo.fechaInicio,
+
+                fechaReferencia:
+                  miembroGrupo.fechaRetiro,
+
+                duracionDias:
+                  grupo.duracionDias,
+              })
+            : null;
+
+        diaActual =
+          Math.max(
+            miembroGrupo.diaIngreso,
+            diaRetiro !== null
+              ? Math.min(
+                  diaCalculado,
+                  diaRetiro
+                )
+              : diaCalculado
+          );
+      }
+    } else if (
+      grupo.estado ===
+      "FINALIZADO"
+    ) {
+      const diaFinal =
+        grupo.fechaFinalizado
+          ? diaGrupoEnFecha({
+              fechaInicio:
+                grupo.fechaInicio,
+
+              fechaReferencia:
+                grupo.fechaFinalizado,
+
+              duracionDias:
+                grupo.duracionDias,
+            })
+          : grupo.duracionDias;
+
+      const diaRetiro =
+        miembroGrupo.estado ===
+            "RETIRADO" &&
+          miembroGrupo.fechaRetiro
+          ? diaGrupoEnFecha({
+              fechaInicio:
+                grupo.fechaInicio,
+
+              fechaReferencia:
+                miembroGrupo.fechaRetiro,
+
+              duracionDias:
+                grupo.duracionDias,
+            })
+          : null;
+
+      diaActual =
+        Math.max(
+          miembroGrupo.diaIngreso,
+          diaRetiro !== null
+            ? Math.min(
+                diaFinal,
+                diaRetiro
+              )
+            : diaFinal
+        );
+    }
+  } else if (
     seguimiento.fechaInicio
   ) {
-    diaActual =
+    const diaCalculado =
       obtenerDiaSeguimiento(
         seguimiento.fechaInicio
       );
 
-    diaActual =
-      Math.max(
-        1,
+    if (
+      diaCalculado >=
+      1
+    ) {
+      diaActual =
         Math.min(
-          diaActual,
+          diaCalculado,
           seguimiento.duracionDias
-        )
-      );
+        );
+    }
   }
 
   return NextResponse.json({
@@ -242,6 +438,46 @@ export async function GET(
         seguimiento.fechaFinalizado,
 
       diaActual,
+
+      grupo:
+        miembroGrupo
+          ? {
+              id:
+                miembroGrupo
+                  .grupo.id,
+
+              nombre:
+                miembroGrupo
+                  .grupo.nombre,
+
+              estado:
+                miembroGrupo
+                  .grupo.estado,
+
+              estadoMiembro:
+                miembroGrupo
+                  .estado,
+
+              fechaInicio:
+                miembroGrupo
+                  .grupo.fechaInicio,
+
+              fechaFinalizado:
+                miembroGrupo
+                  .grupo.fechaFinalizado,
+
+              duracionDias:
+                miembroGrupo
+                  .grupo.duracionDias,
+
+              diaIngreso:
+                miembroGrupo
+                  .diaIngreso,
+
+              programado:
+                grupoProgramado,
+            }
+          : null,
 
       pesos:
         seguimiento.registrosDiarios.map(

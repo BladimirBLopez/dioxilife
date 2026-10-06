@@ -11,6 +11,10 @@ import {
   tokenSeguimientoValido,
 } from "@/lib/seguimiento-publico";
 
+import {
+  resolverDiaRegistroPublico,
+} from "@/lib/seguimiento-publico-grupo";
+
 function numeroOpcional(
   valor: unknown,
   nombre: string,
@@ -89,32 +93,179 @@ async function obtenerSeguimiento(
       estado: true,
       fechaInicio: true,
       duracionDias: true,
+
+      miembroGrupo: {
+        select: {
+          estado: true,
+          diaIngreso: true,
+          fechaRetiro: true,
+
+          grupo: {
+            select: {
+              estado: true,
+              fechaInicio: true,
+              duracionDias: true,
+            },
+          },
+        },
+      },
     },
   });
 }
 
-function obtenerDiaActual(
+function resolverConsultaMediciones(
   seguimiento: {
+    estado: string;
     fechaInicio: Date | null;
     duracionDias: number;
+
+    miembroGrupo:
+      | {
+          estado: string;
+          diaIngreso: number;
+          fechaRetiro: Date | null;
+
+          grupo: {
+            estado: string;
+            fechaInicio: Date;
+            duracionDias: number;
+          };
+        }
+      | null;
   }
 ) {
   if (
-    !seguimiento.fechaInicio
+    seguimiento.miembroGrupo
   ) {
-    return null;
+    const miembro =
+      seguimiento.miembroGrupo;
+
+    const grupo =
+      miembro.grupo;
+
+    const diaActualGrupo =
+      obtenerDiaSeguimiento(
+        grupo.fechaInicio
+      );
+
+    const diaRetiro =
+      miembro.estado ===
+          "RETIRADO" &&
+        miembro.fechaRetiro
+        ? Math.floor(
+            (
+              Date.UTC(
+                miembro.fechaRetiro
+                  .getUTCFullYear(),
+                miembro.fechaRetiro
+                  .getUTCMonth(),
+                miembro.fechaRetiro
+                  .getUTCDate()
+              ) -
+              Date.UTC(
+                grupo.fechaInicio
+                  .getUTCFullYear(),
+                grupo.fechaInicio
+                  .getUTCMonth(),
+                grupo.fechaInicio
+                  .getUTCDate()
+              )
+            ) /
+              86400000
+          ) + 1
+        : null;
+
+    const diaCalculado =
+      diaRetiro !== null
+        ? Math.min(
+            diaActualGrupo,
+            diaRetiro
+          )
+        : diaActualGrupo;
+
+    if (
+      diaCalculado < 1
+    ) {
+      return {
+        diaActual:
+          null as number | null,
+
+        editable:
+          false,
+      };
+    }
+
+    const diaActual =
+      Math.max(
+        miembro.diaIngreso,
+        Math.min(
+          diaCalculado,
+          grupo.duracionDias
+        )
+      );
+
+    const editable =
+      seguimiento.estado ===
+        "ACTIVO" &&
+      miembro.estado ===
+        "ACTIVO" &&
+      grupo.estado ===
+        "ACTIVO" &&
+      diaCalculado >=
+        miembro.diaIngreso &&
+      diaCalculado <=
+        grupo.duracionDias;
+
+    return {
+      diaActual,
+      editable,
+    };
   }
 
-  return Math.max(
-    1,
-    Math.min(
-      obtenerDiaSeguimiento(
-        seguimiento.fechaInicio
+  if (
+    !seguimiento.fechaInicio
+  ) {
+    return {
+      diaActual:
+        null as number | null,
+
+      editable:
+        false,
+    };
+  }
+
+  const diaCalculado =
+    obtenerDiaSeguimiento(
+      seguimiento.fechaInicio
+    );
+
+  if (
+    diaCalculado < 1
+  ) {
+    return {
+      diaActual:
+        null as number | null,
+
+      editable:
+        false,
+    };
+  }
+
+  return {
+    diaActual:
+      Math.min(
+        diaCalculado,
+        seguimiento.duracionDias
       ),
-      seguimiento.duracionDias
-    )
-  );
+
+    editable:
+      seguimiento.estado ===
+        "ACTIVO" &&
+      diaCalculado <=
+        seguimiento.duracionDias,
+  };
 }
+
 
 export async function GET(
   _req: NextRequest,
@@ -147,48 +298,87 @@ export async function GET(
     );
   }
 
-  const diaActual =
-    obtenerDiaActual(
+  const consulta =
+    resolverConsultaMediciones(
       seguimiento
     );
 
-  if (!diaActual) {
+  if (!consulta.diaActual) {
     return NextResponse.json({
       diaActual: null,
+      editable: false,
       registro: null,
     });
   }
 
   const registro =
-    await prisma.registroDiaSeguimiento.findUnique({
-      where: {
-        seguimientoId_diaPlan: {
-          seguimientoId:
-            seguimiento.id,
+    consulta.editable
+      ? await prisma.registroDiaSeguimiento.findUnique({
+          where: {
+            seguimientoId_diaPlan: {
+              seguimientoId:
+                seguimiento.id,
 
-          diaPlan:
-            diaActual,
-        },
-      },
+              diaPlan:
+                consulta.diaActual,
+            },
+          },
 
-      select: {
-        diaPlan: true,
-        peso: true,
-        cinturaCm: true,
-        glucemiaAyunas: true,
-      },
-    });
+          select: {
+            diaPlan: true,
+            peso: true,
+            cinturaCm: true,
+            glucemiaAyunas: true,
+          },
+        })
+      : await prisma.registroDiaSeguimiento.findFirst({
+          where: {
+            seguimientoId:
+              seguimiento.id,
+
+            diaPlan: {
+              lte:
+                consulta.diaActual,
+
+              ...(seguimiento
+                .miembroGrupo
+                ? {
+                    gte:
+                      seguimiento
+                        .miembroGrupo
+                        .diaIngreso,
+                  }
+                : {}),
+            },
+          },
+
+          orderBy: {
+            diaPlan:
+              "desc",
+          },
+
+          select: {
+            diaPlan: true,
+            peso: true,
+            cinturaCm: true,
+            glucemiaAyunas: true,
+          },
+        });
+
+  const diaMostrado =
+    registro?.diaPlan ??
+    consulta.diaActual;
 
   return NextResponse.json({
-    diaActual,
+    diaActual:
+      diaMostrado,
 
     editable:
-      seguimiento.estado ===
-      "ACTIVO",
+      consulta.editable,
 
     registro: {
       diaPlan:
-        diaActual,
+        diaMostrado,
 
       peso:
         registro?.peso !==
@@ -254,37 +444,39 @@ export async function PUT(
     );
   }
 
+  const resolucionDia =
+    resolverDiaRegistroPublico({
+      estado:
+        seguimiento.estado,
+
+      fechaInicio:
+        seguimiento.fechaInicio,
+
+      duracionDias:
+        seguimiento.duracionDias,
+
+      miembroGrupo:
+        seguimiento.miembroGrupo,
+    });
+
   if (
-    seguimiento.estado !==
-    "ACTIVO"
+    !resolucionDia.ok
   ) {
     return NextResponse.json(
       {
         error:
-          "Las mediciones solo pueden registrarse mientras el seguimiento está activo.",
+          resolucionDia.error,
       },
       {
-        status: 409,
+        status:
+          resolucionDia.status,
       }
     );
   }
 
   const diaActual =
-    obtenerDiaActual(
-      seguimiento
-    );
+    resolucionDia.diaPlan;
 
-  if (!diaActual) {
-    return NextResponse.json(
-      {
-        error:
-          "El seguimiento todavía no tiene una fecha de inicio.",
-      },
-      {
-        status: 409,
-      }
-    );
-  }
 
   const body: unknown =
     await req

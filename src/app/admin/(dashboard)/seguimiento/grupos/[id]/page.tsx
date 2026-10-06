@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import AgregarParticipanteGrupo from "@/components/admin/seguimiento/AgregarParticipanteGrupo";
+import GestionParticipanteGrupo from "@/components/admin/seguimiento/GestionParticipanteGrupo";
 import GestionGrupoSeguimiento from "@/components/admin/seguimiento/GestionGrupoSeguimiento";
 import ResumenGrupoSeguimiento from "@/components/admin/seguimiento/ResumenGrupoSeguimiento";
 import BotonInformeGrupoSeguimiento from "@/components/admin/seguimiento/BotonInformeGrupoSeguimiento";
@@ -284,6 +285,7 @@ export default async function GrupoSeguimientoDetallePage({
             id: true,
             diaIngreso: true,
             fechaIngreso: true,
+            fechaRetiro: true,
             estado: true,
 
             seguimiento: {
@@ -325,6 +327,21 @@ export default async function GrupoSeguimientoDetallePage({
           grupo.duracionDias
         )
       : null;
+
+  const participantesActivos =
+    grupo.miembros.filter(
+      (miembro) =>
+        miembro.estado ===
+        "ACTIVO"
+    ).length;
+
+  const participantesRetirados =
+    grupo.miembros.filter(
+      (miembro) =>
+        miembro.estado ===
+        "RETIRADO"
+    ).length;
+
 
   const actividadesAgenda =
     grupo.plan.actividades.map(
@@ -472,7 +489,7 @@ export default async function GrupoSeguimientoDetallePage({
               grupoId={grupo.id}
               estado={grupo.estado}
               duracionDias={grupo.duracionDias}
-              participantes={grupo.miembros.length}
+              participantes={participantesActivos}
               fechaInicio={
                 fechaClave(
                   grupo.fechaInicio
@@ -604,12 +621,22 @@ export default async function GrupoSeguimientoDetallePage({
               {grupo.miembros.length ===
               0
                 ? "Todavía no hay participantes en este grupo."
-                : `${grupo.miembros.length} participante${
-                    grupo.miembros.length ===
+                : `${participantesActivos} activo${
+                    participantesActivos ===
                     1
                       ? ""
                       : "s"
-                  } en el grupo.`}
+                  }${
+                    participantesRetirados >
+                    0
+                      ? ` · ${participantesRetirados} retirado${
+                          participantesRetirados ===
+                          1
+                            ? ""
+                            : "s"
+                        }`
+                      : ""
+                  }`}
             </p>
           </div>
 
@@ -668,12 +695,27 @@ export default async function GrupoSeguimientoDetallePage({
 
                   <div>
 
-                    <p className="font-semibold text-gray-900">
-                      {miembro
-                        .seguimiento
-                        .nombreCliente ||
-                        "Cliente sin nombre"}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+
+                      <p className="font-semibold text-gray-900">
+                        {miembro
+                          .seguimiento
+                          .nombreCliente ||
+                          "Cliente sin nombre"}
+                      </p>
+
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                          miembro.estado ===
+                          "ACTIVO"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {miembro.estado}
+                      </span>
+
+                    </div>
 
                     <p className="mt-1 text-xs text-gray-500">
                       Ingreso día{" "}
@@ -684,16 +726,56 @@ export default async function GrupoSeguimientoDetallePage({
                       {fecha(
                         miembro.fechaIngreso
                       )}
+
+                      {miembro.estado ===
+                        "RETIRADO" &&
+                        miembro.fechaRetiro && (
+                          <>
+                            {" "}
+                            · Retiro{" "}
+                            {fecha(
+                              miembro.fechaRetiro
+                            )}
+                          </>
+                        )}
                     </p>
 
                   </div>
 
-                  <Link
-                    href={`/admin/seguimiento/clientes/${miembro.seguimiento.id}`}
-                    className="text-sm font-semibold text-violet-700 hover:text-violet-800"
-                  >
-                    Ver seguimiento →
-                  </Link>
+                  <div className="flex flex-wrap items-center justify-end gap-3">
+
+                    <Link
+                      href={`/admin/seguimiento/clientes/${miembro.seguimiento.id}`}
+                      className="text-sm font-semibold text-violet-700 hover:text-violet-800"
+                    >
+                      Ver seguimiento →
+                    </Link>
+
+                    <GestionParticipanteGrupo
+                      grupoId={
+                        grupo.id
+                      }
+                      miembroId={
+                        miembro.id
+                      }
+                      nombre={
+                        miembro
+                          .seguimiento
+                          .nombreCliente ||
+                        "este participante"
+                      }
+                      estadoGrupo={
+                        grupo.estado
+                      }
+                      estadoMiembro={
+                        miembro.estado
+                      }
+                      programado={
+                        grupoProgramado
+                      }
+                    />
+
+                  </div>
 
                 </div>
               )

@@ -7,9 +7,12 @@ import { prisma } from "@/lib/prisma";
 
 import {
   hashTokenSeguimiento,
-  obtenerDiaSeguimiento,
   tokenSeguimientoValido,
 } from "@/lib/seguimiento-publico";
+
+import {
+  resolverDiaRegistroPublico,
+} from "@/lib/seguimiento-publico-grupo";
 
 export async function PUT(
   req: NextRequest,
@@ -57,6 +60,21 @@ export async function PUT(
         estado: true,
         fechaInicio: true,
         duracionDias: true,
+
+        miembroGrupo: {
+          select: {
+            estado: true,
+            diaIngreso: true,
+
+            grupo: {
+              select: {
+                estado: true,
+                fechaInicio: true,
+                duracionDias: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -72,42 +90,41 @@ export async function PUT(
     );
   }
 
+  const resolucionDia =
+    resolverDiaRegistroPublico({
+      estado:
+        seguimiento.estado,
+
+      fechaInicio:
+        seguimiento.fechaInicio,
+
+      duracionDias:
+        seguimiento.duracionDias,
+
+      miembroGrupo:
+        seguimiento.miembroGrupo,
+    });
+
   if (
-    seguimiento.estado !==
-      "ACTIVO" ||
-    !seguimiento.fechaInicio
+    !resolucionDia.ok
   ) {
     return NextResponse.json(
       {
         error:
-          "El seguimiento no está activo.",
+          resolucionDia.error,
       },
       {
-        status: 409,
+        status:
+          resolucionDia.status,
       }
     );
   }
 
   const diaPlan =
-    obtenerDiaSeguimiento(
-      seguimiento.fechaInicio
-    );
+    resolucionDia.diaPlan;
 
-  if (
-    diaPlan < 1 ||
-    diaPlan >
-      seguimiento.duracionDias
-  ) {
-    return NextResponse.json(
-      {
-        error:
-          "El día actual está fuera del periodo de seguimiento.",
-      },
-      {
-        status: 409,
-      }
-    );
-  }
+  const duracionAplicable =
+    resolucionDia.duracionDias;
 
   const actividad =
     await prisma.actividadSeguimiento.findFirst({
@@ -173,7 +190,7 @@ export async function PUT(
     (
       actividad.seccion ===
         "ADICIONAL"
-        ? seguimiento.duracionDias
+        ? duracionAplicable
         : actividad.diaInicio
     );
 

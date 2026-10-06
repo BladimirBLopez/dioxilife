@@ -403,8 +403,9 @@ model MiembroGrupoSeguimiento {
   seguimientoId String             @unique
   seguimiento   SeguimientoCliente @relation(fields: [seguimientoId], references: [id], onDelete: Cascade)
 
-  fechaIngreso DateTime @db.Date
+  fechaIngreso DateTime  @db.Date
   diaIngreso   Int
+  fechaRetiro  DateTime? @db.Date
 
   estado EstadoMiembroGrupoSeguimiento @default(ACTIVO)
 
@@ -414,6 +415,7 @@ model MiembroGrupoSeguimiento {
   @@index([grupoId])
   @@index([estado])
   @@index([fechaIngreso])
+  @@index([fechaRetiro])
 }
 
 model RegistroDiaSeguimiento {

@@ -100,6 +100,22 @@ type RegistroPeso = {
 };
 
 
+type GrupoSeguimientoPublico = {
+  id: string;
+  nombre: string;
+  estado:
+    | "BORRADOR"
+    | "ACTIVO"
+    | "FINALIZADO"
+    | "CANCELADO";
+  estadoMiembro: string;
+  fechaInicio: string;
+  fechaFinalizado: string | null;
+  duracionDias: number;
+  diaIngreso: number;
+  programado: boolean;
+};
+
 type Seguimiento = {
   nombreCliente: string | null;
   nombrePlan: string;
@@ -109,6 +125,7 @@ type Seguimiento = {
   fechaInicio: string | null;
   fechaFinalizado: string | null;
   diaActual: number | null;
+  grupo: GrupoSeguimientoPublico | null;
   pesos: RegistroPeso[];
   actividades: Actividad[];
 };
@@ -1216,6 +1233,36 @@ export default function SeguimientoPublico({
       : null;
 
 
+  const grupoFinalizado =
+    seguimiento?.grupo
+      ?.estado ===
+    "FINALIZADO";
+
+  const participanteGrupoActivo =
+    seguimiento?.grupo
+      ?.estadoMiembro ===
+    "ACTIVO";
+
+  const puedeRegistrarChecks =
+    Boolean(
+      seguimiento &&
+      seguimiento.estado ===
+        "ACTIVO" &&
+      seguimiento.diaActual &&
+      (
+        !seguimiento.grupo ||
+        (
+          seguimiento.grupo
+            .estado ===
+            "ACTIVO" &&
+          participanteGrupoActivo &&
+          !seguimiento.grupo
+            .programado
+        )
+      )
+    );
+
+
   async function iniciarSeguimiento() {
     if (iniciando) {
       return;
@@ -1274,9 +1321,8 @@ export default function SeguimientoPublico({
     actividad: Actividad
   ) {
     if (
-      !seguimiento?.diaActual ||
-      seguimiento.estado !==
-        "ACTIVO"
+      !puedeRegistrarChecks ||
+      !seguimiento?.diaActual
     ) {
       return;
     }
@@ -1405,9 +1451,8 @@ export default function SeguimientoPublico({
     indicacionId: string
   ) {
     if (
+      !puedeRegistrarChecks ||
       !seguimiento?.diaActual ||
-      seguimiento.estado !==
-        "ACTIVO" ||
       actualizandoIndicacion
     ) {
       return;
@@ -1609,6 +1654,51 @@ export default function SeguimientoPublico({
           </p>
         </div>
       </main>
+    );
+  }
+
+
+  /*
+   * En un grupo el participante nunca
+   * inicia manualmente el seguimiento.
+   */
+  if (
+    seguimiento.grupo &&
+    seguimiento.estado ===
+      "PENDIENTE"
+  ) {
+    return (
+      <EstadoEspecial
+        titulo="Grupo en preparación"
+        descripcion={
+          seguimiento.grupo.estado ===
+            "BORRADOR"
+            ? `Tu participación en ${seguimiento.grupo.nombre} ya está registrada. El administrador iniciará el grupo.`
+            : `Tu participación en ${seguimiento.grupo.nombre} está registrada. El inicio depende del calendario del grupo.`
+        }
+        icono={
+          <CalendarDays className="h-8 w-8" />
+        }
+      />
+    );
+  }
+
+
+  if (
+    seguimiento.grupo
+      ?.programado
+  ) {
+    return (
+      <EstadoEspecial
+        titulo="Seguimiento programado"
+        descripcion={`Tu grupo ${seguimiento.grupo.nombre} comenzará el ${formatearFecha(
+          seguimiento.grupo
+            .fechaInicio
+        )}. Cuando llegue la fecha entrarás automáticamente al Día 1.`}
+        icono={
+          <CalendarDays className="h-8 w-8" />
+        }
+      />
     );
   }
 
@@ -1919,8 +2009,26 @@ export default function SeguimientoPublico({
 
 
   if (
+    seguimiento.grupo
+      ?.estado ===
+    "CANCELADO"
+  ) {
+    return (
+      <EstadoEspecial
+        titulo="Grupo cancelado"
+        descripcion="Este grupo fue cerrado y ya no admite nuevos registros."
+        icono={
+          <Ban className="h-8 w-8" />
+        }
+      />
+    );
+  }
+
+
+  if (
     seguimiento.estado ===
-    "PAUSADO"
+      "PAUSADO" &&
+    !seguimiento.grupo
   ) {
     return (
       <EstadoEspecial
@@ -1936,7 +2044,8 @@ export default function SeguimientoPublico({
 
   if (
     seguimiento.estado ===
-    "CANCELADO"
+      "CANCELADO" &&
+    !seguimiento.grupo
   ) {
     return (
       <EstadoEspecial
@@ -1952,7 +2061,8 @@ export default function SeguimientoPublico({
 
   if (
     seguimiento.estado ===
-    "COMPLETADO"
+      "COMPLETADO" &&
+    !seguimiento.grupo
   ) {
     return (
       <EstadoEspecial
@@ -1965,19 +2075,23 @@ export default function SeguimientoPublico({
     );
   }
 
-
   const diaActual =
     seguimiento.diaActual ??
+    1;
+
+  const primerDiaDisponible =
+    seguimiento.grupo
+      ?.diaIngreso ??
     1;
 
 
   const inicioCalendario =
     Math.max(
-      1,
+      primerDiaDisponible,
       Math.min(
         diaActual - 3,
         Math.max(
-          1,
+          primerDiaDisponible,
           seguimiento.duracionDias - 6
         )
       )
@@ -2009,7 +2123,8 @@ export default function SeguimientoPublico({
             indice
     ).filter(
       (dia) =>
-        dia >= 1 &&
+        dia >=
+          primerDiaDisponible &&
         dia <=
           seguimiento.duracionDias
     );
@@ -2017,6 +2132,37 @@ export default function SeguimientoPublico({
 
   return (
     <main className="min-h-screen bg-[#F8F7FC] pb-24">
+
+      {grupoFinalizado && (
+        <div className="mx-auto w-full max-w-3xl px-4 pt-4">
+          <div className="rounded-2xl border border-[#E9E4F2] bg-white px-4 py-3 shadow-sm">
+            <p className="text-sm font-extrabold text-[#34303A]">
+              Grupo finalizado
+            </p>
+
+            <p className="mt-1 text-xs leading-5 text-brand-gray">
+              Puedes consultar tu historial, tus checks y tus avances anteriores. Ya no se pueden registrar nuevos checks.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {seguimiento.grupo &&
+        seguimiento.grupo.estadoMiembro !==
+          "ACTIVO" &&
+        !grupoFinalizado && (
+          <div className="mx-auto w-full max-w-3xl px-4 pt-4">
+            <div className="rounded-2xl border border-[#E9E4F2] bg-white px-4 py-3 shadow-sm">
+              <p className="text-sm font-extrabold text-[#34303A]">
+                Participación finalizada
+              </p>
+
+              <p className="mt-1 text-xs leading-5 text-brand-gray">
+                Puedes consultar los registros realizados mientras participabas en el grupo. Ya no puedes registrar nuevos checks.
+              </p>
+            </div>
+          </div>
+        )}
 
       <header className="border-b border-[#E9E4F2] bg-white">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3">
@@ -2204,7 +2350,13 @@ export default function SeguimientoPublico({
 
 
         {pestana === "hoy" &&
-          seguimiento.estado === "ACTIVO" && (
+          (
+            seguimiento.estado ===
+              "ACTIVO" ||
+            Boolean(
+              seguimiento.grupo
+            )
+          ) && (
           <>
             <MedicionesSeguimientoPublico
               token={token}
@@ -2828,8 +2980,9 @@ export default function SeguimientoPublico({
                                   )
                                 }
                                 disabled={
+                                  !puedeRegistrarChecks ||
                                   actualizandoActividad ===
-                                  actividad.id
+                                    actividad.id
                                 }
                                 aria-label={
                                   completada
@@ -2996,6 +3149,7 @@ export default function SeguimientoPublico({
                                           <button
                                             type="button"
                                             disabled={
+                                              !puedeRegistrarChecks ||
                                               cargandoIndicacion ||
                                               actualizando
                                             }

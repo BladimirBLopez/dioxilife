@@ -51,6 +51,9 @@ export default function MedicionesSeguimientoPublico({
   const [guardando, setGuardando] =
     useState(false);
 
+  const [editable, setEditable] =
+    useState(false);
+
   const [sucio, setSucio] =
     useState(false);
 
@@ -84,6 +87,11 @@ export default function MedicionesSeguimientoPublico({
 
           setDiaActual(
             respuesta.diaActual
+          );
+
+          setEditable(
+            respuesta.editable ===
+              true
           );
 
           setPeso(
@@ -139,6 +147,7 @@ export default function MedicionesSeguimientoPublico({
 
   async function guardar() {
     if (
+      !editable ||
       guardando ||
       !sucio
     ) {
@@ -280,7 +289,9 @@ export default function MedicionesSeguimientoPublico({
         </h2>
 
         <p className="mt-1 text-xs leading-5 text-brand-gray">
-          Registra solamente las mediciones que tengas disponibles hoy.
+          {editable
+            ? "Registra solamente las mediciones que tengas disponibles hoy."
+            : "Estas son tus últimas mediciones registradas. El historial se encuentra en modo consulta."}
         </p>
       </div>
 
@@ -296,6 +307,7 @@ export default function MedicionesSeguimientoPublico({
             <input
               type="text"
               inputMode="decimal"
+              disabled={!editable}
               value={peso}
               onChange={(event) => {
                 setPeso(
@@ -323,6 +335,7 @@ export default function MedicionesSeguimientoPublico({
             <input
               type="text"
               inputMode="decimal"
+              disabled={!editable}
               value={cinturaCm}
               onChange={(event) => {
                 setCinturaCm(
@@ -350,6 +363,7 @@ export default function MedicionesSeguimientoPublico({
             <input
               type="text"
               inputMode="decimal"
+              disabled={!editable}
               value={glucemiaAyunas}
               onChange={(event) => {
                 setGlucemiaAyunas(
@@ -373,6 +387,7 @@ export default function MedicionesSeguimientoPublico({
       <button
         type="button"
         disabled={
+          !editable ||
           guardando ||
           !sucio
         }
@@ -387,7 +402,9 @@ export default function MedicionesSeguimientoPublico({
           <Save className="h-4 w-4" />
         )}
 
-        {guardando
+        {!editable
+          ? "Solo lectura"
+          : guardando
           ? "Guardando..."
           : sucio
           ? "Guardar mediciones"
