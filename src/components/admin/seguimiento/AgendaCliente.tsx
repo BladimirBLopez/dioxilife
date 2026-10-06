@@ -49,7 +49,10 @@ type Actividad = {
 };
 
 type Props = {
-  seguimientoId: string;
+  seguimientoId?: string;
+  apiBase?: string;
+  tituloAgenda?: string;
+  descripcionAgenda?: string;
   duracionDias: number;
   estado: string;
   diaActual: number | null;
@@ -72,12 +75,29 @@ const vacio = {
 
 export default function AgendaCliente({
   seguimientoId,
+  apiBase,
+  tituloAgenda = "Agenda individual",
+  descripcionAgenda = "Estas actividades pertenecen exclusivamente a este cliente.",
   duracionDias,
   estado,
   diaActual,
   actividades,
 }: Props) {
   const router = useRouter();
+
+  const baseApi =
+    apiBase ??
+    (
+      seguimientoId
+        ? `/api/admin/seguimiento/clientes/${seguimientoId}`
+        : ""
+    );
+
+  if (!baseApi) {
+    throw new Error(
+      "No se definió el recurso de la agenda."
+    );
+  }
 
   const bloqueado =
     estado === "COMPLETADO" ||
@@ -155,8 +175,8 @@ export default function AgendaCliente({
     try {
       const url =
         actividadEditando
-          ? `/api/admin/seguimiento/clientes/${seguimientoId}/actividades/${actividadEditando.id}`
-          : `/api/admin/seguimiento/clientes/${seguimientoId}/actividades`;
+          ? `${baseApi}/actividades/${actividadEditando.id}`
+          : `${baseApi}/actividades`;
 
       const res = await fetch(url, {
         method:
@@ -258,7 +278,7 @@ export default function AgendaCliente({
 
     try {
       const res = await fetch(
-        `/api/admin/seguimiento/clientes/${seguimientoId}/actividades/${actividad.id}`,
+        `${baseApi}/actividades/${actividad.id}`,
         {
           method: "PUT",
 
@@ -355,7 +375,7 @@ export default function AgendaCliente({
 
     try {
       const res = await fetch(
-        `/api/admin/seguimiento/clientes/${seguimientoId}/actividades/${quitarActividad.id}`,
+        `${baseApi}/actividades/${quitarActividad.id}`,
         {
           method: "PUT",
 
@@ -430,7 +450,7 @@ export default function AgendaCliente({
 
     try {
       const res = await fetch(
-        `/api/admin/seguimiento/clientes/${seguimientoId}/actividades/${eliminarActividad.id}`,
+        `${baseApi}/actividades/${eliminarActividad.id}`,
         {
           method: "DELETE",
         }
@@ -486,11 +506,11 @@ export default function AgendaCliente({
           <div>
 
             <h2 className="text-lg font-semibold text-gray-900">
-              Agenda individual
+              {tituloAgenda}
             </h2>
 
             <p className="mt-1 text-sm text-gray-500">
-              Estas actividades pertenecen exclusivamente a este cliente.
+              {descripcionAgenda}
             </p>
 
           </div>
@@ -651,6 +671,9 @@ export default function AgendaCliente({
                       <IndicacionesActividadPreparacion
                         seguimientoId={
                           seguimientoId
+                        }
+                        apiBase={
+                          baseApi
                         }
                         actividadId={
                           actividad.id

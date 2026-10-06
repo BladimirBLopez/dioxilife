@@ -9,6 +9,7 @@ import AgregarParticipanteGrupo from "@/components/admin/seguimiento/AgregarPart
 import GestionGrupoSeguimiento from "@/components/admin/seguimiento/GestionGrupoSeguimiento";
 import ResumenGrupoSeguimiento from "@/components/admin/seguimiento/ResumenGrupoSeguimiento";
 import BotonInformeGrupoSeguimiento from "@/components/admin/seguimiento/BotonInformeGrupoSeguimiento";
+import AgendaCliente from "@/components/admin/seguimiento/AgendaCliente";
 
 function fecha(
   valor: Date
@@ -62,6 +63,60 @@ function fechaClave(
       0,
       10
     );
+}
+
+function diaActualGrupo(
+  fechaInicio: Date,
+  duracionDias: number
+) {
+  const hoy =
+    fechaBoliviaActual();
+
+  const inicio =
+    fechaClave(
+      fechaInicio
+    );
+
+  const inicioMs =
+    Date.parse(
+      `${inicio}T00:00:00.000Z`
+    );
+
+  const hoyMs =
+    Date.parse(
+      `${hoy}T00:00:00.000Z`
+    );
+
+  if (
+    !Number.isFinite(
+      inicioMs
+    ) ||
+    !Number.isFinite(
+      hoyMs
+    )
+  ) {
+    return null;
+  }
+
+  const dia =
+    Math.floor(
+      (
+        hoyMs -
+        inicioMs
+      ) /
+        86400000
+    ) + 1;
+
+  if (
+    dia < 1
+  ) {
+    return null;
+  }
+
+  return Math.min(
+    dia,
+    duracionDias
+  );
 }
 
 function claseEstado(
@@ -137,6 +192,86 @@ export default async function GrupoSeguimientoDetallePage({
                 },
               },
             },
+
+            actividades: {
+              orderBy: [
+                {
+                  diaInicio:
+                    "asc",
+                },
+                {
+                  orden:
+                    "asc",
+                },
+                {
+                  hora: {
+                    sort:
+                      "asc",
+                    nulls:
+                      "last",
+                  },
+                },
+                {
+                  createdAt:
+                    "asc",
+                },
+              ],
+
+              select: {
+                id: true,
+                tipo: true,
+                recordatorio: true,
+                seccion: true,
+                titulo: true,
+                descripcion: true,
+                momento: true,
+                hora: true,
+                diaInicio: true,
+                diaFin: true,
+                orden: true,
+                activo: true,
+
+                indicaciones: {
+                  where: {
+                    activo:
+                      true,
+                  },
+
+                  orderBy: [
+                    {
+                      hora:
+                        "asc",
+                    },
+                    {
+                      orden:
+                        "asc",
+                    },
+                    {
+                      createdAt:
+                        "asc",
+                    },
+                  ],
+
+                  select: {
+                    id: true,
+                    hora: true,
+                    texto: true,
+                    orden: true,
+                  },
+                },
+
+                copiasSeguimiento: {
+                  select: {
+                    _count: {
+                      select: {
+                        progresos:
+                          true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
         },
 
@@ -180,6 +315,74 @@ export default async function GrupoSeguimientoDetallePage({
     grupoProgramado
       ? "PROGRAMADO"
       : grupo.estado;
+
+  const diaActual =
+    grupo.estado ===
+      "ACTIVO" &&
+    !grupoProgramado
+      ? diaActualGrupo(
+          grupo.fechaInicio,
+          grupo.duracionDias
+        )
+      : null;
+
+  const actividadesAgenda =
+    grupo.plan.actividades.map(
+      (
+        actividad
+      ) => ({
+        id:
+          actividad.id,
+
+        tipo:
+          actividad.tipo,
+
+        seccion:
+          actividad.seccion,
+
+        recordatorio:
+          actividad.recordatorio,
+
+        titulo:
+          actividad.titulo,
+
+        descripcion:
+          actividad.descripcion,
+
+        momento:
+          actividad.momento,
+
+        hora:
+          actividad.hora,
+
+        diaInicio:
+          actividad.diaInicio,
+
+        diaFin:
+          actividad.diaFin,
+
+        orden:
+          actividad.orden,
+
+        activo:
+          actividad.activo,
+
+        indicaciones:
+          actividad.indicaciones,
+
+        cantidadProgresos:
+          actividad.copiasSeguimiento.reduce(
+            (
+              total,
+              copia
+            ) =>
+              total +
+              copia._count
+                .progresos,
+            0
+          ),
+      })
+    );
 
   return (
     <div className="space-y-6">
@@ -347,6 +550,35 @@ export default async function GrupoSeguimientoDetallePage({
           </p>
 
         </div>
+      )}
+
+
+      {grupo.estado !==
+        "BORRADOR" && (
+
+        <AgendaCliente
+          apiBase={
+            `/api/admin/seguimiento/grupos/${grupo.id}`
+          }
+          tituloAgenda="Agenda grupal"
+          descripcionAgenda="Los cambios realizados aquí se aplican al protocolo común y a los participantes activos del grupo."
+          duracionDias={
+            grupo.duracionDias
+          }
+          estado={
+            grupo.estado ===
+              "FINALIZADO"
+              ? "COMPLETADO"
+              : grupo.estado
+          }
+          diaActual={
+            diaActual
+          }
+          actividades={
+            actividadesAgenda
+          }
+        />
+
       )}
 
 
