@@ -727,6 +727,27 @@ export default function PlanActividadesPage() {
       return;
     }
 
+    if (
+      flujoGrupo &&
+      !actividades.some(
+        (actividad) =>
+          Boolean(
+            actividad.descripcion.trim()
+          ) ||
+          actividad.instrucciones.some(
+            (instruccion) =>
+              Boolean(
+                instruccion.texto.trim()
+              )
+          )
+      )
+    ) {
+      toast.error(
+        "Agrega al menos una instrucción al protocolo del grupo."
+      );
+      return;
+    }
+
     setGuardando(
       true
     );

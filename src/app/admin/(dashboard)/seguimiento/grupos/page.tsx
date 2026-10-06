@@ -48,10 +48,15 @@ type Grupo = {
   };
 };
 
+type ModoInicio =
+  | "CERO"
+  | "PLANTILLA";
+
 type FormGrupo = {
   nombre: string;
   objetivo: string;
   descripcion: string;
+  modoInicio: ModoInicio;
   planId: string;
   fechaInicio: string;
   duracionDias: string;
@@ -61,6 +66,7 @@ const FORM_VACIO: FormGrupo = {
   nombre: "",
   objetivo: "",
   descripcion: "",
+  modoInicio: "CERO",
   planId: "",
   fechaInicio: "",
   duracionDias: "21",
@@ -340,9 +346,13 @@ export default function GruposSeguimientoPage() {
       return;
     }
 
-    if (!form.planId) {
+    if (
+      form.modoInicio ===
+        "PLANTILLA" &&
+      !form.planId
+    ) {
       toast.error(
-        "Selecciona el protocolo común."
+        "Selecciona una plantilla."
       );
       return;
     }
@@ -392,8 +402,14 @@ export default function GruposSeguimientoPage() {
                     .trim() ||
                   null,
 
+                modo:
+                  form.modoInicio,
+
                 planId:
-                  form.planId,
+                  form.modoInicio ===
+                  "PLANTILLA"
+                    ? form.planId
+                    : null,
 
                 fechaInicio:
                   form.fechaInicio,
@@ -807,57 +823,108 @@ export default function GruposSeguimientoPage() {
             <div>
 
               <label className="mb-1.5 block text-sm font-semibold text-gray-700">
-                Protocolo común *
+                ¿Cómo quieres comenzar? *
               </label>
 
-              <select
-                value={
-                  form.planId
-                }
-                onChange={(
-                  event
-                ) =>
-                  seleccionarPlan(
-                    event
-                      .target
-                      .value
-                  )
-                }
-                className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-3 text-sm outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
-              >
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
 
-                <option value="">
-                  Seleccionar plantilla
-                </option>
+                <button
+                  type="button"
+                  disabled={guardando}
+                  onClick={() =>
+                    setForm((actual) => ({
+                      ...actual,
+                      modoInicio: "CERO",
+                    }))
+                  }
+                  className={`rounded-2xl border p-4 text-left transition ${
+                    form.modoInicio === "CERO"
+                      ? "border-violet-500 bg-violet-50 ring-2 ring-violet-100"
+                      : "border-gray-200 bg-white hover:border-violet-200"
+                  }`}
+                >
+                  <p className="font-semibold text-gray-900">
+                    Crear protocolo desde cero
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-gray-500">
+                    Arma el protocolo propio de este grupo.
+                  </p>
+                </button>
 
-                {planes.map(
-                  (plan) => (
-                    <option
-                      key={
-                        plan.id
-                      }
-                      value={
-                        plan.id
-                      }
-                    >
-                      {
-                        plan.nombre
-                      }{" "}
-                      ·{" "}
-                      {
-                        plan.duracionDias
-                      }{" "}
-                      días
+                <button
+                  type="button"
+                  disabled={
+                    guardando ||
+                    planes.length === 0
+                  }
+                  onClick={() =>
+                    setForm((actual) => ({
+                      ...actual,
+                      modoInicio: "PLANTILLA",
+                    }))
+                  }
+                  className={`rounded-2xl border p-4 text-left transition ${
+                    form.modoInicio === "PLANTILLA"
+                      ? "border-violet-500 bg-violet-50 ring-2 ring-violet-100"
+                      : "border-gray-200 bg-white hover:border-violet-200"
+                  } ${
+                    planes.length === 0
+                      ? "cursor-not-allowed opacity-50"
+                      : ""
+                  }`}
+                >
+                  <p className="font-semibold text-gray-900">
+                    Usar una plantilla
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-gray-500">
+                    Copia un protocolo guardado y personalízalo para el grupo.
+                  </p>
+                </button>
+
+              </div>
+
+              {form.modoInicio === "CERO" && (
+                <p className="mt-3 text-xs leading-5 text-violet-700">
+                  En el siguiente paso agregarás los horarios e indicaciones del protocolo.
+                </p>
+              )}
+
+              {form.modoInicio === "PLANTILLA" && (
+                <div className="mt-3">
+
+                  <select
+                    value={form.planId}
+                    onChange={(event) =>
+                      seleccionarPlan(
+                        event.target.value
+                      )
+                    }
+                    className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-3 text-sm outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                  >
+                    <option value="">
+                      Seleccionar plantilla
                     </option>
-                  )
-                )}
 
-              </select>
+                    {planes.map((plan) => (
+                      <option
+                        key={plan.id}
+                        value={plan.id}
+                      >
+                        {plan.nombre} · {plan.duracionDias} días
+                      </option>
+                    ))}
+                  </select>
 
-              {planes.length ===
-                0 && (
+                  <p className="mt-2 text-xs leading-5 text-gray-500">
+                    Se copiará la plantilla y luego podrás personalizarla para este grupo.
+                  </p>
+
+                </div>
+              )}
+
+              {planes.length === 0 && (
                 <p className="mt-2 text-xs text-amber-600">
-                  No hay plantillas activas con actividades disponibles.
+                  No hay plantillas activas con actividades. Puedes crear el protocolo desde cero.
                 </p>
               )}
 

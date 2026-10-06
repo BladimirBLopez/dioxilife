@@ -209,6 +209,11 @@ export async function POST(
       ? body.planId.trim()
       : "";
 
+  const modo =
+    body.modo === "CERO"
+      ? "CERO"
+      : "PLANTILLA";
+
   const fechaInicio =
     body.fechaInicio;
 
@@ -241,7 +246,10 @@ export async function POST(
     );
   }
 
-  if (!planId) {
+  if (
+    modo === "PLANTILLA" &&
+    !planId
+  ) {
     return NextResponse.json(
       {
         error:
@@ -288,7 +296,9 @@ export async function POST(
   }
 
   const plan =
-    await prisma.planSeguimiento.findUnique({
+    modo === "CERO"
+      ? null
+      : await prisma.planSeguimiento.findUnique({
       where: {
         id:
           planId,
@@ -298,6 +308,7 @@ export async function POST(
         id: true,
         nombre: true,
         descripcion: true,
+        duracionDias: true,
         estado: true,
         esCopiaGrupo: true,
 
@@ -358,7 +369,10 @@ export async function POST(
       },
     });
 
-  if (!plan) {
+  if (
+    modo === "PLANTILLA" &&
+    !plan
+  ) {
     return NextResponse.json(
       {
         error:
@@ -371,7 +385,7 @@ export async function POST(
   }
 
   if (
-    plan.esCopiaGrupo
+    plan?.esCopiaGrupo
   ) {
     return NextResponse.json(
       {
@@ -385,6 +399,7 @@ export async function POST(
   }
 
   if (
+    plan &&
     plan.estado !== "ACTIVO"
   ) {
     return NextResponse.json(
@@ -399,6 +414,7 @@ export async function POST(
   }
 
   if (
+    plan &&
     plan.actividades.length ===
       0
   ) {
@@ -413,6 +429,16 @@ export async function POST(
     );
   }
 
+  const actividadesBase =
+    plan
+      ? plan.actividades
+      : [];
+
+  const duracionPlantilla =
+    plan
+      ? plan.duracionDias
+      : duracionDias;
+
   const tokenRanking =
     randomBytes(32)
       .toString("hex");
@@ -424,10 +450,17 @@ export async function POST(
           await tx.planSeguimiento.create({
             data: {
               nombre:
-                plan.nombre,
+                plan
+                  ? plan.nombre
+                  : `Protocolo del grupo: ${nombre}`.slice(
+                      0,
+                      200
+                    ),
 
               descripcion:
-                plan.descripcion,
+                plan
+                  ? plan.descripcion
+                  : null,
 
               duracionDias,
 
@@ -439,7 +472,7 @@ export async function POST(
 
               actividades: {
                 create:
-                  plan.actividades
+                  actividadesBase
                     .filter(
                       (actividad) =>
                         actividad.diaInicio <=
@@ -475,10 +508,13 @@ export async function POST(
                           actividad.diaFin ===
                             null
                             ? null
-                            : Math.min(
-                                actividad.diaFin,
-                                duracionDias
-                              ),
+                            : actividad.diaFin >=
+                                duracionPlantilla
+                              ? duracionDias
+                              : Math.min(
+                                  actividad.diaFin,
+                                  duracionDias
+                                ),
 
                         orden:
                           actividad.orden,
