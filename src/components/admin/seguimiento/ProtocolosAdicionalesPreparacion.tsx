@@ -33,7 +33,8 @@ type ActividadAdicional = {
 };
 
 type Props = {
-  seguimientoId: string;
+  seguimientoId?: string;
+  apiBase?: string;
   duracionDias: number;
   actividades: ActividadAdicional[];
 };
@@ -66,10 +67,25 @@ function textoRecordatorio(
 
 export default function ProtocolosAdicionalesPreparacion({
   seguimientoId,
+  apiBase,
   duracionDias,
   actividades,
 }: Props) {
   const router = useRouter();
+
+  const baseApi =
+    apiBase ??
+    (
+      seguimientoId
+        ? `/api/admin/seguimiento/clientes/${seguimientoId}`
+        : ""
+    );
+
+  if (!baseApi) {
+    throw new Error(
+      "No se definió el recurso del protocolo."
+    );
+  }
 
   const [modalAbierto, setModalAbierto] =
     useState(false);
@@ -211,8 +227,8 @@ export default function ProtocolosAdicionalesPreparacion({
     try {
       const url =
         actividadEditando
-          ? `/api/admin/seguimiento/clientes/${seguimientoId}/actividades/${actividadEditando.id}`
-          : `/api/admin/seguimiento/clientes/${seguimientoId}/actividades`;
+          ? `${baseApi}/actividades/${actividadEditando.id}`
+          : `${baseApi}/actividades`;
 
       const res =
         await fetch(
@@ -354,7 +370,7 @@ export default function ProtocolosAdicionalesPreparacion({
     try {
       const res =
         await fetch(
-          `/api/admin/seguimiento/clientes/${seguimientoId}/actividades/${actividad.id}`,
+          `${baseApi}/actividades/${actividad.id}`,
           {
             method:
               "PUT",
@@ -636,6 +652,9 @@ export default function ProtocolosAdicionalesPreparacion({
                           <IndicacionesActividadPreparacion
                             seguimientoId={
                               seguimientoId
+                            }
+                            apiBase={
+                              baseApi
                             }
                             actividadId={
                               actividad.id

@@ -56,6 +56,66 @@ export async function PUT(
     );
   }
 
+  const body =
+    await req
+      .json()
+      .catch(() => null);
+
+  if (
+    typeof body !== "object" ||
+    body === null ||
+    Array.isArray(body)
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Los datos enviados no son válidos.",
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+
+  const datos =
+    body as Record<string, unknown>;
+
+  /*
+   * Durante la preparación de un plan
+   * no existe historial todavía.
+   * Por eso quitar un adicional equivale
+   * a eliminarlo del protocolo maestro.
+   */
+  if (
+    datos.quitar === true
+  ) {
+    if (
+      actividad.seccion !==
+      "ADICIONAL"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Esta acción solo corresponde a protocolos adicionales.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    await prisma.actividadPlan.delete({
+      where: {
+        id:
+          actividad.id,
+      },
+    });
+
+    return NextResponse.json({
+      ok: true,
+    });
+  }
+
   const {
     tipo,
     recordatorio,
@@ -68,7 +128,7 @@ export async function PUT(
     diaFin,
     orden,
     activo,
-  } = await req.json();
+  } = datos;
 
   const tipoActividad =
     tipo === "INFORMACION" ||

@@ -44,7 +44,15 @@ type Actividad = {
 };
 
 type Props = {
-  seguimientoId: string;
+  seguimientoId?: string;
+
+  /*
+   * Permite reutilizar este mismo editor
+   * con clientes o con el protocolo maestro
+   * de un grupo.
+   */
+  apiBase?: string;
+
   duracionDias: number;
   actividades: Actividad[];
 };
@@ -143,11 +151,26 @@ function actividadDestacada(
 
 export default function ProtocoloPrincipalPreparacion({
   seguimientoId,
+  apiBase,
   duracionDias,
   actividades,
 }: Props) {
   const router =
     useRouter();
+
+  const baseApi =
+    apiBase ??
+    (
+      seguimientoId
+        ? `/api/admin/seguimiento/clientes/${seguimientoId}`
+        : ""
+    );
+
+  if (!baseApi) {
+    throw new Error(
+      "No se definió el recurso del protocolo."
+    );
+  }
 
   const [
     modalActividad,
@@ -327,8 +350,8 @@ export default function ProtocoloPrincipalPreparacion({
     try {
       const url =
         editando
-          ? `/api/admin/seguimiento/clientes/${seguimientoId}/actividades/${editando.id}`
-          : `/api/admin/seguimiento/clientes/${seguimientoId}/actividades`;
+          ? `${baseApi}/actividades/${editando.id}`
+          : `${baseApi}/actividades`;
 
       const res =
         await fetch(
@@ -458,7 +481,7 @@ export default function ProtocoloPrincipalPreparacion({
     try {
       const res =
         await fetch(
-          `/api/admin/seguimiento/clientes/${seguimientoId}/actividades/${actividad.id}`,
+          `${baseApi}/actividades/${actividad.id}`,
           {
             method:
               "PUT",
@@ -572,7 +595,7 @@ export default function ProtocoloPrincipalPreparacion({
     try {
       const res =
         await fetch(
-          `/api/admin/seguimiento/clientes/${seguimientoId}/actividades/${actividad.id}`,
+          `${baseApi}/actividades/${actividad.id}`,
           {
             method:
               "DELETE",
@@ -708,7 +731,7 @@ export default function ProtocoloPrincipalPreparacion({
     try {
       const res =
         await fetch(
-          `/api/admin/seguimiento/clientes/${seguimientoId}/actividades/serie`,
+          `${baseApi}/actividades/serie`,
           {
             method:
               "POST",
@@ -1063,6 +1086,9 @@ export default function ProtocoloPrincipalPreparacion({
                             <IndicacionesActividadPreparacion
                               seguimientoId={
                                 seguimientoId
+                              }
+                              apiBase={
+                                baseApi
                               }
                               actividadId={
                                 actividad.id

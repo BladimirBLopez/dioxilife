@@ -24,7 +24,8 @@ type Indicacion = {
 };
 
 type Props = {
-  seguimientoId: string;
+  seguimientoId?: string;
+  apiBase?: string;
   actividadId: string;
   indicaciones: Indicacion[];
   editable?: boolean;
@@ -32,12 +33,27 @@ type Props = {
 
 export default function IndicacionesActividadPreparacion({
   seguimientoId,
+  apiBase,
   actividadId,
   indicaciones,
   editable = true,
 }: Props) {
   const router =
     useRouter();
+
+  const baseApi =
+    apiBase ??
+    (
+      seguimientoId
+        ? `/api/admin/seguimiento/clientes/${seguimientoId}`
+        : ""
+    );
+
+  if (!baseApi) {
+    throw new Error(
+      "No se definió el recurso de las indicaciones."
+    );
+  }
 
   const [
     modalAbierto,
@@ -143,8 +159,8 @@ export default function IndicacionesActividadPreparacion({
     try {
       const url =
         editando
-          ? `/api/admin/seguimiento/clientes/${seguimientoId}/actividades/${actividadId}/indicaciones/${editando.id}`
-          : `/api/admin/seguimiento/clientes/${seguimientoId}/actividades/${actividadId}/indicaciones`;
+          ? `${baseApi}/actividades/${actividadId}/indicaciones/${editando.id}`
+          : `${baseApi}/actividades/${actividadId}/indicaciones`;
 
       const res =
         await fetch(
@@ -246,7 +262,7 @@ export default function IndicacionesActividadPreparacion({
     try {
       const res =
         await fetch(
-          `/api/admin/seguimiento/clientes/${seguimientoId}/actividades/${actividadId}/indicaciones/${indicacion.id}`,
+          `${baseApi}/actividades/${actividadId}/indicaciones/${indicacion.id}`,
           {
             method:
               "DELETE",
