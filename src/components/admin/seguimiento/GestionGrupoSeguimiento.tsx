@@ -23,16 +23,101 @@ type EstadoGrupo =
   | "FINALIZADO"
   | "CANCELADO";
 
+type ModoInicio =
+  | "MANTENER_FECHA"
+  | "HOY";
+
+function fechaBoliviaActual() {
+  const partes =
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone:
+          "America/La_Paz",
+        year:
+          "numeric",
+        month:
+          "2-digit",
+        day:
+          "2-digit",
+      }
+    ).formatToParts(
+      new Date()
+    );
+
+  const valor = (
+    tipo: string
+  ) =>
+    partes.find(
+      (
+        parte
+      ) =>
+        parte.type ===
+        tipo
+    )?.value || "";
+
+  return `${valor("year")}-${valor("month")}-${valor("day")}`;
+}
+
+function fechaLegible(
+  valor: string
+) {
+  return new Date(
+    `${valor}T00:00:00.000Z`
+  ).toLocaleDateString(
+    "es-BO",
+    {
+      timeZone:
+        "UTC",
+      year:
+        "numeric",
+      month:
+        "long",
+      day:
+        "numeric",
+    }
+  );
+}
+
+function diaCorrespondiente(
+  inicio: string,
+  hoy: string
+) {
+  const inicioMs =
+    Date.parse(
+      `${inicio}T00:00:00.000Z`
+    );
+
+  const hoyMs =
+    Date.parse(
+      `${hoy}T00:00:00.000Z`
+    );
+
+  return (
+    Math.floor(
+      (
+        hoyMs -
+        inicioMs
+      ) /
+        86400000
+    ) + 1
+  );
+}
+
 export default function GestionGrupoSeguimiento({
   grupoId,
   estado,
   duracionDias,
   participantes,
+  fechaInicio,
+  programado = false,
 }: {
   grupoId: string;
   estado: EstadoGrupo;
   duracionDias: number;
   participantes: number;
+  fechaInicio: string;
+  programado?: boolean;
 }) {
   const router =
     useRouter();
@@ -66,6 +151,33 @@ export default function GestionGrupoSeguimiento({
     setProcesando,
   ] = useState(false);
 
+  const [
+    modoInicio,
+    setModoInicio,
+  ] =
+    useState<ModoInicio>(
+      "MANTENER_FECHA"
+    );
+
+  const hoyBolivia =
+    fechaBoliviaActual();
+
+  const fechaPasada =
+    fechaInicio <
+    hoyBolivia;
+
+  const fechaFutura =
+    fechaInicio >
+    hoyBolivia;
+
+  const diaSiMantiene =
+    fechaPasada
+      ? diaCorrespondiente(
+          fechaInicio,
+          hoyBolivia
+        )
+      : 1;
+
   async function iniciarGrupo() {
     setProcesando(true);
 
@@ -86,6 +198,11 @@ export default function GestionGrupoSeguimiento({
               JSON.stringify({
                 accion:
                   "ACTIVAR",
+
+                modoInicio:
+                  fechaPasada
+                    ? modoInicio
+                    : undefined,
               }),
           }
         );
@@ -103,9 +220,25 @@ export default function GestionGrupoSeguimiento({
         return;
       }
 
-      toast.success(
-        "Grupo iniciado correctamente."
-      );
+      if (
+        data?.programado
+      ) {
+        toast.success(
+          "Grupo programado correctamente."
+        );
+      } else if (
+        Number(
+          data?.diaActual
+        ) > 1
+      ) {
+        toast.success(
+          `Grupo activado en el día ${data.diaActual}.`
+        );
+      } else {
+        toast.success(
+          "Grupo iniciado correctamente."
+        );
+      }
 
       setConfirmandoInicio(
         false
@@ -305,7 +438,8 @@ export default function GestionGrupoSeguimiento({
         )}
 
         {estado ===
-          "ACTIVO" && (
+          "ACTIVO" &&
+          !programado && (
           <button
             type="button"
             onClick={() =>
@@ -339,14 +473,135 @@ export default function GestionGrupoSeguimiento({
             <div className="rounded-2xl bg-violet-50 p-4">
 
               <p className="font-semibold text-violet-900">
-                El grupo quedará activo
+                {fechaFutura
+                  ? "El grupo quedará programado"
+                  : "El grupo quedará activo"}
               </p>
 
               <p className="mt-1 text-sm leading-6 text-violet-700">
-                Los {participantes} participante{participantes === 1 ? "" : "s"} conservarán la misma fecha de inicio, duración y protocolo del grupo.
+
+                {fechaFutura ? (
+                  <>
+                    Comenzará automáticamente el{" "}
+                    <strong>
+                      {fechaLegible(
+                        fechaInicio
+                      )}
+                    </strong>
+                    . Hasta esa fecha no se consumirá ninguna jornada.
+                  </>
+                ) : fechaPasada ? (
+                  <>
+                    La fecha configurada fue el{" "}
+                    <strong>
+                      {fechaLegible(
+                        fechaInicio
+                      )}
+                    </strong>
+                    . Elige cómo deseas iniciar.
+                  </>
+                ) : (
+                  <>
+                    El grupo comenzará hoy. Los{" "}
+                    {participantes} participante
+                    {participantes === 1
+                      ? ""
+                      : "s"}{" "}
+                    usarán la misma fecha, duración y protocolo.
+                  </>
+                )}
+
               </p>
 
             </div>
+
+
+            {fechaPasada && (
+
+              <div className="space-y-3">
+
+                <label className="block cursor-pointer rounded-xl border border-gray-200 p-4 transition hover:bg-gray-50">
+
+                  <div className="flex items-start gap-3">
+
+                    <input
+                      type="radio"
+                      name="modoInicioGrupo"
+                      checked={
+                        modoInicio ===
+                        "MANTENER_FECHA"
+                      }
+                      onChange={() =>
+                        setModoInicio(
+                          "MANTENER_FECHA"
+                        )
+                      }
+                      className="mt-1"
+                    />
+
+                    <div>
+
+                      <p className="font-semibold text-gray-900">
+                        Mantener fecha original
+                      </p>
+
+                      <p className="mt-1 text-sm leading-5 text-gray-500">
+                        Se conservará el{" "}
+                        {fechaLegible(
+                          fechaInicio
+                        )}{" "}
+                        como inicio oficial. Actualmente el grupo quedará en el día{" "}
+                        <strong>
+                          {diaSiMantiene}
+                        </strong>
+                        .
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                </label>
+
+
+                <label className="block cursor-pointer rounded-xl border border-gray-200 p-4 transition hover:bg-gray-50">
+
+                  <div className="flex items-start gap-3">
+
+                    <input
+                      type="radio"
+                      name="modoInicioGrupo"
+                      checked={
+                        modoInicio ===
+                        "HOY"
+                      }
+                      onChange={() =>
+                        setModoInicio(
+                          "HOY"
+                        )
+                      }
+                      className="mt-1"
+                    />
+
+                    <div>
+
+                      <p className="font-semibold text-gray-900">
+                        Comenzar hoy
+                      </p>
+
+                      <p className="mt-1 text-sm leading-5 text-gray-500">
+                        La fecha oficial cambiará a hoy y todos los participantes comenzarán en el día 1.
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                </label>
+
+              </div>
+
+            )}
 
             {participantes ===
               0 && (
@@ -385,7 +640,9 @@ export default function GestionGrupoSeguimiento({
                 className="admin-btn-primary"
               >
                 {procesando
-                  ? "Iniciando..."
+                  ? "Procesando..."
+                  : fechaFutura
+                  ? "Programar grupo"
                   : "Confirmar inicio"}
               </button>
 

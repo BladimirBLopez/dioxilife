@@ -21,12 +21,58 @@ function fecha(
   );
 }
 
+function fechaBoliviaActual() {
+  const partes =
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone:
+          "America/La_Paz",
+        year:
+          "numeric",
+        month:
+          "2-digit",
+        day:
+          "2-digit",
+      }
+    ).formatToParts(
+      new Date()
+    );
+
+  const valor = (
+    tipo: string
+  ) =>
+    partes.find(
+      (
+        parte
+      ) =>
+        parte.type ===
+        tipo
+    )?.value || "";
+
+  return `${valor("year")}-${valor("month")}-${valor("day")}`;
+}
+
+function fechaClave(
+  valor: Date
+) {
+  return valor
+    .toISOString()
+    .slice(
+      0,
+      10
+    );
+}
+
 function claseEstado(
   estado: string
 ) {
   switch (estado) {
     case "ACTIVO":
       return "bg-emerald-100 text-emerald-700";
+
+    case "PROGRAMADO":
+      return "bg-violet-100 text-violet-700";
 
     case "FINALIZADO":
       return "bg-blue-100 text-blue-700";
@@ -122,6 +168,19 @@ export default async function GrupoSeguimientoDetallePage({
     notFound();
   }
 
+  const grupoProgramado =
+    grupo.estado ===
+      "ACTIVO" &&
+    fechaClave(
+      grupo.fechaInicio
+    ) >
+      fechaBoliviaActual();
+
+  const estadoVisual =
+    grupoProgramado
+      ? "PROGRAMADO"
+      : grupo.estado;
+
   return (
     <div className="space-y-6">
 
@@ -176,10 +235,10 @@ export default async function GrupoSeguimientoDetallePage({
 
               <span
                 className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${claseEstado(
-                  grupo.estado
+                  estadoVisual
                 )}`}
               >
-                {grupo.estado}
+                {estadoVisual}
               </span>
 
             </div>
@@ -192,10 +251,15 @@ export default async function GrupoSeguimientoDetallePage({
 
           <div className="flex flex-wrap items-center gap-2">
 
-            {(grupo.estado ===
-              "ACTIVO" ||
+            {(
+              (
+                grupo.estado ===
+                  "ACTIVO" &&
+                !grupoProgramado
+              ) ||
               grupo.estado ===
-              "FINALIZADO") && (
+                "FINALIZADO"
+            ) && (
               <BotonInformeGrupoSeguimiento
                 grupoId={grupo.id}
               />
@@ -206,6 +270,14 @@ export default async function GrupoSeguimientoDetallePage({
               estado={grupo.estado}
               duracionDias={grupo.duracionDias}
               participantes={grupo.miembros.length}
+              fechaInicio={
+                fechaClave(
+                  grupo.fechaInicio
+                )
+              }
+              programado={
+                grupoProgramado
+              }
             />
 
           </div>
@@ -279,7 +351,8 @@ export default async function GrupoSeguimientoDetallePage({
 
 
       {grupo.estado !==
-        "BORRADOR" && (
+        "BORRADOR" &&
+        !grupoProgramado && (
         <ResumenGrupoSeguimiento
           grupoId={grupo.id}
         />

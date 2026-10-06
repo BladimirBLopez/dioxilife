@@ -305,6 +305,78 @@ export async function PATCH(
       );
     }
 
+    /*
+     * Un grupo BORRADOR no consume jornadas.
+     *
+     * Si la fecha configurada ya pasó,
+     * el administrador debe decidir entre:
+     *
+     * - conservar la fecha original;
+     * - comenzar oficialmente hoy.
+     */
+    const hoyTexto =
+      fechaBoliviaActual();
+
+    const hoy =
+      fechaUtc(
+        hoyTexto
+      );
+
+    const fechaPasada =
+      grupo.fechaInicio.getTime() <
+      hoy.getTime();
+
+    const modoInicio =
+      body.modoInicio;
+
+    if (
+      fechaPasada &&
+      modoInicio !==
+        "MANTENER_FECHA" &&
+      modoInicio !==
+        "HOY"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "La fecha programada del grupo ya pasó. Elige si deseas mantenerla o comenzar hoy.",
+
+          requiereDecisionFecha:
+            true,
+
+          fechaInicio:
+            grupo.fechaInicio
+              .toISOString()
+              .slice(
+                0,
+                10
+              ),
+
+          hoy:
+            hoyTexto,
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
+    const fechaInicioEfectiva =
+      fechaPasada &&
+      modoInicio ===
+        "HOY"
+        ? hoy
+        : grupo.fechaInicio;
+
+    const diaInicioEfectivo =
+      diaActualGrupo(
+        fechaInicioEfectiva
+      );
+
+    const programado =
+      diaInicioEfectivo <
+      1;
+
     const ids =
       grupo.miembros.map(
         (miembro) =>
@@ -370,6 +442,9 @@ export async function PATCH(
             estado:
               "ACTIVO",
 
+            fechaInicio:
+              fechaInicioEfectiva,
+
             fechaFinalizado:
               null,
           },
@@ -414,10 +489,10 @@ export async function PATCH(
               grupo.duracionDias,
 
             fechaInicio:
-              grupo.fechaInicio,
+              fechaInicioEfectiva,
 
             fechaInicioPrevista:
-              grupo.fechaInicio,
+              fechaInicioEfectiva,
           },
         });
       }
@@ -425,8 +500,25 @@ export async function PATCH(
 
     return NextResponse.json({
       ok: true,
+
       estado:
         "ACTIVO",
+
+      programado,
+
+      fechaInicio:
+        fechaInicioEfectiva
+          .toISOString()
+          .slice(
+            0,
+            10
+          ),
+
+      diaActual:
+        Math.max(
+          diaInicioEfectivo,
+          0
+        ),
     });
   }
 
