@@ -228,7 +228,7 @@ export default async function GrupoSeguimientoDetallePage({
 
           {grupo.estado === "BORRADOR" && (
             <Link
-              href={`/admin/seguimiento/planes/${grupo.plan.id}?flujo=grupo&grupoId=${grupo.id}`}
+              href={`/admin/seguimiento/grupos/${grupo.id}/preparar`}
               className="mt-2 inline-block text-sm font-semibold text-violet-700 hover:text-violet-800"
             >
               {grupo.plan._count.actividades === 0
@@ -278,9 +278,12 @@ export default async function GrupoSeguimientoDetallePage({
       )}
 
 
-      <ResumenGrupoSeguimiento
-        grupoId={grupo.id}
-      />
+      {grupo.estado !==
+        "BORRADOR" && (
+        <ResumenGrupoSeguimiento
+          grupoId={grupo.id}
+        />
+      )}
 
 
       <section className="admin-card p-5">
@@ -310,7 +313,7 @@ export default async function GrupoSeguimientoDetallePage({
             grupo.plan._count.actividades === 0 && (
               <div className="flex flex-col gap-2 sm:items-end">
                 <Link
-                  href={`/admin/seguimiento/planes/${grupo.plan.id}?flujo=grupo&grupoId=${grupo.id}`}
+                  href={`/admin/seguimiento/grupos/${grupo.id}/preparar`}
                   className="admin-btn-primary"
                 >
                   Configurar protocolo

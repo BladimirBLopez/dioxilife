@@ -28,6 +28,8 @@ export async function PUT(
     where: { id },
     select: {
       duracionDias: true,
+      estado: true,
+      esCopiaGrupo: true,
     },
   });
 
@@ -35,6 +37,21 @@ export async function PUT(
     return NextResponse.json(
       { error: "Plan no encontrado" },
       { status: 404 }
+    );
+  }
+
+  if (
+    plan.esCopiaGrupo &&
+    plan.estado !== "BORRADOR"
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "El protocolo de un grupo activo ya no se modifica desde la preparación.",
+      },
+      {
+        status: 409,
+      }
     );
   }
 
@@ -255,6 +272,13 @@ export async function DELETE(
     },
     select: {
       id: true,
+
+      plan: {
+        select: {
+          estado: true,
+          esCopiaGrupo: true,
+        },
+      },
     },
   });
 
@@ -262,6 +286,21 @@ export async function DELETE(
     return NextResponse.json(
       { error: "Actividad no encontrada" },
       { status: 404 }
+    );
+  }
+
+  if (
+    actividad.plan.esCopiaGrupo &&
+    actividad.plan.estado !== "BORRADOR"
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "El protocolo de un grupo activo ya no se modifica desde la preparación.",
+      },
+      {
+        status: 409,
+      }
     );
   }
 

@@ -91,6 +91,8 @@ export async function POST(
     select: {
       id: true,
       duracionDias: true,
+      estado: true,
+      esCopiaGrupo: true,
     },
   });
 
@@ -98,6 +100,21 @@ export async function POST(
     return NextResponse.json(
       { error: "Plan no encontrado" },
       { status: 404 }
+    );
+  }
+
+  if (
+    plan.esCopiaGrupo &&
+    plan.estado !== "BORRADOR"
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "El protocolo de un grupo activo ya no se modifica desde la preparación.",
+      },
+      {
+        status: 409,
+      }
     );
   }
 

@@ -453,7 +453,7 @@ export default function GruposSeguimientoPage() {
         planGrupoId
       ) {
         router.push(
-          `/admin/seguimiento/planes/${planGrupoId}?flujo=grupo&grupoId=${grupoId}`
+          `/admin/seguimiento/grupos/${grupoId}/preparar`
         );
 
         return;
