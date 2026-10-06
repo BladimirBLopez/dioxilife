@@ -1,5 +1,6 @@
 import {
   obtenerDiaSeguimiento,
+  obtenerDiaSeguimientoFechaCalendario,
 } from "@/lib/seguimiento-publico";
 
 type MiembroGrupoPublico =
@@ -106,7 +107,7 @@ export function resolverDiaRegistroPublico({
     }
 
     const diaPlan =
-      obtenerDiaSeguimiento(
+      obtenerDiaSeguimientoFechaCalendario(
         miembroGrupo.grupo
           .fechaInicio
       );

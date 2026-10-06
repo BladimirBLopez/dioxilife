@@ -4,7 +4,9 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { obtenerDiaSeguimiento } from "@/lib/seguimiento-publico";
+import { obtenerDiaSeguimiento,
+  obtenerDiaSeguimientoFechaCalendario,
+  obtenerDiaEntreFechasCalendario } from "@/lib/seguimiento-publico";
 import {
   indicadorComunicacion,
   tiempoRelativo,
@@ -134,6 +136,23 @@ export default async function SeguimientoClientePage({
         fechaInicioPrevista: true,
         fechaInicio: true,
 
+        miembroGrupo: {
+          select: {
+            estado: true,
+            diaIngreso: true,
+            fechaRetiro: true,
+
+            grupo: {
+              select: {
+                estado: true,
+                fechaInicio: true,
+                fechaFinalizado: true,
+                duracionDias: true,
+              },
+            },
+          },
+        },
+
         ultimoAccesoAt: true,
         observacionInterna: true,
         origen: true,
@@ -261,21 +280,113 @@ export default async function SeguimientoClientePage({
       seguimiento.estado === "PAUSADO") &&
     seguimiento.fechaInicio;
 
-  const diaActual =
-    seguimiento.estado === "COMPLETADO"
-      ? seguimiento.duracionDias
-      : enCurso
-      ? Math.min(
+  let diaActual:
+    | number
+    | null = null;
+
+  if (
+    seguimiento.miembroGrupo
+  ) {
+    const miembro =
+      seguimiento.miembroGrupo;
+
+    const grupo =
+      miembro.grupo;
+
+    let diaGrupo:
+      | number
+      | null = null;
+
+    if (
+      grupo.estado ===
+      "ACTIVO"
+    ) {
+      const calculado =
+        obtenerDiaSeguimientoFechaCalendario(
+          grupo.fechaInicio,
+          ahora
+        );
+
+      if (
+        calculado >= 1
+      ) {
+        diaGrupo =
+          Math.min(
+            calculado,
+            grupo.duracionDias
+          );
+      }
+    } else if (
+      grupo.estado ===
+      "FINALIZADO"
+    ) {
+      const calculado =
+        grupo.fechaFinalizado
+          ? obtenerDiaSeguimientoFechaCalendario(
+              grupo.fechaInicio,
+              grupo.fechaFinalizado
+            )
+          : grupo.duracionDias;
+
+      diaGrupo =
+        Math.min(
           Math.max(
-            obtenerDiaSeguimiento(
-              seguimiento.fechaInicio as Date,
-              ahora
-            ),
+            calculado,
             1
           ),
-          seguimiento.duracionDias
-        )
-      : null;
+          grupo.duracionDias
+        );
+    }
+
+    if (
+      diaGrupo !== null &&
+      miembro.estado ===
+        "RETIRADO" &&
+      miembro.fechaRetiro
+    ) {
+      const diaRetiro =
+        obtenerDiaEntreFechasCalendario(
+          grupo.fechaInicio,
+          miembro.fechaRetiro
+        );
+
+      diaGrupo =
+        Math.min(
+          diaGrupo,
+          Math.max(
+            miembro.diaIngreso,
+            diaRetiro
+          )
+        );
+    }
+
+    if (
+      diaGrupo !== null
+    ) {
+      diaActual =
+        Math.max(
+          miembro.diaIngreso,
+          diaGrupo
+        );
+    }
+  } else {
+    diaActual =
+      seguimiento.estado ===
+        "COMPLETADO"
+        ? seguimiento.duracionDias
+        : enCurso
+        ? Math.min(
+            Math.max(
+              obtenerDiaSeguimiento(
+                seguimiento.fechaInicio as Date,
+                ahora
+              ),
+              1
+            ),
+            seguimiento.duracionDias
+          )
+        : null;
+  }
 
   const pendienteSinPreparar =
     seguimiento.estado ===
@@ -299,11 +410,20 @@ export default async function SeguimientoClientePage({
       : 0;
 
   const inicioReal =
-    seguimiento.fechaInicio
+    seguimiento.miembroGrupo
+      ? seguimiento.miembroGrupo.grupo.fechaInicio.toLocaleDateString(
+          "es-BO",
+          {
+            timeZone:
+              "UTC",
+          }
+        )
+      : seguimiento.fechaInicio
       ? seguimiento.fechaInicio.toLocaleDateString(
           "es-BO",
           {
-            timeZone: "America/La_Paz",
+            timeZone:
+              "America/La_Paz",
           }
         )
       : null;

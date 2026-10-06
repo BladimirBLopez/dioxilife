@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { obtenerDiaSeguimiento } from "@/lib/seguimiento-publico";
+import {
+  obtenerDiaSeguimiento,
+  obtenerDiaSeguimientoFechaCalendario,
+} from "@/lib/seguimiento-publico";
 
 export type PendienteHoy = {
   id: string;
@@ -65,27 +68,89 @@ export async function calcularCumplimiento(
         estado: true,
         fechaInicio: true,
         duracionDias: true,
+
+        miembroGrupo: {
+          select: {
+            estado: true,
+            diaIngreso: true,
+
+            grupo: {
+              select: {
+                estado: true,
+                fechaInicio: true,
+                duracionDias: true,
+              },
+            },
+          },
+        },
       },
     });
 
   if (
     !seguimiento ||
-    seguimiento.estado !== "ACTIVO" ||
-    !seguimiento.fechaInicio
+    seguimiento.estado !== "ACTIVO"
   ) {
     return null;
   }
 
-  const dia = obtenerDiaSeguimiento(
-    seguimiento.fechaInicio,
-    ahora
-  );
+  let dia: number;
+  let duracionAplicable =
+    seguimiento.duracionDias;
+  let primerDiaAplicable = 1;
 
-  if (dia < 1 || dia > seguimiento.duracionDias) {
+  if (
+    seguimiento.miembroGrupo
+  ) {
+    const miembro =
+      seguimiento.miembroGrupo;
+
+    const grupo =
+      miembro.grupo;
+
+    if (
+      miembro.estado !== "ACTIVO" ||
+      grupo.estado !== "ACTIVO"
+    ) {
+      return null;
+    }
+
+    dia =
+      obtenerDiaSeguimientoFechaCalendario(
+        grupo.fechaInicio,
+        ahora
+      );
+
+    duracionAplicable =
+      grupo.duracionDias;
+
+    primerDiaAplicable =
+      miembro.diaIngreso;
+  } else {
+    if (
+      !seguimiento.fechaInicio
+    ) {
+      return null;
+    }
+
+    dia =
+      obtenerDiaSeguimiento(
+        seguimiento.fechaInicio,
+        ahora
+      );
+  }
+
+  if (
+    dia < primerDiaAplicable ||
+    dia > duracionAplicable
+  ) {
     return null;
   }
 
-  const desde = Math.max(1, dia - 6);
+  const desde =
+    Math.max(
+      primerDiaAplicable,
+      dia - 6
+    );
 
   const [actividades, progresos] =
     await Promise.all([
@@ -163,7 +228,7 @@ export async function calcularCumplimiento(
       (
         actividad.seccion ===
           "ADICIONAL"
-          ? seguimiento.duracionDias
+          ? duracionAplicable
           : actividad.diaInicio
       );
 
@@ -227,7 +292,7 @@ export async function calcularCumplimiento(
 
   return {
     diaActual: dia,
-    duracionDias: seguimiento.duracionDias,
+    duracionDias: duracionAplicable,
     totalHoy,
     completadasHoy,
 

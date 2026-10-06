@@ -85,6 +85,78 @@ export function obtenerDiaSeguimiento(
   );
 }
 
+/*
+ * Para fechas guardadas como @db.Date.
+ *
+ * Un grupo con fecha 2026-10-06 debe
+ * representar siempre el 06/10/2026,
+ * sin convertir esa medianoche UTC
+ * al día anterior en Bolivia.
+ */
+export function obtenerDiaSeguimientoFechaCalendario(
+  fechaInicio: Date,
+  ahora = new Date()
+) {
+  const actual =
+    fechaLocalBolivia(
+      ahora
+    );
+
+  const inicioUtc =
+    Date.UTC(
+      fechaInicio.getUTCFullYear(),
+      fechaInicio.getUTCMonth(),
+      fechaInicio.getUTCDate()
+    );
+
+  const actualUtc =
+    Date.UTC(
+      actual.year,
+      actual.month - 1,
+      actual.day
+    );
+
+  return (
+    Math.floor(
+      (
+        actualUtc -
+        inicioUtc
+      ) /
+        86_400_000
+    ) + 1
+  );
+}
+
+export function obtenerDiaEntreFechasCalendario(
+  fechaInicio: Date,
+  fechaReferencia: Date
+) {
+  const inicioUtc =
+    Date.UTC(
+      fechaInicio.getUTCFullYear(),
+      fechaInicio.getUTCMonth(),
+      fechaInicio.getUTCDate()
+    );
+
+  const referenciaUtc =
+    Date.UTC(
+      fechaReferencia.getUTCFullYear(),
+      fechaReferencia.getUTCMonth(),
+      fechaReferencia.getUTCDate()
+    );
+
+  return (
+    Math.floor(
+      (
+        referenciaUtc -
+        inicioUtc
+      ) /
+        86_400_000
+    ) + 1
+  );
+}
+
+
 export function tokenSeguimientoValido(
   token: string
 ) {

@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import {
   hashTokenSeguimiento,
   obtenerDiaSeguimiento,
+  obtenerDiaSeguimientoFechaCalendario,
   tokenSeguimientoValido,
 } from "@/lib/seguimiento-publico";
 
@@ -144,7 +145,7 @@ function resolverConsultaMediciones(
       miembro.grupo;
 
     const diaActualGrupo =
-      obtenerDiaSeguimiento(
+      obtenerDiaSeguimientoFechaCalendario(
         grupo.fechaInicio
       );
 

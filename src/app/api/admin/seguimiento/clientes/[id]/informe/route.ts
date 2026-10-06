@@ -13,6 +13,8 @@ import {
 
 import {
   obtenerDiaSeguimiento,
+  obtenerDiaSeguimientoFechaCalendario,
+  obtenerDiaEntreFechasCalendario
 } from "@/lib/seguimiento-publico";
 
 function aplicaEnDia(
@@ -94,6 +96,23 @@ export async function GET(
         duracionDias: true,
         estado: true,
         fechaInicio: true,
+
+        miembroGrupo: {
+          select: {
+            estado: true,
+            diaIngreso: true,
+            fechaRetiro: true,
+
+            grupo: {
+              select: {
+                estado: true,
+                fechaInicio: true,
+                fechaFinalizado: true,
+                duracionDias: true,
+              },
+            },
+          },
+        },
         fechaFinalizado: true,
 
         registrosDiarios: {
@@ -213,6 +232,72 @@ export async function GET(
     0;
 
   if (
+    seguimiento.miembroGrupo
+  ) {
+    const miembro =
+      seguimiento.miembroGrupo;
+
+    const grupo =
+      miembro.grupo;
+
+    let diaGrupo = 0;
+
+    if (
+      grupo.estado ===
+      "FINALIZADO"
+    ) {
+      diaGrupo =
+        grupo.fechaFinalizado
+          ? obtenerDiaSeguimientoFechaCalendario(
+              grupo.fechaInicio,
+              grupo.fechaFinalizado
+            )
+          : grupo.duracionDias;
+    } else if (
+      grupo.estado ===
+      "ACTIVO"
+    ) {
+      diaGrupo =
+        obtenerDiaSeguimientoFechaCalendario(
+          grupo.fechaInicio,
+          ahora
+        );
+    }
+
+    if (
+      miembro.estado ===
+        "RETIRADO" &&
+      miembro.fechaRetiro
+    ) {
+      const diaRetiro =
+        obtenerDiaEntreFechasCalendario(
+          grupo.fechaInicio,
+          miembro.fechaRetiro
+        );
+
+      diaGrupo =
+        Math.min(
+          diaGrupo,
+          Math.max(
+            miembro.diaIngreso,
+            diaRetiro
+          )
+        );
+    }
+
+    if (
+      diaGrupo >= 1
+    ) {
+      diaActual =
+        Math.min(
+          Math.max(
+            diaGrupo,
+            miembro.diaIngreso
+          ),
+          grupo.duracionDias
+        );
+    }
+  } else if (
     seguimiento.estado ===
     "COMPLETADO"
   ) {

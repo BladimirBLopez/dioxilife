@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import {
   hashTokenSeguimiento,
   obtenerDiaSeguimiento,
+  obtenerDiaSeguimientoFechaCalendario,
   tokenSeguimientoValido,
 } from "@/lib/seguimiento-publico";
 
@@ -346,7 +347,7 @@ export async function GET(
       "ACTIVO"
     ) {
       const diaCalculado =
-        obtenerDiaSeguimiento(
+        obtenerDiaSeguimientoFechaCalendario(
           grupo.fechaInicio
         );
 

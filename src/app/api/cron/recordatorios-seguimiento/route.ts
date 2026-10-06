@@ -11,7 +11,10 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { obtenerAdminActual } from "@/lib/admin-auth";
 import { obtenerWebPush } from "@/lib/web-push";
-import { obtenerDiaSeguimiento } from "@/lib/seguimiento-publico";
+import {
+  obtenerDiaSeguimiento,
+  obtenerDiaSeguimientoFechaCalendario
+} from "@/lib/seguimiento-publico";
 import {
   mensajeRecordatorio,
   mensajeRecordatorioTardio,
@@ -635,6 +638,21 @@ export async function GET(
         fechaInicio: true,
         duracionDias: true,
 
+        miembroGrupo: {
+          select: {
+            estado: true,
+            diaIngreso: true,
+
+            grupo: {
+              select: {
+                estado: true,
+                fechaInicio: true,
+                duracionDias: true,
+              },
+            },
+          },
+        },
+
         suscripcionesPush: {
           where: {
             activa: true,
@@ -692,15 +710,55 @@ export async function GET(
         continue;
       }
 
-      const diaPlan =
-        obtenerDiaSeguimiento(
-          seguimiento.fechaInicio,
-          ahora
-        );
+      let diaPlan: number;
+      let duracionAplicable =
+        seguimiento.duracionDias;
+
+      if (
+        seguimiento.miembroGrupo
+      ) {
+        const miembro =
+          seguimiento.miembroGrupo;
+
+        const grupo =
+          miembro.grupo;
+
+        if (
+          miembro.estado !==
+            "ACTIVO" ||
+          grupo.estado !==
+            "ACTIVO"
+        ) {
+          continue;
+        }
+
+        diaPlan =
+          obtenerDiaSeguimientoFechaCalendario(
+            grupo.fechaInicio,
+            ahora
+          );
+
+        duracionAplicable =
+          grupo.duracionDias;
+
+        if (
+          diaPlan <
+          miembro.diaIngreso
+        ) {
+          continue;
+        }
+      } else {
+        diaPlan =
+          obtenerDiaSeguimiento(
+            seguimiento.fechaInicio,
+            ahora
+          );
+      }
 
       if (
         diaPlan < 1 ||
-        diaPlan > seguimiento.duracionDias
+        diaPlan >
+          duracionAplicable
       ) {
         continue;
       }
