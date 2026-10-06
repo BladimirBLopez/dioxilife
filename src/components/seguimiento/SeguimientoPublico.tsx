@@ -2202,125 +2202,49 @@ export default function SeguimientoPublico({
         {seguimiento.estado ===
           "ACTIVO" && (
 
-          <section className="sticky top-0 z-40 border-b border-[#E2D9F0] bg-[#F2EDF8]/95 py-2 backdrop-blur">
+          <section className="sticky top-0 z-40 border-b border-[#E9E4F2] bg-white/95 backdrop-blur">
 
-            <div className="mx-auto max-w-3xl px-3 sm:px-4">
+            <div className="mx-auto max-w-3xl px-4 py-2.5">
 
-              <div className="rounded-2xl border border-[#E2D9F0] bg-[#F6F1FB] px-4 py-3 shadow-sm">
+              <div className="flex items-center justify-between gap-4">
 
-                <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
 
-                  <div className="min-w-0">
+                  <p className="truncate text-sm font-extrabold text-[#1F1B24]">
+                    {seguimiento.nombreCliente?.trim() || "Cliente"}
+                  </p>
 
-                    <p className="truncate text-base font-extrabold text-[#1F1B24]">
-                      {seguimiento.nombreCliente?.trim() || "Cliente"}
-                    </p>
-
-                    <p className="mt-0.5 text-[11px] font-semibold text-brand-gray">
-                      Seguimiento de hoy
-                    </p>
-
-                  </div>
-
-
-                  <div className="shrink-0 text-right">
-
-                    <p className="text-2xl font-extrabold text-brand-blue">
-                      {porcentajeHoy}%
-                    </p>
-
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-brand-gray">
-                      avance
-                    </p>
-
-                  </div>
+                  <p className="mt-0.5 truncate text-[11px] font-semibold text-brand-gray">
+                    {seguimiento.nombrePlan} · Día {diaActual} de {seguimiento.duracionDias}
+                  </p>
 
                 </div>
 
 
-                <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[#EEEAF5]">
+                <div className="shrink-0 text-right">
 
-                  <div
-                    className="h-full rounded-full bg-brand-pink transition-all duration-300"
-                    style={{
-                      width:
-                        `${porcentajeHoy}%`,
-                    }}
-                  />
+                  <p className="text-base font-extrabold text-brand-blue">
+                    {checksCompletadosHoy}/{totalChecksHoy}
+                  </p>
 
-                </div>
-
-
-                <div className="mt-3 grid grid-cols-2 divide-x divide-[#EEEAF3] rounded-xl bg-[#FAF9FC] py-2.5">
-
-                  <div className="px-3">
-
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-brand-gray">
-                      Peso inicial
-                    </p>
-
-                    <p className="mt-0.5 text-base font-extrabold text-[#1F1B24]">
-                      {pesoInicial
-                        ? `${pesoInicial.peso.toLocaleString(
-                            "es-BO",
-                            {
-                              minimumFractionDigits:
-                                1,
-                              maximumFractionDigits:
-                                2,
-                            }
-                          )} kg`
-                        : "—"}
-                    </p>
-
-                  </div>
-
-
-                  <div className="px-3">
-
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-brand-gray">
-                      Peso actual
-                    </p>
-
-                    <p className="mt-0.5 text-base font-extrabold text-[#1F1B24]">
-                      {ultimoPeso
-                        ? `${ultimoPeso.peso.toLocaleString(
-                            "es-BO",
-                            {
-                              minimumFractionDigits:
-                                1,
-                              maximumFractionDigits:
-                                2,
-                            }
-                          )} kg`
-                        : "—"}
-                    </p>
-
-                  </div>
+                  <p className="text-[9px] font-bold uppercase tracking-wide text-brand-gray">
+                    completados
+                  </p>
 
                 </div>
 
+              </div>
 
-                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-semibold text-brand-gray">
 
-                  <span className="font-bold text-brand-blue">
-                    {checksCompletadosHoy}/{totalChecksHoy} checks completados
-                  </span>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#EEEAF5]">
 
-                  <span>
-                    Títulos {completadasHoy}/{tareasHoy.length}
-                  </span>
-
-                  {totalIndicacionesHoy >
-                    0 && (
-
-                    <span>
-                      Indicaciones {indicacionesCompletadasHoy}/{totalIndicacionesHoy}
-                    </span>
-
-                  )}
-
-                </div>
+                <div
+                  className="h-full rounded-full bg-brand-pink transition-all duration-300"
+                  style={{
+                    width:
+                      `${porcentajeHoy}%`,
+                  }}
+                />
 
               </div>
 
@@ -2333,43 +2257,27 @@ export default function SeguimientoPublico({
       <div className="mx-auto max-w-3xl px-4 py-5">
 
         <section>
-          <p className="text-sm text-brand-gray">
+          <p className="text-sm font-medium text-brand-gray">
             {primerNombre(
               seguimiento.nombreCliente
             ) === "Hola"
               ? "Bienvenido"
               : `Hola, ${primerNombre(
                   seguimiento.nombreCliente
-                )}`}
+                )} 👋`}
           </p>
 
           <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#1F1B24]">
-            Tu seguimiento de hoy
+            Tu agenda de hoy
           </h1>
+
+          <p className="mt-1 text-sm font-medium text-brand-gray">
+            {seguimiento.nombrePlan} · Día {diaActual} de {seguimiento.duracionDias}
+          </p>
         </section>
 
 
-        {pestana === "hoy" &&
-          (
-            seguimiento.estado ===
-              "ACTIVO" ||
-            Boolean(
-              seguimiento.grupo
-            )
-          ) && (
-          <>
-            <MedicionesSeguimientoPublico
-              token={token}
-            />
-
-            <RankingGrupoPublico
-              token={token}
-            />
-          </>
-        )}
-
-
-          {pestana === "hoy" && (
+          {pestana === "plan" && (
 
           <section className="mt-5 overflow-hidden rounded-2xl border border-[#E9E4F2] bg-white p-4 shadow-sm sm:p-5">
 
@@ -2641,34 +2549,6 @@ export default function SeguimientoPublico({
           </section>
 
           )}
-
-
-        <section className="mt-5 overflow-hidden rounded-3xl bg-gradient-to-br from-brand-blue to-[#4B2DB7] p-5 text-white shadow-sm">
-
-          <div className="flex items-start justify-between gap-4">
-
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/70">
-                {seguimiento.nombrePlan}
-              </p>
-
-              <p className="mt-2 text-3xl font-extrabold">
-                Día {diaActual}
-              </p>
-
-              <p className="mt-1 text-sm text-white/75">
-                de {seguimiento.duracionDias} días
-              </p>
-            </div>
-
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10">
-              <CalendarDays className="h-6 w-6" />
-            </div>
-
-          </div>
-
-
-        </section>
 
 
         {pestana ===
@@ -3322,6 +3202,117 @@ export default function SeguimientoPublico({
                     </div>
 
                   </section>
+
+
+          <section className="mt-6">
+
+            <div className="mb-3">
+
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
+                Más de tu seguimiento
+              </p>
+
+              <p className="mt-1 text-sm text-brand-gray">
+                Consulta o registra información adicional cuando la necesites.
+              </p>
+
+            </div>
+
+
+            <div className="space-y-3">
+
+              <details className="group overflow-hidden rounded-2xl border border-[#E9E4F2] bg-white shadow-sm">
+
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4 [&::-webkit-details-marker]:hidden">
+
+                  <div className="flex min-w-0 items-center gap-3">
+
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F8F6FF] text-brand-blue">
+                      <ClipboardList className="h-5 w-5" />
+                    </div>
+
+                    <div className="min-w-0">
+
+                      <p className="font-bold text-[#1F1B24]">
+                        Mis mediciones
+                      </p>
+
+                      <p className="mt-0.5 text-xs text-brand-gray">
+                        Peso, cintura y otros registros opcionales
+                      </p>
+
+                    </div>
+
+                  </div>
+
+
+                  <span className="shrink-0 rounded-full bg-[#F8F6FF] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-blue">
+                    Opcional
+                  </span>
+
+                </summary>
+
+
+                <div className="border-t border-[#EEEAF5] px-3 pb-3 pt-1">
+
+                  <MedicionesSeguimientoPublico
+                    token={token}
+                  />
+
+                </div>
+
+              </details>
+
+
+              {seguimiento.grupo && (
+
+                <details className="group overflow-hidden rounded-2xl border border-[#E9E4F2] bg-white shadow-sm">
+
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4 [&::-webkit-details-marker]:hidden">
+
+                    <div className="flex min-w-0 items-center gap-3">
+
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+                        <Trophy className="h-5 w-5" />
+                      </div>
+
+                      <div className="min-w-0">
+
+                        <p className="font-bold text-[#1F1B24]">
+                          Ranking del grupo
+                        </p>
+
+                        <p className="mt-0.5 text-xs text-brand-gray">
+                          Consulta el avance del grupo
+                        </p>
+
+                      </div>
+
+                    </div>
+
+
+                    <span className="text-xs font-bold text-brand-blue">
+                      Ver
+                    </span>
+
+                  </summary>
+
+
+                  <div className="border-t border-[#EEEAF5] px-3 pb-3 pt-1">
+
+                    <RankingGrupoPublico
+                      token={token}
+                    />
+
+                  </div>
+
+                </details>
+
+              )}
+
+            </div>
+
+          </section>
 
 
           </>
