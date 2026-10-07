@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import Modal from "@/components/Modal";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import NuevaPlantillaModal from "@/components/admin/seguimiento/NuevaPlantillaModal";
@@ -25,6 +27,8 @@ const vacio = {
 };
 
 export default function PlanesSeguimientoPage() {
+  const router = useRouter();
+
   const [planes, setPlanes] = useState<Plan[]>([]);
   const [cargando, setCargando] = useState(true);
 
@@ -37,6 +41,21 @@ export default function PlanesSeguimientoPage() {
 
   const [borrarId, setBorrarId] = useState<string | null>(null);
   const [confirmarSalir, setConfirmarSalir] = useState(false);
+
+  const [
+    planDuplicando,
+    setPlanDuplicando,
+  ] = useState<Plan | null>(null);
+
+  const [
+    nombreDuplicado,
+    setNombreDuplicado,
+  ] = useState("");
+
+  const [
+    duplicando,
+    setDuplicando,
+  ] = useState(false);
 
   async function cargar() {
     setCargando(true);
@@ -88,6 +107,135 @@ export default function PlanesSeguimientoPage() {
     setForm(datos);
     setFormInicial(datos);
     setModalAbierto(true);
+  }
+
+  function abrirDuplicar(
+    plan: Plan
+  ) {
+    setPlanDuplicando(
+      plan
+    );
+
+    setNombreDuplicado(
+      `${plan.nombre} - copia`
+    );
+  }
+
+  function cerrarDuplicar() {
+    if (duplicando) {
+      return;
+    }
+
+    setPlanDuplicando(
+      null
+    );
+
+    setNombreDuplicado(
+      ""
+    );
+  }
+
+  async function duplicarPlantilla() {
+    if (
+      !planDuplicando ||
+      duplicando
+    ) {
+      return;
+    }
+
+    const nombre =
+      nombreDuplicado.trim();
+
+    if (!nombre) {
+      toast.error(
+        "Escribe el nombre de la nueva plantilla."
+      );
+      return;
+    }
+
+    setDuplicando(
+      true
+    );
+
+    const toastId =
+      toast.loading(
+        "Copiando plantilla..."
+      );
+
+    try {
+      const res =
+        await fetch(
+          `/api/admin/seguimiento/planes/${planDuplicando.id}/duplicar`,
+          {
+            method:
+              "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                nombre,
+              }),
+          }
+        );
+
+      const data =
+        await res
+          .json()
+          .catch(
+            () => null
+          );
+
+      if (!res.ok) {
+        toast.error(
+          data?.error ||
+            "No se pudo duplicar la plantilla.",
+          {
+            id:
+              toastId,
+          }
+        );
+
+        return;
+      }
+
+      toast.success(
+        "Plantilla copiada. Ya puedes personalizarla.",
+        {
+          id:
+            toastId,
+        }
+      );
+
+      setPlanDuplicando(
+        null
+      );
+
+      setNombreDuplicado(
+        ""
+      );
+
+      await cargar();
+
+      router.push(
+        `/admin/seguimiento/planes/${data.id}`
+      );
+    } catch {
+      toast.error(
+        "No se pudo conectar con el servidor.",
+        {
+          id:
+            toastId,
+        }
+      );
+    } finally {
+      setDuplicando(
+        false
+      );
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -286,6 +434,18 @@ export default function PlanesSeguimientoPage() {
                   Editar
                 </button>
 
+                <button
+                  type="button"
+                  onClick={() =>
+                    abrirDuplicar(
+                      plan
+                    )
+                  }
+                  className="font-medium text-violet-600 hover:underline"
+                >
+                  Duplicar
+                </button>
+
                 <a
                   href={`/admin/seguimiento/planes/${plan.id}`}
                   className="font-medium text-brand-pink hover:underline"
@@ -318,6 +478,93 @@ export default function PlanesSeguimientoPage() {
           onClose={() => setNuevaPlantillaAbierta(false)}
           onCreada={cargar}
         />
+      )}
+
+      {planDuplicando && (
+        <Modal
+          title="Usar plantilla como base"
+          onClose={
+            cerrarDuplicar
+          }
+        >
+          <div className="space-y-5">
+
+            <div className="rounded-2xl border border-violet-100 bg-violet-50 p-4">
+              <p className="text-sm font-semibold text-violet-950">
+                Se copiará toda la plantilla
+              </p>
+
+              <p className="mt-1 text-sm leading-6 text-violet-700">
+                Se conservarán actividades, horarios, indicaciones, duración y protocolos adicionales. La plantilla original no será modificada.
+              </p>
+            </div>
+
+            <div>
+              <label className="admin-label">
+                Plantilla base
+              </label>
+
+              <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                <p className="font-semibold text-[#1F1B24]">
+                  {
+                    planDuplicando.nombre
+                  }
+                </p>
+
+                <p className="mt-1 text-xs text-[#8A8790]">
+                  {
+                    planDuplicando.duracionDias
+                  } días · {
+                    planDuplicando._count.actividades
+                  } actividades
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <label className="admin-label">
+                Nombre de la nueva plantilla
+              </label>
+
+              <input
+                type="text"
+                value={
+                  nombreDuplicado
+                }
+                onChange={(e) =>
+                  setNombreDuplicado(
+                    e.target.value
+                  )
+                }
+                className="admin-input"
+                maxLength={200}
+                placeholder="Ej. Protocolo Juan Pérez"
+                autoFocus
+              />
+
+              <p className="mt-1.5 text-xs leading-5 text-[#8A8790]">
+                La nueva copia quedará en borrador hasta que termines de personalizarla.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              disabled={
+                duplicando ||
+                !nombreDuplicado.trim()
+              }
+              onClick={() =>
+                void duplicarPlantilla()
+              }
+              className="admin-btn-primary w-full disabled:opacity-50"
+            >
+              {duplicando
+                ? "Copiando..."
+                : "Crear copia y editar"}
+            </button>
+
+          </div>
+        </Modal>
       )}
 
       {modalAbierto && (
