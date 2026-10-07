@@ -14,6 +14,7 @@ import {
 } from "@/lib/seguimiento-estado";
 import AgendaCliente from "@/components/admin/seguimiento/AgendaCliente";
 import AccionesSeguimientoCliente from "@/components/admin/seguimiento/AccionesSeguimientoCliente";
+import GestionSeguimientoCliente from "@/components/admin/seguimiento/GestionSeguimientoCliente";
 import HistorialWhatsApp from "@/components/admin/seguimiento/HistorialWhatsApp";
 import ResumenCumplimiento from "@/components/admin/seguimiento/ResumenCumplimiento";
 import RegistroDiarioCliente from "@/components/admin/seguimiento/RegistroDiarioCliente";
@@ -135,6 +136,8 @@ export default async function SeguimientoClientePage({
 
         fechaInicioPrevista: true,
         fechaInicio: true,
+        fechaFinalizado: true,
+        pausadoAt: true,
 
         miembroGrupo: {
           select: {
@@ -280,6 +283,15 @@ export default async function SeguimientoClientePage({
       seguimiento.estado === "PAUSADO") &&
     seguimiento.fechaInicio;
 
+  const referenciaDiaIndividual =
+    seguimiento.estado === "PAUSADO" &&
+    seguimiento.pausadoAt
+      ? seguimiento.pausadoAt
+      : seguimiento.estado === "CANCELADO" &&
+        seguimiento.fechaFinalizado
+      ? seguimiento.fechaFinalizado
+      : ahora;
+
   let diaActual:
     | number
     | null = null;
@@ -374,12 +386,19 @@ export default async function SeguimientoClientePage({
       seguimiento.estado ===
         "COMPLETADO"
         ? seguimiento.duracionDias
-        : enCurso
+        : (
+            enCurso ||
+            (
+              seguimiento.estado ===
+                "CANCELADO" &&
+              seguimiento.fechaInicio
+            )
+          )
         ? Math.min(
             Math.max(
               obtenerDiaSeguimiento(
                 seguimiento.fechaInicio as Date,
-                ahora
+                referenciaDiaIndividual
               ),
               1
             ),
@@ -469,6 +488,36 @@ export default async function SeguimientoClientePage({
         </div>
 
       </div>
+
+
+      <GestionSeguimientoCliente
+        seguimientoId={
+          seguimiento.id
+        }
+        estado={
+          seguimiento.estado
+        }
+        esGrupo={
+          Boolean(
+            seguimiento.miembroGrupo
+          )
+        }
+        nombreCliente={
+          seguimiento.nombreCliente
+        }
+        telefonoCliente={
+          seguimiento.telefonoCliente
+        }
+        nombrePlan={
+          seguimiento.nombrePlan
+        }
+        referenciaCompra={
+          seguimiento.referenciaCompra
+        }
+        observacionInterna={
+          seguimiento.observacionInterna
+        }
+      />
 
 
       {pendienteSinPreparar && (

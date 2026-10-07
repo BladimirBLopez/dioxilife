@@ -240,6 +240,7 @@ model SeguimientoCliente {
   fechaInicioPrevista DateTime? @db.Date
   fechaInicio         DateTime?
   fechaFinalizado     DateTime?
+  pausadoAt           DateTime?
   observacionInterna  String?
 
   actividades       ActividadSeguimiento[]
