@@ -221,7 +221,7 @@ export default function PlanesSeguimientoPage() {
       await cargar();
 
       router.push(
-        `/admin/seguimiento/planes/${data.id}`
+        `/admin/seguimiento/planes/${data.id}/editar`
       );
     } catch {
       toast.error(
@@ -447,10 +447,10 @@ export default function PlanesSeguimientoPage() {
                 </button>
 
                 <a
-                  href={`/admin/seguimiento/planes/${plan.id}`}
+                  href={`/admin/seguimiento/planes/${plan.id}/editar`}
                   className="font-medium text-brand-pink hover:underline"
                 >
-                  Configurar actividades
+                  Editar protocolo
                 </a>
 
                 <button
