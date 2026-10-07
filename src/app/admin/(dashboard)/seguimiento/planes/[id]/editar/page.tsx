@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 import ProtocoloPrincipalPreparacion from "@/components/admin/seguimiento/ProtocoloPrincipalPreparacion";
 import ProtocolosAdicionalesPreparacion from "@/components/admin/seguimiento/ProtocolosAdicionalesPreparacion";
+import EditarDatosPlantilla from "@/components/admin/seguimiento/EditarDatosPlantilla";
 
 export default async function EditarPlantillaPage({
   params,
@@ -212,19 +213,31 @@ export default async function EditarPlantillaPage({
             </div>
 
 
-            <span
-              className={`self-start rounded-full px-3 py-1.5 text-xs font-bold ${
-                plan.estado ===
-                "ACTIVO"
-                  ? "bg-emerald-50 text-emerald-700"
-                  : plan.estado ===
-                    "INACTIVO"
-                  ? "bg-gray-100 text-gray-600"
-                  : "bg-amber-50 text-amber-700"
-              }`}
-            >
-              {plan.estado}
-            </span>
+            <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+
+              <span
+                className={`rounded-full px-3 py-1.5 text-xs font-bold ${
+                  plan.estado ===
+                  "ACTIVO"
+                    ? "bg-emerald-50 text-emerald-700"
+                    : plan.estado ===
+                      "INACTIVO"
+                    ? "bg-gray-100 text-gray-600"
+                    : "bg-amber-50 text-amber-700"
+                }`}
+              >
+                {plan.estado}
+              </span>
+
+              <EditarDatosPlantilla
+                id={plan.id}
+                nombre={plan.nombre}
+                descripcion={plan.descripcion}
+                duracionDias={plan.duracionDias}
+                estado={plan.estado}
+              />
+
+            </div>
 
           </div>
 

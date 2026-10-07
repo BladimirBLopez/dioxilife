@@ -349,6 +349,7 @@ export async function POST(req: NextRequest) {
             nombre: true,
             estado: true,
             duracionDias: true,
+            esCopiaGrupo: true,
 
             actividades: {
               where: {
@@ -432,6 +433,20 @@ export async function POST(req: NextRequest) {
       },
       {
         status: 404,
+      }
+    );
+  }
+
+  if (
+    plan?.esCopiaGrupo
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Selecciona una plantilla original. Las copias internas de grupos no pueden asignarse a clientes.",
+      },
+      {
+        status: 409,
       }
     );
   }
