@@ -116,12 +116,191 @@ function obtenerCintura(
   };
 }
 
-function obtenerGlucemia(
+type MedicionGlucosaEntrada = {
+  numero: number;
+  valor: number | null;
+  hora: string | null;
+  momento: string | null;
+};
+
+function obtenerMedicionesGlucosa(
   valor: unknown
 ):
   | {
       ok: true;
-      glucemiaAyunas: number | null;
+      mediciones: MedicionGlucosaEntrada[];
+    }
+  | {
+      ok: false;
+      error: string;
+    } {
+  if (!Array.isArray(valor)) {
+    return {
+      ok: false,
+      error:
+        "Las mediciones de glucosa no son válidas.",
+    };
+  }
+
+  if (valor.length > 4) {
+    return {
+      ok: false,
+      error:
+        "Solo se permiten hasta 4 mediciones de glucosa por día.",
+    };
+  }
+
+  const numeros =
+    new Set<number>();
+
+  const mediciones:
+    MedicionGlucosaEntrada[] = [];
+
+  for (
+    const entrada of
+      valor
+  ) {
+    if (
+      typeof entrada !==
+        "object" ||
+      entrada === null ||
+      Array.isArray(entrada)
+    ) {
+      return {
+        ok: false,
+        error:
+          "Una de las mediciones de glucosa no es válida.",
+      };
+    }
+
+    const datos =
+      entrada as Record<
+        string,
+        unknown
+      >;
+
+    const numero =
+      Number(
+        datos.numero
+      );
+
+    if (
+      !Number.isInteger(
+        numero
+      ) ||
+      numero < 1 ||
+      numero > 4
+    ) {
+      return {
+        ok: false,
+        error:
+          "El número de medición debe estar entre 1 y 4.",
+      };
+    }
+
+    if (
+      numeros.has(
+        numero
+      )
+    ) {
+      return {
+        ok: false,
+        error:
+          `La medición ${numero} está repetida.`,
+      };
+    }
+
+    numeros.add(
+      numero
+    );
+
+    const resultadoValor =
+      numeroOpcionalAdmin(
+        datos.valor,
+        `La glucosa de la medición ${numero}`,
+        99999.99
+      );
+
+    if (
+      !resultadoValor.ok
+    ) {
+      return {
+        ok: false,
+        error:
+          resultadoValor.error,
+      };
+    }
+
+    const hora =
+      typeof datos.hora ===
+        "string"
+        ? datos.hora.trim()
+        : "";
+
+    if (
+      hora &&
+      !/^([01]\d|2[0-3]):[0-5]\d$/.test(
+        hora
+      )
+    ) {
+      return {
+        ok: false,
+        error:
+          `La hora de la medición ${numero} no es válida.`,
+      };
+    }
+
+    const momento =
+      typeof datos.momento ===
+        "string"
+        ? datos.momento.trim()
+        : "";
+
+    if (
+      momento.length >
+      120
+    ) {
+      return {
+        ok: false,
+        error:
+          `El momento de la medición ${numero} es demasiado largo.`,
+      };
+    }
+
+    mediciones.push({
+      numero,
+
+      valor:
+        resultadoValor.valor,
+
+      hora:
+        hora || null,
+
+      momento:
+        momento || null,
+    });
+  }
+
+  mediciones.sort(
+    (a, b) =>
+      a.numero -
+      b.numero
+  );
+
+  return {
+    ok: true,
+    mediciones,
+  };
+}
+
+function numeroOpcionalAdmin(
+  valor: unknown,
+  nombre: string,
+  maximo: number
+):
+  | {
+      ok: true;
+      valor: number | null;
     }
   | {
       ok: false;
@@ -134,11 +313,11 @@ function obtenerGlucemia(
   ) {
     return {
       ok: true,
-      glucemiaAyunas: null,
+      valor: null,
     };
   }
 
-  const glucemiaAyunas =
+  const numero =
     typeof valor === "number"
       ? valor
       : Number(
@@ -148,25 +327,26 @@ function obtenerGlucemia(
         );
 
   if (
-    !Number.isFinite(glucemiaAyunas) ||
-    glucemiaAyunas <= 0 ||
-    glucemiaAyunas > 99999.99
+    !Number.isFinite(numero) ||
+    numero <= 0 ||
+    numero > maximo
   ) {
     return {
       ok: false,
       error:
-        "La glucemia debe ser un número válido mayor que 0.",
+        `${nombre} debe ser un número válido mayor que 0.`,
     };
   }
 
   return {
     ok: true,
-    glucemiaAyunas:
+    valor:
       Math.round(
-        glucemiaAyunas * 100
+        numero * 100
       ) / 100,
   };
 }
+
 
 async function obtenerSeguimiento(
   id: string
@@ -289,6 +469,66 @@ export async function GET(
         updatedAt: true,
       },
     });
+
+  const glucosasGuardadas =
+    await prisma.medicionGlucosaSeguimiento.findMany({
+      where: {
+        seguimientoId:
+          id,
+
+        diaPlan,
+      },
+
+      orderBy: {
+        numero:
+          "asc",
+      },
+
+      select: {
+        numero: true,
+        valor: true,
+        hora: true,
+        momento: true,
+      },
+    });
+
+  const medicionesGlucosa =
+    Array.from(
+      {
+        length: 4,
+      },
+      (_, indice) => {
+        const numero =
+          indice + 1;
+
+        const medicion =
+          glucosasGuardadas.find(
+            (item) =>
+              item.numero ===
+              numero
+          );
+
+        return {
+          numero,
+
+          valor:
+            medicion
+              ? Number(
+                  medicion.valor
+                )
+              : null,
+
+          hora:
+            medicion?.hora ??
+            null,
+
+          momento:
+            medicion?.momento ??
+            null,
+        };
+      }
+    );
+
 
   const pesosRegistrados =
     await prisma.registroDiaSeguimiento.findMany({
@@ -744,6 +984,8 @@ export async function GET(
           updatedAt: null,
         },
 
+    medicionesGlucosa,
+
     actividades:
       actividadesDia,
 
@@ -925,16 +1167,18 @@ export async function PUT(
     );
   }
 
-  const resultadoGlucemia =
-    obtenerGlucemia(
-      datos.glucemiaAyunas
+  const resultadoGlucosa =
+    obtenerMedicionesGlucosa(
+      datos.medicionesGlucosa
     );
 
-  if (!resultadoGlucemia.ok) {
+  if (
+    !resultadoGlucosa.ok
+  ) {
     return NextResponse.json(
       {
         error:
-          resultadoGlucemia.error,
+          resultadoGlucosa.error,
       },
       {
         status: 400,
@@ -951,56 +1195,192 @@ export async function PUT(
           .slice(0, 5000)
       : null;
 
+  const resultado =
+    await prisma.$transaction(
+      async (tx) => {
+        const registro =
+          await tx.registroDiaSeguimiento.upsert({
+            where: {
+              seguimientoId_diaPlan: {
+                seguimientoId:
+                  id,
+                diaPlan,
+              },
+            },
+
+            create: {
+              seguimientoId:
+                id,
+              diaPlan,
+
+              peso:
+                resultadoPeso.peso,
+
+              cinturaCm:
+                resultadoCintura.cinturaCm,
+
+              observacion,
+            },
+
+            update: {
+              peso:
+                resultadoPeso.peso,
+
+              cinturaCm:
+                resultadoCintura.cinturaCm,
+
+              observacion,
+            },
+
+            select: {
+              id: true,
+              diaPlan: true,
+              peso: true,
+              cinturaCm: true,
+              glucemiaAyunas: true,
+              observacion: true,
+              createdAt: true,
+              updatedAt: true,
+            },
+          });
+
+        for (
+          const medicion of
+            resultadoGlucosa.mediciones
+        ) {
+          if (
+            medicion.valor ===
+            null
+          ) {
+            await tx.medicionGlucosaSeguimiento.deleteMany({
+              where: {
+                seguimientoId:
+                  id,
+
+                diaPlan,
+
+                numero:
+                  medicion.numero,
+              },
+            });
+
+            continue;
+          }
+
+          await tx.medicionGlucosaSeguimiento.upsert({
+            where: {
+              seguimientoId_diaPlan_numero: {
+                seguimientoId:
+                  id,
+
+                diaPlan,
+
+                numero:
+                  medicion.numero,
+              },
+            },
+
+            create: {
+              seguimientoId:
+                id,
+
+              diaPlan,
+
+              numero:
+                medicion.numero,
+
+              valor:
+                medicion.valor,
+
+              hora:
+                medicion.hora,
+
+              momento:
+                medicion.momento,
+            },
+
+            update: {
+              valor:
+                medicion.valor,
+
+              hora:
+                medicion.hora,
+
+              momento:
+                medicion.momento,
+            },
+          });
+        }
+
+        const glucosas =
+          await tx.medicionGlucosaSeguimiento.findMany({
+            where: {
+              seguimientoId:
+                id,
+
+              diaPlan,
+            },
+
+            orderBy: {
+              numero:
+                "asc",
+            },
+
+            select: {
+              numero: true,
+              valor: true,
+              hora: true,
+              momento: true,
+            },
+          });
+
+        return {
+          registro,
+          glucosas,
+        };
+      }
+    );
+
   const registro =
-    await prisma.registroDiaSeguimiento.upsert({
-      where: {
-        seguimientoId_diaPlan: {
-          seguimientoId:
-            id,
-          diaPlan,
-        },
+    resultado.registro;
+
+  const medicionesGlucosa =
+    Array.from(
+      {
+        length: 4,
       },
+      (_, indice) => {
+        const numero =
+          indice + 1;
 
-      create: {
-        seguimientoId:
-          id,
-        diaPlan,
-        peso:
-          resultadoPeso.peso,
+        const medicion =
+          resultado.glucosas.find(
+            (item) =>
+              item.numero ===
+              numero
+          );
 
-        cinturaCm:
-          resultadoCintura.cinturaCm,
+        return {
+          numero,
 
-        glucemiaAyunas:
-          resultadoGlucemia.glucemiaAyunas,
+          valor:
+            medicion
+              ? Number(
+                  medicion.valor
+                )
+              : null,
 
-        observacion,
-      },
+          hora:
+            medicion?.hora ??
+            null,
 
-      update: {
-        peso:
-          resultadoPeso.peso,
+          momento:
+            medicion?.momento ??
+            null,
+        };
+      }
+    );
 
-        cinturaCm:
-          resultadoCintura.cinturaCm,
-
-        glucemiaAyunas:
-          resultadoGlucemia.glucemiaAyunas,
-
-        observacion,
-      },
-
-      select: {
-        id: true,
-        diaPlan: true,
-        peso: true,
-        cinturaCm: true,
-        glucemiaAyunas: true,
-        observacion: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
 
   return NextResponse.json({
     ok: true,
@@ -1029,5 +1409,7 @@ export async function PUT(
             )
           : null,
     },
+
+    medicionesGlucosa,
   });
 }

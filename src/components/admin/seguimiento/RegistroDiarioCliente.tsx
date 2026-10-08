@@ -35,6 +35,20 @@ type ActividadDia = {
   completadoAt: string | null;
 };
 
+type MedicionGlucosa = {
+  numero: number;
+  valor: number | null;
+  hora: string | null;
+  momento: string | null;
+};
+
+type MedicionGlucosaFormulario = {
+  numero: number;
+  valor: string;
+  hora: string;
+  momento: string;
+};
+
 type RegistroDia = {
   id: string | null;
   diaPlan: number;
@@ -56,6 +70,8 @@ type RespuestaDia = {
   };
 
   registro: RegistroDia;
+
+  medicionesGlucosa: MedicionGlucosa[];
 
   actividades: ActividadDia[];
 
@@ -92,6 +108,51 @@ type RespuestaDia = {
     indicacionesTotal: number;
   };
 };
+
+function prepararMedicionesGlucosa(
+  mediciones:
+    MedicionGlucosa[] | undefined
+): MedicionGlucosaFormulario[] {
+  return Array.from(
+    {
+      length: 4,
+    },
+    (_, indice) => {
+      const numero =
+        indice + 1;
+
+      const medicion =
+        mediciones?.find(
+          (item) =>
+            item.numero ===
+            numero
+        );
+
+      return {
+        numero,
+
+        valor:
+          medicion?.valor ===
+            null ||
+          medicion?.valor ===
+            undefined
+            ? ""
+            : String(
+                medicion.valor
+              ),
+
+        hora:
+          medicion?.hora ??
+          "",
+
+        momento:
+          medicion?.momento ??
+          "",
+      };
+    }
+  );
+}
+
 
 type Props = {
   seguimientoId: string;
@@ -222,9 +283,17 @@ export default function RegistroDiarioCliente({
   ] = useState("");
 
   const [
-    glucemiaAyunas,
-    setGlucemiaAyunas,
-  ] = useState("");
+    medicionesGlucosa,
+    setMedicionesGlucosa,
+  ] =
+    useState<
+      MedicionGlucosaFormulario[]
+    >(
+      () =>
+        prepararMedicionesGlucosa(
+          undefined
+        )
+    );
 
   const [
     observacion,
@@ -310,14 +379,10 @@ export default function RegistroDiarioCliente({
                 )
           );
 
-          setGlucemiaAyunas(
-            datos.registro
-              .glucemiaAyunas === null
-              ? ""
-              : String(
-                  datos.registro
-                    .glucemiaAyunas
-                )
+          setMedicionesGlucosa(
+            prepararMedicionesGlucosa(
+              datos.medicionesGlucosa
+            )
           );
 
           setObservacion(
@@ -379,6 +444,33 @@ export default function RegistroDiarioCliente({
       .estado ===
     "CANCELADO";
 
+  function cambiarMedicionGlucosa(
+    numero: number,
+    campo:
+      | "valor"
+      | "hora"
+      | "momento",
+    valor: string
+  ) {
+    setMedicionesGlucosa(
+      (actual) =>
+        actual.map(
+          (medicion) =>
+            medicion.numero ===
+            numero
+              ? {
+                  ...medicion,
+                  [campo]:
+                    valor,
+                }
+              : medicion
+        )
+    );
+
+    setSucio(true);
+  }
+
+
   async function guardarRegistro(
     mostrarMensaje = true
   ) {
@@ -420,9 +512,30 @@ export default function RegistroDiarioCliente({
                   cinturaCm.trim() ||
                   null,
 
-                glucemiaAyunas:
-                  glucemiaAyunas.trim() ||
-                  null,
+                medicionesGlucosa:
+                  medicionesGlucosa.map(
+                    (
+                      medicion
+                    ) => ({
+                      numero:
+                        medicion.numero,
+
+                      valor:
+                        medicion.valor
+                          .trim() ||
+                        null,
+
+                      hora:
+                        medicion.hora
+                          .trim() ||
+                        null,
+
+                      momento:
+                        medicion.momento
+                          .trim() ||
+                        null,
+                    })
+                  ),
 
                 observacion:
                   observacion.trim() ||
@@ -483,14 +596,10 @@ export default function RegistroDiarioCliente({
             )
       );
 
-      setGlucemiaAyunas(
-        respuesta.registro
-          .glucemiaAyunas === null
-          ? ""
-          : String(
-              respuesta.registro
-                .glucemiaAyunas
-            )
+      setMedicionesGlucosa(
+        prepararMedicionesGlucosa(
+          respuesta.medicionesGlucosa
+        )
       );
 
       setObservacion(
@@ -1253,7 +1362,7 @@ export default function RegistroDiarioCliente({
             </div>
 
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
 
               <div>
 
@@ -1328,41 +1437,157 @@ export default function RegistroDiarioCliente({
 
               </div>
 
+            </div>
 
-              <div>
 
-                <label className="admin-label">
-                  Glucemia en ayunas
-                </label>
+            <div className="mt-5">
 
-                <div className="relative">
+              <div className="mb-3">
 
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    disabled={
-                      bloqueado
-                    }
-                    value={
-                      glucemiaAyunas
-                    }
-                    onChange={(e) => {
-                      setGlucemiaAyunas(
-                        e.target.value
-                      );
-                      setSucio(
-                        true
-                      );
-                    }}
-                    placeholder="Ej. 102"
-                    className="admin-input pr-16"
-                  />
+                <h4 className="text-sm font-bold text-gray-900">
+                  Glucosa del día
+                </h4>
 
-                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-gray-500">
-                    mg/dL
-                  </span>
+                <p className="mt-0.5 text-xs text-gray-500">
+                  Hasta 4 mediciones con valor, hora y momento de referencia.
+                </p>
 
-                </div>
+              </div>
+
+
+              <div className="grid gap-3 lg:grid-cols-2">
+
+                {medicionesGlucosa.map(
+                  (
+                    medicion
+                  ) => (
+
+                    <div
+                      key={
+                        medicion.numero
+                      }
+                      className="rounded-xl border border-gray-200 bg-gray-50 p-3"
+                    >
+
+                      <div className="mb-3 flex items-center justify-between gap-3">
+
+                        <p className="text-sm font-bold text-gray-900">
+                          Medición {medicion.numero}
+                        </p>
+
+                        {medicion.valor && (
+
+                          <span className="text-xs font-semibold text-gray-500">
+                            {medicion.valor} mg/dL
+                          </span>
+
+                        )}
+
+                      </div>
+
+
+                      <div className="grid grid-cols-[1fr_125px] gap-2">
+
+                        <div>
+
+                          <label className="admin-label">
+                            Valor
+                          </label>
+
+                          <div className="relative">
+
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              disabled={
+                                bloqueado
+                              }
+                              value={
+                                medicion.valor
+                              }
+                              onChange={(e) =>
+                                cambiarMedicionGlucosa(
+                                  medicion.numero,
+                                  "valor",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Ej. 102"
+                              className="admin-input pr-16"
+                            />
+
+                            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[10px] text-gray-500">
+                              mg/dL
+                            </span>
+
+                          </div>
+
+                        </div>
+
+
+                        <div>
+
+                          <label className="admin-label">
+                            Hora
+                          </label>
+
+                          <input
+                            type="time"
+                            disabled={
+                              bloqueado
+                            }
+                            value={
+                              medicion.hora
+                            }
+                            onChange={(e) =>
+                              cambiarMedicionGlucosa(
+                                medicion.numero,
+                                "hora",
+                                e.target.value
+                              )
+                            }
+                            className="admin-input"
+                          />
+
+                        </div>
+
+                      </div>
+
+
+                      <div className="mt-2">
+
+                        <label className="admin-label">
+                          Momento
+                        </label>
+
+                        <input
+                          type="text"
+                          disabled={
+                            bloqueado
+                          }
+                          value={
+                            medicion.momento
+                          }
+                          onChange={(e) =>
+                            cambiarMedicionGlucosa(
+                              medicion.numero,
+                              "momento",
+                              e.target.value
+                            )
+                          }
+                          maxLength={
+                            120
+                          }
+                          placeholder="Ej. Después del almuerzo"
+                          className="admin-input"
+                        />
+
+                      </div>
+
+                    </div>
+
+                  )
+                )}
 
               </div>
 
