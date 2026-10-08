@@ -512,7 +512,7 @@ function AvisoHora({
   if (diferencia > MINUTOS_DE_TOLERANCIA) {
     return (
       <span className="mt-2 inline-block rounded-lg bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
-        Pendiente · era a las {hora}
+        Pendiente
       </span>
     );
   }
@@ -528,7 +528,7 @@ function AvisoHora({
   if (esSiguiente) {
     return (
       <span className="mt-2 inline-block rounded-lg bg-[#F4F2F8] px-2.5 py-1 text-xs font-bold text-brand-blue">
-        Siguiente · a las {hora}
+        Siguiente
       </span>
     );
   }
@@ -2976,11 +2976,15 @@ export default function SeguimientoPublico({
                           : [];
 
                     const mostrarTituloSeccion =
-                      indice === 0 ||
-                      actividadesHoy[
-                        indice - 1
-                      ]?.seccion !==
-                        actividad.seccion;
+                      actividad.seccion ===
+                        "ADICIONAL" &&
+                      (
+                        indice === 0 ||
+                        actividadesHoy[
+                          indice - 1
+                        ]?.seccion !==
+                          "ADICIONAL"
+                      );
 
                     return (
                       <div
@@ -3007,9 +3011,7 @@ export default function SeguimientoPublico({
                                     : "text-brand-blue"
                                 }`}
                               >
-                                {actividad.seccion === "ADICIONAL"
-                                  ? "Protocolos adicionales"
-                                  : "Protocolo principal"}
+                                Protocolos adicionales
                               </p>
 
                               <div className="h-px flex-1 bg-[#E9E4F2]" />
@@ -3029,81 +3031,69 @@ export default function SeguimientoPublico({
                         }`}
                       >
 
-                        <div className="p-4 sm:p-5">
+                        <div className="p-4">
 
                           <div className="flex items-start gap-3">
-
-                            <div
-                              className={`mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-                                esInformacion
-                                  ? "bg-blue-100 text-blue-700"
-                                  : esControl
-                                  ? "bg-amber-100 text-amber-700"
-                                  : completada
-                                  ? "bg-emerald-100 text-emerald-700"
-                                  : "bg-[#F8F6FF] text-brand-blue"
-                              }`}
-                            >
-                              {esInformacion ? (
-                                <ClipboardList className="h-5 w-5" />
-                              ) : esControl ? (
-                                <Clock3 className="h-5 w-5" />
-                              ) : completada ? (
-                                <Check className="h-5 w-5" />
-                              ) : (
-                                <Clock3 className="h-5 w-5" />
-                              )}
-                            </div>
-
 
                             <div className="min-w-0 flex-1">
 
                               <div className="flex flex-wrap items-center gap-2">
 
                                 {actividad.hora && (
-                                  <span className="rounded-lg bg-[#F4F2F8] px-2.5 py-1 text-xs font-bold text-brand-blue">
+                                  <span className="font-mono text-xs font-extrabold text-brand-blue">
                                     {actividad.hora}
                                   </span>
                                 )}
 
+
                                 {esAyunas &&
                                   !actividad.hora && (
-                                  <span className="rounded-lg bg-[#F4F2F8] px-2.5 py-1 text-xs font-semibold text-brand-blue">
+                                  <span className="text-xs font-semibold text-brand-gray">
                                     Sin hora fija
                                   </span>
                                 )}
 
-                                {esInformacion && (
-                                  <span className="rounded-lg bg-blue-100 px-2.5 py-1 text-xs font-bold text-blue-700">
-                                    Para tener en cuenta
-                                  </span>
-                                )}
 
                                 {actividad.recordatorio !==
                                   "NINGUNO" && (
-                                  <span className="rounded-lg bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
-                                    🔔{" "}
-                                    {textoRecordatorio(
-                                      actividad.recordatorio
-                                    )}
+
+                                  <span
+                                    title={
+                                      textoRecordatorio(
+                                        actividad.recordatorio
+                                      ) ?? undefined
+                                    }
+                                    aria-label={`Recordatorio: ${
+                                      textoRecordatorio(
+                                        actividad.recordatorio
+                                      ) ?? "programado"
+                                    }`}
+                                    className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-50 text-amber-700"
+                                  >
+                                    <Bell className="h-3.5 w-3.5" />
+                                  </span>
+
+                                )}
+
+
+                                {esInformacion && (
+                                  <span className="text-[11px] font-bold text-blue-700">
+                                    Información
+                                  </span>
+                                )}
+
+
+                                {esControl && (
+                                  <span className="text-[11px] font-bold text-amber-700">
+                                    Control
                                   </span>
                                 )}
 
                               </div>
 
-                              {actividad.tipo === "TAREA" &&
-                                !completada && (
-                                <div>
-                                  <AvisoHora
-                                    hora={actividad.hora}
-                                    esSiguiente={esSiguiente}
-                                  />
-                                </div>
-                              )}
-
 
                               <h3
-                                className={`mt-2 text-base font-extrabold ${
+                                className={`mt-1.5 text-base font-extrabold leading-6 ${
                                   esInformacion
                                     ? "text-blue-900"
                                     : completada
@@ -3119,6 +3109,17 @@ export default function SeguimientoPublico({
                                 <p className="mt-0.5 text-xs font-medium text-brand-gray">
                                   {actividad.momento}
                                 </p>
+                              )}
+
+
+                              {actividad.tipo === "TAREA" &&
+                                !completada && (
+
+                                <AvisoHora
+                                  hora={actividad.hora}
+                                  esSiguiente={esSiguiente}
+                                />
+
                               )}
 
                             </div>
@@ -3144,7 +3145,7 @@ export default function SeguimientoPublico({
                                     ? `Marcar como pendiente: ${actividad.titulo}`
                                     : `Marcar como realizada: ${actividad.titulo}`
                                 }
-                                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+                                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
                                   completada
                                     ? "border-brand-pink bg-brand-pink text-white"
                                     : "border-brand-pink bg-white text-brand-pink"
@@ -3154,12 +3155,12 @@ export default function SeguimientoPublico({
                                 {actualizandoActividad ===
                                 actividad.id ? (
 
-                                  <LoaderCircle className="h-6 w-6 animate-spin" />
+                                  <LoaderCircle className="h-5 w-5 animate-spin" />
 
                                 ) : (
 
                                   <Check
-                                    className={`h-6 w-6 ${
+                                    className={`h-5 w-5 ${
                                       completada
                                         ? ""
                                         : "opacity-35"
@@ -3178,59 +3179,56 @@ export default function SeguimientoPublico({
 
                           {descripcionPrincipal && (
 
-                            <div className="mt-4 rounded-xl bg-[#FAF9FC] px-3.5 py-3">
-
-                              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-brand-gray">
-                                Instrucción principal
-                              </p>
-
-                              <p className="mt-1.5 whitespace-pre-wrap text-sm leading-6 text-[#4F4B56]">
-                                {descripcionPrincipal}
-                              </p>
-
-                            </div>
+                            <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[#4F4B56]">
+                              {descripcionPrincipal}
+                            </p>
 
                           )}
 
 
-                          {instrucciones.length > 0 && (
-                            <div className="mt-4 border-t border-black/5 pt-4">
+                          {actividad.indicaciones.length > 0 ? (
 
-                              <div className="mb-3 flex items-center justify-between gap-3">
+                            <details className="group mt-3 overflow-hidden rounded-xl border border-[#EEEAF3] bg-[#FCFBFD]">
 
-                                <p className="text-xs font-bold uppercase tracking-[0.12em] text-brand-gray">
+                              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 [&::-webkit-details-marker]:hidden">
+
+                                <span className="text-xs font-bold text-[#4F4B56]">
                                   {esInformacion
-                                    ? "Información"
-                                    : "Instrucciones"}
-                                </p>
+                                    ? "Indicaciones"
+                                    : `${actividad.indicaciones.length} ${
+                                        actividad.indicaciones.length === 1
+                                          ? "indicación"
+                                          : "indicaciones"
+                                      }`}
+                                </span>
 
 
-                                {actividad.tipo ===
-                                  "TAREA" &&
-                                  actividad.indicaciones.length >
-                                    0 && (
+                                <span className="shrink-0 text-xs font-bold text-brand-blue">
 
-                                  <span className="rounded-full bg-[#F8F6FF] px-2.5 py-1 text-xs font-bold text-brand-blue">
-                                    {
-                                      actividad.indicaciones.filter(
-                                        (indicacion) =>
-                                          indicacionCompletadaEnDia(
-                                            indicacion,
-                                            diaActual
-                                          )
-                                      ).length
-                                    }{" "}
-                                    de{" "}
-                                    {
-                                      actividad.indicaciones.length
-                                    }
+                                  <span className="group-open:hidden">
+                                    {actividad.tipo === "TAREA"
+                                      ? `${
+                                          actividad.indicaciones.filter(
+                                            (indicacion) =>
+                                              indicacionCompletadaEnDia(
+                                                indicacion,
+                                                diaActual
+                                              )
+                                          ).length
+                                        }/${actividad.indicaciones.length} · Ver`
+                                      : "Ver"}
                                   </span>
 
-                                )}
+                                  <span className="hidden group-open:inline">
+                                    Ocultar
+                                  </span>
 
-                              </div>
+                                </span>
 
-                              <ul className="space-y-2.5">
+                              </summary>
+
+
+                              <ul className="space-y-2 border-t border-[#EEEAF3] p-2.5">
 
                                 {instrucciones.map(
                                   (
@@ -3257,30 +3255,22 @@ export default function SeguimientoPublico({
                                     return (
                                       <li
                                         key={`${actividad.id}-${instruccion.id}`}
-                                        className={`flex items-start gap-2.5 rounded-xl border p-2.5 text-sm leading-6 transition ${
+                                        className={`flex items-start gap-2.5 rounded-lg px-2 py-2 text-sm leading-6 transition ${
                                           indicacionRealizada
-                                            ? "border-emerald-200 bg-emerald-50/60 text-emerald-800"
-                                            : "border-[#EEEAF3] bg-[#FCFBFD] text-[#4F4B56]"
+                                            ? "bg-emerald-50/70 text-emerald-800"
+                                            : "bg-white text-[#4F4B56]"
                                         }`}
                                       >
 
                                         {instruccion.hora && (
-                                          <span className="mt-0.5 min-w-[58px] shrink-0 rounded-lg bg-[#F4F2F8] px-2 py-1 text-center font-mono text-xs font-bold text-brand-blue">
-                                            {
-                                              instruccion.hora
-                                            }
+                                          <span className="mt-0.5 min-w-[52px] shrink-0 font-mono text-xs font-bold text-brand-blue">
+                                            {instruccion.hora}
                                           </span>
                                         )}
 
 
                                         {esInformacion && (
                                           <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
-                                        )}
-
-
-                                        {!esInformacion &&
-                                          !esIndicacionEstructurada && (
-                                          <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-blue/40" />
                                         )}
 
 
@@ -3291,14 +3281,11 @@ export default function SeguimientoPublico({
                                               : ""
                                           }`}
                                         >
-                                          {
-                                            instruccion.texto
-                                          }
+                                          {instruccion.texto}
                                         </span>
 
 
-                                        {actividad.tipo ===
-                                          "TAREA" &&
+                                        {actividad.tipo === "TAREA" &&
                                           esIndicacionEstructurada && (
 
                                           <button
@@ -3319,7 +3306,7 @@ export default function SeguimientoPublico({
                                                 ? `Marcar como pendiente: ${instruccion.texto}`
                                                 : `Marcar como realizada: ${instruccion.texto}`
                                             }
-                                            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+                                            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
                                               indicacionRealizada
                                                 ? "border-brand-pink bg-brand-pink text-white"
                                                 : "border-brand-pink bg-white text-brand-pink"
@@ -3328,12 +3315,12 @@ export default function SeguimientoPublico({
 
                                             {cargandoIndicacion ? (
 
-                                              <LoaderCircle className="h-6 w-6 animate-spin" />
+                                              <LoaderCircle className="h-5 w-5 animate-spin" />
 
                                             ) : (
 
                                               <Check
-                                                className={`h-6 w-6 ${
+                                                className={`h-5 w-5 ${
                                                   indicacionRealizada
                                                     ? ""
                                                     : "opacity-35"
@@ -3354,11 +3341,36 @@ export default function SeguimientoPublico({
 
                               </ul>
 
+                            </details>
+
+                          ) : instrucciones.length > 0 ? (
+
+                            <div className="mt-3 space-y-1.5">
+
+                              {instrucciones.map(
+                                (
+                                  instruccion
+                                ) => (
+
+                                  <div
+                                    key={`${actividad.id}-${instruccion.id}`}
+                                    className="flex items-start gap-2 text-sm leading-6 text-[#4F4B56]"
+                                  >
+
+                                    <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-blue/40" />
+
+                                    <span>
+                                      {instruccion.texto}
+                                    </span>
+
+                                  </div>
+
+                                )
+                              )}
+
                             </div>
-                          )}
 
-
-
+                          ) : null}
 
 
                           {esControl && (
