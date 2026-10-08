@@ -782,86 +782,56 @@ export default function ProtocolosAdicionalesPreparacion({
 
           <div className="space-y-5">
 
+            <section className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
 
-            <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
-
-              <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
-
-
-                <div>
-
-                  <label className="admin-label">
-                    Hora *
-                  </label>
-
-                  <SelectorHora
-                    value={
-                      form.hora
-                    }
-                    onChange={(hora) =>
-                      setForm({
-                        ...form,
-                        hora,
-                      })
-                    }
-                    permitirVacio={
-                      false
-                    }
-                  />
-
-                </div>
-
-
-                <div>
-
-                  <label className="admin-label">
-                    Nombre del protocolo *
-                  </label>
-
-                  <input
-                    value={
-                      form.titulo
-                    }
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        titulo:
-                          e.target.value,
-                      })
-                    }
-                    className="admin-input"
-                    placeholder="Ej. Protocolo E limpieza"
-                    maxLength={200}
-                    autoFocus
-                  />
-
-                </div>
-
-              </div>
-
-
-              <div className="mt-5">
-
-                <label className="admin-label">
-                  Instrucciones
-                </label>
-
-                <p className="mb-2 text-xs leading-5 text-gray-500">
-                  Escribe las instrucciones generales de este protocolo. Después de guardarlo podrás agregar indicaciones con horarios propios.
+              <div className="mb-4">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-purple-700">
+                  1. Qué protocolo vas a agregar
                 </p>
 
-                <textarea
-                  value={
-                    form.descripcion
-                  }
+                <p className="mt-1 text-xs leading-5 text-gray-500">
+                  Dale un nombre claro y explica en qué consiste.
+                </p>
+              </div>
+
+              <div>
+                <label className="admin-label">
+                  Nombre del protocolo *
+                </label>
+
+                <input
+                  value={form.titulo}
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      descripcion:
-                        e.target.value,
+                      titulo: e.target.value,
                     })
                   }
-                  className="admin-input min-h-32 resize-y"
+                  className="admin-input"
+                  placeholder="Ej. Protocolo adicional"
+                  maxLength={200}
+                  autoFocus
+                />
+              </div>
+
+              <div className="mt-4">
+                <label className="admin-label">
+                  Instrucciones generales
+                </label>
+
+                <p className="mb-2 text-xs leading-5 text-gray-500">
+                  Después de guardarlo podrás añadir indicaciones independientes, cada una con su propio horario.
+                </p>
+
+                <textarea
+                  value={form.descripcion}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      descripcion: e.target.value,
+                    })
+                  }
+                  className="admin-input min-h-28 resize-y"
                   placeholder="Escribe las instrucciones que verá el cliente..."
                   maxLength={5000}
                 />
@@ -869,142 +839,131 @@ export default function ProtocolosAdicionalesPreparacion({
                 <p className="mt-1 text-right text-[11px] text-gray-400">
                   {form.descripcion.length}/5000
                 </p>
-
               </div>
 
-            </div>
+            </section>
 
+            <section className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4 sm:p-5">
 
-            <details className="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
-
-              <summary className="cursor-pointer list-none px-4 py-3.5 text-sm font-semibold text-gray-700">
-
-                Opciones avanzadas
-
-                <span className="ml-2 text-xs font-normal text-gray-400">
-                  vigencia y recordatorio
-                </span>
-
-              </summary>
-
-
-              <div className="space-y-5 border-t border-gray-200 bg-white p-4">
-
-
-                <div className="grid grid-cols-2 gap-3">
-
-                  <div>
-
-                    <label className="admin-label">
-                      Desde el día
-                    </label>
-
-                    <input
-                      type="number"
-                      min={1}
-                      max={
-                        duracionDias
-                      }
-                      value={
-                        form.diaInicio
-                      }
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          diaInicio:
-                            e.target.value,
-                        })
-                      }
-                      className="admin-input"
-                    />
-
-                  </div>
-
-
-                  <div>
-
-                    <label className="admin-label">
-                      Hasta el día
-                    </label>
-
-                    <input
-                      type="number"
-                      min={1}
-                      max={
-                        duracionDias
-                      }
-                      value={
-                        form.diaFin
-                      }
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          diaFin:
-                            e.target.value,
-                        })
-                      }
-                      className="admin-input"
-                      placeholder="Opcional"
-                    />
-
-                  </div>
-
-                </div>
-
-
-                <p className="-mt-3 text-xs leading-5 text-gray-500">
-                  Si dejas el día final vacío, seguirá activo hasta terminar el seguimiento o hasta que sea retirado.
+              <div className="mb-4">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">
+                  2. Cuándo se aplica
                 </p>
 
+                <p className="mt-1 text-xs leading-5 text-blue-700/80">
+                  Define su horario y durante qué días estará vigente.
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-3">
 
                 <div>
-
                   <label className="admin-label">
-                    Recordatorio
+                    Hora *
                   </label>
 
-                  <select
-                    value={
-                      form.recordatorio
+                  <SelectorHora
+                    value={form.hora}
+                    onChange={(hora) =>
+                      setForm({
+                        ...form,
+                        hora,
+                        recordatorio:
+                          hora
+                            ? form.recordatorio
+                            : "NINGUNO",
+                      })
                     }
+                    permitirVacio={false}
+                  />
+                </div>
+
+                <div>
+                  <label className="admin-label">
+                    Desde el día
+                  </label>
+
+                  <input
+                    type="number"
+                    min={1}
+                    max={duracionDias}
+                    value={form.diaInicio}
                     onChange={(e) =>
                       setForm({
                         ...form,
-                        recordatorio:
-                          e.target.value as Recordatorio,
+                        diaInicio: e.target.value,
                       })
                     }
                     className="admin-input"
-                  >
+                  />
+                </div>
 
-                    <option value="NINGUNO">
-                      Sin recordatorio
-                    </option>
+                <div>
+                  <label className="admin-label">
+                    Hasta el día
+                  </label>
 
-                    <option value="A_LA_HORA">
-                      A la hora indicada
-                    </option>
-
-                    <option value="MIN_15_ANTES">
-                      15 minutos antes
-                    </option>
-
-                    <option value="MIN_30_ANTES">
-                      30 minutos antes
-                    </option>
-
-                    <option value="MIN_60_ANTES">
-                      1 hora antes
-                    </option>
-
-                  </select>
-
+                  <input
+                    type="number"
+                    min={1}
+                    max={duracionDias}
+                    value={form.diaFin}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        diaFin: e.target.value,
+                      })
+                    }
+                    className="admin-input"
+                    placeholder="Opcional"
+                  />
                 </div>
 
               </div>
 
-            </details>
+              <p className="mt-2 text-xs leading-5 text-gray-500">
+                Si no defines un día final, seguirá activo hasta terminar el seguimiento.
+              </p>
 
+              <div className="mt-4">
+                <label className="admin-label">
+                  Avisar al cliente
+                </label>
+
+                <select
+                  value={form.recordatorio}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      recordatorio:
+                        e.target.value as Recordatorio,
+                    })
+                  }
+                  className="admin-input"
+                >
+                  <option value="NINGUNO">
+                    Sin recordatorio
+                  </option>
+
+                  <option value="A_LA_HORA">
+                    A la hora indicada
+                  </option>
+
+                  <option value="MIN_15_ANTES">
+                    15 minutos antes
+                  </option>
+
+                  <option value="MIN_30_ANTES">
+                    30 minutos antes
+                  </option>
+
+                  <option value="MIN_60_ANTES">
+                    1 hora antes
+                  </option>
+                </select>
+              </div>
+
+            </section>
 
             <div className="rounded-xl border border-purple-100 bg-purple-50 px-4 py-3">
 

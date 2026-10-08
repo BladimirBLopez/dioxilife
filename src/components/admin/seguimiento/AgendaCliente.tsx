@@ -821,366 +821,348 @@ export default function AgendaCliente({
           }}
         >
 
-          <div className="space-y-4">
+          <div className="space-y-5">
 
-            <div>
-              <label className="admin-label">
-                Sección
-              </label>
+            {!actividadEditando && (
+              <section className="rounded-2xl border border-gray-200 bg-white p-4">
 
-              <select
-                value={form.seccion}
-                disabled={Boolean(
-                  actividadEditando
-                )}
-                onChange={(e) => {
-                  const nuevaSeccion =
-                    e.target.value as SeccionActividad;
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-violet-600">
+                  ¿Qué quieres agregar?
+                </p>
 
-                  setForm({
-                    ...form,
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
 
-                    seccion:
-                      nuevaSeccion,
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm({
+                        ...form,
+                        seccion: "PRINCIPAL",
+                      })
+                    }
+                    className={`rounded-xl border px-4 py-3 text-left transition ${
+                      form.seccion === "PRINCIPAL"
+                        ? "border-violet-400 bg-violet-50 text-violet-900"
+                        : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <span className="block text-sm font-semibold">
+                      Actividad del protocolo
+                    </span>
 
-                    tipo:
-                      nuevaSeccion === "ADICIONAL"
-                        ? "TAREA"
-                        : form.tipo,
+                    <span className="mt-1 block text-[11px] leading-4 opacity-70">
+                      Una actividad normal de la agenda principal.
+                    </span>
+                  </button>
 
-                    diaInicio:
-                      nuevaSeccion === "ADICIONAL" &&
-                      !actividadEditando
-                        ? String(
-                            diaActual ?? 1
-                          )
-                        : form.diaInicio,
-                  });
-                }}
-                className="admin-input disabled:bg-gray-100"
-              >
-                <option value="PRINCIPAL">
-                  Protocolo principal
-                </option>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm({
+                        ...form,
+                        seccion: "ADICIONAL",
+                        tipo: "TAREA",
+                        diaInicio:
+                          String(diaActual ?? 1),
+                      })
+                    }
+                    className={`rounded-xl border px-4 py-3 text-left transition ${
+                      form.seccion === "ADICIONAL"
+                        ? "border-purple-400 bg-purple-50 text-purple-900"
+                        : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <span className="block text-sm font-semibold">
+                      Protocolo adicional
+                    </span>
 
-                <option value="ADICIONAL">
-                  Protocolo adicional
-                </option>
-              </select>
+                    <span className="mt-1 block text-[11px] leading-4 opacity-70">
+                      Añade un protocolo complementario desde el día actual.
+                    </span>
+                  </button>
 
-              <p className="mt-1 text-xs text-gray-500">
-                {actividadEditando
-                  ? "La sección no se cambia después de crear la actividad."
-                  : form.seccion === "ADICIONAL"
-                  ? "El protocolo adicional se podrá registrar como Realizado o Pendiente y contará para la calificación."
-                  : "Actividad del protocolo principal del cliente."}
-              </p>
-            </div>
-
-
-            <div>
-              <label className="admin-label">
-                Tipo de actividad
-              </label>
-
-              <select
-                value={form.tipo}
-                disabled={
-                  form.seccion ===
-                  "ADICIONAL"
-                }
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    tipo: e.target.value as
-                      | "TAREA"
-                      | "INFORMACION"
-                      | "CONTROL",
-                  })
-                }
-                className="admin-input disabled:bg-gray-100"
-              >
-                <option value="TAREA">
-                  Tarea
-                </option>
-
-                <option value="INFORMACION">
-                  Información
-                </option>
-
-                <option value="CONTROL">
-                  Control
-                </option>
-              </select>
-
-              <p className="mt-1 text-xs text-gray-500">
-                {form.seccion === "ADICIONAL"
-                  ? "Los protocolos adicionales se registran como Realizado o Pendiente y cuentan para la calificación del día."
-                  : form.tipo === "TAREA"
-                  ? "El cliente podrá marcarla como realizada."
-                  : form.tipo === "INFORMACION"
-                  ? "Solo se mostrará como información."
-                  : "Permitirá registrar un dato en una siguiente etapa."}
-              </p>
-            </div>
-
-
-            <div>
-              <label className="admin-label">
-                Recordatorio
-              </label>
-
-              <select
-                value={form.recordatorio}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    recordatorio:
-                      e.target.value as RecordatorioActividad,
-                  })
-                }
-                className="admin-input"
-              >
-                <option value="NINGUNO">
-                  Sin recordatorio
-                </option>
-
-                <option value="A_LA_HORA">
-                  A la hora indicada
-                </option>
-
-                <option value="MIN_15_ANTES">
-                  15 minutos antes
-                </option>
-
-                <option value="MIN_30_ANTES">
-                  30 minutos antes
-                </option>
-
-                <option value="MIN_60_ANTES">
-                  1 hora antes
-                </option>
-              </select>
-
-              {form.recordatorio !== "NINGUNO" &&
-                !form.hora && (
-                  <p className="mt-1 text-xs text-amber-600">
-                    Define una hora para poder usar este recordatorio.
-                  </p>
-                )}
-            </div>
-
-
-            <div>
-              <label className="admin-label">
-                Título
-              </label>
-
-              <input
-                value={form.titulo}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    titulo:
-                      e.target.value,
-                  })
-                }
-                maxLength={200}
-                className="admin-input"
-              />
-            </div>
-
-
-            <div>
-              <label className="admin-label">
-                Descripción
-              </label>
-
-              <textarea
-                value={form.descripcion}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    descripcion:
-                      e.target.value,
-                  })
-                }
-                rows={3}
-                maxLength={5000}
-                className="admin-input"
-              />
-            </div>
-
-
-            <div className="grid grid-cols-2 gap-3">
-
-              <div>
-                <label className="admin-label">
-                  Día inicial
-                </label>
-
-                <input
-                  type="number"
-                  min={1}
-                  max={duracionDias}
-                  value={form.diaInicio}
-                  disabled={
-                    Boolean(
-                      actividadEditando &&
-                      actividadEditando.seccion ===
-                        "ADICIONAL" &&
-                      diaActual !== null &&
-                      diaActual >
-                        actividadEditando.diaInicio
-                    )
-                  }
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      diaInicio:
-                        e.target.value,
-                    })
-                  }
-                  className="admin-input disabled:bg-gray-100"
-                />
-              </div>
-
-
-              <div>
-                <label className="admin-label">
-                  Día final
-                </label>
-
-                <input
-                  type="number"
-                  min={1}
-                  max={duracionDias}
-                  value={form.diaFin}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      diaFin:
-                        e.target.value,
-                    })
-                  }
-                  className="admin-input"
-                  placeholder="Opcional"
-                />
-              </div>
-
-            </div>
-
-
-            {actividadEditando &&
-              actividadEditando.seccion === "ADICIONAL" &&
-              diaActual !== null &&
-              diaActual >
-                actividadEditando.diaInicio && (
-                <div className="rounded-lg border border-purple-100 bg-purple-50 px-3 py-2 text-sm text-purple-800">
-                  Este cambio se aplicará desde el día{" "}
-                  <strong>
-                    {diaActual}
-                  </strong>
-                  . Los días anteriores conservarán la hora y las indicaciones que tenían.
                 </div>
+              </section>
+            )}
+
+            <section className="rounded-2xl border border-gray-200 bg-white p-4">
+
+              <p className="mb-4 text-xs font-bold uppercase tracking-[0.12em] text-violet-600">
+                1. {form.seccion === "ADICIONAL"
+                  ? "Qué protocolo vas a agregar"
+                  : "Qué debe hacer el cliente"}
+              </p>
+
+              <div>
+                <label className="admin-label">
+                  {form.seccion === "ADICIONAL"
+                    ? "Nombre del protocolo *"
+                    : "Nombre de la actividad *"}
+                </label>
+
+                <input
+                  value={form.titulo}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      titulo: e.target.value,
+                    })
+                  }
+                  maxLength={200}
+                  className="admin-input"
+                  placeholder={
+                    form.seccion === "ADICIONAL"
+                      ? "Ej. Protocolo adicional"
+                      : "Ej. Caminata, desayuno, control..."
+                  }
+                  autoFocus={!actividadEditando}
+                />
+              </div>
+
+              <div className="mt-4">
+                <label className="admin-label">
+                  Instrucciones
+                </label>
+
+                <textarea
+                  value={form.descripcion}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      descripcion: e.target.value,
+                    })
+                  }
+                  rows={4}
+                  maxLength={5000}
+                  className="admin-input"
+                  placeholder="Escribe lo que verá el cliente..."
+                />
+              </div>
+
+            </section>
+
+            <section className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4">
+
+              <p className="mb-4 text-xs font-bold uppercase tracking-[0.12em] text-blue-700">
+                2. Cuándo se aplica
+              </p>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+
+                <div>
+                  <label className="admin-label">
+                    Hora
+                  </label>
+
+                  <SelectorHora
+                    value={form.hora}
+                    onChange={(hora) =>
+                      setForm({
+                        ...form,
+                        hora,
+                        recordatorio:
+                          hora
+                            ? form.recordatorio
+                            : "NINGUNO",
+                      })
+                    }
+                  />
+                </div>
+
+                <div>
+                  <label className="admin-label">
+                    Desde el día
+                  </label>
+
+                  <input
+                    type="number"
+                    min={1}
+                    max={duracionDias}
+                    value={form.diaInicio}
+                    disabled={Boolean(
+                      actividadEditando &&
+                      actividadEditando.seccion === "ADICIONAL" &&
+                      diaActual !== null &&
+                      diaActual > actividadEditando.diaInicio
+                    )}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        diaInicio: e.target.value,
+                      })
+                    }
+                    className="admin-input disabled:bg-gray-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="admin-label">
+                    Hasta el día
+                  </label>
+
+                  <input
+                    type="number"
+                    min={1}
+                    max={duracionDias}
+                    value={form.diaFin}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        diaFin: e.target.value,
+                      })
+                    }
+                    className="admin-input"
+                    placeholder="Opcional"
+                  />
+                </div>
+
+              </div>
+
+              {actividadEditando &&
+                actividadEditando.seccion === "ADICIONAL" &&
+                diaActual !== null &&
+                diaActual > actividadEditando.diaInicio && (
+                  <div className="mt-3 rounded-lg border border-purple-100 bg-purple-50 px-3 py-2 text-sm text-purple-800">
+                    Este cambio se aplicará desde el día{" "}
+                    <strong>{diaActual}</strong>.
+                    Los días anteriores conservarán su configuración.
+                  </div>
+                )}
+
+              {form.hora ? (
+                <div className="mt-4">
+                  <label className="admin-label">
+                    Avisar al cliente
+                  </label>
+
+                  <select
+                    value={form.recordatorio}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        recordatorio:
+                          e.target.value as RecordatorioActividad,
+                      })
+                    }
+                    className="admin-input"
+                  >
+                    <option value="NINGUNO">
+                      Sin recordatorio
+                    </option>
+                    <option value="A_LA_HORA">
+                      A la hora indicada
+                    </option>
+                    <option value="MIN_15_ANTES">
+                      15 minutos antes
+                    </option>
+                    <option value="MIN_30_ANTES">
+                      30 minutos antes
+                    </option>
+                    <option value="MIN_60_ANTES">
+                      1 hora antes
+                    </option>
+                  </select>
+                </div>
+              ) : (
+                <p className="mt-3 text-xs leading-5 text-gray-500">
+                  Agrega una hora si deseas programar un recordatorio.
+                </p>
               )}
 
+            </section>
 
-            <div className="grid grid-cols-2 gap-3">
+            <details className="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
 
-              <div>
-                <label className="admin-label">
-                  Hora
-                </label>
+              <summary className="cursor-pointer list-none px-4 py-3.5 text-sm font-semibold text-gray-700">
+                3. Más opciones
+              </summary>
 
-                <SelectorHora
-                  value={form.hora}
-                  onChange={(hora) =>
-                    setForm({
-                      ...form,
-                      hora,
-                    })
-                  }
-                />
+              <div className="space-y-4 border-t border-gray-200 bg-white p-4">
+
+                {form.seccion === "PRINCIPAL" && (
+                  <div>
+                    <label className="admin-label">
+                      Cómo se mostrará al cliente
+                    </label>
+
+                    <select
+                      value={form.tipo}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          tipo:
+                            e.target.value as
+                              | "TAREA"
+                              | "INFORMACION"
+                              | "CONTROL",
+                        })
+                      }
+                      className="admin-input"
+                    >
+                      <option value="TAREA">
+                        Debe marcarla como realizada
+                      </option>
+                      <option value="INFORMACION">
+                        Solo mostrar información
+                      </option>
+                      <option value="CONTROL">
+                        Control
+                      </option>
+                    </select>
+                  </div>
+                )}
+
+                <div>
+                  <label className="admin-label">
+                    Momento del día
+                  </label>
+
+                  <select
+                    value={form.momento}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        momento: e.target.value,
+                      })
+                    }
+                    className="admin-input"
+                  >
+                    <option value="">Sin especificar</option>
+                    <option value="Ayunas">Ayunas</option>
+                    <option value="Desayuno">Desayuno</option>
+                    <option value="Media mañana">Media mañana</option>
+                    <option value="Almuerzo">Almuerzo</option>
+                    <option value="Tarde">Tarde</option>
+                    <option value="Cena">Cena</option>
+                    <option value="Antes de dormir">Antes de dormir</option>
+                    <option value="Noche">Noche</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="admin-label">
+                    Orden manual
+                  </label>
+
+                  <input
+                    type="number"
+                    value={form.orden}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        orden: e.target.value,
+                      })
+                    }
+                    className="admin-input"
+                  />
+
+                  <p className="mt-1 text-xs text-gray-500">
+                    Normalmente puedes dejarlo sin modificar.
+                  </p>
+                </div>
+
               </div>
-
-
-              <div>
-                <label className="admin-label">
-                  Momento
-                </label>
-
-                <select
-                  value={form.momento}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      momento:
-                        e.target.value,
-                    })
-                  }
-                  className="admin-input"
-                >
-                  <option value="">
-                    Sin especificar
-                  </option>
-
-                  <option value="Ayunas">
-                    Ayunas
-                  </option>
-
-                  <option value="Desayuno">
-                    Desayuno
-                  </option>
-
-                  <option value="Media mañana">
-                    Media mañana
-                  </option>
-
-                  <option value="Almuerzo">
-                    Almuerzo
-                  </option>
-
-                  <option value="Tarde">
-                    Tarde
-                  </option>
-
-                  <option value="Cena">
-                    Cena
-                  </option>
-
-                  <option value="Antes de dormir">
-                    Antes de dormir
-                  </option>
-
-                  <option value="Noche">
-                    Noche
-                  </option>
-                </select>
-              </div>
-
-            </div>
-
-
-            <div>
-              <label className="admin-label">
-                Orden
-              </label>
-
-              <input
-                type="number"
-                value={form.orden}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    orden:
-                      e.target.value,
-                  })
-                }
-                className="admin-input"
-              />
-            </div>
-
+            </details>
 
             {actividadEditando &&
               form.seccion === "PRINCIPAL" && (

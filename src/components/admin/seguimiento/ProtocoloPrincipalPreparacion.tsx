@@ -1140,10 +1140,98 @@ export default function ProtocoloPrincipalPreparacion({
           <div className="space-y-5">
 
 
-            <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
+            <section className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
 
-              <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
+              <div className="mb-4">
 
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-violet-600">
+                  1. Qué debe hacer el cliente
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-gray-500">
+                  Escribe la actividad tal como quieres que aparezca en su seguimiento.
+                </p>
+
+              </div>
+
+
+              <div>
+
+                <label className="admin-label">
+                  Nombre de la actividad *
+                </label>
+
+                <input
+                  value={
+                    form.titulo
+                  }
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      titulo:
+                        e.target.value,
+                    })
+                  }
+                  className="admin-input"
+                  maxLength={200}
+                  placeholder="Ej. Desayuno, caminata, control..."
+                  autoFocus
+                />
+
+              </div>
+
+
+              <div className="mt-4">
+
+                <label className="admin-label">
+                  Instrucciones
+                </label>
+
+                <p className="mb-2 text-xs leading-5 text-gray-500">
+                  Explica qué debe hacer. Después de guardar podrás agregar pasos o indicaciones separadas.
+                </p>
+
+                <textarea
+                  value={
+                    form.descripcion
+                  }
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      descripcion:
+                        e.target.value,
+                    })
+                  }
+                  className="admin-input min-h-28 resize-y"
+                  maxLength={5000}
+                  placeholder="Escribe las instrucciones que verá el cliente..."
+                />
+
+                <p className="mt-1 text-right text-[11px] text-gray-400">
+                  {form.descripcion.length}/5000
+                </p>
+
+              </div>
+
+            </section>
+
+
+            <section className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4 sm:p-5">
+
+              <div className="mb-4">
+
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">
+                  2. Cuándo debe hacerlo
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-blue-700/80">
+                  Define desde qué día estará disponible y, si corresponde, su horario.
+                </p>
+
+              </div>
+
+
+              <div className="grid gap-4 sm:grid-cols-3">
 
                 <div>
 
@@ -1159,8 +1247,45 @@ export default function ProtocoloPrincipalPreparacion({
                       setForm({
                         ...form,
                         hora,
+
+                        recordatorio:
+                          hora
+                            ? form.recordatorio
+                            : "NINGUNO",
                       })
                     }
+                  />
+
+                  <p className="mt-1 text-[11px] text-gray-500">
+                    Opcional
+                  </p>
+
+                </div>
+
+
+                <div>
+
+                  <label className="admin-label">
+                    Desde el día
+                  </label>
+
+                  <input
+                    type="number"
+                    min={1}
+                    max={
+                      duracionDias
+                    }
+                    value={
+                      form.diaInicio
+                    }
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        diaInicio:
+                          e.target.value,
+                      })
+                    }
+                    className="admin-input"
                   />
 
                 </div>
@@ -1169,24 +1294,27 @@ export default function ProtocoloPrincipalPreparacion({
                 <div>
 
                   <label className="admin-label">
-                    Actividad / título *
+                    Hasta el día
                   </label>
 
                   <input
+                    type="number"
+                    min={1}
+                    max={
+                      duracionDias
+                    }
                     value={
-                      form.titulo
+                      form.diaFin
                     }
                     onChange={(e) =>
                       setForm({
                         ...form,
-                        titulo:
+                        diaFin:
                           e.target.value,
                       })
                     }
                     className="admin-input"
-                    maxLength={200}
-                    placeholder="Ej. Desayuno, Zeolita, Control..."
-                    autoFocus
+                    placeholder="Opcional"
                   />
 
                 </div>
@@ -1194,49 +1322,80 @@ export default function ProtocoloPrincipalPreparacion({
               </div>
 
 
-              <div className="mt-5">
+              <p className="mt-2 text-xs leading-5 text-gray-500">
+                Si no defines un día final, la actividad continuará hasta terminar el seguimiento.
+              </p>
 
-                <label className="admin-label">
-                  Instrucciones
-                </label>
 
-                <p className="mb-2 text-xs leading-5 text-gray-500">
-                  Escribe aquí las instrucciones que corresponden directamente a esta actividad.
-                </p>
+              {form.hora ? (
 
-                <textarea
-                  value={
-                    form.descripcion
-                  }
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      descripcion:
-                        e.target.value,
-                    })
-                  }
-                  className="admin-input min-h-32 resize-y"
-                  maxLength={5000}
-                  placeholder="Escribe las instrucciones que verá el cliente..."
-                />
+                <div className="mt-4">
 
-                <p className="mt-1 text-right text-[11px] text-gray-400">
-                  {form.descripcion.length}/5000
-                </p>
+                  <label className="admin-label">
+                    Avisar al cliente
+                  </label>
 
-              </div>
+                  <select
+                    value={
+                      form.recordatorio
+                    }
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        recordatorio:
+                          e.target.value as Recordatorio,
+                      })
+                    }
+                    className="admin-input"
+                  >
 
-            </div>
+                    <option value="NINGUNO">
+                      Sin recordatorio
+                    </option>
+
+                    <option value="A_LA_HORA">
+                      A la hora indicada
+                    </option>
+
+                    <option value="MIN_15_ANTES">
+                      15 minutos antes
+                    </option>
+
+                    <option value="MIN_30_ANTES">
+                      30 minutos antes
+                    </option>
+
+                    <option value="MIN_60_ANTES">
+                      1 hora antes
+                    </option>
+
+                  </select>
+
+                </div>
+
+              ) : (
+
+                <div className="mt-4 rounded-xl border border-gray-200 bg-white px-3 py-2.5">
+
+                  <p className="text-xs leading-5 text-gray-500">
+                    Si agregas una hora también podrás programar un recordatorio.
+                  </p>
+
+                </div>
+
+              )}
+
+            </section>
 
 
             <details className="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
 
               <summary className="cursor-pointer list-none px-4 py-3.5 text-sm font-semibold text-gray-700">
 
-                Opciones avanzadas
+                3. Más opciones
 
                 <span className="ml-2 text-xs font-normal text-gray-400">
-                  días, recordatorio, momento y tipo
+                  momento, tipo y orden
                 </span>
 
               </summary>
@@ -1245,76 +1404,10 @@ export default function ProtocoloPrincipalPreparacion({
               <div className="space-y-5 border-t border-gray-200 bg-white p-4">
 
 
-                <div className="grid grid-cols-2 gap-3">
-
-                  <div>
-
-                    <label className="admin-label">
-                      Desde el día
-                    </label>
-
-                    <input
-                      type="number"
-                      min={1}
-                      max={
-                        duracionDias
-                      }
-                      value={
-                        form.diaInicio
-                      }
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          diaInicio:
-                            e.target.value,
-                        })
-                      }
-                      className="admin-input"
-                    />
-
-                  </div>
-
-
-                  <div>
-
-                    <label className="admin-label">
-                      Hasta el día
-                    </label>
-
-                    <input
-                      type="number"
-                      min={1}
-                      max={
-                        duracionDias
-                      }
-                      value={
-                        form.diaFin
-                      }
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          diaFin:
-                            e.target.value,
-                        })
-                      }
-                      className="admin-input"
-                      placeholder="Opcional"
-                    />
-
-                  </div>
-
-                </div>
-
-
-                <p className="-mt-3 text-xs leading-5 text-gray-500">
-                  Si dejas el día final vacío, la actividad continuará hasta finalizar el seguimiento.
-                </p>
-
-
                 <div>
 
                   <label className="admin-label">
-                    Momento
+                    Momento del día
                   </label>
 
                   <select
@@ -1375,63 +1468,7 @@ export default function ProtocoloPrincipalPreparacion({
                 <div>
 
                   <label className="admin-label">
-                    Recordatorio
-                  </label>
-
-                  <select
-                    value={
-                      form.recordatorio
-                    }
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        recordatorio:
-                          e.target.value as Recordatorio,
-                      })
-                    }
-                    className="admin-input"
-                  >
-
-                    <option value="NINGUNO">
-                      Sin recordatorio
-                    </option>
-
-                    <option value="A_LA_HORA">
-                      A la hora indicada
-                    </option>
-
-                    <option value="MIN_15_ANTES">
-                      15 minutos antes
-                    </option>
-
-                    <option value="MIN_30_ANTES">
-                      30 minutos antes
-                    </option>
-
-                    <option value="MIN_60_ANTES">
-                      1 hora antes
-                    </option>
-
-                  </select>
-
-
-                  {form.recordatorio !==
-                    "NINGUNO" &&
-                    !form.hora && (
-
-                    <p className="mt-1 text-xs text-amber-600">
-                      Para utilizar un recordatorio debes seleccionar una hora.
-                    </p>
-
-                  )}
-
-                </div>
-
-
-                <div>
-
-                  <label className="admin-label">
-                    Tipo
+                    Cómo se mostrará al cliente
                   </label>
 
                   <select
@@ -1452,11 +1489,11 @@ export default function ProtocoloPrincipalPreparacion({
                   >
 
                     <option value="TAREA">
-                      Actividad que el cliente debe marcar
+                      Debe marcarla como realizada
                     </option>
 
                     <option value="INFORMACION">
-                      Solo información
+                      Solo mostrar información
                     </option>
 
                     <option value="CONTROL">
@@ -1490,7 +1527,7 @@ export default function ProtocoloPrincipalPreparacion({
                   />
 
                   <p className="mt-1 text-xs leading-5 text-gray-500">
-                    Normalmente no necesitas modificarlo. El horario será la referencia principal para mostrar el protocolo.
+                    Normalmente puedes dejar este valor como está. El horario seguirá siendo la referencia principal.
                   </p>
 
                 </div>
@@ -1536,341 +1573,477 @@ export default function ProtocoloPrincipalPreparacion({
       {modalSerie && (
 
         <Modal
-          title="Generar serie de horarios"
+          title="Crear serie de actividades"
           onClose={() =>
             !procesando &&
             setModalSerie(
               false
             )
           }
-          maxWidthClassName="max-w-xl"
+          maxWidthClassName="max-w-2xl"
         >
 
-          <div className="space-y-4">
-
-            <div>
-
-              <label className="admin-label">
-                Nombre base *
-              </label>
-
-              <input
-                value={
-                  serie.nombreBase
-                }
-                onChange={(e) =>
-                  setSerie({
-                    ...serie,
-                    nombreBase:
-                      e.target.value,
-                  })
-                }
-                className="admin-input"
-                placeholder="Ej. Toma"
-              />
-
-            </div>
+          <div className="space-y-5">
 
 
-            <div>
+            <section className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
 
-              <label className="admin-label">
-                Primera hora
-              </label>
+              <div className="mb-4">
 
-              <SelectorHora
-                value={
-                  serie.horaInicio
-                }
-                onChange={(horaInicio) =>
-                  setSerie({
-                    ...serie,
-                    horaInicio,
-                  })
-                }
-                permitirVacio={
-                  false
-                }
-              />
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-violet-600">
+                  1. Qué actividad se repetirá
+                </p>
 
-            </div>
+                <p className="mt-1 text-xs leading-5 text-gray-500">
+                  Define el nombre base y las instrucciones que compartirán todas las actividades de la serie.
+                </p>
+
+              </div>
 
 
-            <div>
+              <div>
 
-              <label className="admin-label">
-                Intervalo
-              </label>
+                <label className="admin-label">
+                  Nombre base *
+                </label>
 
-              <div className="grid grid-cols-4 gap-2">
+                <input
+                  value={
+                    serie.nombreBase
+                  }
+                  onChange={(e) =>
+                    setSerie({
+                      ...serie,
+                      nombreBase:
+                        e.target.value,
+                    })
+                  }
+                  className="admin-input"
+                  placeholder="Ej. Actividad"
+                  autoFocus
+                />
 
-                {[
-                  15,
-                  30,
-                  45,
-                  60,
-                ].map(
-                  (
-                    minutos
-                  ) => (
+                <p className="mt-1 text-xs leading-5 text-gray-500">
+                  El sistema numerará automáticamente las actividades generadas.
+                </p>
 
-                    <button
-                      key={
-                        minutos
+              </div>
+
+
+              <div className="mt-4">
+
+                <label className="admin-label">
+                  Instrucciones
+                </label>
+
+                <p className="mb-2 text-xs leading-5 text-gray-500">
+                  Estas instrucciones se aplicarán a todas las actividades de la serie.
+                </p>
+
+                <textarea
+                  value={
+                    serie.descripcion
+                  }
+                  onChange={(e) =>
+                    setSerie({
+                      ...serie,
+                      descripcion:
+                        e.target.value,
+                    })
+                  }
+                  className="admin-input min-h-24 resize-y"
+                  placeholder="Escribe las instrucciones..."
+                />
+
+              </div>
+
+            </section>
+
+
+            <section className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4 sm:p-5">
+
+              <div className="mb-4">
+
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">
+                  2. Cómo se repetirá
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-blue-700/80">
+                  Elige la primera hora, cada cuánto tiempo se repetirá y cuántas actividades necesitas.
+                </p>
+
+              </div>
+
+
+              <div className="grid gap-4 sm:grid-cols-2">
+
+                <div>
+
+                  <label className="admin-label">
+                    Primera hora *
+                  </label>
+
+                  <SelectorHora
+                    value={
+                      serie.horaInicio
+                    }
+                    onChange={(horaInicio) =>
+                      setSerie({
+                        ...serie,
+                        horaInicio,
+                      })
+                    }
+                    permitirVacio={
+                      false
+                    }
+                  />
+
+                </div>
+
+
+                <div>
+
+                  <label className="admin-label">
+                    Cantidad de actividades
+                  </label>
+
+                  <input
+                    type="number"
+                    min={2}
+                    max={48}
+                    value={
+                      serie.cantidad
+                    }
+                    onChange={(e) =>
+                      setSerie({
+                        ...serie,
+                        cantidad:
+                          e.target.value,
+                      })
+                    }
+                    className="admin-input"
+                  />
+
+                  <p className="mt-1 text-xs text-gray-500">
+                    Entre 2 y 48 actividades.
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              <div className="mt-5">
+
+                <label className="admin-label">
+                  Repetir cada
+                </label>
+
+
+                <div className="grid grid-cols-4 gap-2">
+
+                  {[
+                    15,
+                    30,
+                    45,
+                    60,
+                  ].map(
+                    (
+                      minutos
+                    ) => (
+
+                      <button
+                        key={
+                          minutos
+                        }
+                        type="button"
+                        onClick={() =>
+                          setSerie({
+                            ...serie,
+                            intervalo:
+                              String(
+                                minutos
+                              ),
+                          })
+                        }
+                        className={`rounded-xl border px-2 py-2.5 text-xs font-semibold transition ${
+                          serie.intervalo ===
+                          String(
+                            minutos
+                          )
+                            ? "border-violet-600 bg-violet-600 text-white"
+                            : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        {minutos ===
+                        60
+                          ? "1 hora"
+                          : `${minutos} min`}
+                      </button>
+
+                    )
+                  )}
+
+                </div>
+
+
+                <div className="mt-3">
+
+                  <label className="admin-label">
+                    Otro intervalo
+                  </label>
+
+                  <div className="flex items-center gap-2">
+
+                    <input
+                      type="number"
+                      min={1}
+                      max={360}
+                      value={
+                        serie.intervalo
                       }
-                      type="button"
-                      onClick={() =>
+                      onChange={(e) =>
                         setSerie({
                           ...serie,
                           intervalo:
-                            String(
-                              minutos
-                            ),
+                            e.target.value,
                         })
                       }
-                      className={`rounded-xl border px-2 py-2.5 text-xs font-semibold ${
-                        serie.intervalo ===
-                        String(
-                          minutos
-                        )
-                          ? "border-violet-600 bg-violet-600 text-white"
-                          : "border-gray-200 bg-white text-gray-700"
-                      }`}
-                    >
-                      {minutos ===
-                      60
-                        ? "1 h"
-                        : `${minutos} min`}
-                    </button>
+                      className="admin-input"
+                    />
 
-                  )
-                )}
+                    <span className="shrink-0 text-sm font-medium text-gray-500">
+                      minutos
+                    </span>
+
+                  </div>
+
+                </div>
 
               </div>
 
-            </div>
+            </section>
 
 
-            <div>
+            <section className="rounded-2xl border border-violet-100 bg-violet-50 p-4 sm:p-5">
 
-              <label className="admin-label">
-                Cantidad
-              </label>
+              <div className="flex items-start justify-between gap-3">
 
-              <input
-                type="number"
-                min={2}
-                max={48}
-                value={
-                  serie.cantidad
-                }
-                onChange={(e) =>
-                  setSerie({
-                    ...serie,
-                    cantidad:
-                      e.target.value,
-                  })
-                }
-                className="admin-input"
-              />
+                <div>
 
-            </div>
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-violet-700">
+                    3. Vista previa
+                  </p>
+
+                  <p className="mt-1 text-xs leading-5 text-violet-700/80">
+                    Así quedarán distribuidas las actividades.
+                  </p>
+
+                </div>
 
 
-            <div>
-
-              <label className="admin-label">
-                Instrucciones
-              </label>
-
-              <p className="mb-2 text-xs leading-5 text-gray-500">
-                Estas instrucciones se aplicarán a las actividades generadas.
-              </p>
-
-              <textarea
-                value={
-                  serie.descripcion
-                }
-                onChange={(e) =>
-                  setSerie({
-                    ...serie,
-                    descripcion:
-                      e.target.value,
-                  })
-                }
-                className="admin-input min-h-24"
-              />
-
-            </div>
-
-
-            <div className="grid grid-cols-2 gap-3">
-
-              <div>
-                <label className="admin-label">
-                  Desde el día
-                </label>
-
-                <input
-                  type="number"
-                  min={1}
-                  max={duracionDias}
-                  value={serie.diaInicio}
-                  onChange={(e) =>
-                    setSerie({
-                      ...serie,
-                      diaInicio: e.target.value,
-                    })
-                  }
-                  className="admin-input"
-                />
-              </div>
-
-              <div>
-                <label className="admin-label">
-                  Hasta el día
-                </label>
-
-                <input
-                  type="number"
-                  min={1}
-                  max={duracionDias}
-                  value={serie.diaFin}
-                  onChange={(e) =>
-                    setSerie({
-                      ...serie,
-                      diaFin: e.target.value,
-                    })
-                  }
-                  className="admin-input"
-                  placeholder="Opcional"
-                />
-              </div>
-
-            </div>
-
-
-            <p className="-mt-2 text-xs text-gray-500">
-              Si dejas el día final vacío, las actividades se mantendrán según la configuración del protocolo.
-            </p>
-
-
-            <div>
-
-              <label className="admin-label">
-                Recordatorio
-              </label>
-
-              <select
-                value={serie.recordatorio}
-                onChange={(e) =>
-                  setSerie({
-                    ...serie,
-                    recordatorio:
-                      e.target.value as Recordatorio,
-                  })
-                }
-                className="admin-input"
-              >
-                <option value="NINGUNO">
-                  Sin recordatorio
-                </option>
-
-                <option value="A_LA_HORA">
-                  A la hora indicada
-                </option>
-
-                <option value="MIN_15_ANTES">
-                  15 minutos antes
-                </option>
-
-                <option value="MIN_30_ANTES">
-                  30 minutos antes
-                </option>
-
-                <option value="MIN_60_ANTES">
-                  1 hora antes
-                </option>
-              </select>
-
-            </div>
-
-
-            <div>
-
-              <label className="admin-label">
-                Intervalo personalizado
-              </label>
-
-              <div className="flex items-center gap-2">
-
-                <input
-                  type="number"
-                  min={1}
-                  max={360}
-                  value={serie.intervalo}
-                  onChange={(e) =>
-                    setSerie({
-                      ...serie,
-                      intervalo: e.target.value,
-                    })
-                  }
-                  className="admin-input"
-                />
-
-                <span className="shrink-0 text-sm font-medium text-gray-500">
-                  minutos
+                <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-violet-700">
+                  {vistaSerie.length} actividades
                 </span>
 
               </div>
 
-              <p className="mt-1 text-xs text-gray-500">
-                También puedes usar los botones rápidos de 15, 30, 45 o 60 minutos.
-              </p>
 
-            </div>
+              {vistaSerie.length > 0 ? (
 
+                <div className="mt-4 max-h-60 space-y-2 overflow-y-auto">
 
-            <div className="rounded-xl border border-violet-100 bg-violet-50 p-4">
+                  {vistaSerie.map(
+                    (
+                      item,
+                      indice
+                    ) => (
 
-              <p className="text-xs font-bold uppercase tracking-wide text-violet-600">
-                Vista previa
-              </p>
-
-              <div className="mt-3 max-h-56 space-y-2 overflow-y-auto">
-
-                {vistaSerie.map(
-                  (
-                    item,
-                    indice
-                  ) => (
-
-                    <div
-                      key={
-                        indice
-                      }
-                      className="flex items-center gap-3 rounded-lg bg-white px-3 py-2"
-                    >
-
-                      <span className="w-12 shrink-0 font-mono text-sm font-bold text-violet-700">
-                        {item.hora ||
-                          "—"}
-                      </span>
-
-                      <span className="text-sm text-gray-700">
-                        {
-                          item.titulo
+                      <div
+                        key={
+                          indice
                         }
-                      </span>
+                        className="flex items-center gap-3 rounded-xl border border-violet-100 bg-white px-3 py-2.5"
+                      >
 
-                    </div>
+                        <span className="w-14 shrink-0 font-mono text-sm font-bold text-violet-700">
+                          {item.hora ||
+                            "—"}
+                        </span>
 
-                  )
-                )}
+                        <div className="min-w-0">
+
+                          <p className="truncate text-sm font-medium text-gray-800">
+                            {
+                              item.titulo
+                            }
+                          </p>
+
+                          <p className="text-[11px] text-gray-400">
+                            Actividad {
+                              indice +
+                              1
+                            }
+                          </p>
+
+                        </div>
+
+                      </div>
+
+                    )
+                  )}
+
+                </div>
+
+              ) : (
+
+                <div className="mt-4 rounded-xl border border-dashed border-violet-200 bg-white/70 px-4 py-5 text-center">
+
+                  <p className="text-xs leading-5 text-gray-500">
+                    Completa la hora, el intervalo y la cantidad para ver la serie.
+                  </p>
+
+                </div>
+
+              )}
+
+            </section>
+
+
+            <details className="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
+
+              <summary className="cursor-pointer list-none px-4 py-3.5 text-sm font-semibold text-gray-700">
+
+                4. Durante qué días
+
+                <span className="ml-2 text-xs font-normal text-gray-400">
+                  vigencia y recordatorios
+                </span>
+
+              </summary>
+
+
+              <div className="space-y-5 border-t border-gray-200 bg-white p-4">
+
+
+                <div className="grid grid-cols-2 gap-3">
+
+                  <div>
+
+                    <label className="admin-label">
+                      Desde el día
+                    </label>
+
+                    <input
+                      type="number"
+                      min={1}
+                      max={
+                        duracionDias
+                      }
+                      value={
+                        serie.diaInicio
+                      }
+                      onChange={(e) =>
+                        setSerie({
+                          ...serie,
+                          diaInicio:
+                            e.target.value,
+                        })
+                      }
+                      className="admin-input"
+                    />
+
+                  </div>
+
+
+                  <div>
+
+                    <label className="admin-label">
+                      Hasta el día
+                    </label>
+
+                    <input
+                      type="number"
+                      min={1}
+                      max={
+                        duracionDias
+                      }
+                      value={
+                        serie.diaFin
+                      }
+                      onChange={(e) =>
+                        setSerie({
+                          ...serie,
+                          diaFin:
+                            e.target.value,
+                        })
+                      }
+                      className="admin-input"
+                      placeholder="Opcional"
+                    />
+
+                  </div>
+
+                </div>
+
+
+                <p className="-mt-3 text-xs leading-5 text-gray-500">
+                  Si no defines un día final, las actividades permanecerán vigentes hasta finalizar el seguimiento.
+                </p>
+
+
+                <div>
+
+                  <label className="admin-label">
+                    Avisar al cliente
+                  </label>
+
+                  <select
+                    value={
+                      serie.recordatorio
+                    }
+                    onChange={(e) =>
+                      setSerie({
+                        ...serie,
+                        recordatorio:
+                          e.target.value as Recordatorio,
+                      })
+                    }
+                    className="admin-input"
+                  >
+
+                    <option value="NINGUNO">
+                      Sin recordatorio
+                    </option>
+
+                    <option value="A_LA_HORA">
+                      A la hora indicada
+                    </option>
+
+                    <option value="MIN_15_ANTES">
+                      15 minutos antes
+                    </option>
+
+                    <option value="MIN_30_ANTES">
+                      30 minutos antes
+                    </option>
+
+                    <option value="MIN_60_ANTES">
+                      1 hora antes
+                    </option>
+
+                  </select>
+
+
+                  <p className="mt-1 text-xs leading-5 text-gray-500">
+                    Este ajuste se aplicará a todas las actividades generadas.
+                  </p>
+
+                </div>
 
               </div>
 
-            </div>
+            </details>
 
 
             <button
