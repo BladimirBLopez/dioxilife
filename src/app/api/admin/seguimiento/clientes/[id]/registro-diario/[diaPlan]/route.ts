@@ -134,6 +134,15 @@ function obtenerMedicionesGlucosa(
       ok: false;
       error: string;
     } {
+  if (
+    valor === undefined
+  ) {
+    return {
+      ok: true,
+      mediciones: [],
+    };
+  }
+
   if (!Array.isArray(valor)) {
     return {
       ok: false,
