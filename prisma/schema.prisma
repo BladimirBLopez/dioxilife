@@ -246,6 +246,7 @@ model SeguimientoCliente {
   actividades       ActividadSeguimiento[]
   progresos         ProgresoActividad[]
   registrosDiarios  RegistroDiaSeguimiento[]
+  medicionesGlucosa MedicionGlucosaSeguimiento[]
   suscripcionesPush SuscripcionPush[]
   enviosWhatsApp    SeguimientoEnvioWhatsApp[]
 
@@ -438,6 +439,30 @@ model RegistroDiaSeguimiento {
   @@unique([seguimientoId, diaPlan])
   @@index([seguimientoId])
   @@index([diaPlan])
+}
+
+model MedicionGlucosaSeguimiento {
+  id String @id @default(cuid())
+
+  seguimientoId String
+  seguimiento   SeguimientoCliente @relation(fields: [seguimientoId], references: [id], onDelete: Cascade)
+
+  diaPlan Int
+
+  numero Int
+
+  valor Decimal @db.Decimal(7, 2)
+
+  hora    String?
+  momento String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([seguimientoId, diaPlan, numero])
+  @@index([seguimientoId])
+  @@index([diaPlan])
+  @@index([seguimientoId, diaPlan])
 }
 
 model IndicacionActividadSeguimiento {
