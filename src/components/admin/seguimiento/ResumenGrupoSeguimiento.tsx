@@ -602,8 +602,8 @@ export default function ResumenGrupoSeguimiento({
         />
 
         <GraficoGrupo
-          titulo="Glucemia en ayunas"
-          subtitulo="Promedio de los registros de glucemia en ayunas."
+          titulo="Glucosa"
+          subtitulo="Promedio diario de las mediciones de glucosa registradas."
           datos={
             data.graficas
               .glucemia

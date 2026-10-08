@@ -519,6 +519,32 @@ export async function GET(
                       true,
                   },
                 },
+
+                medicionesGlucosa: {
+                  orderBy: [
+                    {
+                      diaPlan:
+                        "asc",
+                    },
+                    {
+                      numero:
+                        "asc",
+                    },
+                  ],
+
+                  select: {
+                    diaPlan:
+                      true,
+                    numero:
+                      true,
+                    valor:
+                      true,
+                    hora:
+                      true,
+                    momento:
+                      true,
+                  },
+                },
               },
             },
           },
@@ -664,12 +690,44 @@ export async function GET(
               })
             );
 
-        const glucemias =
+        const glucemiasNuevas =
+          seguimiento.medicionesGlucosa
+            .filter(
+              (medicion) =>
+                medicion.diaPlan >=
+                  desde &&
+                medicion.diaPlan <=
+                  hasta
+            )
+            .map(
+              (medicion) => ({
+                diaPlan:
+                  medicion.diaPlan,
+
+                valor:
+                  Number(
+                    medicion.valor
+                  ),
+              })
+            );
+
+        const diasConGlucosaNueva =
+          new Set(
+            glucemiasNuevas.map(
+              (medicion) =>
+                medicion.diaPlan
+            )
+          );
+
+        const glucemiasLegacy =
           registrosValidos
             .filter(
               (registro) =>
                 registro.glucemiaAyunas !==
-                null
+                  null &&
+                !diasConGlucosaNueva.has(
+                  registro.diaPlan
+                )
             )
             .map(
               (registro) => ({
@@ -682,6 +740,15 @@ export async function GET(
                   ),
               })
             );
+
+        const glucemias = [
+          ...glucemiasNuevas,
+          ...glucemiasLegacy,
+        ].sort(
+          (a, b) =>
+            a.diaPlan -
+            b.diaPlan
+        );
 
         const peso =
           resumenMedicion(
@@ -1134,11 +1201,43 @@ export async function GET(
         );
       }
 
+      const glucosasParticipanteDia =
+        seguimiento.medicionesGlucosa
+          .filter(
+            (medicion) =>
+              medicion.diaPlan ===
+              dia
+          )
+          .map(
+            (medicion) =>
+              Number(
+                medicion.valor
+              )
+          );
+
       if (
+        glucosasParticipanteDia.length >
+        0
+      ) {
+        glucemiasDia.push(
+          redondear2(
+            glucosasParticipanteDia.reduce(
+              (
+                total,
+                valor
+              ) =>
+                total +
+                valor,
+              0
+            ) /
+              glucosasParticipanteDia.length
+          )
+        );
+      } else if (
         registroDia?.glucemiaAyunas !==
-        null &&
+          null &&
         registroDia?.glucemiaAyunas !==
-        undefined
+          undefined
       ) {
         glucemiasDia.push(
           Number(
