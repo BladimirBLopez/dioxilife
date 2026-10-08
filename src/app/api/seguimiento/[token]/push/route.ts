@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 
 import {
   hashTokenSeguimiento,
+  obtenerDiaSeguimientoFechaCalendario,
   tokenSeguimientoValido,
 } from "@/lib/seguimiento-publico";
 
@@ -69,6 +70,21 @@ export async function POST(
       select: {
         id: true,
         estado: true,
+
+        miembroGrupo: {
+          select: {
+            estado: true,
+            diaIngreso: true,
+
+            grupo: {
+              select: {
+                estado: true,
+                fechaInicio: true,
+                duracionDias: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -85,21 +101,74 @@ export async function POST(
   }
 
   if (
-    seguimiento.estado ===
-      "CANCELADO" ||
-    seguimiento.estado ===
-      "COMPLETADO"
+    seguimiento.estado !==
+    "ACTIVO"
   ) {
     return NextResponse.json(
       {
         error:
-          "Este seguimiento ya no acepta nuevos recordatorios.",
+          "Este seguimiento no permite activar recordatorios en este momento.",
       },
       {
         status: 409,
       }
     );
   }
+
+
+  if (
+    seguimiento.miembroGrupo
+  ) {
+    const miembro =
+      seguimiento.miembroGrupo;
+
+    const grupo =
+      miembro.grupo;
+
+    if (
+      miembro.estado !==
+        "ACTIVO" ||
+      grupo.estado !==
+        "ACTIVO"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Los recordatorios de este grupo ya no están disponibles.",
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
+
+    const diaGrupo =
+      obtenerDiaSeguimientoFechaCalendario(
+        grupo.fechaInicio,
+        new Date()
+      );
+
+
+    if (
+      diaGrupo < 1 ||
+      diaGrupo >
+        grupo.duracionDias ||
+      diaGrupo <
+        miembro.diaIngreso
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Los recordatorios de este grupo todavía no están disponibles.",
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+  }
+
 
   const body =
     await req
