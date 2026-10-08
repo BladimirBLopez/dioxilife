@@ -866,7 +866,7 @@ export default function GruposSeguimientoPage() {
                   1000
                 }
                 rows={3}
-                placeholder="Ej. Cumplir el protocolo, controlar el peso y la glucemia en ayunas."
+                placeholder="Ej. Cumplir el protocolo, controlar el peso y registrar la glucosa."
                 className="w-full resize-none rounded-xl border border-gray-300 px-3.5 py-3 text-sm outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
               />
 

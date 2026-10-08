@@ -118,6 +118,9 @@ function normalizarMedicionesGlucosa(
   const numeros =
     new Set<number>();
 
+  const horasRegistradas =
+    new Set<string>();
+
   const mediciones:
     MedicionGlucosaEntrada[] = [];
 
@@ -213,6 +216,39 @@ function normalizarMedicionesGlucosa(
         error:
           `La hora de la medición ${numero} no es válida.`,
       };
+    }
+
+    if (
+      resultadoValor.valor !==
+        null &&
+      !horaCruda
+    ) {
+      return {
+        ok: false,
+        error:
+          `La hora es obligatoria en la medición ${numero} cuando registras un valor de glucosa.`,
+      };
+    }
+
+    if (
+      resultadoValor.valor !==
+        null
+    ) {
+      if (
+        horasRegistradas.has(
+          horaCruda
+        )
+      ) {
+        return {
+          ok: false,
+          error:
+            `Las mediciones de glucosa deben tener horarios diferentes. La hora ${horaCruda} está repetida.`,
+        };
+      }
+
+      horasRegistradas.add(
+        horaCruda
+      );
     }
 
     const momentoCrudo =

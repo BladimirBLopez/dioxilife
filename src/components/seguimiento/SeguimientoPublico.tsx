@@ -2507,11 +2507,11 @@ export default function SeguimientoPublico({
                     <Sparkles className="h-5 w-5 text-brand-pink" />
 
                     <p className="mt-3 text-sm font-bold text-[#1F1B24]">
-                      Tu avance
+                      Progreso diario
                     </p>
 
                     <p className="mt-1 text-xs leading-5 text-brand-gray">
-                      Visualizar tu porcentaje de progreso diario.
+                      Visualiza tu porcentaje de progreso de cada jornada.
                     </p>
 
                   </div>

@@ -1605,7 +1605,7 @@ export default function BotonInformeGrupoSeguimiento({
 
       graficoLineas({
         titulo:
-          "GLUCEMIA EN AYUNAS",
+          "GLUCOSA",
 
         subtitulo:
           "Promedio descriptivo de los registros informados en cada jornada. No corresponde a una clasificación competitiva.",

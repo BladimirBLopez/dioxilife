@@ -1127,7 +1127,7 @@ export default function RegistroDiarioCliente({
           </h2>
 
           <p className="text-sm text-gray-500">
-            Registra peso, cintura, glucemia en ayunas, observaciones y cumplimiento de cada día.
+            Registra peso, cintura, glucosa, observaciones y cumplimiento de cada día.
           </p>
 
         </div>
@@ -1449,7 +1449,7 @@ export default function RegistroDiarioCliente({
                 </h4>
 
                 <p className="mt-0.5 text-xs text-gray-500">
-                  Hasta 4 mediciones con valor, hora y momento de referencia.
+                  Hasta 4 mediciones. Si registras un valor, la hora es obligatoria y debe ser diferente en cada medición.
                 </p>
 
               </div>
@@ -1528,7 +1528,7 @@ export default function RegistroDiarioCliente({
                         <div>
 
                           <label className="admin-label">
-                            Hora
+                            Hora *
                           </label>
 
                           <input

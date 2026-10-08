@@ -568,7 +568,7 @@ export default function MedicionesSeguimientoPublico({
             </h3>
 
             <p className="mt-0.5 text-xs leading-5 text-brand-gray">
-              Registra hasta 4 mediciones en los distintos momentos indicados para tu seguimiento.
+              Registra hasta 4 mediciones. Si ingresas un valor, indica también su hora. Cada medición debe tener un horario diferente.
             </p>
 
           </div>
@@ -653,7 +653,7 @@ export default function MedicionesSeguimientoPublico({
                   <div>
 
                     <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-brand-gray">
-                      Hora
+                      Hora *
                     </label>
 
                     <input

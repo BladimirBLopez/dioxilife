@@ -742,7 +742,7 @@ export default function ResumenGrupoSeguimiento({
           </h3>
 
           <p className="mt-1 text-xs text-gray-500">
-            Peso, cintura, glucemia en ayunas y cumplimiento.
+            Peso, cintura, glucosa y cumplimiento.
           </p>
         </div>
 
