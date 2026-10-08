@@ -3319,6 +3319,313 @@ export default function SeguimientoPublico({
 
           <>
 
+          <section className="mt-4 overflow-hidden rounded-2xl border border-[#E9E4F2] bg-white p-4 shadow-sm sm:p-5">
+
+            <div className="flex items-start justify-between gap-4">
+
+              <div className="min-w-0">
+
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-brand-pink">
+                  Tu progreso
+                </p>
+
+                <h2 className="mt-1 text-xl font-extrabold tracking-tight text-[#1F1B24]">
+                  Buen día{primerNombre(
+                    seguimiento.nombreCliente
+                  ) !== "Hola"
+                    ? `, ${primerNombre(
+                        seguimiento.nombreCliente
+                      )}`
+                    : ""}
+                </h2>
+
+                <p className="mt-1 text-xs leading-5 text-brand-gray">
+                  Revisa tu avance y continúa con tu protocolo de hoy.
+                </p>
+
+              </div>
+
+
+              <div className="shrink-0 rounded-2xl bg-[#F8F6FF] px-4 py-3 text-center">
+
+                <p className="text-2xl font-extrabold text-brand-blue">
+                  {porcentajeAvance}%
+                </p>
+
+                <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wide text-brand-gray">
+                  avance
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#EEEAF5]">
+
+              <div
+                className="h-full rounded-full bg-brand-pink transition-all duration-300"
+                style={{
+                  width:
+                    `${porcentajeAvance}%`,
+                }}
+              />
+
+            </div>
+
+
+            <div className="mt-4 grid grid-cols-3 gap-2">
+
+              <div className="min-w-0 rounded-xl bg-[#FAF9FC] p-3">
+
+                <p className="text-[9px] font-bold uppercase tracking-wide text-brand-gray">
+                  Peso
+                </p>
+
+                <p className="mt-1 truncate text-sm font-extrabold text-[#1F1B24] sm:text-base">
+                  {ultimoPeso
+                    ? `${ultimoPeso.peso.toLocaleString(
+                        "es-BO",
+                        {
+                          maximumFractionDigits:
+                            2,
+                        }
+                      )} kg`
+                    : "—"}
+                </p>
+
+                <p className="mt-0.5 text-[9px] text-brand-gray">
+                  Actual
+                </p>
+
+              </div>
+
+
+              <div className="min-w-0 rounded-xl bg-[#FAF9FC] p-3">
+
+                <p className="text-[9px] font-bold uppercase tracking-wide text-brand-gray">
+                  Glucosa
+                </p>
+
+                <p className="mt-1 truncate text-sm font-extrabold text-[#1F1B24] sm:text-base">
+                  {ultimaGlucosa
+                    ? ultimaGlucosa.valor.toLocaleString(
+                        "es-BO",
+                        {
+                          maximumFractionDigits:
+                            2,
+                        }
+                      )
+                    : "—"}
+                </p>
+
+                <p className="mt-0.5 text-[9px] text-brand-gray">
+                  mg/dL
+                </p>
+
+              </div>
+
+
+              <div className="min-w-0 rounded-xl bg-[#FAF9FC] p-3">
+
+                <p className="text-[9px] font-bold uppercase tracking-wide text-brand-gray">
+                  Cintura
+                </p>
+
+                <p className="mt-1 truncate text-sm font-extrabold text-[#1F1B24] sm:text-base">
+                  {ultimaCintura
+                    ? `${ultimaCintura.cinturaCm.toLocaleString(
+                        "es-BO",
+                        {
+                          maximumFractionDigits:
+                            2,
+                        }
+                      )} cm`
+                    : "—"}
+                </p>
+
+                <p className="mt-0.5 text-[9px] text-brand-gray">
+                  Actual
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <details className="group mt-4">
+
+              <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl border border-[#E9E4F2] bg-[#FAF9FC] px-4 py-3 text-sm font-bold text-brand-blue">
+
+                <span>
+                  Ver gráficas y detalle
+                </span>
+
+                <span className="text-lg leading-none transition-transform group-open:rotate-180">
+                  ⌄
+                </span>
+
+              </summary>
+
+
+              <div className="mt-4 space-y-4">
+
+                <TarjetaMetricaAvance
+                  titulo="Peso"
+                  actual={
+                    ultimoPeso?.peso ??
+                    null
+                  }
+                  detalleActual={
+                    ultimoPeso
+                      ? `Día ${ultimoPeso.diaPlan}`
+                      : null
+                  }
+                  inicial={
+                    pesoInicial?.peso ??
+                    null
+                  }
+                  promedio={
+                    pesoPromedio
+                  }
+                  unidad=" kg"
+                  datos={
+                    graficaPeso
+                  }
+                  textoVacio="Cuando registres tu peso, aquí aparecerá su evolución."
+                />
+
+
+                <TarjetaMetricaAvance
+                  titulo="Glucosa"
+                  actual={
+                    ultimaGlucosa
+                      ?.valor ??
+                    null
+                  }
+                  detalleActual={
+                    ultimaGlucosa
+                      ? `Día ${ultimaGlucosa.diaPlan}${
+                          ultimaGlucosa.hora
+                            ? ` · ${ultimaGlucosa.hora}`
+                            : ""
+                        }`
+                      : null
+                  }
+                  inicial={
+                    glucosaInicial
+                      ?.valor ??
+                    null
+                  }
+                  promedio={
+                    glucosaPromedio
+                  }
+                  unidad=" mg/dL"
+                  datos={
+                    graficaGlucosa
+                  }
+                  textoVacio="Cuando registres mediciones de glucosa, aquí aparecerá su evolución."
+                />
+
+
+                <TarjetaMetricaAvance
+                  titulo="Cintura"
+                  actual={
+                    ultimaCintura
+                      ?.cinturaCm ??
+                    null
+                  }
+                  detalleActual={
+                    ultimaCintura
+                      ? `Día ${ultimaCintura.diaPlan}`
+                      : null
+                  }
+                  inicial={
+                    cinturaInicial
+                      ?.cinturaCm ??
+                    null
+                  }
+                  promedio={
+                    cinturaPromedio
+                  }
+                  unidad=" cm"
+                  datos={
+                    graficaCintura
+                  }
+                  textoVacio="Cuando registres una medición de cintura, aquí aparecerá su evolución."
+                />
+
+
+                <article className="overflow-hidden rounded-2xl border border-[#E9E4F2] bg-white p-4 shadow-sm">
+
+                  <div className="flex items-start justify-between gap-4">
+
+                    <div>
+
+                      <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-brand-pink">
+                        Porcentaje de avance
+                      </p>
+
+                      <p className="mt-1 text-2xl font-extrabold text-[#1F1B24]">
+                        {porcentajeAvance}%
+                      </p>
+
+                      <p className="mt-1 text-xs text-brand-gray">
+                        {checksAvanceCompletados} de {checksAvanceTotales} checks realizados
+                      </p>
+
+                    </div>
+
+
+                    <div className="rounded-xl bg-[#F8F6FF] px-3 py-2 text-center">
+
+                      <p className="text-sm font-extrabold text-brand-blue">
+                        {Math.max(
+                          0,
+                          checksAvanceTotales -
+                            checksAvanceCompletados
+                        )}
+                      </p>
+
+                      <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wide text-brand-gray">
+                        pendientes
+                      </p>
+
+                    </div>
+
+                  </div>
+
+
+                  <div className="mt-4">
+
+                    <GraficoAvancePublico
+                      datos={
+                        graficaAvance
+                      }
+                      nombre="Avance"
+                      unidad="%"
+                      textoVacio="El avance aparecerá cuando existan actividades registradas."
+                    />
+
+                  </div>
+
+                </article>
+
+              </div>
+
+            </details>
+
+          </section>
+
+
+          <div className="mt-5 border-t border-[#E9E4F2] pt-5">
+
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
+              Protocolo del día
+            </p>
+
+          </div>
+
 
           <section className="mt-4">
 
