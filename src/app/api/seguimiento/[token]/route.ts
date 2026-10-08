@@ -203,19 +203,53 @@ export async function GET(
         },
 
         registrosDiarios: {
-          where: {
-            peso: {
-              not: null,
-            },
-          },
-
           orderBy: {
-            diaPlan: "asc",
+            diaPlan:
+              "asc",
           },
 
           select: {
-            diaPlan: true,
-            peso: true,
+            diaPlan:
+              true,
+
+            peso:
+              true,
+
+            cinturaCm:
+              true,
+
+            glucemiaAyunas:
+              true,
+          },
+        },
+
+        medicionesGlucosa: {
+          orderBy: [
+            {
+              diaPlan:
+                "asc",
+            },
+            {
+              numero:
+                "asc",
+            },
+          ],
+
+          select: {
+            diaPlan:
+              true,
+
+            numero:
+              true,
+
+            valor:
+              true,
+
+            hora:
+              true,
+
+            momento:
+              true,
           },
         },
 
@@ -456,6 +490,79 @@ export async function GET(
     }
   }
 
+  const glucosasNuevas =
+    seguimiento.medicionesGlucosa.map(
+      (medicion) => ({
+        diaPlan:
+          medicion.diaPlan,
+
+        numero:
+          medicion.numero,
+
+        valor:
+          Number(
+            medicion.valor
+          ),
+
+        hora:
+          medicion.hora,
+
+        momento:
+          medicion.momento,
+      })
+    );
+
+  const diasConGlucosaNueva =
+    new Set(
+      glucosasNuevas.map(
+        (medicion) =>
+          medicion.diaPlan
+      )
+    );
+
+  const glucosasLegacy =
+    seguimiento.registrosDiarios
+      .filter(
+        (registro) =>
+          registro.glucemiaAyunas !==
+            null &&
+          !diasConGlucosaNueva.has(
+            registro.diaPlan
+          )
+      )
+      .map(
+        (registro) => ({
+          diaPlan:
+            registro.diaPlan,
+
+          numero:
+            1,
+
+          valor:
+            Number(
+              registro.glucemiaAyunas
+            ),
+
+          hora:
+            null as string | null,
+
+          momento:
+            null as string | null,
+        })
+      );
+
+  const glucosas = [
+    ...glucosasNuevas,
+    ...glucosasLegacy,
+  ].sort(
+    (a, b) =>
+      a.diaPlan -
+        b.diaPlan ||
+      a.numero -
+        b.numero
+  );
+
+
   return NextResponse.json({
     seguimiento: {
       nombreCliente:
@@ -522,17 +629,44 @@ export async function GET(
           : null,
 
       pesos:
-        seguimiento.registrosDiarios.map(
-          (registro) => ({
-            diaPlan:
-              registro.diaPlan,
+        seguimiento.registrosDiarios
+          .filter(
+            (registro) =>
+              registro.peso !==
+              null
+          )
+          .map(
+            (registro) => ({
+              diaPlan:
+                registro.diaPlan,
 
-            peso:
-              Number(
-                registro.peso
-              ),
-          })
-        ),
+              peso:
+                Number(
+                  registro.peso
+                ),
+            })
+          ),
+
+      cinturas:
+        seguimiento.registrosDiarios
+          .filter(
+            (registro) =>
+              registro.cinturaCm !==
+              null
+          )
+          .map(
+            (registro) => ({
+              diaPlan:
+                registro.diaPlan,
+
+              cinturaCm:
+                Number(
+                  registro.cinturaCm
+                ),
+            })
+          ),
+
+      glucosas,
 
       actividades:
         seguimiento.actividades,
