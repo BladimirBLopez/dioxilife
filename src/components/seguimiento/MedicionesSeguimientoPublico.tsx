@@ -7,11 +7,27 @@ import {
 } from "react";
 
 import {
+  Clock3,
   LoaderCircle,
   Save,
 } from "lucide-react";
 
 import { toast } from "sonner";
+
+
+type MedicionGlucosa = {
+  numero: number;
+  valor: number | null;
+  hora: string | null;
+  momento: string | null;
+};
+
+type MedicionGlucosaFormulario = {
+  numero: number;
+  valor: string;
+  hora: string;
+  momento: string;
+};
 
 type Registro = {
   diaPlan: number;
@@ -24,38 +40,128 @@ type Respuesta = {
   diaActual: number | null;
   editable?: boolean;
   registro: Registro | null;
+  medicionesGlucosa?: MedicionGlucosa[];
 };
+
+
+function crearMedicionesVacias():
+  MedicionGlucosaFormulario[] {
+  return Array.from(
+    { length: 4 },
+    (_, indice) => ({
+      numero:
+        indice + 1,
+
+      valor: "",
+      hora: "",
+      momento: "",
+    })
+  );
+}
+
+
+function prepararMediciones(
+  mediciones:
+    MedicionGlucosa[] | undefined
+): MedicionGlucosaFormulario[] {
+  return Array.from(
+    { length: 4 },
+    (_, indice) => {
+      const numero =
+        indice + 1;
+
+      const medicion =
+        mediciones?.find(
+          (item) =>
+            item.numero ===
+            numero
+        );
+
+      return {
+        numero,
+
+        valor:
+          medicion?.valor ===
+            null ||
+          medicion?.valor ===
+            undefined
+            ? ""
+            : String(
+                medicion.valor
+              ),
+
+        hora:
+          medicion?.hora ??
+          "",
+
+        momento:
+          medicion?.momento ??
+          "",
+      };
+    }
+  );
+}
+
 
 export default function MedicionesSeguimientoPublico({
   token,
 }: {
   token: string;
 }) {
-  const [diaActual, setDiaActual] =
-    useState<number | null>(null);
+  const [
+    diaActual,
+    setDiaActual,
+  ] =
+    useState<number | null>(
+      null
+    );
 
-  const [peso, setPeso] =
-    useState("");
-
-  const [cinturaCm, setCinturaCm] =
+  const [
+    peso,
+    setPeso,
+  ] =
     useState("");
 
   const [
-    glucemiaAyunas,
-    setGlucemiaAyunas,
-  ] = useState("");
+    cinturaCm,
+    setCinturaCm,
+  ] =
+    useState("");
 
-  const [cargando, setCargando] =
+  const [
+    medicionesGlucosa,
+    setMedicionesGlucosa,
+  ] =
+    useState<
+      MedicionGlucosaFormulario[]
+    >(
+      crearMedicionesVacias
+    );
+
+  const [
+    cargando,
+    setCargando,
+  ] =
     useState(true);
 
-  const [guardando, setGuardando] =
+  const [
+    guardando,
+    setGuardando,
+  ] =
     useState(false);
 
-  const [editable, setEditable] =
+  const [
+    editable,
+    setEditable,
+  ] =
     useState(false);
 
-  const [sucio, setSucio] =
+  const [
+    sucio,
+    setSucio,
+  ] =
     useState(false);
+
 
   const cargar =
     useCallback(
@@ -69,14 +175,17 @@ export default function MedicionesSeguimientoPublico({
                 token
               )}/mediciones`,
               {
-                cache: "no-store",
+                cache:
+                  "no-store",
               }
             );
 
           const data =
             await res
               .json()
-              .catch(() => null);
+              .catch(
+                () => null
+              );
 
           if (!res.ok) {
             return;
@@ -98,7 +207,8 @@ export default function MedicionesSeguimientoPublico({
             respuesta.registro
               ?.peso === null ||
             respuesta.registro
-              ?.peso === undefined
+              ?.peso ===
+              undefined
               ? ""
               : String(
                   respuesta
@@ -109,9 +219,11 @@ export default function MedicionesSeguimientoPublico({
 
           setCinturaCm(
             respuesta.registro
-              ?.cinturaCm === null ||
+              ?.cinturaCm ===
+                null ||
             respuesta.registro
-              ?.cinturaCm === undefined
+              ?.cinturaCm ===
+                undefined
               ? ""
               : String(
                   respuesta
@@ -120,17 +232,11 @@ export default function MedicionesSeguimientoPublico({
                 )
           );
 
-          setGlucemiaAyunas(
-            respuesta.registro
-              ?.glucemiaAyunas === null ||
-            respuesta.registro
-              ?.glucemiaAyunas === undefined
-              ? ""
-              : String(
-                  respuesta
-                    .registro
-                    .glucemiaAyunas
-                )
+          setMedicionesGlucosa(
+            prepararMediciones(
+              respuesta
+                .medicionesGlucosa
+            )
           );
 
           setSucio(false);
@@ -141,9 +247,38 @@ export default function MedicionesSeguimientoPublico({
       [token]
     );
 
+
   useEffect(() => {
     void cargar();
   }, [cargar]);
+
+
+  function cambiarMedicion(
+    numero: number,
+    campo:
+      | "valor"
+      | "hora"
+      | "momento",
+    valor: string
+  ) {
+    setMedicionesGlucosa(
+      (actual) =>
+        actual.map(
+          (medicion) =>
+            medicion.numero ===
+            numero
+              ? {
+                  ...medicion,
+                  [campo]:
+                    valor,
+                }
+              : medicion
+        )
+    );
+
+    setSucio(true);
+  }
+
 
   async function guardar() {
     if (
@@ -185,9 +320,30 @@ export default function MedicionesSeguimientoPublico({
                   cinturaCm.trim() ||
                   null,
 
-                glucemiaAyunas:
-                  glucemiaAyunas.trim() ||
-                  null,
+                medicionesGlucosa:
+                  medicionesGlucosa.map(
+                    (
+                      medicion
+                    ) => ({
+                      numero:
+                        medicion.numero,
+
+                      valor:
+                        medicion.valor
+                          .trim() ||
+                        null,
+
+                      hora:
+                        medicion.hora
+                          .trim() ||
+                        null,
+
+                      momento:
+                        medicion.momento
+                          .trim() ||
+                        null,
+                    })
+                  ),
               }),
           }
         );
@@ -195,13 +351,17 @@ export default function MedicionesSeguimientoPublico({
       const data =
         await res
           .json()
-          .catch(() => null);
+          .catch(
+            () => null
+          );
 
       if (!res.ok) {
         toast.error(
           "No se pudieron guardar las mediciones",
           {
-            id: toastId,
+            id:
+              toastId,
+
             description:
               data?.error ||
               "Inténtalo nuevamente.",
@@ -223,7 +383,8 @@ export default function MedicionesSeguimientoPublico({
 
       setCinturaCm(
         data.registro
-          .cinturaCm === null
+          .cinturaCm ===
+            null
           ? ""
           : String(
               data.registro
@@ -231,14 +392,10 @@ export default function MedicionesSeguimientoPublico({
             )
       );
 
-      setGlucemiaAyunas(
-        data.registro
-          .glucemiaAyunas === null
-          ? ""
-          : String(
-              data.registro
-                .glucemiaAyunas
-            )
+      setMedicionesGlucosa(
+        prepararMediciones(
+          data.medicionesGlucosa
+        )
       );
 
       setSucio(false);
@@ -246,14 +403,16 @@ export default function MedicionesSeguimientoPublico({
       toast.success(
         "Mediciones guardadas",
         {
-          id: toastId,
+          id:
+            toastId,
         }
       );
     } catch {
       toast.error(
         "No se pudo conectar con el servidor",
         {
-          id: toastId,
+          id:
+            toastId,
         }
       );
     } finally {
@@ -261,27 +420,36 @@ export default function MedicionesSeguimientoPublico({
     }
   }
 
+
   if (cargando) {
     return (
-      <section className="mt-5 rounded-2xl border border-[#E9E4F2] bg-white p-4 shadow-sm">
+      <div className="py-4">
+
         <div className="flex items-center gap-2 text-sm font-semibold text-brand-gray">
+
           <LoaderCircle className="h-4 w-4 animate-spin" />
+
           Cargando mediciones...
+
         </div>
-      </section>
+
+      </div>
     );
   }
+
 
   if (!diaActual) {
     return null;
   }
 
+
   return (
-    <section className="mt-5 overflow-hidden rounded-2xl border border-[#E9E4F2] bg-white p-4 shadow-sm sm:p-5">
+    <div className="py-3">
 
       <div>
+
         <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
-          Mediciones de hoy
+          Mediciones del día
         </p>
 
         <h2 className="mt-1 text-lg font-extrabold text-[#1F1B24]">
@@ -290,95 +458,270 @@ export default function MedicionesSeguimientoPublico({
 
         <p className="mt-1 text-xs leading-5 text-brand-gray">
           {editable
-            ? "Registra solamente las mediciones que tengas disponibles hoy."
-            : "Estas son tus últimas mediciones registradas. El historial se encuentra en modo consulta."}
+            ? "Registra las mediciones que tengas disponibles hoy."
+            : "Estas mediciones están disponibles en modo consulta."}
         </p>
+
       </div>
 
 
-      <div className="mt-4 space-y-3">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
 
         <div>
+
           <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-brand-gray">
             Peso
           </label>
 
           <div className="relative">
+
             <input
               type="text"
               inputMode="decimal"
-              disabled={!editable}
-              value={peso}
-              onChange={(event) => {
+              disabled={
+                !editable
+              }
+              value={
+                peso
+              }
+              onChange={(
+                event
+              ) => {
                 setPeso(
-                  event.target.value
+                  event.target
+                    .value
                 );
-                setSucio(true);
+
+                setSucio(
+                  true
+                );
               }}
               placeholder="Ej. 80.50"
-              className="w-full rounded-xl border border-[#DDD7E8] bg-[#FAF9FC] px-4 py-3 pr-14 text-base font-semibold text-[#1F1B24] outline-none transition focus:border-brand-blue focus:bg-white"
+              className="w-full rounded-xl border border-[#DDD7E8] bg-[#FAF9FC] px-4 py-3 pr-14 text-base font-semibold text-[#1F1B24] outline-none transition focus:border-brand-blue focus:bg-white disabled:opacity-70"
             />
 
             <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm font-semibold text-brand-gray">
               kg
             </span>
+
           </div>
+
         </div>
 
 
         <div>
+
           <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-brand-gray">
             Cintura
           </label>
 
           <div className="relative">
+
             <input
               type="text"
               inputMode="decimal"
-              disabled={!editable}
-              value={cinturaCm}
-              onChange={(event) => {
+              disabled={
+                !editable
+              }
+              value={
+                cinturaCm
+              }
+              onChange={(
+                event
+              ) => {
                 setCinturaCm(
-                  event.target.value
+                  event.target
+                    .value
                 );
-                setSucio(true);
+
+                setSucio(
+                  true
+                );
               }}
               placeholder="Ej. 94.00"
-              className="w-full rounded-xl border border-[#DDD7E8] bg-[#FAF9FC] px-4 py-3 pr-14 text-base font-semibold text-[#1F1B24] outline-none transition focus:border-brand-blue focus:bg-white"
+              className="w-full rounded-xl border border-[#DDD7E8] bg-[#FAF9FC] px-4 py-3 pr-14 text-base font-semibold text-[#1F1B24] outline-none transition focus:border-brand-blue focus:bg-white disabled:opacity-70"
             />
 
             <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm font-semibold text-brand-gray">
               cm
             </span>
+
           </div>
+
+        </div>
+
+      </div>
+
+
+      <div className="mt-6">
+
+        <div className="flex items-start gap-3">
+
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F8F6FF] text-brand-blue">
+            <Clock3 className="h-4 w-4" />
+          </div>
+
+          <div className="min-w-0">
+
+            <h3 className="font-extrabold text-[#1F1B24]">
+              Glucosa de hoy
+            </h3>
+
+            <p className="mt-0.5 text-xs leading-5 text-brand-gray">
+              Registra hasta 4 mediciones en los distintos momentos indicados para tu seguimiento.
+            </p>
+
+          </div>
+
         </div>
 
 
-        <div>
-          <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-brand-gray">
-            Glucemia en ayunas
-          </label>
+        <div className="mt-3 space-y-3">
 
-          <div className="relative">
-            <input
-              type="text"
-              inputMode="decimal"
-              disabled={!editable}
-              value={glucemiaAyunas}
-              onChange={(event) => {
-                setGlucemiaAyunas(
-                  event.target.value
-                );
-                setSucio(true);
-              }}
-              placeholder="Ej. 102"
-              className="w-full rounded-xl border border-[#DDD7E8] bg-[#FAF9FC] px-4 py-3 pr-20 text-base font-semibold text-[#1F1B24] outline-none transition focus:border-brand-blue focus:bg-white"
-            />
+          {medicionesGlucosa.map(
+            (
+              medicion
+            ) => (
 
-            <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-xs font-semibold text-brand-gray">
-              mg/dL
-            </span>
-          </div>
+              <div
+                key={
+                  medicion.numero
+                }
+                className="rounded-xl border border-[#E9E4F2] bg-[#FAF9FC] p-3"
+              >
+
+                <div className="mb-3 flex items-center justify-between gap-3">
+
+                  <p className="text-sm font-extrabold text-[#1F1B24]">
+                    Medición {medicion.numero}
+                  </p>
+
+                  {medicion.valor && (
+
+                    <span className="text-xs font-bold text-brand-blue">
+                      {medicion.valor} mg/dL
+                    </span>
+
+                  )}
+
+                </div>
+
+
+                <div className="grid grid-cols-[1fr_120px] gap-2">
+
+                  <div>
+
+                    <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-brand-gray">
+                      Valor
+                    </label>
+
+                    <div className="relative">
+
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        disabled={
+                          !editable
+                        }
+                        value={
+                          medicion.valor
+                        }
+                        onChange={(
+                          event
+                        ) =>
+                          cambiarMedicion(
+                            medicion.numero,
+                            "valor",
+                            event
+                              .target
+                              .value
+                          )
+                        }
+                        placeholder="Ej. 102"
+                        className="w-full rounded-xl border border-[#DDD7E8] bg-white px-3 py-2.5 pr-16 text-sm font-semibold text-[#1F1B24] outline-none transition focus:border-brand-blue disabled:opacity-70"
+                      />
+
+                      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[10px] font-semibold text-brand-gray">
+                        mg/dL
+                      </span>
+
+                    </div>
+
+                  </div>
+
+
+                  <div>
+
+                    <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-brand-gray">
+                      Hora
+                    </label>
+
+                    <input
+                      type="time"
+                      disabled={
+                        !editable
+                      }
+                      value={
+                        medicion.hora
+                      }
+                      onChange={(
+                        event
+                      ) =>
+                        cambiarMedicion(
+                          medicion.numero,
+                          "hora",
+                          event
+                            .target
+                            .value
+                        )
+                      }
+                      className="w-full rounded-xl border border-[#DDD7E8] bg-white px-2 py-2.5 text-sm font-semibold text-[#1F1B24] outline-none transition focus:border-brand-blue disabled:opacity-70"
+                    />
+
+                  </div>
+
+                </div>
+
+
+                <div className="mt-2">
+
+                  <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-brand-gray">
+                    Momento o referencia
+                  </label>
+
+                  <input
+                    type="text"
+                    disabled={
+                      !editable
+                    }
+                    value={
+                      medicion.momento
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      cambiarMedicion(
+                        medicion.numero,
+                        "momento",
+                        event
+                          .target
+                          .value
+                      )
+                    }
+                    placeholder="Ej. Después del almuerzo"
+                    maxLength={
+                      120
+                    }
+                    className="w-full rounded-xl border border-[#DDD7E8] bg-white px-3 py-2.5 text-sm text-[#1F1B24] outline-none transition focus:border-brand-blue disabled:opacity-70"
+                  />
+
+                </div>
+
+              </div>
+
+            )
+          )}
+
         </div>
 
       </div>
@@ -394,8 +737,9 @@ export default function MedicionesSeguimientoPublico({
         onClick={() =>
           void guardar()
         }
-        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-pink px-4 py-3.5 text-sm font-extrabold text-white shadow-sm transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-pink px-4 py-3.5 text-sm font-extrabold text-white shadow-sm transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
       >
+
         {guardando ? (
           <LoaderCircle className="h-4 w-4 animate-spin" />
         ) : (
@@ -405,12 +749,13 @@ export default function MedicionesSeguimientoPublico({
         {!editable
           ? "Solo lectura"
           : guardando
-          ? "Guardando..."
-          : sucio
-          ? "Guardar mediciones"
-          : "Mediciones guardadas"}
+            ? "Guardando..."
+            : sucio
+              ? "Guardar mediciones"
+              : "Mediciones guardadas"}
+
       </button>
 
-    </section>
+    </div>
   );
 }
