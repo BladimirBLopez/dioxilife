@@ -2238,42 +2238,7 @@ export default function SeguimientoPublico({
           </div>
         )}
 
-      <header className="border-b border-[#E9E4F2] bg-white">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3">
-
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-[#E9E4F2] bg-white">
-              <Image
-                src="/logo.png"
-                alt="DioxiLife Bolivia"
-                width={52}
-                height={43}
-                priority
-                className="h-auto w-9"
-              />
-            </div>
-
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-brand-pink">
-                DioxiLife
-              </p>
-
-              <p className="text-sm font-semibold text-[#1F1B24]">
-                Mi seguimiento
-              </p>
-            </div>
-          </div>
-
-
-          <div className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
-            Activo
-          </div>
-
-        </div>
-      </header>
-
-
-        {seguimiento.estado ===
+              {seguimiento.estado ===
           "ACTIVO" && (
 
           <section className="sticky top-0 z-40 border-b border-[#E9E4F2] bg-white/95 backdrop-blur">
@@ -2285,11 +2250,17 @@ export default function SeguimientoPublico({
                 <div className="min-w-0">
 
                   <p className="truncate text-sm font-extrabold text-[#1F1B24]">
-                    {seguimiento.nombreCliente?.trim() || "Cliente"}
+                    {primerNombre(
+                      seguimiento.nombreCliente
+                    ) === "Hola"
+                      ? "Mi seguimiento"
+                      : `Hola, ${primerNombre(
+                          seguimiento.nombreCliente
+                        )}`}
                   </p>
 
-                  <p className="mt-0.5 truncate text-[11px] font-semibold text-brand-gray">
-                    {seguimiento.nombrePlan} · Día {diaActual} de {seguimiento.duracionDias}
+                  <p className="mt-0.5 text-[11px] font-semibold text-brand-gray">
+                    Día {diaActual} de {seguimiento.duracionDias}
                   </p>
 
                 </div>
@@ -2508,28 +2479,7 @@ export default function SeguimientoPublico({
 
       <div className="mx-auto max-w-3xl px-4 py-5">
 
-        <section>
-          <p className="text-sm font-medium text-brand-gray">
-            {primerNombre(
-              seguimiento.nombreCliente
-            ) === "Hola"
-              ? "Bienvenido"
-              : `Hola, ${primerNombre(
-                  seguimiento.nombreCliente
-                )} 👋`}
-          </p>
-
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#1F1B24]">
-            Tu agenda de hoy
-          </h1>
-
-          <p className="mt-1 text-sm font-medium text-brand-gray">
-            {seguimiento.nombrePlan} · Día {diaActual} de {seguimiento.duracionDias}
-          </p>
-        </section>
-
-
-        {puedeGestionarRecordatorios &&
+                {puedeGestionarRecordatorios &&
           pestana === "hoy" &&
           estadoRecordatorios === "INACTIVOS" &&
           !invitacionRecordatoriosOculta && (
@@ -2873,24 +2823,33 @@ export default function SeguimientoPublico({
           <>
 
 
-          <section className="mt-6">
+          <section className="mt-4">
 
-            <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="mb-3 flex items-end justify-between gap-3">
 
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
-                  Hoy
+              <div className="min-w-0">
+
+                <h1 className="text-xl font-extrabold tracking-tight text-[#1F1B24]">
+                  {puedeRegistrarChecks
+                    ? "Tu agenda de hoy"
+                    : "Tu agenda"}
+                </h1>
+
+                <p className="mt-1 text-xs font-medium text-brand-gray">
+                  {puedeRegistrarChecks
+                    ? "Marca cada actividad a medida que la completes."
+                    : "Consulta las actividades y registros de tu seguimiento."}
                 </p>
 
-                <h2 className="mt-1 text-lg font-bold text-[#1F1B24]">
-                  Tu protocolo de hoy
-                </h2>
               </div>
 
-              {tareasHoy.length > 0 && (
-                <span className="rounded-full border border-[#E9E4F2] bg-white px-3 py-1 text-xs font-semibold text-brand-gray">
-                  {completadasHoy}/{tareasHoy.length} realizadas
+
+              {totalChecksHoy > 0 && (
+
+                <span className="shrink-0 rounded-full border border-[#E9E4F2] bg-white px-3 py-1.5 text-xs font-bold text-brand-blue">
+                  {checksCompletadosHoy}/{totalChecksHoy}
                 </span>
+
               )}
 
             </div>
@@ -3425,12 +3384,12 @@ export default function SeguimientoPublico({
 
             <div className="mb-3">
 
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
+              <p className="text-sm font-extrabold text-[#1F1B24]">
                 Más de tu seguimiento
               </p>
 
-              <p className="mt-1 text-sm text-brand-gray">
-                Consulta o registra información adicional cuando la necesites.
+              <p className="mt-0.5 text-xs text-brand-gray">
+                Mediciones y otras opciones.
               </p>
 
             </div>
