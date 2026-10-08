@@ -3453,6 +3453,52 @@ export default function SeguimientoPublico({
             </div>
 
 
+            <details className="group mt-4 overflow-hidden rounded-xl border border-[#E9E4F2] bg-white">
+
+              <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3">
+
+                <div className="min-w-0">
+
+                  <p className="text-sm font-extrabold text-[#1F1B24]">
+                    Registrar mediciones de hoy
+                  </p>
+
+                  <p className="mt-0.5 text-[11px] leading-4 text-brand-gray">
+                    Peso, cintura y glucosa del día.
+                  </p>
+
+                </div>
+
+
+                <div className="flex shrink-0 items-center gap-2">
+
+                  <span className="rounded-full bg-[#F8F6FF] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-blue">
+                    Registrar
+                  </span>
+
+                  <span className="text-lg leading-none text-brand-blue transition-transform group-open:rotate-180">
+                    ⌄
+                  </span>
+
+                </div>
+
+              </summary>
+
+
+              <div className="border-t border-[#EEEAF5] px-3 pb-3 pt-1">
+
+                <MedicionesSeguimientoPublico
+                  token={token}
+                  onGuardado={
+                    cargarSeguimiento
+                  }
+                />
+
+              </div>
+
+            </details>
+
+
             <details className="group mt-4">
 
               <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl border border-[#E9E4F2] bg-[#FAF9FC] px-4 py-3 text-sm font-bold text-brand-blue">
@@ -4213,47 +4259,7 @@ export default function SeguimientoPublico({
 
             <div className="space-y-3">
 
-              <details className="group overflow-hidden rounded-2xl border border-[#E9E4F2] bg-white shadow-sm">
 
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4 [&::-webkit-details-marker]:hidden">
-
-                  <div className="flex min-w-0 items-center gap-3">
-
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F8F6FF] text-brand-blue">
-                      <ClipboardList className="h-5 w-5" />
-                    </div>
-
-                    <div className="min-w-0">
-
-                      <p className="font-bold text-[#1F1B24]">
-                        Mis mediciones
-                      </p>
-
-                      <p className="mt-0.5 text-xs text-brand-gray">
-                        Peso, cintura y otros registros opcionales
-                      </p>
-
-                    </div>
-
-                  </div>
-
-
-                  <span className="shrink-0 rounded-full bg-[#F8F6FF] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-blue">
-                    Opcional
-                  </span>
-
-                </summary>
-
-
-                <div className="border-t border-[#EEEAF5] px-3 pb-3 pt-1">
-
-                  <MedicionesSeguimientoPublico
-                    token={token}
-                  />
-
-                </div>
-
-              </details>
 
 
               {seguimiento.grupo && (

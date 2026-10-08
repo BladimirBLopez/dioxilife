@@ -105,8 +105,13 @@ function prepararMediciones(
 
 export default function MedicionesSeguimientoPublico({
   token,
+  onGuardado,
 }: {
   token: string;
+  onGuardado?:
+    () =>
+      | void
+      | Promise<void>;
 }) {
   const [
     diaActual,
@@ -399,6 +404,10 @@ export default function MedicionesSeguimientoPublico({
       );
 
       setSucio(false);
+
+      if (onGuardado) {
+        await onGuardado();
+      }
 
       toast.success(
         "Mediciones guardadas",
