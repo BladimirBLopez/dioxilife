@@ -2241,7 +2241,7 @@ export default function BotonInformeGrupoSeguimiento({
         );
 
         doc.text(
-          `Glucemia en ayunas: inicial ${numero(
+          `Glucosa: inicial ${numero(
             participante.glucemia.inicial?.valor ??
               null,
             "mg/dL"
@@ -2309,7 +2309,7 @@ export default function BotonInformeGrupoSeguimiento({
 
       const nota =
         doc.splitTextToSize(
-          "Las mediciones incluidas en este informe corresponden a registros del seguimiento. La glucemia en ayunas se presenta únicamente como información descriptiva y no forma parte de ningún ranking competitivo ni implica una interpretación clínica.",
+          "Las mediciones incluidas en este informe corresponden a registros del seguimiento. La glucosa se presenta únicamente como información descriptiva y no forma parte de ningún ranking competitivo ni implica una interpretación clínica.",
           anchoUtil - 8
         );
 
