@@ -12,6 +12,7 @@ import Modal from "@/components/Modal";
 
 import SelectorHora from "@/components/admin/seguimiento/SelectorHora";
 import IndicacionesActividadPreparacion from "@/components/admin/seguimiento/IndicacionesActividadPreparacion";
+import AgregarDesdeBiblioteca from "@/components/admin/seguimiento/AgregarDesdeBiblioteca";
 
 type Recordatorio =
   | "NINGUNO"
@@ -52,6 +53,7 @@ type Props = {
    * de un grupo.
    */
   apiBase?: string;
+  bibliotecaPlanId?: string;
 
   duracionDias: number;
   actividades: Actividad[];
@@ -152,6 +154,7 @@ function actividadDestacada(
 export default function ProtocoloPrincipalPreparacion({
   seguimientoId,
   apiBase,
+  bibliotecaPlanId,
   duracionDias,
   actividades,
 }: Props) {
@@ -862,6 +865,18 @@ export default function ProtocoloPrincipalPreparacion({
 
 
               <div className="flex flex-wrap gap-2">
+
+                {bibliotecaPlanId && (
+                  <AgregarDesdeBiblioteca
+                    planId={
+                      bibliotecaPlanId
+                    }
+                    seccion="PRINCIPAL"
+                    onAgregadas={() => {
+                      router.refresh();
+                    }}
+                  />
+                )}
 
                 <button
                   type="button"

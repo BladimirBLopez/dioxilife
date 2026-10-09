@@ -9,9 +9,14 @@ type TipoActividad =
   | "INFORMACION"
   | "CONTROL";
 
+type SeccionActividad =
+  | "PRINCIPAL"
+  | "ADICIONAL";
+
 type ActividadBase = {
   id: string;
   tipo: TipoActividad;
+  seccion: SeccionActividad;
   titulo: string;
   descripcion: string | null;
   momento: string | null;
@@ -21,6 +26,7 @@ type ActividadBase = {
 
 type Props = {
   planId: string;
+  seccion: SeccionActividad;
   onAgregadas: () => void | Promise<void>;
 };
 
@@ -50,6 +56,7 @@ function claseTipo(tipo: TipoActividad) {
 
 export default function AgregarDesdeBiblioteca({
   planId,
+  seccion,
   onAgregadas,
 }: Props) {
   const [abierto, setAbierto] =
@@ -83,6 +90,13 @@ export default function AgregarDesdeBiblioteca({
             return false;
           }
 
+          if (
+            actividad.seccion !==
+            seccion
+          ) {
+            return false;
+          }
+
           if (!termino) {
             return true;
           }
@@ -100,7 +114,11 @@ export default function AgregarDesdeBiblioteca({
           return texto.includes(termino);
         }
       );
-    }, [actividades, busqueda]);
+    }, [
+      actividades,
+      busqueda,
+      seccion,
+    ]);
 
   async function abrir() {
     setAbierto(true);
@@ -268,8 +286,8 @@ export default function AgregarDesdeBiblioteca({
 
       toast.success(
         cantidad === 1
-          ? "1 actividad agregada a la plantilla."
-          : `${cantidad} actividades agregadas a la plantilla.`,
+          ? "1 actividad agregada al protocolo."
+          : `${cantidad} actividades agregadas al protocolo.`,
         {
           id: toastId,
         }
@@ -299,9 +317,9 @@ export default function AgregarDesdeBiblioteca({
         onClick={() =>
           void abrir()
         }
-        className="admin-btn-primary shrink-0"
+        className="shrink-0 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-semibold text-violet-700 transition hover:bg-violet-100"
       >
-        + Agregar desde biblioteca
+        + Biblioteca
       </button>
 
       {abierto && (
@@ -317,7 +335,11 @@ export default function AgregarDesdeBiblioteca({
 
             <div>
               <p className="text-sm leading-6 text-gray-600">
-                Selecciona una o varias actividades. Se copiarán a esta plantilla y después podrás modificar sus días, horarios o instrucciones sin alterar la biblioteca.
+                Selecciona una o varias actividades de{" "}
+                {seccion === "ADICIONAL"
+                  ? "protocolos adicionales"
+                  : "protocolo principal"}
+                . Se copiarán al protocolo y después podrás modificarlas sin alterar la biblioteca.
               </p>
             </div>
 

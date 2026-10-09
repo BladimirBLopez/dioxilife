@@ -573,7 +573,32 @@ export default async function GrupoSeguimientoDetallePage({
       {grupo.estado !==
         "BORRADOR" && (
 
-        <AgendaCliente
+        <details className="group overflow-hidden rounded-xl bg-white shadow">
+
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 sm:p-5">
+
+            <div>
+
+              <p className="text-sm font-semibold text-gray-900">
+                Administrar protocolo del grupo
+              </p>
+
+              <p className="mt-1 text-xs text-gray-500">
+                Edita actividades, horarios, indicaciones y protocolos adicionales.
+              </p>
+
+            </div>
+
+            <span className="shrink-0 text-gray-400 transition group-open:rotate-180">
+              ▾
+            </span>
+
+          </summary>
+
+
+          <div className="border-t border-gray-100 p-3 sm:p-4">
+
+            <AgendaCliente
           apiBase={
             `/api/admin/seguimiento/grupos/${grupo.id}`
           }
@@ -594,7 +619,11 @@ export default async function GrupoSeguimientoDetallePage({
           actividades={
             actividadesAgenda
           }
-        />
+            />
+
+          </div>
+
+        </details>
 
       )}
 

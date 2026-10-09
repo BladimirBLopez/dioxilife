@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import Modal from "@/components/Modal";
 import SelectorHora from "@/components/admin/seguimiento/SelectorHora";
 import IndicacionesActividadPreparacion from "@/components/admin/seguimiento/IndicacionesActividadPreparacion";
+import AgregarDesdeBiblioteca from "@/components/admin/seguimiento/AgregarDesdeBiblioteca";
 
 type Recordatorio =
   | "NINGUNO"
@@ -35,6 +36,7 @@ type ActividadAdicional = {
 type Props = {
   seguimientoId?: string;
   apiBase?: string;
+  bibliotecaPlanId?: string;
   duracionDias: number;
   actividades: ActividadAdicional[];
 };
@@ -68,6 +70,7 @@ function textoRecordatorio(
 export default function ProtocolosAdicionalesPreparacion({
   seguimientoId,
   apiBase,
+  bibliotecaPlanId,
   duracionDias,
   actividades,
 }: Props) {
@@ -492,15 +495,31 @@ export default function ProtocolosAdicionalesPreparacion({
               </div>
 
 
-              <button
-                type="button"
-                onClick={
-                  abrirNuevo
-                }
-                className="shrink-0 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-purple-700"
-              >
-                + Agregar protocolo
-              </button>
+              <div className="flex flex-wrap gap-2">
+
+                {bibliotecaPlanId && (
+                  <AgregarDesdeBiblioteca
+                    planId={
+                      bibliotecaPlanId
+                    }
+                    seccion="ADICIONAL"
+                    onAgregadas={() => {
+                      router.refresh();
+                    }}
+                  />
+                )}
+
+                <button
+                  type="button"
+                  onClick={
+                    abrirNuevo
+                  }
+                  className="shrink-0 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-purple-700"
+                >
+                  + Agregar protocolo
+                </button>
+
+              </div>
 
             </div>
 

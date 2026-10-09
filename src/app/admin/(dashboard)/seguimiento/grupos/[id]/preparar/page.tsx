@@ -294,6 +294,9 @@ export default async function PrepararProtocoloGrupoPage({
         apiBase={
           apiBase
         }
+        bibliotecaPlanId={
+          grupo.plan.id
+        }
         duracionDias={
           grupo.plan.duracionDias
         }
@@ -343,6 +346,9 @@ export default async function PrepararProtocoloGrupoPage({
       <ProtocolosAdicionalesPreparacion
         apiBase={
           apiBase
+        }
+        bibliotecaPlanId={
+          grupo.plan.id
         }
         duracionDias={
           grupo.plan.duracionDias

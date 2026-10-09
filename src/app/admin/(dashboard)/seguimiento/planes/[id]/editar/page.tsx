@@ -287,6 +287,9 @@ export default async function EditarPlantillaPage({
           apiBase={
             apiBase
           }
+          bibliotecaPlanId={
+            plan.id
+          }
           duracionDias={
             plan.duracionDias
           }
@@ -303,6 +306,9 @@ export default async function EditarPlantillaPage({
         <ProtocolosAdicionalesPreparacion
           apiBase={
             apiBase
+          }
+          bibliotecaPlanId={
+            plan.id
           }
           duracionDias={
             plan.duracionDias

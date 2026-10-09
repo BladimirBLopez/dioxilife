@@ -27,6 +27,7 @@ type ActividadBase = {
   id: string;
   tipo: TipoActividad;
   recordatorio: RecordatorioActividad;
+  seccion: SeccionActividad;
   titulo: string;
   descripcion: string | null;
   momento: string | null;
@@ -36,6 +37,10 @@ type ActividadBase = {
   updatedAt: string;
 };
 
+type SeccionActividad =
+  | "PRINCIPAL"
+  | "ADICIONAL";
+
 type FiltroEstado =
   | "TODAS"
   | "ACTIVAS"
@@ -44,6 +49,7 @@ type FiltroEstado =
 type FormActividad = {
   tipo: TipoActividad;
   recordatorio: RecordatorioActividad;
+  seccion: SeccionActividad;
   titulo: string;
   descripcion: string;
   momento: string;
@@ -54,6 +60,7 @@ type FormActividad = {
 const FORM_VACIO: FormActividad = {
   tipo: "TAREA",
   recordatorio: "NINGUNO",
+  seccion: "PRINCIPAL",
   titulo: "",
   descripcion: "",
   momento: "",
@@ -332,6 +339,9 @@ export default function BibliotecaActividadesPage() {
       recordatorio:
         actividad.recordatorio,
 
+      seccion:
+        actividad.seccion,
+
       titulo:
         actividad.titulo,
 
@@ -457,6 +467,9 @@ export default function BibliotecaActividadesPage() {
               recordatorio:
                 form.recordatorio,
 
+              seccion:
+                form.seccion,
+
               titulo,
 
               descripcion:
@@ -571,6 +584,9 @@ export default function BibliotecaActividadesPage() {
 
               recordatorio:
                 actividad.recordatorio,
+
+              seccion:
+                actividad.seccion,
 
               titulo:
                 actividad.titulo,
@@ -908,6 +924,18 @@ export default function BibliotecaActividadesPage() {
                             )}
                           </span>
 
+                          <span
+                            className={`rounded-lg px-2 py-1 text-xs font-semibold ${
+                              actividad.seccion === "ADICIONAL"
+                                ? "bg-purple-50 text-purple-700"
+                                : "bg-violet-50 text-violet-700"
+                            }`}
+                          >
+                            {actividad.seccion === "ADICIONAL"
+                              ? "Adicional"
+                              : "Principal"}
+                          </span>
+
                           {actividad.hora && (
                             <span className="rounded-lg bg-[#F8F6FF] px-2 py-1 text-xs font-semibold text-brand-pink">
                               {actividad.hora}
@@ -1083,6 +1111,40 @@ export default function BibliotecaActividadesPage() {
 
 
             <div className="grid gap-3 sm:grid-cols-2">
+
+              <div>
+                <label className="admin-label">
+                  Sección
+                </label>
+
+                <select
+                  value={
+                    form.seccion
+                  }
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      seccion:
+                        e.target
+                          .value as SeccionActividad,
+                    })
+                  }
+                  className="admin-input"
+                >
+                  <option value="PRINCIPAL">
+                    Protocolo principal
+                  </option>
+
+                  <option value="ADICIONAL">
+                    Protocolo adicional
+                  </option>
+                </select>
+
+                <p className="mt-1 text-xs text-gray-500">
+                  Define en qué parte del protocolo se reutilizará esta actividad.
+                </p>
+              </div>
+
 
               <div>
                 <label className="admin-label">
