@@ -55,11 +55,6 @@ export default async function SeguimientosClientesPage() {
           },
         },
 
-        _count: {
-          select: {
-            actividades: true,
-          },
-        },
       },
     });
 
@@ -118,11 +113,10 @@ export default async function SeguimientosClientesPage() {
               <thead className="bg-gray-50 text-gray-600">
                 <tr>
                   <th className="px-4 py-3">Cliente</th>
-                  <th className="px-4 py-3">Plantilla</th>
+                  <th className="px-4 py-3">Protocolo</th>
                   <th className="px-4 py-3">Pedido</th>
                   <th className="px-4 py-3">Inicio previsto</th>
                   <th className="px-4 py-3">Estado</th>
-                  <th className="px-4 py-3">Actividades</th>
                   <th className="px-4 py-3 text-right">Acción</th>
                 </tr>
               </thead>
@@ -151,7 +145,7 @@ export default async function SeguimientosClientesPage() {
                             href={`https://wa.me/591${seguimiento.telefonoCliente.replace(/\D/g, "")}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700"
+                            className="inline-flex items-center text-xs font-semibold text-green-700 hover:underline"
                           >
                             WhatsApp
                           </a>
@@ -213,10 +207,6 @@ export default async function SeguimientosClientesPage() {
                       >
                         {seguimiento.estado}
                       </span>
-                    </td>
-
-                    <td className="px-4 py-4">
-                      {seguimiento._count.actividades}
                     </td>
 
                     <td className="px-4 py-4 text-right">

@@ -19,28 +19,15 @@ type Plan = {
   };
 };
 
-const vacio = {
-  nombre: "",
-  descripcion: "",
-  duracionDias: "30",
-  estado: "BORRADOR" as "BORRADOR" | "ACTIVO" | "INACTIVO",
-};
-
 export default function PlanesSeguimientoPage() {
   const router = useRouter();
 
   const [planes, setPlanes] = useState<Plan[]>([]);
   const [cargando, setCargando] = useState(true);
 
-  const [modalAbierto, setModalAbierto] = useState(false);
   const [nuevaPlantillaAbierta, setNuevaPlantillaAbierta] = useState(false);
-  const [editandoId, setEditandoId] = useState<string | null>(null);
-  const [form, setForm] = useState(vacio);
-  const [formInicial, setFormInicial] = useState(vacio);
-  const [guardando, setGuardando] = useState(false);
 
   const [borrarId, setBorrarId] = useState<string | null>(null);
-  const [confirmarSalir, setConfirmarSalir] = useState(false);
 
   const [
     planDuplicando,
@@ -74,39 +61,8 @@ export default function PlanesSeguimientoPage() {
     cargar();
   }, []);
 
-  function hayCambiosSinGuardar() {
-    return JSON.stringify(form) !== JSON.stringify(formInicial);
-  }
-
-  function pedirCerrarModal() {
-    if (hayCambiosSinGuardar()) {
-      setConfirmarSalir(true);
-    } else {
-      setModalAbierto(false);
-    }
-  }
-
-  function cerrarSinGuardar() {
-    setConfirmarSalir(false);
-    setModalAbierto(false);
-  }
-
   function abrirNuevo() {
     setNuevaPlantillaAbierta(true);
-  }
-
-  function abrirEditar(plan: Plan) {
-    const datos = {
-      nombre: plan.nombre,
-      descripcion: plan.descripcion || "",
-      duracionDias: String(plan.duracionDias),
-      estado: plan.estado,
-    };
-
-    setEditandoId(plan.id);
-    setForm(datos);
-    setFormInicial(datos);
-    setModalAbierto(true);
   }
 
   function abrirDuplicar(
@@ -235,64 +191,6 @@ export default function PlanesSeguimientoPage() {
       setDuplicando(
         false
       );
-    }
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-
-    if (!form.nombre.trim()) {
-      alert("El nombre de la plantilla es obligatorio");
-      return;
-    }
-
-    const dias = Number(form.duracionDias);
-
-    if (!Number.isInteger(dias) || dias < 1 || dias > 365) {
-      alert("La duración debe estar entre 1 y 365 días");
-      return;
-    }
-
-    setGuardando(true);
-
-    const body = {
-      nombre: form.nombre.trim(),
-      descripcion: form.descripcion.trim() || null,
-      duracionDias: dias,
-      estado: form.estado,
-    };
-
-    try {
-      const res = editandoId
-        ? await fetch(`/api/admin/seguimiento/planes/${editandoId}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(body),
-          })
-        : await fetch("/api/admin/seguimiento/planes", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(body),
-          });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        alert(data?.error || "No se pudo guardar la plantilla");
-        return;
-      }
-
-      setModalAbierto(false);
-      setEditandoId(null);
-      setForm(vacio);
-      await cargar();
-    } catch {
-      alert("No se pudo conectar con el servidor");
-    } finally {
-      setGuardando(false);
     }
   }
 
@@ -426,13 +324,12 @@ export default function PlanesSeguimientoPage() {
               </div>
 
               <div className="mt-4 flex flex-wrap gap-4 border-t border-gray-100 pt-4 text-sm">
-                <button
-                  type="button"
-                  onClick={() => abrirEditar(plan)}
-                  className="font-medium text-brand-blue hover:underline"
+                <a
+                  href={`/admin/seguimiento/planes/${plan.id}/editar`}
+                  className="font-medium text-brand-pink hover:underline"
                 >
-                  Editar
-                </button>
+                  Administrar
+                </a>
 
                 <button
                   type="button"
@@ -445,13 +342,6 @@ export default function PlanesSeguimientoPage() {
                 >
                   Duplicar
                 </button>
-
-                <a
-                  href={`/admin/seguimiento/planes/${plan.id}/editar`}
-                  className="font-medium text-brand-pink hover:underline"
-                >
-                  Editar protocolo
-                </a>
 
                 <button
                   type="button"
@@ -565,137 +455,6 @@ export default function PlanesSeguimientoPage() {
 
           </div>
         </Modal>
-      )}
-
-      {modalAbierto && (
-        <Modal
-          title={editandoId ? "Editar plantilla" : "Nueva plantilla de seguimiento"}
-          onClose={pedirCerrarModal}
-        >
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="admin-label">
-                Nombre de la plantilla
-              </label>
-
-              <input
-                type="text"
-                value={form.nombre}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    nombre: e.target.value,
-                  })
-                }
-                className="admin-input"
-                placeholder="Ej. Plantilla estándar 90 días"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="admin-label">
-                Descripción
-              </label>
-
-              <textarea
-                value={form.descripcion}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    descripcion: e.target.value,
-                  })
-                }
-                className="admin-input"
-                rows={4}
-                placeholder="Descripción interna de la plantilla..."
-              />
-            </div>
-
-            <div>
-              <label className="admin-label">
-                Duración
-              </label>
-
-              <div className="relative">
-                <input
-                  type="number"
-                  min={1}
-                  max={365}
-                  value={form.duracionDias}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      duracionDias: e.target.value,
-                    })
-                  }
-                  className="admin-input pr-14"
-                  required
-                />
-
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8A8790]">
-                  días
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <label className="admin-label">
-                Estado
-              </label>
-
-              <select
-                value={form.estado}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    estado: e.target.value as
-                      | "BORRADOR"
-                      | "ACTIVO"
-                      | "INACTIVO",
-                  })
-                }
-                className="admin-input"
-              >
-                <option value="BORRADOR">
-                  Borrador
-                </option>
-                <option value="ACTIVO">
-                  Activo
-                </option>
-                <option value="INACTIVO">
-                  Inactivo
-                </option>
-              </select>
-
-              <p className="mt-1 text-xs text-[#8A8790]">
-                Solo las plantillas activas podrán asignarse posteriormente a clientes.
-              </p>
-            </div>
-
-            <button
-              type="submit"
-              disabled={guardando}
-              className="admin-btn-primary w-full"
-            >
-              {guardando
-                ? "Guardando..."
-                : editandoId
-                ? "Guardar cambios"
-                : "Crear plantilla"}
-            </button>
-          </form>
-        </Modal>
-      )}
-
-      {confirmarSalir && (
-        <ConfirmDialog
-          title="Cambios sin guardar"
-          message="Tienes cambios sin guardar. Si sales ahora se perderán."
-          confirmLabel="Descartar cambios"
-          onConfirm={cerrarSinGuardar}
-          onCancel={() => setConfirmarSalir(false)}
-        />
       )}
 
       {borrarId && (
