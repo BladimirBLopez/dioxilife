@@ -179,6 +179,7 @@ export default async function DetallePedidoPage({
     await prisma.planSeguimiento.findMany({
       where: {
         estado: "ACTIVO",
+        esCopiaGrupo: false,
         actividades: {
           some: {
             activo: true,

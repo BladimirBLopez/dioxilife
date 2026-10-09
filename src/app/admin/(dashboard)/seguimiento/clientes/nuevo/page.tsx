@@ -9,6 +9,7 @@ export default async function NuevoSeguimientoPage() {
     await prisma.planSeguimiento.findMany({
       where: {
         estado: "ACTIVO",
+        esCopiaGrupo: false,
         actividades: {
           some: {
             activo: true,

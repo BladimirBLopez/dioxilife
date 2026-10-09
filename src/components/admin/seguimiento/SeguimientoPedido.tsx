@@ -4,12 +4,17 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import SelectorFecha from "@/components/admin/seguimiento/SelectorFecha";
 
 type Plan = {
   id: string;
   nombre: string;
   duracionDias: number;
 };
+
+type ModoInicio =
+  | "CERO"
+  | "PLANTILLA";
 
 type Seguimiento = {
   id: string;
@@ -62,8 +67,29 @@ export default function SeguimientoPedido({
         seguimiento.estado === "PAUSADO"
     ) || null;
 
+  const [
+    modoInicio,
+    setModoInicio,
+  ] = useState<ModoInicio>(
+    "CERO"
+  );
+
   const [planId, setPlanId] = useState(
     planes[0]?.id || ""
+  );
+
+  const [
+    nombreProtocolo,
+    setNombreProtocolo,
+  ] = useState(
+    "Protocolo personalizado"
+  );
+
+  const [
+    duracionDias,
+    setDuracionDias,
+  ] = useState(
+    "30"
   );
 
   const [
@@ -84,16 +110,46 @@ export default function SeguimientoPedido({
     estadoPedido === "COMPLETADO";
 
   async function asignar() {
+    if (procesando) {
+      return;
+    }
+
     if (
-      procesando ||
+      modoInicio === "PLANTILLA" &&
       !planId
     ) {
+      toast.error(
+        "Selecciona una plantilla."
+      );
+      return;
+    }
+
+    const duracion =
+      Number(
+        duracionDias
+      );
+
+    if (
+      modoInicio === "CERO" &&
+      (
+        !Number.isInteger(
+          duracion
+        ) ||
+        duracion < 1 ||
+        duracion > 365
+      )
+    ) {
+      toast.error(
+        "La duración debe estar entre 1 y 365 días."
+      );
       return;
     }
 
     const confirmar =
       window.confirm(
-        "¿Deseas asignar esta plantilla de seguimiento al cliente?"
+        modoInicio === "PLANTILLA"
+          ? "¿Deseas crear el seguimiento usando esta plantilla?"
+          : "¿Deseas crear un seguimiento personalizado desde cero?"
       );
 
     if (!confirmar) {
@@ -118,9 +174,26 @@ export default function SeguimientoPedido({
           },
           body: JSON.stringify({
             pedidoId,
-            planId,
+
+            planId:
+              modoInicio === "PLANTILLA"
+                ? planId
+                : null,
+
+            nombreProtocolo:
+              modoInicio === "CERO"
+                ? nombreProtocolo.trim() ||
+                  "Protocolo personalizado"
+                : null,
+
+            duracionDias:
+              modoInicio === "CERO"
+                ? duracion
+                : null,
+
             fechaInicioPrevista:
               fechaInicioPrevista || null,
+
             observacionInterna:
               observacionInterna.trim() ||
               null,
@@ -146,7 +219,9 @@ export default function SeguimientoPedido({
       }
 
       toast.success(
-        "Seguimiento asignado correctamente",
+        modoInicio === "PLANTILLA"
+          ? "Plantilla aplicada correctamente"
+          : "Seguimiento creado correctamente",
         {
           id: toastId,
           description:
@@ -325,47 +400,164 @@ export default function SeguimientoPedido({
 
         </div>
 
-      ) : planes.length === 0 ? (
-
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-
-          <p className="text-sm font-semibold text-amber-800">
-            No hay planes activos
-          </p>
-
-          <p className="mt-1 text-xs text-amber-700">
-            Primero crea y activa un plan con actividades.
-          </p>
-
-        </div>
-
       ) : (
 
         <div className="mt-5 space-y-4">
 
           <div>
-            <label className="admin-label">
-              Plantilla de seguimiento
-            </label>
 
-            <select
-              value={planId}
-              onChange={(e) =>
-                setPlanId(e.target.value)
-              }
-              className="admin-input"
-            >
-              {planes.map((plan) => (
-                <option
-                  key={plan.id}
-                  value={plan.id}
-                >
-                  {plan.nombre} ·{" "}
-                  {plan.duracionDias} días
-                </option>
-              ))}
-            </select>
+            <p className="text-sm font-semibold text-gray-900">
+              ¿Cómo quieres comenzar?
+            </p>
+
+            <p className="mt-1 text-xs leading-5 text-gray-500">
+              Puedes preparar un protocolo personalizado o usar una plantilla existente.
+            </p>
+
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+
+              <button
+                type="button"
+                onClick={() =>
+                  setModoInicio(
+                    "CERO"
+                  )
+                }
+                className={`rounded-xl border p-4 text-left transition ${
+                  modoInicio === "CERO"
+                    ? "border-violet-500 bg-violet-50 ring-2 ring-violet-100"
+                    : "border-gray-200 bg-white hover:border-violet-200"
+                }`}
+              >
+                <p className="font-semibold text-gray-900">
+                  Crear desde cero
+                </p>
+
+                <p className="mt-1 text-xs text-gray-500">
+                  Para un protocolo personalizado.
+                </p>
+              </button>
+
+
+              <button
+                type="button"
+                disabled={
+                  planes.length === 0
+                }
+                onClick={() =>
+                  setModoInicio(
+                    "PLANTILLA"
+                  )
+                }
+                className={`rounded-xl border p-4 text-left transition ${
+                  modoInicio === "PLANTILLA"
+                    ? "border-violet-500 bg-violet-50 ring-2 ring-violet-100"
+                    : "border-gray-200 bg-white hover:border-violet-200"
+                } ${
+                  planes.length === 0
+                    ? "cursor-not-allowed opacity-50"
+                    : ""
+                }`}
+              >
+                <p className="font-semibold text-gray-900">
+                  Usar plantilla
+                </p>
+
+                <p className="mt-1 text-xs text-gray-500">
+                  {planes.length === 0
+                    ? "No hay plantillas activas disponibles."
+                    : "Copia un protocolo existente."}
+                </p>
+              </button>
+
+            </div>
+
           </div>
+
+
+          {modoInicio === "CERO" ? (
+
+            <div className="grid gap-4 rounded-xl border border-violet-100 bg-violet-50/40 p-4 sm:grid-cols-[1fr_150px]">
+
+              <div>
+                <label className="admin-label">
+                  Nombre del protocolo
+                </label>
+
+                <input
+                  value={
+                    nombreProtocolo
+                  }
+                  onChange={(e) =>
+                    setNombreProtocolo(
+                      e.target.value
+                    )
+                  }
+                  className="admin-input"
+                  maxLength={200}
+                  placeholder="Protocolo personalizado"
+                />
+              </div>
+
+
+              <div>
+                <label className="admin-label">
+                  Duración
+                </label>
+
+                <input
+                  type="number"
+                  min={1}
+                  max={365}
+                  value={
+                    duracionDias
+                  }
+                  onChange={(e) =>
+                    setDuracionDias(
+                      e.target.value
+                    )
+                  }
+                  className="admin-input"
+                />
+              </div>
+
+            </div>
+
+          ) : (
+
+            <div>
+              <label className="admin-label">
+                Plantilla de seguimiento
+              </label>
+
+              <select
+                value={
+                  planId
+                }
+                onChange={(e) =>
+                  setPlanId(
+                    e.target.value
+                  )
+                }
+                className="admin-input"
+              >
+                {planes.map((plan) => (
+                  <option
+                    key={plan.id}
+                    value={plan.id}
+                  >
+                    {plan.nombre} ·{" "}
+                    {plan.duracionDias} días
+                  </option>
+                ))}
+              </select>
+
+              <p className="mt-1 text-xs text-gray-500">
+                Se copiará la plantilla y luego podrás personalizarla para este cliente.
+              </p>
+            </div>
+
+          )}
 
 
           <div>
@@ -373,15 +565,13 @@ export default function SeguimientoPedido({
               Fecha prevista de inicio
             </label>
 
-            <input
-              type="date"
-              value={fechaInicioPrevista}
-              onChange={(e) =>
-                setFechaInicioPrevista(
-                  e.target.value
-                )
+            <SelectorFecha
+              value={
+                fechaInicioPrevista
               }
-              className="admin-input"
+              onChange={
+                setFechaInicioPrevista
+              }
             />
 
             <p className="mt-1 text-xs text-gray-500">
@@ -418,7 +608,11 @@ export default function SeguimientoPedido({
             type="button"
             disabled={
               procesando ||
-              !planId
+              (
+                modoInicio ===
+                  "PLANTILLA" &&
+                !planId
+              )
             }
             onClick={() =>
               void asignar()
@@ -427,7 +621,7 @@ export default function SeguimientoPedido({
           >
             {procesando
               ? "Asignando..."
-              : "Asignar seguimiento"}
+              : "Crear y preparar protocolo →"}
           </button>
 
         </div>
