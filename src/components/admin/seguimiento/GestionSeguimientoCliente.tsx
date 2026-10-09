@@ -50,6 +50,8 @@ type Props = {
 
   nombrePlan: string;
 
+  duracionDias: number;
+
   referenciaCompra:
     | string
     | null;
@@ -66,6 +68,7 @@ export default function GestionSeguimientoCliente({
   nombreCliente,
   telefonoCliente,
   nombrePlan,
+  duracionDias,
   referenciaCompra,
   observacionInterna,
 }: Props) {
@@ -117,6 +120,11 @@ export default function GestionSeguimientoCliente({
 
       nombrePlan,
 
+      duracionDias:
+        String(
+          duracionDias
+        ),
+
       referenciaCompra:
         referenciaCompra ?? "",
 
@@ -135,6 +143,11 @@ export default function GestionSeguimientoCliente({
         telefonoCliente ?? "",
 
       nombrePlan,
+
+      duracionDias:
+        String(
+          duracionDias
+        ),
 
       referenciaCompra:
         referenciaCompra ?? "",
@@ -162,6 +175,28 @@ export default function GestionSeguimientoCliente({
         "El nombre del protocolo es obligatorio."
       );
       return;
+    }
+
+    if (
+      !esGrupo
+    ) {
+      const duracion =
+        Number(
+          form.duracionDias
+        );
+
+      if (
+        !Number.isInteger(
+          duracion
+        ) ||
+        duracion < 1 ||
+        duracion > 365
+      ) {
+        toast.error(
+          "La duración debe estar entre 1 y 365 días."
+        );
+        return;
+      }
     }
 
     setProcesando(
@@ -569,6 +604,44 @@ export default function GestionSeguimientoCliente({
           }}
         >
           <div className="space-y-4">
+
+            {!esGrupo && (
+              <div className="rounded-xl border border-violet-200 bg-violet-50 p-4">
+                <label className="admin-label">
+                  Duración del seguimiento
+                </label>
+
+                <div className="mt-1 flex items-center gap-2">
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={365}
+                    step={1}
+                    className="admin-input max-w-32"
+                    value={
+                      form.duracionDias
+                    }
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        duracionDias:
+                          e.target.value,
+                      })
+                    }
+                  />
+
+                  <span className="text-sm font-medium text-gray-600">
+                    días
+                  </span>
+                </div>
+
+                <p className="mt-2 text-xs leading-5 text-violet-700">
+                  Puedes aumentar o reducir el plazo. No se podrá reducir por debajo de un día que ya tenga información registrada.
+                </p>
+              </div>
+            )}
+
 
             <div>
               <label className="admin-label">

@@ -10,6 +10,99 @@ import { obtenerDiaSeguimiento } from "@/lib/seguimiento-publico";
 const MS_DIA =
   86_400_000;
 
+
+async function obtenerUltimoDiaConHistorial(
+  seguimientoId: string
+) {
+  const [
+    registro,
+    glucosa,
+    progresoActividad,
+    progresoIndicacion,
+  ] =
+    await Promise.all([
+      prisma.registroDiaSeguimiento.findFirst({
+        where: {
+          seguimientoId,
+        },
+
+        orderBy: {
+          diaPlan:
+            "desc",
+        },
+
+        select: {
+          diaPlan:
+            true,
+        },
+      }),
+
+      prisma.medicionGlucosaSeguimiento.findFirst({
+        where: {
+          seguimientoId,
+        },
+
+        orderBy: {
+          diaPlan:
+            "desc",
+        },
+
+        select: {
+          diaPlan:
+            true,
+        },
+      }),
+
+      prisma.progresoActividad.findFirst({
+        where: {
+          seguimientoId,
+        },
+
+        orderBy: {
+          diaPlan:
+            "desc",
+        },
+
+        select: {
+          diaPlan:
+            true,
+        },
+      }),
+
+      prisma.progresoIndicacion.findFirst({
+        where: {
+          indicacionActividadSeguimiento: {
+            actividadSeguimiento: {
+              seguimientoId,
+            },
+          },
+        },
+
+        orderBy: {
+          diaPlan:
+            "desc",
+        },
+
+        select: {
+          diaPlan:
+            true,
+        },
+      }),
+    ]);
+
+  return Math.max(
+    registro?.diaPlan ??
+      0,
+    glucosa?.diaPlan ??
+      0,
+    progresoActividad?.diaPlan ??
+      0,
+    progresoIndicacion?.diaPlan ??
+      0
+  );
+}
+
+
 export async function PATCH(
   req: NextRequest,
   {
@@ -47,6 +140,7 @@ export async function PATCH(
       select: {
         id: true,
         estado: true,
+        duracionDias: true,
         fechaInicio: true,
         fechaFinalizado: true,
         pausadoAt: true,
@@ -166,6 +260,37 @@ export async function PATCH(
             )
         : "";
 
+    const duracionRecibida =
+      Number(
+        datos.duracionDias
+      );
+
+    const nuevaDuracion =
+      seguimiento.miembroGrupo
+        ? seguimiento.duracionDias
+        : duracionRecibida;
+
+    if (
+      !seguimiento.miembroGrupo &&
+      (
+        !Number.isInteger(
+          nuevaDuracion
+        ) ||
+        nuevaDuracion < 1 ||
+        nuevaDuracion > 365
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "La duración debe estar entre 1 y 365 días.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
     if (
       telefonoCliente &&
       !/^[0-9]{8}$/.test(
@@ -195,6 +320,95 @@ export async function PATCH(
       );
     }
 
+    const cambioDuracion =
+      !seguimiento.miembroGrupo &&
+      nuevaDuracion !==
+        seguimiento.duracionDias;
+
+    if (
+      cambioDuracion &&
+      seguimiento.estado ===
+        "CANCELADO"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "La duración de un seguimiento cancelado no puede modificarse.",
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
+    if (
+      cambioDuracion &&
+      nuevaDuracion <
+        seguimiento.duracionDias
+    ) {
+      const ultimoDiaConHistorial =
+        await obtenerUltimoDiaConHistorial(
+          seguimiento.id
+        );
+
+      if (
+        nuevaDuracion <
+        ultimoDiaConHistorial
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              `No puedes reducir el seguimiento a ${nuevaDuracion} días porque ya existe información registrada hasta el día ${ultimoDiaConHistorial}.`,
+          },
+          {
+            status: 409,
+          }
+        );
+      }
+    }
+
+    const ahora =
+      new Date();
+
+    const referenciaDia =
+      seguimiento.estado ===
+          "PAUSADO" &&
+        seguimiento.pausadoAt
+        ? seguimiento.pausadoAt
+        : ahora;
+
+    const diaActual =
+      seguimiento.fechaInicio
+        ? obtenerDiaSeguimiento(
+            seguimiento.fechaInicio,
+            referenciaDia
+          )
+        : null;
+
+    const debeCompletar =
+      cambioDuracion &&
+      diaActual !==
+        null &&
+      (
+        seguimiento.estado ===
+          "ACTIVO" ||
+        seguimiento.estado ===
+          "PAUSADO"
+      ) &&
+      diaActual >
+        nuevaDuracion;
+
+    const debeReactivar =
+      cambioDuracion &&
+      seguimiento.estado ===
+        "COMPLETADO" &&
+      seguimiento.fechaInicio !==
+        null &&
+      diaActual !==
+        null &&
+      diaActual <=
+        nuevaDuracion;
+
     const actualizado =
       await prisma.seguimientoCliente.update({
         where: {
@@ -219,6 +433,45 @@ export async function PATCH(
           observacionInterna:
             observacionInterna ||
             null,
+
+          ...(
+            !seguimiento.miembroGrupo
+              ? {
+                  duracionDias:
+                    nuevaDuracion,
+                }
+              : {}
+          ),
+
+          ...(
+            debeCompletar
+              ? {
+                  estado:
+                    "COMPLETADO" as const,
+
+                  fechaFinalizado:
+                    ahora,
+
+                  pausadoAt:
+                    null,
+                }
+              : {}
+          ),
+
+          ...(
+            debeReactivar
+              ? {
+                  estado:
+                    "ACTIVO" as const,
+
+                  fechaFinalizado:
+                    null,
+
+                  pausadoAt:
+                    null,
+                }
+              : {}
+          ),
         },
       });
 

@@ -10,6 +10,7 @@ import {
   obtenerDiaSeguimiento,
   obtenerDiaSeguimientoFechaCalendario,
   tokenSeguimientoValido,
+  seguimientoIndividualVencido,
 } from "@/lib/seguimiento-publico";
 
 const MS_DIA =
@@ -360,6 +361,88 @@ export async function GET(
 
   const miembroGrupo =
     seguimiento.miembroGrupo;
+
+  /*
+   * Un seguimiento individual deja de
+   * ser accesible desde el día siguiente
+   * al último día configurado.
+   */
+  if (
+    !miembroGrupo
+  ) {
+    if (
+      seguimiento.estado ===
+        "COMPLETADO"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Este seguimiento ha finalizado.",
+        },
+        {
+          status: 410,
+        }
+      );
+    }
+
+    if (
+      seguimiento.estado ===
+        "CANCELADO"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Este seguimiento fue cancelado.",
+        },
+        {
+          status: 410,
+        }
+      );
+    }
+
+    if (
+      seguimiento.estado ===
+        "ACTIVO" &&
+      seguimientoIndividualVencido(
+        seguimiento.fechaInicio,
+        seguimiento.duracionDias
+      )
+    ) {
+      const ahora =
+        new Date();
+
+      await prisma.seguimientoCliente.updateMany({
+        where: {
+          id:
+            seguimiento.id,
+
+          estado:
+            "ACTIVO",
+        },
+
+        data: {
+          estado:
+            "COMPLETADO",
+
+          fechaFinalizado:
+            ahora,
+
+          pausadoAt:
+            null,
+        },
+      });
+
+      return NextResponse.json(
+        {
+          error:
+            "Este seguimiento ha finalizado.",
+        },
+        {
+          status: 410,
+        }
+      );
+    }
+  }
 
   let diaActual:
     number | null = null;

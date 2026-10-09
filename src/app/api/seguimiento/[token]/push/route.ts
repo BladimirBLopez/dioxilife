@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import {
   hashTokenSeguimiento,
   obtenerDiaSeguimientoFechaCalendario,
+  seguimientoIndividualVencido,
   tokenSeguimientoValido,
 } from "@/lib/seguimiento-publico";
 
@@ -70,6 +71,8 @@ export async function POST(
       select: {
         id: true,
         estado: true,
+        fechaInicio: true,
+        duracionDias: true,
 
         miembroGrupo: {
           select: {
@@ -96,6 +99,47 @@ export async function POST(
       },
       {
         status: 404,
+      }
+    );
+  }
+
+  if (
+    !seguimiento.miembroGrupo &&
+    seguimiento.estado ===
+      "ACTIVO" &&
+    seguimientoIndividualVencido(
+      seguimiento.fechaInicio,
+      seguimiento.duracionDias
+    )
+  ) {
+    await prisma.seguimientoCliente.updateMany({
+      where: {
+        id:
+          seguimiento.id,
+
+        estado:
+          "ACTIVO",
+      },
+
+      data: {
+        estado:
+          "COMPLETADO",
+
+        fechaFinalizado:
+          new Date(),
+
+        pausadoAt:
+          null,
+      },
+    });
+
+    return NextResponse.json(
+      {
+        error:
+          "Este seguimiento ha finalizado.",
+      },
+      {
+        status: 410,
       }
     );
   }

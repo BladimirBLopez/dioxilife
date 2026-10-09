@@ -511,6 +511,9 @@ export default async function SeguimientoClientePage({
         nombrePlan={
           seguimiento.nombrePlan
         }
+        duracionDias={
+          seguimiento.duracionDias
+        }
         referenciaCompra={
           seguimiento.referenciaCompra
         }

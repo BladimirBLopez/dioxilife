@@ -181,15 +181,25 @@ export function resolverDiaRegistroPublico({
     );
 
   if (
-    diaPlan < 1 ||
-    diaPlan >
-      duracionDias
+    diaPlan < 1
   ) {
     return {
       ok: false as const,
       status: 409,
       error:
-        "El día actual está fuera del periodo de seguimiento.",
+        "El seguimiento todavía no ha comenzado.",
+    };
+  }
+
+  if (
+    diaPlan >
+      duracionDias
+  ) {
+    return {
+      ok: false as const,
+      status: 410,
+      error:
+        "Este seguimiento ha finalizado.",
     };
   }
 

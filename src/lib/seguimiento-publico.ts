@@ -157,6 +157,28 @@ export function obtenerDiaEntreFechasCalendario(
 }
 
 
+export function seguimientoIndividualVencido(
+  fechaInicio: Date | null,
+  duracionDias: number,
+  ahora = new Date()
+) {
+  if (
+    !fechaInicio ||
+    duracionDias < 1
+  ) {
+    return false;
+  }
+
+  return (
+    obtenerDiaSeguimiento(
+      fechaInicio,
+      ahora
+    ) >
+    duracionDias
+  );
+}
+
+
 export function tokenSeguimientoValido(
   token: string
 ) {

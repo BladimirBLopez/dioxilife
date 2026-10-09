@@ -10,6 +10,7 @@ import {
   obtenerDiaSeguimiento,
   obtenerDiaSeguimientoFechaCalendario,
   tokenSeguimientoValido,
+  seguimientoIndividualVencido,
 } from "@/lib/seguimiento-publico";
 
 import {
@@ -523,6 +524,63 @@ export async function GET(
       },
       {
         status: 404,
+      }
+    );
+  }
+
+  if (
+    !seguimiento.miembroGrupo &&
+    (
+      seguimiento.estado ===
+        "COMPLETADO" ||
+      seguimiento.estado ===
+        "CANCELADO" ||
+      (
+        seguimiento.estado ===
+          "ACTIVO" &&
+        seguimientoIndividualVencido(
+          seguimiento.fechaInicio,
+          seguimiento.duracionDias
+        )
+      )
+    )
+  ) {
+    if (
+      seguimiento.estado ===
+        "ACTIVO"
+    ) {
+      await prisma.seguimientoCliente.updateMany({
+        where: {
+          id:
+            seguimiento.id,
+
+          estado:
+            "ACTIVO",
+        },
+
+        data: {
+          estado:
+            "COMPLETADO",
+
+          fechaFinalizado:
+            new Date(),
+
+          pausadoAt:
+            null,
+        },
+      });
+    }
+
+    return NextResponse.json(
+      {
+        error:
+          seguimiento.estado ===
+            "CANCELADO"
+            ? "Este seguimiento fue cancelado."
+            : "Este seguimiento ha finalizado.",
+      },
+      {
+        status: 410,
       }
     );
   }
