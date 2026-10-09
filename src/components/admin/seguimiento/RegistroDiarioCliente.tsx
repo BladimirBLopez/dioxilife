@@ -1440,112 +1440,176 @@ export default function RegistroDiarioCliente({
             </div>
 
 
-            <div className="mt-5">
+            <details className="group mt-5 overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
 
-              <div className="mb-3">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-3">
 
-                <h4 className="text-sm font-bold text-gray-900">
-                  Glucosa del día
-                </h4>
+                <div>
 
-                <p className="mt-0.5 text-xs text-gray-500">
+                  <p className="text-sm font-bold text-gray-900">
+                    Glucosa del día
+                  </p>
+
+                  <p className="mt-0.5 text-xs text-gray-500">
+                    {
+                      medicionesGlucosa.filter(
+                        (medicion) =>
+                          Boolean(
+                            medicion.valor.trim()
+                          )
+                      ).length
+                    } de 4 mediciones registradas
+                  </p>
+
+                </div>
+
+
+                <div className="flex shrink-0 items-center gap-2">
+
+                  <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold text-gray-600">
+                    Ver / registrar
+                  </span>
+
+                  <span className="text-gray-400 transition group-open:rotate-180">
+                    ▾
+                  </span>
+
+                </div>
+
+              </summary>
+
+
+              <div className="border-t border-gray-200 p-3">
+
+                <p className="mb-3 text-xs leading-5 text-gray-500">
                   Hasta 4 mediciones. Si registras un valor, la hora es obligatoria y debe ser diferente en cada medición.
                 </p>
 
-              </div>
+
+                <div className="grid gap-3 lg:grid-cols-2">
+
+                  {medicionesGlucosa.map(
+                    (
+                      medicion
+                    ) => (
+
+                      <div
+                        key={
+                          medicion.numero
+                        }
+                        className="rounded-xl border border-gray-200 bg-white p-3"
+                      >
+
+                        <div className="mb-3 flex items-center justify-between gap-3">
+
+                          <p className="text-sm font-bold text-gray-900">
+                            Medición {medicion.numero}
+                          </p>
+
+                          {medicion.valor && (
+
+                            <span className="text-xs font-semibold text-gray-500">
+                              {medicion.valor} mg/dL
+                            </span>
+
+                          )}
+
+                        </div>
 
 
-              <div className="grid gap-3 lg:grid-cols-2">
+                        <div className="grid grid-cols-[1fr_125px] gap-2">
 
-                {medicionesGlucosa.map(
-                  (
-                    medicion
-                  ) => (
+                          <div>
 
-                    <div
-                      key={
-                        medicion.numero
-                      }
-                      className="rounded-xl border border-gray-200 bg-gray-50 p-3"
-                    >
+                            <label className="admin-label">
+                              Valor
+                            </label>
 
-                      <div className="mb-3 flex items-center justify-between gap-3">
+                            <div className="relative">
 
-                        <p className="text-sm font-bold text-gray-900">
-                          Medición {medicion.numero}
-                        </p>
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                disabled={
+                                  bloqueado
+                                }
+                                value={
+                                  medicion.valor
+                                }
+                                onChange={(e) =>
+                                  cambiarMedicionGlucosa(
+                                    medicion.numero,
+                                    "valor",
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="Ej. 102"
+                                className="admin-input pr-16"
+                              />
 
-                        {medicion.valor && (
+                              <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[10px] text-gray-500">
+                                mg/dL
+                              </span>
 
-                          <span className="text-xs font-semibold text-gray-500">
-                            {medicion.valor} mg/dL
-                          </span>
+                            </div>
 
-                        )}
-
-                      </div>
+                          </div>
 
 
-                      <div className="grid grid-cols-[1fr_125px] gap-2">
+                          <div>
 
-                        <div>
-
-                          <label className="admin-label">
-                            Valor
-                          </label>
-
-                          <div className="relative">
+                            <label className="admin-label">
+                              Hora *
+                            </label>
 
                             <input
-                              type="text"
-                              inputMode="decimal"
+                              type="time"
                               disabled={
                                 bloqueado
                               }
                               value={
-                                medicion.valor
+                                medicion.hora
                               }
                               onChange={(e) =>
                                 cambiarMedicionGlucosa(
                                   medicion.numero,
-                                  "valor",
+                                  "hora",
                                   e.target.value
                                 )
                               }
-                              placeholder="Ej. 102"
-                              className="admin-input pr-16"
+                              className="admin-input"
                             />
-
-                            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[10px] text-gray-500">
-                              mg/dL
-                            </span>
 
                           </div>
 
                         </div>
 
 
-                        <div>
+                        <div className="mt-2">
 
                           <label className="admin-label">
-                            Hora *
+                            Momento
                           </label>
 
                           <input
-                            type="time"
+                            type="text"
                             disabled={
                               bloqueado
                             }
                             value={
-                              medicion.hora
+                              medicion.momento
                             }
                             onChange={(e) =>
                               cambiarMedicionGlucosa(
                                 medicion.numero,
-                                "hora",
+                                "momento",
                                 e.target.value
                               )
                             }
+                            maxLength={
+                              120
+                            }
+                            placeholder="Ej. Después del almuerzo"
                             className="admin-input"
                           />
 
@@ -1553,45 +1617,14 @@ export default function RegistroDiarioCliente({
 
                       </div>
 
+                    )
+                  )}
 
-                      <div className="mt-2">
-
-                        <label className="admin-label">
-                          Momento
-                        </label>
-
-                        <input
-                          type="text"
-                          disabled={
-                            bloqueado
-                          }
-                          value={
-                            medicion.momento
-                          }
-                          onChange={(e) =>
-                            cambiarMedicionGlucosa(
-                              medicion.numero,
-                              "momento",
-                              e.target.value
-                            )
-                          }
-                          maxLength={
-                            120
-                          }
-                          placeholder="Ej. Después del almuerzo"
-                          className="admin-input"
-                        />
-
-                      </div>
-
-                    </div>
-
-                  )
-                )}
+                </div>
 
               </div>
 
-            </div>
+            </details>
 
           </div>
 

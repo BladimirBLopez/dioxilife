@@ -51,16 +51,24 @@ export default async function ResumenCumplimiento({
       : 0;
 
   return (
-    <section className="space-y-4 rounded-xl bg-white p-4 shadow sm:p-5">
+    <section className="space-y-3 rounded-xl bg-white p-4 shadow">
 
-      <h2 className="text-base font-semibold text-gray-900">
-        Cómo va el cliente
-      </h2>
+      <div>
+
+        <p className="text-xs font-bold uppercase tracking-[0.12em] text-gray-400">
+          Cumplimiento
+        </p>
+
+        <p className="mt-1 text-sm font-semibold text-gray-900">
+          Actividad del cliente
+        </p>
+
+      </div>
 
 
       <div className="grid grid-cols-2 gap-2 text-center">
 
-        <div className="rounded-xl bg-gray-50 p-3">
+        <div className="rounded-xl bg-gray-50 p-2.5">
 
           <p className="text-[11px] text-gray-500">
             Hoy
@@ -84,7 +92,7 @@ export default async function ResumenCumplimiento({
         </div>
 
 
-        <div className="rounded-xl bg-gray-50 p-3">
+        <div className="rounded-xl bg-gray-50 p-2.5">
 
           <p className="text-[11px] text-gray-500">
             {diaActual >= 7
@@ -117,27 +125,17 @@ export default async function ResumenCumplimiento({
 
         <div className="space-y-3">
 
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-2.5">
 
             <p className="text-xs font-semibold text-amber-900">
-              Le falta hoy
+              {pendientesHoy.length === 1
+                ? "Queda 1 pendiente hoy"
+                : `Quedan ${pendientesHoy.length} pendientes hoy`}
             </p>
 
-            <ul className="mt-1.5 space-y-1">
-
-              {pendientesHoy.map((pendiente) => (
-                <li
-                  key={pendiente.id}
-                  className="text-xs text-amber-800"
-                >
-                  • {pendiente.titulo}
-                  {pendiente.hora
-                    ? ` (${pendiente.hora})`
-                    : ""}
-                </li>
-              ))}
-
-            </ul>
+            <p className="mt-1 text-[11px] leading-5 text-amber-800">
+              Revisa el registro diario para ver el detalle de las actividades.
+            </p>
 
           </div>
 

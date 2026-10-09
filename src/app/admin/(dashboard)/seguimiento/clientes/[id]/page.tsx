@@ -692,9 +692,32 @@ export default async function SeguimientoClientePage({
       )}
 
 
-      <section className="rounded-xl bg-white px-4 py-2 shadow sm:px-5">
+      <details className="group overflow-hidden rounded-xl bg-white shadow">
 
-        <dl className="divide-y divide-gray-100">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 sm:p-5">
+
+          <div>
+
+            <p className="text-sm font-semibold text-gray-900">
+              Datos del cliente
+            </p>
+
+            <p className="mt-1 text-xs text-gray-500">
+              Contacto, origen, compra, fechas y nota interna.
+            </p>
+
+          </div>
+
+          <span className="shrink-0 text-gray-400 transition group-open:rotate-180">
+            ▾
+          </span>
+
+        </summary>
+
+
+        <div className="border-t border-gray-100 px-4 py-2 sm:px-5">
+
+          <dl className="divide-y divide-gray-100">
 
           <Fila etiqueta="WhatsApp">
             {seguimiento.telefonoCliente ||
@@ -732,24 +755,26 @@ export default async function SeguimientoClientePage({
             {inicioReal || "Sin iniciar"}
           </Fila>
 
-        </dl>
+          </dl>
 
 
-        {seguimiento.observacionInterna && (
-          <div className="mb-3 rounded-lg bg-amber-50 p-3">
+          {seguimiento.observacionInterna && (
+            <div className="mb-3 rounded-lg bg-amber-50 p-3">
 
-            <p className="text-xs font-semibold text-amber-900">
-              Nota interna
-            </p>
+              <p className="text-xs font-semibold text-amber-900">
+                Nota interna
+              </p>
 
-            <p className="mt-1 whitespace-pre-wrap text-xs text-amber-800">
-              {seguimiento.observacionInterna}
-            </p>
+              <p className="mt-1 whitespace-pre-wrap text-xs text-amber-800">
+                {seguimiento.observacionInterna}
+              </p>
 
-          </div>
-        )}
+            </div>
+          )}
 
-      </section>
+        </div>
+
+      </details>
 
 
       <HistorialWhatsApp
@@ -757,19 +782,37 @@ export default async function SeguimientoClientePage({
       />
 
 
-      <p className="px-1 text-xs text-gray-500">
-        {seguimiento.actividades.length}{" "}
-        actividades ·{" "}
-        {seguimiento.progresos.length}{" "}
-        registros completados
-      </p>
-
-
-      <div
+      <details
         id="agenda-individual"
-        className="scroll-mt-5"
+        className="group scroll-mt-5 overflow-hidden rounded-xl bg-white shadow"
       >
-        <AgendaCliente
+
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 sm:p-5">
+
+          <div>
+
+            <p className="text-sm font-semibold text-gray-900">
+              Administrar protocolo
+            </p>
+
+            <p className="mt-1 text-xs text-gray-500">
+              Edita actividades, horarios, indicaciones y protocolos adicionales.
+            </p>
+
+          </div>
+
+          <span className="shrink-0 text-gray-400 transition group-open:rotate-180">
+            ▾
+          </span>
+
+        </summary>
+
+
+        <div className="border-t border-gray-100 p-3 sm:p-4">
+
+          <AgendaCliente
+        tituloAgenda="Agenda del seguimiento"
+        descripcionAgenda="Configuración completa del protocolo de este cliente."
         seguimientoId={seguimiento.id}
         duracionDias={seguimiento.duracionDias}
         estado={seguimiento.estado}
@@ -797,7 +840,10 @@ export default async function SeguimientoClientePage({
           })
         )}
         />
-      </div>
+
+        </div>
+
+      </details>
 
     </div>
   );
