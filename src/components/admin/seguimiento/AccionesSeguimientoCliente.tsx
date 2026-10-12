@@ -23,6 +23,7 @@ import {
 } from "@/lib/whatsapp-cliente";
 
 import BotonInformeSeguimiento from "@/components/admin/seguimiento/BotonInformeSeguimiento";
+import BotonInstruccionesPeriodo from "@/components/admin/seguimiento/BotonInstruccionesPeriodo";
 
 type Confirmacion =
   | "PRIMER_ENVIO"
@@ -231,6 +232,10 @@ export default function AccionesSeguimientoCliente({
             }
           />
         )}
+
+        <BotonInstruccionesPeriodo
+          seguimientoId={seguimientoId}
+        />
 
 
         {haEnviado && (
