@@ -4,6 +4,7 @@ import {
 } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { hayHistorialSeguimiento } from "@/lib/seguimiento-historial";
 import { obtenerAdminActual } from "@/lib/admin-auth";
 
 function fechaBoliviaActual() {
@@ -152,8 +153,18 @@ export async function PATCH(
       "BORRADOR" ||
     programado
   ) {
-    await prisma.$transaction(
+    const eliminado = await prisma.$transaction(
       async (tx) => {
+        const tieneHistorial =
+          await hayHistorialSeguimiento(
+            tx,
+            miembro.seguimientoId
+          );
+
+        if (tieneHistorial) {
+          return false;
+        }
+
         await tx.miembroGrupoSeguimiento.delete({
           where: {
             id:
@@ -167,8 +178,22 @@ export async function PATCH(
               miembro.seguimientoId,
           },
         });
+
+        return true;
       }
     );
+
+    if (!eliminado) {
+      return NextResponse.json(
+        {
+          error:
+            "Este participante tiene registros guardados. No se puede eliminar sin perder historial.",
+        },
+        {
+          status: 409,
+        }
+      );
+    }
 
     return NextResponse.json({
       ok: true,

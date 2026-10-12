@@ -4,6 +4,7 @@ import {
 } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { hayProgresoEnIndicacionesPorIds } from "@/lib/seguimiento-historial";
 import { obtenerAdminActual } from "@/lib/admin-auth";
 import { obtenerDiaSeguimiento } from "@/lib/seguimiento-publico";
 
@@ -576,6 +577,21 @@ export async function DELETE(
     !contexto.seguimiento
       .fechaInicio
   ) {
+
+    if (
+      await hayProgresoEnIndicacionesPorIds([indicacionId])
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Esta indicación tiene historial registrado. No se puede eliminar.",
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
     await prisma.indicacionActividadSeguimiento.delete({
       where: {
         id:
@@ -629,6 +645,21 @@ export async function DELETE(
     contexto.actividad
       .diaInicio
   ) {
+
+    if (
+      await hayProgresoEnIndicacionesPorIds([indicacionId])
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Esta indicación tiene historial registrado. No se puede eliminar.",
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
     await prisma.indicacionActividadSeguimiento.delete({
       where: {
         id:

@@ -4,6 +4,7 @@ import {
 } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { hayProgresoEnIndicaciones } from "@/lib/seguimiento-historial";
 import { obtenerAdminActual } from "@/lib/admin-auth";
 
 import {
@@ -733,7 +734,10 @@ export async function DELETE(
     );
 
   if (
-    tieneProgreso
+    tieneProgreso ||
+    (await hayProgresoEnIndicaciones(
+      copias.map((copia) => copia.id)
+    ))
   ) {
     return NextResponse.json(
       {

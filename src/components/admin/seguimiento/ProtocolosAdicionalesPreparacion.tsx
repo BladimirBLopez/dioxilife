@@ -50,6 +50,24 @@ const formularioVacio = {
   recordatorio: "NINGUNO" as Recordatorio,
 };
 
+function duracionPeriodo(
+  diaInicio: number,
+  diaFin: number | null,
+  duracionSeguimiento: number
+) {
+  const fin =
+    diaFin ??
+    duracionSeguimiento;
+
+  return Math.max(
+    fin -
+      diaInicio +
+      1,
+    1
+  );
+}
+
+
 function textoRecordatorio(
   valor: Recordatorio
 ) {
@@ -441,6 +459,16 @@ export default function ProtocolosAdicionalesPreparacion({
     [...actividades].sort(
       (a, b) => {
         if (
+          a.diaInicio !==
+          b.diaInicio
+        ) {
+          return (
+            a.diaInicio -
+            b.diaInicio
+          );
+        }
+
+        if (
           a.hora &&
           b.hora
         ) {
@@ -449,12 +477,19 @@ export default function ProtocolosAdicionalesPreparacion({
               b.hora
             );
 
-          if (porHora !== 0) {
+          if (
+            porHora !==
+            0
+          ) {
             return porHora;
           }
-        } else if (a.hora) {
+        } else if (
+          a.hora
+        ) {
           return -1;
-        } else if (b.hora) {
+        } else if (
+          b.hora
+        ) {
           return 1;
         }
 
@@ -489,7 +524,7 @@ export default function ProtocolosAdicionalesPreparacion({
                 </h2>
 
                 <p className="mt-1 text-sm leading-6 text-gray-500">
-                  Agrega únicamente los protocolos complementarios que necesita este cliente.
+                  Organiza los distintos protocolos o fases que tendrá el cliente durante su seguimiento general.
                 </p>
 
               </div>
@@ -642,14 +677,34 @@ export default function ProtocolosAdicionalesPreparacion({
                           <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
 
                             <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">
-                              Día{" "}
+                              Días{" "}
                               {
                                 actividad.diaInicio
                               }
-                              {actividad.diaFin !==
-                              null
-                                ? ` al ${actividad.diaFin}`
-                                : " en adelante"}
+                              {" – "}
+                              {
+                                actividad.diaFin ??
+                                duracionDias
+                              }
+                            </span>
+
+                            <span className="rounded-full bg-purple-50 px-2.5 py-1 font-medium text-purple-700">
+                              {
+                                duracionPeriodo(
+                                  actividad.diaInicio,
+                                  actividad.diaFin,
+                                  duracionDias
+                                )
+                              }{" "}
+                              {
+                                duracionPeriodo(
+                                  actividad.diaInicio,
+                                  actividad.diaFin,
+                                  duracionDias
+                                ) === 1
+                                  ? "día"
+                                  : "días"
+                              }
                             </span>
 
 
@@ -870,7 +925,7 @@ export default function ProtocolosAdicionalesPreparacion({
                 </p>
 
                 <p className="mt-1 text-xs leading-5 text-blue-700/80">
-                  Define su horario y durante qué días estará vigente.
+                  Define el periodo de esta fase dentro del seguimiento general de {duracionDias} días.
                 </p>
               </div>
 
@@ -899,7 +954,7 @@ export default function ProtocolosAdicionalesPreparacion({
 
                 <div>
                   <label className="admin-label">
-                    Desde el día
+                    Día de inicio
                   </label>
 
                   <input
@@ -919,7 +974,7 @@ export default function ProtocolosAdicionalesPreparacion({
 
                 <div>
                   <label className="admin-label">
-                    Hasta el día
+                    Día final
                   </label>
 
                   <input
@@ -934,15 +989,39 @@ export default function ProtocolosAdicionalesPreparacion({
                       })
                     }
                     className="admin-input"
-                    placeholder="Opcional"
+                    placeholder="Opcional: hasta el último día"
                   />
                 </div>
 
               </div>
 
-              <p className="mt-2 text-xs leading-5 text-gray-500">
-                Si no defines un día final, seguirá activo hasta terminar el seguimiento.
-              </p>
+              <div className="mt-3 rounded-xl border border-blue-100 bg-white px-4 py-3">
+                <p className="text-xs font-semibold text-blue-800">
+                  Periodo configurado
+                </p>
+
+                <p className="mt-1 text-sm font-bold text-gray-900">
+                  Día{" "}
+                  {
+                    Number(
+                      form.diaInicio
+                    ) ||
+                    1
+                  }
+                  {" al "}
+                  {
+                    form.diaFin
+                      ? Number(
+                          form.diaFin
+                        )
+                      : duracionDias
+                  }
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-gray-500">
+                  Puedes programar varios protocolos el mismo día. Si no defines un día final, continuará hasta terminar el seguimiento.
+                </p>
+              </div>
 
               <div className="mt-4">
                 <label className="admin-label">

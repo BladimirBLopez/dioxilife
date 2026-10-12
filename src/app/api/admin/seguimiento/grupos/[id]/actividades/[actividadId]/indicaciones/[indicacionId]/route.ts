@@ -583,7 +583,7 @@ export async function DELETE(
     ctx.actividad
       .diaInicio
   ) {
-    await prisma.$transaction(
+    const eliminado = await prisma.$transaction(
       async (
         tx
       ) => {
@@ -601,42 +601,41 @@ export async function DELETE(
             }
           );
 
-        for (
-          const copia of
-          copias
-        ) {
+        const hijasIds = copias.flatMap((copia) => {
           const hija =
             copia.indicaciones.find(
-              (
-                item
-              ) =>
-                item.orden ===
-                  ctx.indicacion
-                    .orden &&
-                item.hora ===
-                  ctx.indicacion
-                    .hora &&
-                item.texto ===
-                  ctx.indicacion
-                    .texto
+              (item) =>
+                item.orden === ctx.indicacion.orden &&
+                item.hora === ctx.indicacion.hora &&
+                item.texto === ctx.indicacion.texto
             ) ??
             copia.indicaciones.find(
-              (
-                item
-              ) =>
-                item.orden ===
-                ctx.indicacion
-                  .orden
+              (item) =>
+                item.orden === ctx.indicacion.orden
             );
 
-          if (hija) {
-            await tx.indicacionActividadSeguimiento.delete({
-              where: {
-                id:
-                  hija.id,
+          return hija ? [hija.id] : [];
+        });
+
+        const historial =
+          await tx.progresoIndicacion.count({
+            where: {
+              indicacionActividadSeguimientoId: {
+                in: hijasIds,
               },
-            });
-          }
+            },
+          });
+
+        if (historial > 0) {
+          return false;
+        }
+
+        for (const hijaId of hijasIds) {
+          await tx.indicacionActividadSeguimiento.delete({
+            where: {
+              id: hijaId,
+            },
+          });
         }
 
         await tx.indicacionActividadPlan.delete({
@@ -646,8 +645,21 @@ export async function DELETE(
                 .id,
           },
         });
+        return true;
       }
     );
+
+    if (!eliminado) {
+      return NextResponse.json(
+        {
+          error:
+            "Una indicación tiene historial registrado. No se puede eliminar.",
+        },
+        {
+          status: 409,
+        }
+      );
+    }
 
     return NextResponse.json({
       ok: true,

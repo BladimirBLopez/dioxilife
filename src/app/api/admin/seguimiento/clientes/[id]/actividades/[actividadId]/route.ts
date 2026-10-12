@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { hayProgresoEnIndicaciones } from "@/lib/seguimiento-historial";
 import { obtenerAdminActual } from "@/lib/admin-auth";
 import { obtenerDiaSeguimiento } from "@/lib/seguimiento-publico";
 
@@ -838,8 +839,8 @@ export async function DELETE(
   }
 
   if (
-    actividad._count
-      .progresos > 0
+    actividad._count.progresos > 0 ||
+    (await hayProgresoEnIndicaciones([actividadId]))
   ) {
     return NextResponse.json(
       {
