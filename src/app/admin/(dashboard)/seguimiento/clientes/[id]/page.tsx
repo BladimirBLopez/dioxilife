@@ -13,6 +13,7 @@ import {
   type NivelComunicacion,
 } from "@/lib/seguimiento-estado";
 import AgendaCliente from "@/components/admin/seguimiento/AgendaCliente";
+import AccesoRapidoProtocolos from "@/components/admin/seguimiento/AccesoRapidoProtocolos";
 import AccionesSeguimientoCliente from "@/components/admin/seguimiento/AccionesSeguimientoCliente";
 import GestionSeguimientoCliente from "@/components/admin/seguimiento/GestionSeguimientoCliente";
 import HistorialWhatsApp from "@/components/admin/seguimiento/HistorialWhatsApp";
@@ -490,6 +491,8 @@ export default async function SeguimientoClientePage({
       </div>
 
 
+      <AccesoRapidoProtocolos />
+
       <GestionSeguimientoCliente
         seguimientoId={
           seguimiento.id
@@ -795,7 +798,7 @@ export default async function SeguimientoClientePage({
           <div>
 
             <p className="text-sm font-semibold text-gray-900">
-              Administrar protocolo
+              Ver agenda completa y editar
             </p>
 
             <p className="mt-1 text-xs text-gray-500">
