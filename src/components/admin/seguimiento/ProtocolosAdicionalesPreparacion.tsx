@@ -7,6 +7,7 @@ import Modal from "@/components/Modal";
 import SelectorHora from "@/components/admin/seguimiento/SelectorHora";
 import IndicacionesActividadPreparacion from "@/components/admin/seguimiento/IndicacionesActividadPreparacion";
 import AgregarDesdeBiblioteca from "@/components/admin/seguimiento/AgregarDesdeBiblioteca";
+import SeleccionarProtocoloGuardado from "@/components/admin/seguimiento/SeleccionarProtocoloGuardado";
 
 type Recordatorio =
   | "NINGUNO"
@@ -531,6 +532,14 @@ export default function ProtocolosAdicionalesPreparacion({
 
 
               <div className="flex flex-wrap gap-2">
+
+                {seguimientoId && (
+                  <SeleccionarProtocoloGuardado
+                    seguimientoId={seguimientoId}
+                    duracionDias={duracionDias}
+                    onAgregada={() => router.refresh()}
+                  />
+                )}
 
                 {bibliotecaPlanId && (
                   <AgregarDesdeBiblioteca
