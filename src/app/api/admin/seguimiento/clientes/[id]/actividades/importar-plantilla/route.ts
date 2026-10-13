@@ -248,10 +248,7 @@ export async function POST(
           const finNuevo =
             actividad.diaFin === null
               ? fin
-              : Math.min(
-                  fin,
-                  inicio + actividad.diaFin - 1
-                );
+              : inicio + actividad.diaFin - 1;
 
           return {
             origen: actividad,
@@ -261,16 +258,28 @@ export async function POST(
         }
       );
 
-      if (
-        actividades.some(
+      const actividadIncompatible =
+        actividades.find(
           (actividad) =>
             actividad.diaInicio > fin ||
+            actividad.diaFin > fin ||
             actividad.diaFin < actividad.diaInicio
-        )
-      ) {
+        );
+
+      if (actividadIncompatible) {
+        const diaNecesario =
+          actividadIncompatible.origen.diaFin ??
+          actividadIncompatible.origen.diaInicio;
+
         return {
           error:
-            "El período elegido es demasiado corto para las actividades programadas en esta plantilla. Revisa sus días.",
+            'La actividad "' +
+            actividadIncompatible.origen.titulo +
+            '" necesita al menos ' +
+            diaNecesario +
+            ' días según la plantilla. Elegiste ' +
+            (fin - inicio + 1) +
+            ' días. Amplía el período o ajusta la plantilla.',
           status: 400,
         };
       }

@@ -3,6 +3,7 @@ import SeleccionarProtocoloGuardado from "@/components/admin/seguimiento/Selecci
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import DuracionRapidaProtocolo from "@/components/admin/seguimiento/DuracionRapidaProtocolo";
 import { toast } from "sonner";
 import Modal from "@/components/Modal";
 import SelectorHora from "@/components/admin/seguimiento/SelectorHora";
@@ -1029,6 +1030,19 @@ export default function AgendaCliente({
 
                 {(!seguimientoId || form.seccion === "ADICIONAL") && (
                   <>
+                    {seguimientoId && form.seccion === "ADICIONAL" && (
+                      <DuracionRapidaProtocolo
+                        inicio={form.diaInicio}
+                        fin={form.diaFin}
+                        duracionDias={duracionDias}
+                        onFinChange={(diaFin) =>
+                          setForm((anterior) => ({
+                            ...anterior,
+                            diaFin,
+                          }))
+                        }
+                      />
+                    )}
                 <div>
                   <label className="admin-label">
                     Desde el día

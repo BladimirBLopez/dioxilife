@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import DuracionRapidaProtocolo from "@/components/admin/seguimiento/DuracionRapidaProtocolo";
 
 type Protocolo = {
   id: string;
@@ -257,11 +258,23 @@ export default function SeleccionarProtocoloGuardado({
                     <p className="mt-2 text-xs text-purple-800">
                       Se copiarán todas sus actividades,
                       indicaciones y horarios.
+                      Si alguna actividad no cabe en el
+                      período elegido, el sistema te pedirá
+                      ampliar los días antes de guardar.
                     </p>
                   </div>
                 )}
 
                 <div className="grid grid-cols-2 gap-3">
+                  {actual && (
+                    <DuracionRapidaProtocolo
+                      inicio={inicio}
+                      fin={fin}
+                      duracionDias={duracionDias}
+                      onFinChange={setFin}
+                    />
+                  )}
+
                   <div>
                     <label className="mb-1 block text-sm font-semibold">
                       Día de inicio
