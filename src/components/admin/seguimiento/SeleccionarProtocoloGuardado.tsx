@@ -5,14 +5,10 @@ import { toast } from "sonner";
 
 type Protocolo = {
   id: string;
-  titulo: string;
+  nombre: string;
   descripcion: string | null;
-  hora: string | null;
-  diaInicio: number;
-  diaFin: number | null;
-  plan: {
-    nombre: string;
-  };
+  duracionDias: number;
+  actividades: number;
 };
 
 export default function SeleccionarProtocoloGuardado({
@@ -31,10 +27,10 @@ export default function SeleccionarProtocoloGuardado({
   const [seleccionado, setSeleccionado] = useState("");
   const [busqueda, setBusqueda] = useState("");
   const [inicio, setInicio] = useState("1");
-  const [fin, setFin] = useState("");
+  const [fin, setFin] = useState(String(duracionDias));
 
   const visibles = protocolos.filter((p) =>
-    `${p.titulo} ${p.descripcion ?? ""}`
+    `${p.nombre} ${p.descripcion ?? ""}`
       .toLocaleLowerCase("es")
       .includes(busqueda.trim().toLocaleLowerCase("es"))
   );
@@ -47,11 +43,11 @@ export default function SeleccionarProtocoloGuardado({
     setSeleccionado("");
     setBusqueda("");
     setInicio("1");
-    setFin("");
+    setFin(String(duracionDias));
 
     try {
       const respuesta = await fetch(
-        `/api/admin/seguimiento/clientes/${seguimientoId}/actividades/importar`,
+        `/api/admin/seguimiento/clientes/${seguimientoId}/actividades/importar-plantilla`,
         { cache: "no-store" }
       );
 
@@ -64,7 +60,7 @@ export default function SeleccionarProtocoloGuardado({
       }
 
       setProtocolos(
-        Array.isArray(datos.protocolos) ? datos.protocolos : []
+        Array.isArray(datos.plantillas) ? datos.plantillas : []
       );
     } catch (error) {
       toast.error(
@@ -82,16 +78,15 @@ export default function SeleccionarProtocoloGuardado({
     if (guardando || !actual) return;
 
     const diaInicio = Number(inicio);
-    const diaFin = fin.trim() === "" ? null : Number(fin);
+    const diaFin = Number(fin);
 
     if (
       !Number.isInteger(diaInicio) ||
       diaInicio < 1 ||
       diaInicio > duracionDias ||
-      (diaFin !== null &&
-        (!Number.isInteger(diaFin) ||
-          diaFin < diaInicio ||
-          diaFin > duracionDias))
+      !Number.isInteger(diaFin) ||
+      diaFin < diaInicio ||
+      diaFin > duracionDias
     ) {
       toast.error(
         `Elige días válidos dentro del seguimiento de ${duracionDias} días.`
@@ -103,14 +98,14 @@ export default function SeleccionarProtocoloGuardado({
 
     try {
       const respuesta = await fetch(
-        `/api/admin/seguimiento/clientes/${seguimientoId}/actividades/importar`,
+        `/api/admin/seguimiento/clientes/${seguimientoId}/actividades/importar-plantilla`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            actividadPlanId: actual.id,
+            planId: actual.id,
             diaInicio,
             diaFin,
           }),
@@ -126,12 +121,12 @@ export default function SeleccionarProtocoloGuardado({
       }
 
       toast.success(
-        "Protocolo agregado con sus instrucciones."
+        "Protocolo completo agregado con sus instrucciones."
       );
 
       setSeleccionado("");
       setInicio("1");
-      setFin("");
+      setFin(String(duracionDias));
       setAbierto(false);
       onAgregada();
     } catch (error) {
@@ -189,8 +184,8 @@ export default function SeleccionarProtocoloGuardado({
               </p>
             ) : protocolos.length === 0 ? (
               <p className="mt-5 rounded-xl bg-gray-50 p-4 text-sm text-gray-700">
-                No hay protocolos adicionales guardados en
-                las plantillas. Primero prepara uno en una plantilla.
+                No hay plantillas con actividades.
+                Primero crea tu protocolo en Nueva plantilla.
               </p>
             ) : (
               <div className="mt-5 space-y-4">
@@ -212,14 +207,31 @@ export default function SeleccionarProtocoloGuardado({
                   </label>
                   <select
                     value={seleccionado}
-                    onChange={(e) => setSeleccionado(e.target.value)}
+                    onChange={(e) => {
+                      const elegido = protocolos.find(
+                        (p) => p.id === e.target.value
+                      );
+
+                      setSeleccionado(e.target.value);
+
+                      if (elegido) {
+                        setFin(
+                          String(
+                            Math.min(
+                              duracionDias,
+                              Number(inicio) + elegido.duracionDias - 1
+                            )
+                          )
+                        );
+                      }
+                    }}
                     className="w-full rounded-xl border p-3 text-sm"
                   >
                     <option value="">Selecciona uno...</option>
                     {visibles.map((p) => (
                       <option key={p.id} value={p.id}>
-                        {p.titulo} — {p.plan.nombre}
-                        {p.hora ? ` - ${p.hora}` : ""}
+                        {p.nombre} ({p.actividades} actividades)
+
                       </option>
                     ))}
                   </select>
@@ -227,9 +239,9 @@ export default function SeleccionarProtocoloGuardado({
 
                 {actual && (
                   <div className="rounded-xl bg-purple-50 p-3 text-sm">
-                    <p className="font-semibold">{actual.titulo}</p>
+                    <p className="font-semibold">{actual.nombre}</p>
                     <p className="mt-1 text-xs text-purple-800">
-                      Plantilla: {actual.plan.nombre}
+                      Plantilla de {actual.duracionDias} días · {actual.actividades} actividades
                     </p>
                     {actual.descripcion && (
                       <p className="mt-1 whitespace-pre-wrap text-gray-700">
@@ -237,8 +249,8 @@ export default function SeleccionarProtocoloGuardado({
                       </p>
                     )}
                     <p className="mt-2 text-xs text-purple-800">
-                      Sus indicaciones y horarios se copiarán
-                      automáticamente.
+                      Se copiarán todas sus actividades,
+                      indicaciones y horarios.
                     </p>
                   </div>
                 )}
@@ -253,7 +265,28 @@ export default function SeleccionarProtocoloGuardado({
                       min={1}
                       max={duracionDias}
                       value={inicio}
-                      onChange={(e) => setInicio(e.target.value)}
+                      onChange={(e) => {
+                        const valor = e.target.value;
+                        setInicio(valor);
+
+                        const dia = Number(valor);
+
+                        if (
+                          actual &&
+                          Number.isInteger(dia) &&
+                          dia >= 1 &&
+                          dia <= duracionDias
+                        ) {
+                          setFin(
+                            String(
+                              Math.min(
+                                duracionDias,
+                                dia + actual.duracionDias - 1
+                              )
+                            )
+                          );
+                        }
+                      }}
                       className="w-full rounded-xl border p-3"
                     />
                   </div>
@@ -268,15 +301,15 @@ export default function SeleccionarProtocoloGuardado({
                       max={duracionDias}
                       value={fin}
                       onChange={(e) => setFin(e.target.value)}
-                      placeholder="Opcional"
+                      placeholder="Día final"
                       className="w-full rounded-xl border p-3"
                     />
                   </div>
                 </div>
 
                 <p className="text-xs text-gray-600">
-                  Si dejas vacío el día final, el protocolo
-                  continuará hasta el último día del seguimiento.
+                  Indica el día final. Las actividades
+                  deben caber en ese período.
                 </p>
 
                 <button
