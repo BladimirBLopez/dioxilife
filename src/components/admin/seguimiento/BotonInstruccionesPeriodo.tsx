@@ -12,6 +12,7 @@ type Indicacion = {
 
 type Protocolo = {
   id: string;
+  seccion?: "PRINCIPAL" | "ADICIONAL";
   titulo: string;
   descripcion: string | null;
   momento: string | null;
@@ -57,6 +58,7 @@ function obtenerPeriodos(datos: Datos): Periodo[] {
   const cortes = new Set<number>([1, total + 1]);
 
   for (const p of validos) {
+    if (p.seccion === "PRINCIPAL") continue;
     const fin = Math.min(p.diaFin ?? total, total);
     cortes.add(p.diaInicio);
     cortes.add(fin + 1);
@@ -72,11 +74,15 @@ function obtenerPeriodos(datos: Datos): Periodo[] {
     const protocolos = validos
       .filter(
         (p) =>
-          p.diaInicio <= inicio &&
-          (p.diaFin ?? total) >= inicio
+          p.diaInicio <= fin &&
+          (p.diaFin ??
+            (p.seccion === "PRINCIPAL" ? p.diaInicio : total)
+          ) >= inicio
       )
       .sort(
         (a, b) =>
+          (a.seccion === "PRINCIPAL" ? 0 : 1) -
+            (b.seccion === "PRINCIPAL" ? 0 : 1) ||
           (a.hora ?? "").localeCompare(b.hora ?? "") ||
           a.orden - b.orden
       );
@@ -110,13 +116,17 @@ async function cargarLogo(): Promise<string | null> {
 
 export default function BotonInstruccionesPeriodo({
   seguimientoId,
+  datosCliente,
 }: {
-  seguimientoId: string;
+  seguimientoId?: string;
+  datosCliente?: Datos;
 }) {
   const [abierto, setAbierto] = useState(false);
   const [cargando, setCargando] = useState(false);
   const [generando, setGenerando] = useState(false);
-  const [datos, setDatos] = useState<Datos | null>(null);
+  const [datos, setDatos] = useState<Datos | null>(
+    datosCliente ?? null
+  );
   const [indice, setIndice] = useState("0");
   const [frase, setFrase] = useState(
     "Cada paso cuenta. Sigue adelante con constancia."
@@ -126,9 +136,16 @@ export default function BotonInstruccionesPeriodo({
 
   async function abrir() {
     setAbierto(true);
+    setIndice("0");
+
+    if (datosCliente) {
+      setDatos(datosCliente);
+      setCargando(false);
+      return;
+    }
+
     setCargando(true);
     setDatos(null);
-    setIndice("0");
 
     try {
       const respuesta = await fetch(
@@ -262,7 +279,22 @@ export default function BotonInstruccionesPeriodo({
 
       y += 4;
 
+      let seccionAnterior = "";
+
       for (const protocolo of periodo.protocolos) {
+        if (datosCliente) {
+          const seccion =
+            protocolo.seccion === "PRINCIPAL"
+              ? "PROTOCOLO PRINCIPAL"
+              : "PROTOCOLOS ADICIONALES";
+
+          if (seccion !== seccionAnterior) {
+            asegurar(17);
+            escribir(seccion, 12, true);
+            seccionAnterior = seccion;
+          }
+        }
+
         asegurar(23);
 
         doc.setDrawColor(210);
@@ -273,7 +305,10 @@ export default function BotonInstruccionesPeriodo({
 
         escribir(
           `Aplicacion: dia ${protocolo.diaInicio} al ${
-            protocolo.diaFin ?? datos.cliente.duracionDias
+            protocolo.diaFin ??
+              (protocolo.seccion === "PRINCIPAL"
+                ? protocolo.diaInicio
+                : datos.cliente.duracionDias)
           }`
         );
 
@@ -347,7 +382,9 @@ export default function BotonInstruccionesPeriodo({
         onClick={() => void abrir()}
         className="inline-flex flex-1 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-800 hover:bg-blue-100 sm:flex-none"
       >
-        Imprimir instrucciones
+        {datosCliente
+          ? "Imprimir mis protocolos"
+          : "Imprimir instrucciones"}
       </button>
 
       {abierto && (
@@ -360,7 +397,9 @@ export default function BotonInstruccionesPeriodo({
           >
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-bold text-gray-900">
-                Imprimir instrucciones
+                {datosCliente
+                  ? "Mis protocolos para imprimir"
+                  : "Imprimir instrucciones"}
               </h2>
               <button
                 type="button"
@@ -372,8 +411,9 @@ export default function BotonInstruccionesPeriodo({
             </div>
 
             <p className="mt-2 text-sm text-gray-600">
-              Selecciona un período. Se incluirán juntos todos
-              los protocolos adicionales que correspondan.
+              {datosCliente
+                ? "Selecciona un período. El PDF incluirá las actividades principales y adicionales que correspondan."
+                : "Selecciona un período. Se incluirán juntos todos los protocolos adicionales que correspondan."}
             </p>
 
             {cargando ? (
@@ -386,8 +426,8 @@ export default function BotonInstruccionesPeriodo({
               </p>
             ) : periodos.length === 0 ? (
               <p className="mt-5 text-sm text-gray-600">
-                Este seguimiento no tiene protocolos adicionales
-                disponibles para imprimir.
+                No hay actividades disponibles para imprimir
+                en este seguimiento.
               </p>
             ) : (
               <div className="mt-5 space-y-4">

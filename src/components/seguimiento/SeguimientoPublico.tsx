@@ -30,6 +30,7 @@ import {
 
 import { toast } from "sonner";
 import MedicionesSeguimientoPublico from "@/components/seguimiento/MedicionesSeguimientoPublico";
+import BotonInstruccionesPeriodo from "@/components/admin/seguimiento/BotonInstruccionesPeriodo";
 import RankingGrupoPublico from "@/components/seguimiento/RankingGrupoPublico";
 
 import {
@@ -2720,6 +2721,21 @@ export default function SeguimientoPublico({
 
   return (
     <main className="min-h-screen bg-[#F8F7FC] pb-24">
+
+      <section className="mx-auto w-full max-w-3xl px-4 pt-4">
+        <div className="rounded-2xl border border-[#E9E4F2] bg-white p-3 shadow-sm">
+          <BotonInstruccionesPeriodo
+            datosCliente={{
+              cliente: {
+                nombreCliente: seguimiento.nombreCliente,
+                nombrePlan: seguimiento.nombrePlan,
+                duracionDias: seguimiento.duracionDias,
+              },
+              protocolos: seguimiento.actividades,
+            }}
+          />
+        </div>
+      </section>
 
       {grupoFinalizado && (
         <div className="mx-auto w-full max-w-3xl px-4 pt-4">
