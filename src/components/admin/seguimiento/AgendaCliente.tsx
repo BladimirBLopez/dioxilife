@@ -124,7 +124,20 @@ export default function AgendaCliente({
 
   function abrirNueva() {
     setActividadEditando(null);
-    setForm(vacio);
+    setForm(
+      seguimientoId
+        ? {
+            ...vacio,
+            diaInicio: String(
+              Math.max(
+                1,
+                Math.min(duracionDias, diaActual ?? 1)
+              )
+            ),
+            diaFin: String(duracionDias),
+          }
+        : vacio
+    );
     setModalAbierto(true);
   }
 
@@ -869,6 +882,20 @@ export default function AgendaCliente({
                       setForm({
                         ...form,
                         seccion: "PRINCIPAL",
+                        ...(seguimientoId
+                          ? {
+                              diaInicio: String(
+                                Math.max(
+                                  1,
+                                  Math.min(
+                                    duracionDias,
+                                    diaActual ?? 1
+                                  )
+                                )
+                              ),
+                              diaFin: String(duracionDias),
+                            }
+                          : {}),
                       })
                     }
                     className={`rounded-xl border px-4 py-3 text-left transition ${
@@ -1000,6 +1027,8 @@ export default function AgendaCliente({
                   />
                 </div>
 
+                {(!seguimientoId || form.seccion === "ADICIONAL") && (
+                  <>
                 <div>
                   <label className="admin-label">
                     Desde el día
@@ -1047,7 +1076,25 @@ export default function AgendaCliente({
                   />
                 </div>
 
+                  </>
+                )}
+
               </div>
+
+              {seguimientoId && form.seccion === "PRINCIPAL" && (
+                <p className="mt-3 text-xs leading-5 text-gray-600">
+                  {actividadEditando
+                    ? "Se conserva la programación de días que ya tiene esta actividad."
+                    : "Esta actividad se programará desde el día " +
+                      Math.max(
+                        1,
+                        Math.min(duracionDias, diaActual ?? 1)
+                      ) +
+                      " hasta el día " +
+                      duracionDias +
+                      "."}
+                </p>
+              )}
 
               {actividadEditando &&
                 actividadEditando.seccion === "ADICIONAL" &&

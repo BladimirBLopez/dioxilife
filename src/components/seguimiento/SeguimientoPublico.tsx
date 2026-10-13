@@ -493,13 +493,7 @@ function actividadCorrespondeDia(
   dia: number
 ) {
   const diaFin =
-    actividad.diaFin ??
-    (
-      actividad.seccion ===
-        "ADICIONAL"
-        ? Number.MAX_SAFE_INTEGER
-        : actividad.diaInicio
-    );
+    actividad.diaFin ?? Number.MAX_SAFE_INTEGER;
 
   return (
     dia >=

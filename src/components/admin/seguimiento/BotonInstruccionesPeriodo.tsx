@@ -75,9 +75,7 @@ function obtenerPeriodos(datos: Datos): Periodo[] {
       .filter(
         (p) =>
           p.diaInicio <= fin &&
-          (p.diaFin ??
-            (p.seccion === "PRINCIPAL" ? p.diaInicio : total)
-          ) >= inicio
+          (p.diaFin ?? total) >= inicio
       )
       .sort(
         (a, b) =>
@@ -306,9 +304,7 @@ export default function BotonInstruccionesPeriodo({
         escribir(
           `Aplicacion: dia ${protocolo.diaInicio} al ${
             protocolo.diaFin ??
-              (protocolo.seccion === "PRINCIPAL"
-                ? protocolo.diaInicio
-                : datos.cliente.duracionDias)
+              datos.cliente.duracionDias
           }`
         );
 

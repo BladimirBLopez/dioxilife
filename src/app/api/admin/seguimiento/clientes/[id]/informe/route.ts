@@ -29,13 +29,7 @@ function aplicaEnDia(
   duracionDias: number
 ) {
   const ultimoDia =
-    actividad.diaFin ??
-    (
-      actividad.seccion ===
-      "ADICIONAL"
-        ? duracionDias
-        : actividad.diaInicio
-    );
+    actividad.diaFin ?? duracionDias;
 
   return (
     dia >= actividad.diaInicio &&
