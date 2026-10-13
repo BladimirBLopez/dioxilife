@@ -14,19 +14,25 @@ type Protocolo = {
 export default function SeleccionarProtocoloGuardado({
   seguimientoId,
   duracionDias,
+  diaActual,
   onAgregada,
 }: {
   seguimientoId: string;
   duracionDias: number;
+  diaActual?: number | null;
   onAgregada: () => void;
 }) {
+  const inicioSugerido = String(
+    Math.max(1, Math.min(duracionDias, diaActual ?? 1))
+  );
+
   const [abierto, setAbierto] = useState(false);
   const [cargando, setCargando] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [protocolos, setProtocolos] = useState<Protocolo[]>([]);
   const [seleccionado, setSeleccionado] = useState("");
   const [busqueda, setBusqueda] = useState("");
-  const [inicio, setInicio] = useState("1");
+  const [inicio, setInicio] = useState(inicioSugerido);
   const [fin, setFin] = useState(String(duracionDias));
 
   const visibles = protocolos.filter((p) =>
@@ -42,7 +48,7 @@ export default function SeleccionarProtocoloGuardado({
     setCargando(true);
     setSeleccionado("");
     setBusqueda("");
-    setInicio("1");
+    setInicio(inicioSugerido);
     setFin(String(duracionDias));
 
     try {
@@ -125,7 +131,7 @@ export default function SeleccionarProtocoloGuardado({
       );
 
       setSeleccionado("");
-      setInicio("1");
+      setInicio(inicioSugerido);
       setFin(String(duracionDias));
       setAbierto(false);
       onAgregada();

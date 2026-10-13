@@ -1,4 +1,5 @@
 "use client";
+import SeleccionarProtocoloGuardado from "@/components/admin/seguimiento/SeleccionarProtocoloGuardado";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -516,13 +517,43 @@ export default function AgendaCliente({
           </div>
 
           {!bloqueado && (
-            <button
-              type="button"
-              onClick={abrirNueva}
-              className="admin-btn-primary"
-            >
-              Nueva actividad
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+
+              <button
+                type="button"
+                onClick={abrirNueva}
+                className="admin-btn-primary"
+              >
+                + Actividad principal
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setActividadEditando(null);
+                  setForm({
+                    ...vacio,
+                    seccion: "ADICIONAL",
+                    tipo: "TAREA",
+                    diaInicio: String(diaActual ?? 1),
+                  });
+                  setModalAbierto(true);
+                }}
+                className="rounded-lg border border-purple-300 bg-purple-50 px-4 py-2 text-sm font-semibold text-purple-800 hover:bg-purple-100"
+              >
+                + Protocolo adicional
+              </button>
+
+              {seguimientoId && (
+                <SeleccionarProtocoloGuardado
+                  seguimientoId={seguimientoId}
+                  duracionDias={duracionDias}
+                  diaActual={diaActual}
+                  onAgregada={() => router.refresh()}
+                />
+              )}
+
+            </div>
           )}
 
         </div>
