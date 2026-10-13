@@ -188,13 +188,7 @@ export async function PUT(
   }
 
   const ultimoDia =
-    actividad.diaFin ??
-    (
-      actividad.seccion ===
-        "ADICIONAL"
-        ? duracionAplicable
-        : actividad.diaInicio
-    );
+    actividad.diaFin ?? duracionAplicable;
 
   if (
     diaPlan <
