@@ -3945,7 +3945,7 @@ export default function SeguimientoPublico({
                               </h3>
 
 
-                              {momentoDiferente && (
+                              {momentoDiferente && actividad.momento !== "Importante" && (
                                 <p className="mt-0.5 text-xs font-medium text-brand-gray">
                                   {actividad.momento}
                                 </p>
@@ -4688,11 +4688,7 @@ export default function SeguimientoPublico({
                                       </div>
 
 
-                                      {esInformacion && (
-                                        <p className="mt-0.5 text-xs text-blue-700">
-                                          Información importante
-                                        </p>
-                                      )}
+
 
                                     </div>
 
