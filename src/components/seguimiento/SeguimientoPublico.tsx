@@ -3852,20 +3852,10 @@ export default function SeguimientoPublico({
                             }
                           >
 
-                            <div className="flex items-center gap-3">
-
-                              <p
-                                className={`shrink-0 text-xs font-extrabold uppercase tracking-[0.14em] ${
-                                  actividad.seccion === "ADICIONAL"
-                                    ? "text-purple-700"
-                                    : "text-brand-blue"
-                                }`}
-                              >
+                            <div className="rounded-xl bg-purple-700 px-4 py-3 text-center shadow-sm">
+                              <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-white">
                                 Protocolos adicionales
                               </p>
-
-                              <div className="h-px flex-1 bg-[#E9E4F2]" />
-
                             </div>
 
                           </div>
@@ -4602,7 +4592,8 @@ export default function SeguimientoPublico({
 
                             {actividadesDia.map(
                               (
-                                actividad
+                                actividad,
+                                indice
                               ) => {
 
                                 const hecha =
@@ -4618,7 +4609,17 @@ export default function SeguimientoPublico({
 
 
                                 return (
-                                  <div
+                                  <div key={actividad.id} className="space-y-2.5">
+                                    {actividad.seccion === "ADICIONAL" &&
+                                      (indice === 0 ||
+                                        actividadesDia[indice - 1].seccion !== "ADICIONAL") && (
+                                        <div className="rounded-xl bg-purple-700 px-4 py-3 text-center shadow-sm">
+                                          <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-white">
+                                            Protocolos adicionales
+                                          </p>
+                                        </div>
+                                      )}
+                                    <div
                                     key={
                                       actividad.id
                                     }
@@ -4695,6 +4696,7 @@ export default function SeguimientoPublico({
 
                                     </div>
 
+                                  </div>
                                   </div>
                                 );
                               }
