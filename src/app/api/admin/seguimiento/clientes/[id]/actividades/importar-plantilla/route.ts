@@ -80,6 +80,29 @@ export async function POST(
 
   const { id } = await params;
 
+  // No crear actividades tradicionales nuevas
+  // si este seguimiento ya utiliza etapas.
+  const _etapaQueRequiereEditor =
+    await prisma.etapaSeguimiento.findFirst({
+      where: {
+        seguimientoId: id,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+  if (_etapaQueRequiereEditor) {
+    return NextResponse.json(
+      {
+        error:
+          "Este seguimiento utiliza etapas. Esta operación estará disponible cuando permita seleccionar la etapa de destino.",
+      },
+      { status: 409 }
+    );
+  }
+
+
   const body: unknown = await req.json().catch(() => null);
 
   if (
@@ -121,6 +144,35 @@ export async function POST(
 
   const resultado = await prisma.$transaction(
     async (tx) => {
+      // Coordinar con la creacion de etapas.
+      const bloqueo = await tx.$queryRaw<Array<{ id: string }>>`
+        SELECT "id" FROM "SeguimientoCliente"
+        WHERE "id" = ${id}
+        FOR UPDATE
+      `;
+
+      if (bloqueo.length === 0) {
+        return {
+          error: "Seguimiento no encontrado.",
+          status: 404,
+        };
+      }
+
+      // Revisar las etapas dentro del bloqueo.
+      const etapaExistente =
+        await tx.etapaSeguimiento.findFirst({
+          where: { seguimientoId: id },
+          select: { id: true },
+        });
+
+      if (etapaExistente) {
+        return {
+          error:
+            "Este seguimiento utiliza etapas. No se pueden importar actividades sin seleccionar una etapa.",
+          status: 409,
+        };
+      }
+
       const seguimiento =
         await tx.seguimientoCliente.findUnique({
           where: { id },

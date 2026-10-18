@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useSyncExternalStore,
 } from "react";
 
 import Image from "next/image";
@@ -42,6 +43,16 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+
+function suscribirPreferenciasRecordatorios(
+  notificar: () => void
+) {
+  window.addEventListener("storage", notificar);
+
+  return () => {
+    window.removeEventListener("storage", notificar);
+  };
+}
 
 
 type EstadoSeguimiento =
@@ -92,6 +103,8 @@ type Actividad = {
   orden: number;
   indicaciones: IndicacionActividad[];
   progresos: Progreso[];
+  etapaEstado?: "PUBLICADA" | "FINALIZADA";
+  soloLectura?: boolean;
 };
 
 
@@ -884,34 +897,34 @@ export default function SeguimientoPublico({
     useState(false);
 
   const [
-    invitacionRecordatoriosOculta,
-    setInvitacionRecordatoriosOculta,
-  ] =
-    useState(true);
+    invitacionOcultaEnSesion,
+    setInvitacionOcultaEnSesion,
+  ] = useState<string | null>(null);
 
+  const invitacionOcultaGuardada =
+    useSyncExternalStore(
+      suscribirPreferenciasRecordatorios,
+      () => {
+        try {
+          return (
+            window.localStorage.getItem(
+              `dioxilife:recordatorios:invitacion:${token}`
+            ) === "1"
+          );
+        } catch {
+          return false;
+        }
+      },
+      () => true
+    );
 
-  useEffect(() => {
-    try {
-      const clave =
-        `dioxilife:recordatorios:invitacion:${token}`;
-
-      setInvitacionRecordatoriosOculta(
-        window.localStorage.getItem(
-          clave
-        ) === "1"
-      );
-    } catch {
-      setInvitacionRecordatoriosOculta(
-        false
-      );
-    }
-  }, [token]);
+  const invitacionRecordatoriosOculta =
+    invitacionOcultaGuardada ||
+    invitacionOcultaEnSesion === token;
 
 
   function ocultarInvitacionRecordatorios() {
-    setInvitacionRecordatoriosOculta(
-      true
-    );
+    setInvitacionOcultaEnSesion(token);
 
     try {
       window.localStorage.setItem(
@@ -928,8 +941,6 @@ export default function SeguimientoPublico({
     useCallback(
       async () => {
         try {
-          setError("");
-
           const respuesta =
             await fetch(
               `/api/seguimiento/${encodeURIComponent(token)}`,
@@ -951,6 +962,8 @@ export default function SeguimientoPublico({
 
           const datos =
             data as DatosRespuesta;
+
+          setError("");
 
           setSeguimiento(
             datos.seguimiento
@@ -977,7 +990,17 @@ export default function SeguimientoPublico({
 
   useEffect(
     () => {
-      cargarSeguimiento();
+      let cancelado = false;
+
+      queueMicrotask(() => {
+        if (!cancelado) {
+          void cargarSeguimiento();
+        }
+      });
+
+      return () => {
+        cancelado = true;
+      };
     },
     [
       cargarSeguimiento,
@@ -1905,6 +1928,7 @@ export default function SeguimientoPublico({
   ) {
     if (
       !puedeRegistrarChecks ||
+      actividad.soloLectura ||
       !seguimiento?.diaActual
     ) {
       return;
@@ -2035,6 +2059,7 @@ export default function SeguimientoPublico({
   ) {
     if (
       !puedeRegistrarChecks ||
+      actividad.soloLectura ||
       !seguimiento?.diaActual ||
       actualizandoIndicacion
     ) {
@@ -3987,6 +4012,7 @@ export default function SeguimientoPublico({
                                 }
                                 disabled={
                                   !puedeRegistrarChecks ||
+                                  Boolean(actividad.soloLectura) ||
                                   actualizandoActividad ===
                                     actividad.id
                                 }
@@ -4142,6 +4168,7 @@ export default function SeguimientoPublico({
                                             type="button"
                                             disabled={
                                               !puedeRegistrarChecks ||
+                                              Boolean(actividad.soloLectura) ||
                                               cargandoIndicacion ||
                                               actualizando
                                             }
@@ -4885,6 +4912,16 @@ export default function SeguimientoPublico({
                   Toca cada sección para consultar sus instrucciones.
                 </p>
 
+                {seguimiento.actividades.some(
+                  (actividad) => actividad.soloLectura
+                ) && (
+                  <p className="mt-2 text-xs font-semibold text-brand-gray">
+                    Las actividades de períodos anteriores
+                    se conservan para consulta y ya no
+                    permiten registrar nuevos cambios.
+                  </p>
+                )}
+
               </div>
 
 
@@ -4894,6 +4931,7 @@ export default function SeguimientoPublico({
                   .slice()
                   .filter(
                     (actividad) =>
+                      actividad.soloLectura === true ||
                       actividad.seccion === "PRINCIPAL" ||
                       (
                         actividad.diaFin ??

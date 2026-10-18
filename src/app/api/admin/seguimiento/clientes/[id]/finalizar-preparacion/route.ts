@@ -76,6 +76,11 @@ export async function POST(
           select: {
             id: true,
             titulo: true,
+            etapa: {
+              select: {
+                estado: true,
+              },
+            },
             seccion: true,
             hora: true,
 
@@ -155,6 +160,15 @@ export async function POST(
     const actividad of
     seguimiento.actividades
   ) {
+    // Los borradores se validaran antes de
+    // su propia publicacion al cliente.
+    if (
+      actividad.etapa &&
+      actividad.etapa.estado !== "PUBLICADA"
+    ) {
+      continue;
+    }
+
     for (
       const indicacion of
       actividad.indicaciones
@@ -217,12 +231,15 @@ export async function POST(
   const ahora =
     new Date();
 
-  await prisma.seguimientoCliente.update({
-    where: {
-      id,
-    },
+  const confirmacion =
+    await prisma.seguimientoCliente.updateMany({
+      where: {
+        id,
+        estado: "PENDIENTE",
+        preparadoAt: null,
+      },
 
-    data: {
+      data: {
       tokenAccesoHash:
         hashToken(token),
 
@@ -233,6 +250,16 @@ export async function POST(
         ahora,
     },
   });
+
+  if (confirmacion.count !== 1) {
+    return NextResponse.json(
+      {
+        error:
+          "Este seguimiento ya fue preparado o cambio de estado. Actualiza la pagina.",
+      },
+      { status: 409 }
+    );
+  }
 
   return NextResponse.json({
     ok: true,

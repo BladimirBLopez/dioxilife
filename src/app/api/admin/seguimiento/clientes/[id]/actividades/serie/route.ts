@@ -78,6 +78,29 @@ export async function POST(
   const { id } =
     await params;
 
+  // No crear actividades tradicionales nuevas
+  // si este seguimiento ya utiliza etapas.
+  const _etapaQueRequiereEditor =
+    await prisma.etapaSeguimiento.findFirst({
+      where: {
+        seguimientoId: id,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+  if (_etapaQueRequiereEditor) {
+    return NextResponse.json(
+      {
+        error:
+          "Este seguimiento utiliza etapas. Esta operación estará disponible cuando permita seleccionar la etapa de destino.",
+      },
+      { status: 409 }
+    );
+  }
+
+
   const seguimiento =
     await prisma.seguimientoCliente.findUnique({
       where: {
@@ -379,11 +402,102 @@ export async function POST(
       })
     );
 
-  const resultado =
-    await prisma.actividadSeguimiento.createMany({
-      data:
-        actividades,
+  // PASO 212: proteger la creacion de series.
+  const resultado = await prisma.$transaction(async (tx) => {
+    const bloqueo = await tx.$queryRaw<Array<{ id: string }>>`
+      SELECT "id" FROM "SeguimientoCliente"
+      WHERE "id" = ${id}
+      FOR UPDATE
+    `;
+
+    if (bloqueo.length === 0) {
+      return {
+        ok: false as const,
+        error: "Seguimiento no encontrado.",
+        status: 404,
+      };
+    }
+
+    const actual = await tx.seguimientoCliente.findUnique({
+      where: { id },
+      select: {
+        estado: true,
+        preparadoAt: true,
+        duracionDias: true,
+      },
     });
+
+    if (
+      !actual ||
+      actual.estado !== "PENDIENTE" ||
+      actual.preparadoAt !== null
+    ) {
+      return {
+        ok: false as const,
+        error: "El seguimiento ya no esta en preparacion.",
+        status: 409,
+      };
+    }
+
+    const etapaExistente =
+      await tx.etapaSeguimiento.findFirst({
+        where: { seguimientoId: id },
+        select: { id: true },
+      });
+
+    if (etapaExistente) {
+      return {
+        ok: false as const,
+        error:
+          "Este seguimiento utiliza etapas. No se pueden generar series tradicionales.",
+        status: 409,
+      };
+    }
+
+    if (
+      diaInicio < 1 ||
+      diaInicio > actual.duracionDias ||
+      (diaFin !== null && (
+        diaFin < diaInicio ||
+        diaFin > actual.duracionDias
+      ))
+    ) {
+      return {
+        ok: false as const,
+        error: "El periodo de la serie ya no es valido.",
+        status: 409,
+      };
+    }
+
+    const ultimoOrden =
+      await tx.actividadSeguimiento.aggregate({
+        where: { seguimientoId: id },
+        _max: { orden: true },
+      });
+
+    const ordenBase =
+      (ultimoOrden._max.orden ?? 0) + 1;
+
+    const creadas =
+      await tx.actividadSeguimiento.createMany({
+        data: actividades.map((actividad, indice) => ({
+          ...actividad,
+          orden: ordenBase + indice,
+        })),
+      });
+
+    return {
+      ok: true as const,
+      count: creadas.count,
+    };
+  });
+
+  if (!resultado.ok) {
+    return NextResponse.json(
+      { error: resultado.error },
+      { status: resultado.status }
+    );
+  }
 
   return NextResponse.json({
     ok: true,

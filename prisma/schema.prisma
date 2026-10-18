@@ -243,12 +243,14 @@ model SeguimientoCliente {
   pausadoAt           DateTime?
   observacionInterna  String?
 
-  actividades       ActividadSeguimiento[]
-  progresos         ProgresoActividad[]
-  registrosDiarios  RegistroDiaSeguimiento[]
-  medicionesGlucosa MedicionGlucosaSeguimiento[]
-  suscripcionesPush SuscripcionPush[]
-  enviosWhatsApp    SeguimientoEnvioWhatsApp[]
+  actividades             ActividadSeguimiento[]
+  etapas                  EtapaSeguimiento[]
+  mostrarEtapasAnteriores Boolean                      @default(true)
+  progresos               ProgresoActividad[]
+  registrosDiarios        RegistroDiaSeguimiento[]
+  medicionesGlucosa       MedicionGlucosaSeguimiento[]
+  suscripcionesPush       SuscripcionPush[]
+  enviosWhatsApp          SeguimientoEnvioWhatsApp[]
 
   miembroGrupo MiembroGrupoSeguimiento?
 
@@ -298,11 +300,53 @@ model IndicacionActividadPlan {
   @@index([orden])
 }
 
+enum EstadoEtapaSeguimiento {
+  BORRADOR
+  PROGRAMADA
+  PUBLICADA
+  FINALIZADA
+}
+
+enum ModoPublicacionEtapa {
+  MANUAL
+  AUTOMATICA
+}
+
+model EtapaSeguimiento {
+  id String @id @default(cuid())
+
+  seguimientoId String
+  seguimiento   SeguimientoCliente @relation(fields: [seguimientoId], references: [id], onDelete: Cascade)
+
+  nombre String
+  orden  Int
+
+  diaInicio Int
+  diaFin    Int
+
+  estado          EstadoEtapaSeguimiento @default(BORRADOR)
+  modoPublicacion ModoPublicacionEtapa   @default(MANUAL)
+
+  publicadaAt DateTime?
+
+  actividades ActividadSeguimiento[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([seguimientoId, orden])
+  @@index([seguimientoId, diaInicio])
+  @@index([seguimientoId, estado])
+}
+
 model ActividadSeguimiento {
   id String @id @default(cuid())
 
   seguimientoId String
   seguimiento   SeguimientoCliente @relation(fields: [seguimientoId], references: [id], onDelete: Cascade)
+
+  etapaId String?
+  etapa   EtapaSeguimiento? @relation(fields: [etapaId], references: [id], onDelete: Restrict)
 
   actividadPlanOrigenId String?
   actividadPlanOrigen   ActividadPlan? @relation("ActividadPlanOrigen", fields: [actividadPlanOrigenId], references: [id], onDelete: SetNull)
@@ -329,6 +373,7 @@ model ActividadSeguimiento {
   @@index([seguimientoId])
   @@index([actividadPlanOrigenId])
   @@index([diaInicio])
+  @@index([etapaId])
 }
 
 model SuscripcionPush {

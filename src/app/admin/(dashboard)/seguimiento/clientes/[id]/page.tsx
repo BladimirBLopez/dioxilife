@@ -13,6 +13,7 @@ import {
   type NivelComunicacion,
 } from "@/lib/seguimiento-estado";
 import AgendaCliente from "@/components/admin/seguimiento/AgendaCliente";
+import GestionEtapasCliente from "@/components/admin/seguimiento/GestionEtapasCliente";
 import AccesoRapidoProtocolos from "@/components/admin/seguimiento/AccesoRapidoProtocolos";
 import AccionesSeguimientoCliente from "@/components/admin/seguimiento/AccionesSeguimientoCliente";
 import GestionSeguimientoCliente from "@/components/admin/seguimiento/GestionSeguimientoCliente";
@@ -211,6 +212,15 @@ export default async function SeguimientoClientePage({
             diaFin: true,
             orden: true,
             activo: true,
+            etapaId: true,
+            etapa: {
+              select: {
+                nombre: true,
+                estado: true,
+                diaInicio: true,
+                diaFin: true,
+              },
+            },
 
             indicaciones: {
               where: {
@@ -788,6 +798,12 @@ export default async function SeguimientoClientePage({
       />
 
 
+      <GestionEtapasCliente
+        seguimientoId={seguimiento.id}
+        duracionDias={seguimiento.duracionDias}
+        estado={seguimiento.estado}
+      />
+
       <details
         id="agenda-individual"
         className="group scroll-mt-5 overflow-hidden rounded-xl bg-white shadow"
@@ -837,6 +853,8 @@ export default async function SeguimientoClientePage({
             diaFin: actividad.diaFin,
             orden: actividad.orden,
             activo: actividad.activo,
+            etapaId: actividad.etapaId,
+            etapa: actividad.etapa,
 
             indicaciones:
               actividad.indicaciones,

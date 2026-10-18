@@ -172,6 +172,9 @@ export async function GET(
         duracionDias:
           true,
 
+        mostrarEtapasAnteriores:
+          true,
+
         estado:
           true,
 
@@ -257,6 +260,22 @@ export async function GET(
         actividades: {
           where: {
             activo: true,
+            OR: [
+              {
+                // Seguimientos tradicionales.
+                etapaId: null,
+              },
+              {
+                // Solo etapas que ya fueron publicadas.
+                etapa: {
+                  is: {
+                    estado: {
+                      in: ["PUBLICADA", "FINALIZADA"],
+                    },
+                  },
+                },
+              },
+            ],
           },
 
           orderBy: [
@@ -286,6 +305,14 @@ export async function GET(
             diaInicio: true,
             diaFin: true,
             orden: true,
+
+            etapa: {
+              select: {
+                estado: true,
+                diaInicio: true,
+                diaFin: true,
+              },
+            },
 
             indicaciones: {
               where: {
@@ -752,7 +779,70 @@ export async function GET(
       glucosas,
 
       actividades:
-        seguimiento.actividades,
+        seguimiento.actividades.flatMap((actividad) => {
+          const { etapa, ...datos } = actividad;
+
+          // Las actividades tradicionales mantienen
+          // exactamente sus fechas originales.
+          if (!etapa) {
+            return [datos];
+          }
+
+          // PASO 224: historial configurable.
+          // Si el administrador oculta las etapas
+          // anteriores, no entregarlas al cliente.
+          const periodoTerminado =
+            diaActual !== null &&
+            diaActual > etapa.diaFin;
+
+          if (
+            !seguimiento.mostrarEtapasAnteriores &&
+            (
+              etapa.estado === "FINALIZADA" ||
+              periodoTerminado
+            )
+          ) {
+            return [];
+          }
+
+          // Una actividad de etapa nunca puede
+          // mostrarse fuera de sus dias.
+          const inicioEfectivo = Math.max(
+            datos.diaInicio,
+            etapa.diaInicio
+          );
+
+          const finEfectivo = Math.min(
+            datos.diaFin ?? etapa.diaFin,
+            etapa.diaFin
+          );
+
+          // Evitar mostrar periodos inconsistentes.
+          if (inicioEfectivo > finEfectivo) {
+            return [];
+          }
+
+          // No enviar instrucciones de actividades
+          // que comienzan en dias futuros.
+          // Las actividades tradicionales no pasan
+          // por esta validacion.
+          if (
+            diaActual === null ||
+            inicioEfectivo > diaActual
+          ) {
+            return [];
+          }
+
+          return [{
+            ...datos,
+            diaInicio: inicioEfectivo,
+            diaFin: finEfectivo,
+            etapaEstado: etapa.estado,
+            soloLectura:
+              etapa.estado === "FINALIZADA" ||
+              periodoTerminado,
+          }];
+        }),
     },
   });
 }

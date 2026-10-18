@@ -89,6 +89,7 @@ async function obtenerContexto({
             diaFin: true,
             orden: true,
             activo: true,
+            etapaId: true,
 
             indicaciones: {
               where: {
@@ -176,7 +177,8 @@ async function obtenerContexto({
   if (
     !enPreparacion &&
     actividad.seccion !==
-      "ADICIONAL"
+      "ADICIONAL" &&
+    actividad.etapaId === null
   ) {
     return {
       error:
@@ -316,6 +318,156 @@ export async function PUT(
       : contexto
           .indicacion
           .orden;
+
+  /*
+   * EDITAR INDICACION DE ETAPA EN BORRADOR.
+   * La logica tradicional permanece intacta.
+   */
+  if (contexto.actividad.etapaId !== null) {
+    return await prisma.$transaction(async (tx) => {
+      const bloqueo =
+        await tx.$queryRaw<Array<{ id: string }>>`
+          SELECT "id"
+          FROM "SeguimientoCliente"
+          WHERE "id" = ${id}
+          FOR UPDATE
+        `;
+
+      if (bloqueo.length === 0) {
+        return NextResponse.json(
+          { error: "Seguimiento no encontrado." },
+          { status: 404 }
+        );
+      }
+
+      const seguimientoActual =
+        await tx.seguimientoCliente.findUnique({
+          where: { id },
+          select: { estado: true },
+        });
+
+      if (
+        !seguimientoActual ||
+        seguimientoActual.estado === "COMPLETADO" ||
+        seguimientoActual.estado === "CANCELADO"
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "El seguimiento ya no permite modificaciones.",
+          },
+          { status: 409 }
+        );
+      }
+
+      const actividadActual =
+        await tx.actividadSeguimiento.findFirst({
+          where: {
+            id: actividadId,
+            seguimientoId: id,
+            etapaId: contexto.actividad.etapaId,
+            activo: true,
+          },
+          select: {
+            id: true,
+            etapa: {
+              select: {
+                estado: true,
+              },
+            },
+          },
+        });
+
+      if (!actividadActual) {
+        return NextResponse.json(
+          {
+            error:
+              "La actividad ya no pertenece a esta etapa.",
+          },
+          { status: 409 }
+        );
+      }
+
+      if (
+        actividadActual.etapa?.estado !== "BORRADOR"
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Solo se pueden editar indicaciones de etapas en borrador.",
+          },
+          { status: 409 }
+        );
+      }
+
+      const indicacionActual =
+        await tx.indicacionActividadSeguimiento.findFirst({
+          where: {
+            id: indicacionId,
+            actividadSeguimientoId: actividadActual.id,
+            activo: true,
+          },
+          select: {
+            id: true,
+          },
+        });
+
+      if (!indicacionActual) {
+        return NextResponse.json(
+          {
+            error:
+              "La indicación ya no existe en esta actividad.",
+          },
+          { status: 404 }
+        );
+      }
+
+      const progresosActividad =
+        await tx.progresoActividad.count({
+          where: {
+            actividadSeguimientoId: actividadId,
+          },
+        });
+
+      const progresosIndicaciones =
+        await tx.progresoIndicacion.count({
+          where: {
+            indicacionActividadSeguimiento: {
+              is: {
+                actividadSeguimientoId: actividadId,
+              },
+            },
+          },
+        });
+
+      if (
+        progresosActividad > 0 ||
+        progresosIndicaciones > 0
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Esta actividad tiene historial. No se pueden sobrescribir sus indicaciones.",
+          },
+          { status: 409 }
+        );
+      }
+
+      const actualizada =
+        await tx.indicacionActividadSeguimiento.update({
+          where: {
+            id: indicacionActual.id,
+          },
+          data: {
+            hora,
+            texto,
+            orden: nuevoOrden,
+          },
+        });
+
+      return NextResponse.json(actualizada);
+    });
+  }
 
   /*
    * Preparación o protocolo adicional
@@ -570,6 +722,177 @@ export async function DELETE(
           contexto.status,
       }
     );
+  }
+
+  if (contexto.actividad.etapaId !== null) {
+    return await prisma.$transaction(async (tx) => {
+      const bloqueo =
+        await tx.$queryRaw<Array<{ id: string }>>`
+          SELECT "id"
+          FROM "SeguimientoCliente"
+          WHERE "id" = ${id}
+          FOR UPDATE
+        `;
+
+      if (bloqueo.length === 0) {
+        return NextResponse.json(
+          { error: "Seguimiento no encontrado." },
+          { status: 404 }
+        );
+      }
+
+      const seguimientoActual =
+        await tx.seguimientoCliente.findUnique({
+          where: { id },
+          select: {
+            estado: true,
+            duracionDias: true,
+          },
+        });
+
+      if (
+        !seguimientoActual ||
+        seguimientoActual.estado === "COMPLETADO" ||
+        seguimientoActual.estado === "CANCELADO"
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "El seguimiento no permite eliminar indicaciones.",
+          },
+          { status: 409 }
+        );
+      }
+
+      const actividadActual =
+        await tx.actividadSeguimiento.findFirst({
+          where: {
+            id: actividadId,
+            seguimientoId: id,
+            etapaId: contexto.actividad.etapaId,
+            activo: true,
+          },
+          select: {
+            id: true,
+            diaInicio: true,
+            diaFin: true,
+            etapa: {
+              select: {
+                estado: true,
+                diaInicio: true,
+                diaFin: true,
+              },
+            },
+            _count: {
+              select: {
+                progresos: true,
+              },
+            },
+          },
+        });
+
+      if (!actividadActual || !actividadActual.etapa) {
+        return NextResponse.json(
+          {
+            error:
+              "La actividad ya no pertenece a esta etapa.",
+          },
+          { status: 409 }
+        );
+      }
+
+      if (actividadActual.etapa.estado !== "BORRADOR") {
+        return NextResponse.json(
+          {
+            error:
+              "Solo se pueden eliminar indicaciones de etapas en borrador.",
+          },
+          { status: 409 }
+        );
+      }
+
+      if (
+        actividadActual.diaInicio <
+          actividadActual.etapa.diaInicio ||
+        actividadActual.diaInicio >
+          actividadActual.etapa.diaFin ||
+        actividadActual.diaInicio >
+          seguimientoActual.duracionDias ||
+        (
+          actividadActual.diaFin !== null &&
+          (
+            actividadActual.diaFin <
+              actividadActual.diaInicio ||
+            actividadActual.diaFin >
+              actividadActual.etapa.diaFin ||
+            actividadActual.diaFin >
+              seguimientoActual.duracionDias
+          )
+        )
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Los días de la actividad no corresponden a su etapa.",
+          },
+          { status: 409 }
+        );
+      }
+
+      const indicacionActual =
+        await tx.indicacionActividadSeguimiento.findFirst({
+          where: {
+            id: indicacionId,
+            actividadSeguimientoId: actividadActual.id,
+            activo: true,
+          },
+          select: {
+            id: true,
+          },
+        });
+
+      if (!indicacionActual) {
+        return NextResponse.json(
+          {
+            error:
+              "Indicación no encontrada en esta actividad.",
+          },
+          { status: 404 }
+        );
+      }
+
+      const progresosIndicaciones =
+        await tx.progresoIndicacion.count({
+          where: {
+            indicacionActividadSeguimiento: {
+              is: {
+                actividadSeguimientoId: actividadActual.id,
+              },
+            },
+          },
+        });
+
+      if (
+        actividadActual._count.progresos > 0 ||
+        progresosIndicaciones > 0
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Esta actividad tiene historial registrado. No se pueden eliminar sus indicaciones.",
+          },
+          { status: 409 }
+        );
+      }
+
+      await tx.indicacionActividadSeguimiento.delete({
+        where: {
+          id: indicacionActual.id,
+        },
+      });
+
+      return NextResponse.json({ ok: true });
+    });
   }
 
   if (

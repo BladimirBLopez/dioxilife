@@ -24,17 +24,45 @@ function aplicaEnDia(
     seccion:
       | "PRINCIPAL"
       | "ADICIONAL";
+    etapa: {
+      diaInicio: number;
+      diaFin: number;
+      estado:
+        | "BORRADOR"
+        | "PROGRAMADA"
+        | "PUBLICADA"
+        | "FINALIZADA";
+    } | null;
   },
   dia: number,
   duracionDias: number
 ) {
-  const ultimoDia =
-    actividad.diaFin ?? duracionDias;
+  const etapa = actividad.etapa;
 
-  return (
-    dia >= actividad.diaInicio &&
-    dia <= ultimoDia
+  // Los borradores no forman parte
+  // del cumplimiento del cliente.
+  if (
+    etapa &&
+    etapa.estado !== "PUBLICADA" &&
+    etapa.estado !== "FINALIZADA"
+  ) {
+    return false;
+  }
+
+  const inicio = Math.max(
+    actividad.diaInicio,
+    etapa?.diaInicio ?? actividad.diaInicio
   );
+
+  // Sin etapa, mantener la duracion
+  // tradicional del seguimiento.
+  const fin = Math.min(
+    actividad.diaFin ??
+      (etapa?.diaFin ?? duracionDias),
+    etapa?.diaFin ?? duracionDias
+  );
+
+  return dia >= inicio && dia <= fin;
 }
 
 function redondear(
@@ -151,6 +179,14 @@ export async function GET(
             diaInicio: true,
             diaFin: true,
             activo: true,
+
+            etapa: {
+              select: {
+                diaInicio: true,
+                diaFin: true,
+                estado: true,
+              },
+            },
 
             progresos: {
               select: {

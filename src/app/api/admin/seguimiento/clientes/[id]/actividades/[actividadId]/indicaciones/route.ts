@@ -79,6 +79,7 @@ async function obtenerContexto(
           diaFin: true,
           orden: true,
           activo: true,
+          etapaId: true,
 
           indicaciones: {
             where: {
@@ -243,6 +244,203 @@ export async function POST(
 
   const actividad =
     contexto.actividades[0];
+
+  if (actividad.etapaId !== null) {
+    const cuerpo: unknown =
+      await req.json().catch(() => null);
+
+    if (
+      !cuerpo ||
+      typeof cuerpo !== "object" ||
+      Array.isArray(cuerpo)
+    ) {
+      return NextResponse.json(
+        { error: "Datos no válidos." },
+        { status: 400 }
+      );
+    }
+
+    const datos = cuerpo as Record<string, unknown>;
+
+    const hora =
+      typeof datos.hora === "string"
+        ? datos.hora.trim()
+        : "";
+
+    const texto =
+      typeof datos.texto === "string"
+        ? datos.texto.trim()
+        : "";
+
+    if (!horaValida(hora)) {
+      return NextResponse.json(
+        { error: "La hora debe tener formato HH:MM." },
+        { status: 400 }
+      );
+    }
+
+    if (!texto || texto.length > 5000) {
+      return NextResponse.json(
+        {
+          error:
+            "La indicación debe contener entre 1 y 5000 caracteres.",
+        },
+        { status: 400 }
+      );
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const bloqueo =
+        await tx.$queryRaw<Array<{ id: string }>>`
+          SELECT "id"
+          FROM "SeguimientoCliente"
+          WHERE "id" = ${id}
+          FOR UPDATE
+        `;
+
+      if (bloqueo.length === 0) {
+        return NextResponse.json(
+          { error: "Seguimiento no encontrado." },
+          { status: 404 }
+        );
+      }
+
+      const seguimientoActual =
+        await tx.seguimientoCliente.findUnique({
+          where: { id },
+          select: {
+            estado: true,
+            duracionDias: true,
+          },
+        });
+
+      if (
+        !seguimientoActual ||
+        seguimientoActual.estado === "CANCELADO" ||
+        seguimientoActual.estado === "COMPLETADO"
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "El seguimiento no permite modificar indicaciones.",
+          },
+          { status: 409 }
+        );
+      }
+
+      const actual =
+        await tx.actividadSeguimiento.findFirst({
+          where: {
+            id: actividadId,
+            seguimientoId: id,
+            etapaId: actividad.etapaId,
+          },
+          select: {
+            id: true,
+            activo: true,
+            diaInicio: true,
+            diaFin: true,
+            etapa: {
+              select: {
+                estado: true,
+                diaInicio: true,
+                diaFin: true,
+              },
+            },
+            _count: {
+              select: {
+                progresos: true,
+              },
+            },
+          },
+        });
+
+      if (!actual || !actual.etapa) {
+        return NextResponse.json(
+          {
+            error:
+              "La actividad ya no pertenece a esta etapa.",
+          },
+          { status: 409 }
+        );
+      }
+
+      if (actual.etapa.estado !== "BORRADOR") {
+        return NextResponse.json(
+          {
+            error:
+              "La etapa ya no está en borrador.",
+          },
+          { status: 409 }
+        );
+      }
+
+      if (!actual.activo) {
+        return NextResponse.json(
+          {
+            error:
+              "La actividad está inactiva.",
+          },
+          { status: 409 }
+        );
+      }
+
+      if (actual._count.progresos > 0) {
+        return NextResponse.json(
+          {
+            error:
+              "La actividad tiene progreso registrado.",
+          },
+          { status: 409 }
+        );
+      }
+
+      if (
+        actual.diaInicio < actual.etapa.diaInicio ||
+        actual.diaInicio > actual.etapa.diaFin ||
+        actual.diaInicio > seguimientoActual.duracionDias ||
+        (
+          actual.diaFin !== null &&
+          (
+            actual.diaFin < actual.diaInicio ||
+            actual.diaFin > actual.etapa.diaFin ||
+            actual.diaFin > seguimientoActual.duracionDias
+          )
+        )
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Los días de la actividad no corresponden a su etapa.",
+          },
+          { status: 409 }
+        );
+      }
+
+      const ordenActual =
+        await tx.indicacionActividadSeguimiento.aggregate({
+          where: {
+            actividadSeguimientoId: actual.id,
+          },
+          _max: {
+            orden: true,
+          },
+        });
+
+      const indicacion =
+        await tx.indicacionActividadSeguimiento.create({
+          data: {
+            actividadSeguimientoId: actual.id,
+            hora,
+            texto,
+            orden: (ordenActual._max.orden ?? -1) + 1,
+            activo: true,
+          },
+        });
+
+      return NextResponse.json(indicacion);
+    });
+  }
 
   const enPreparacion =
     contexto.estado ===

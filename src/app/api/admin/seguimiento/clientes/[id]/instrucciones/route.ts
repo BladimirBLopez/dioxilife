@@ -57,6 +57,13 @@ export async function GET(
             diaFin: true,
             orden: true,
 
+            etapa: {
+              select: {
+                diaInicio: true,
+                diaFin: true,
+              },
+            },
+
             indicaciones: {
               where: {
                 activo: true,
@@ -96,7 +103,36 @@ export async function GET(
           seguimiento.duracionDias,
       },
       protocolos:
-        seguimiento.actividades,
+        seguimiento.actividades.flatMap((actividad) => {
+          const { etapa, ...protocolo } = actividad;
+
+          // El protocolo tradicional
+          // conserva sus fechas.
+          if (!etapa) {
+            return [protocolo];
+          }
+
+          const inicio = Math.max(
+            protocolo.diaInicio,
+            etapa.diaInicio
+          );
+
+          const fin = Math.min(
+            protocolo.diaFin ?? etapa.diaFin,
+            etapa.diaFin
+          );
+
+          // No imprimir períodos inválidos.
+          if (inicio > fin) {
+            return [];
+          }
+
+          return [{
+            ...protocolo,
+            diaInicio: inicio,
+            diaFin: fin,
+          }];
+        }),
     },
     {
       headers: {

@@ -145,7 +145,38 @@ type ActividadAviso = {
     | "ADICIONAL";
   diaInicio: number;
   diaFin: number | null;
+  etapa: {
+    diaInicio: number;
+    diaFin: number;
+  } | null;
 };
+
+// Aplicar el periodo de etapa solo a actividades nuevas.
+// Las actividades tradicionales conservan sus reglas.
+function actividadVigenteEnDia(
+  actividad: ActividadAviso,
+  diaPlan: number
+) {
+  const inicio = Math.max(
+    actividad.diaInicio,
+    actividad.etapa?.diaInicio ?? actividad.diaInicio
+  );
+
+  // En una etapa, la ausencia de fecha final
+  // significa hasta el último día de esa etapa.
+  // Sin etapa, conservar la regla tradicional.
+  const fin = actividad.etapa
+    ? Math.min(
+        actividad.diaFin ?? actividad.etapa.diaFin,
+        actividad.etapa.diaFin
+      )
+    : (actividad.diaFin ??
+        (actividad.seccion === "ADICIONAL"
+          ? Number.MAX_SAFE_INTEGER
+          : actividad.diaInicio));
+
+  return diaPlan >= inicio && diaPlan <= fin;
+}
 
 async function procesarAvisosTardios({
   seguimiento,
@@ -174,15 +205,8 @@ async function procesarAvisosTardios({
   }[] = [];
 
   const candidatas = seguimiento.actividades
-    .filter(
-      (actividad) =>
-        diaPlan >= actividad.diaInicio &&
-        diaPlan <= (actividad.diaFin ??
-          (
-            actividad.seccion === "ADICIONAL"
-              ? Number.MAX_SAFE_INTEGER
-              : actividad.diaInicio
-          ))
+    .filter((actividad) =>
+      actividadVigenteEnDia(actividad, diaPlan)
     )
     .map((actividad) => ({
       actividad,
@@ -669,6 +693,21 @@ export async function GET(
           where: {
             activo: true,
 
+            // Los protocolos tradicionales siguen visibles.
+            // Los protocolos por etapas requieren publicacion.
+            OR: [
+              {
+                etapaId: null,
+              },
+              {
+                etapa: {
+                  is: {
+                    estado: "PUBLICADA",
+                  },
+                },
+              },
+            ],
+
             hora: {
               not: null,
             },
@@ -686,6 +725,12 @@ export async function GET(
             seccion: true,
             diaInicio: true,
             diaFin: true,
+            etapa: {
+              select: {
+                diaInicio: true,
+                diaFin: true,
+              },
+            },
           },
         },
       },
@@ -777,17 +822,8 @@ export async function GET(
 
       const candidatas =
         seguimiento.actividades
-          .filter(
-            (actividad) =>
-              diaPlan >=
-                actividad.diaInicio &&
-              diaPlan <=
-                (actividad.diaFin ??
-          (
-            actividad.seccion === "ADICIONAL"
-              ? Number.MAX_SAFE_INTEGER
-              : actividad.diaInicio
-          ))
+          .filter((actividad) =>
+            actividadVigenteEnDia(actividad, diaPlan)
           )
           .map((actividad) => ({
             actividad,

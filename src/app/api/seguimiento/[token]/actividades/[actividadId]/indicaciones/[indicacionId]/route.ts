@@ -5,6 +5,9 @@ import {
 
 import { prisma } from "@/lib/prisma";
 
+import { validarRegistroEtapaBajoBloqueo }
+  from "@/lib/seguimiento-etapa-registro";
+
 import {
   hashTokenSeguimiento,
   tokenSeguimientoValido,
@@ -139,10 +142,35 @@ export async function PUT(
 
         activo:
           true,
+
+        OR: [
+          {
+            // Actividades tradicionales:
+            // conservar su comportamiento.
+            etapaId: null,
+          },
+          {
+            // Las nuevas actividades
+            // requieren una etapa publicada
+            // y dentro de su período.
+            etapa: {
+              is: {
+                estado: "PUBLICADA",
+                diaInicio: {
+                  lte: diaPlan,
+                },
+                diaFin: {
+                  gte: diaPlan,
+                },
+              },
+            },
+          },
+        ],
       },
 
       select: {
         id: true,
+        etapaId: true,
         tipo: true,
         seccion: true,
         diaInicio: true,
@@ -237,6 +265,27 @@ export async function PUT(
     await prisma.$transaction(
       async (tx) => {
 
+        // Para etapas nuevas, coordinar con
+        // el cierre automático antes de escribir.
+        // Las actividades tradicionales conservan
+        // su comportamiento anterior.
+        if (actividad.etapaId !== null) {
+          const permitido =
+            await validarRegistroEtapaBajoBloqueo(
+              tx,
+              {
+            seguimientoId: seguimiento.id,
+            actividadId: actividad.id,
+            indicacionId,
+            diaPlan,
+              }
+            );
+
+          if (!permitido) {
+            return null;
+          }
+        }
+
         const progresoIndicacion =
           await tx.progresoIndicacion.upsert({
             where: {
@@ -299,6 +348,16 @@ export async function PUT(
       }
     );
 
+
+  if (resultado === null) {
+    return NextResponse.json(
+      {
+        error:
+          "La etapa ya no permite registrar este cumplimiento. Actualiza la página.",
+      },
+      { status: 409 }
+    );
+  }
 
   return NextResponse.json({
     completado:

@@ -1,7 +1,7 @@
 "use client";
 import SeleccionarProtocoloGuardado from "@/components/admin/seguimiento/SeleccionarProtocoloGuardado";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import DuracionRapidaProtocolo from "@/components/admin/seguimiento/DuracionRapidaProtocolo";
 import { toast } from "sonner";
@@ -39,6 +39,13 @@ type Actividad = {
   diaFin: number | null;
   orden: number;
   activo: boolean;
+  etapaId?: string | null;
+  etapa?: {
+    nombre: string;
+    estado: string;
+    diaInicio: number;
+    diaFin: number;
+  } | null;
 
   indicaciones: Array<{
     id: string;
@@ -48,6 +55,14 @@ type Actividad = {
   }>;
 
   cantidadProgresos: number;
+};
+
+type EtapaAgenda = {
+  id: string;
+  nombre: string;
+  estado: string;
+  diaInicio: number;
+  diaFin: number;
 };
 
 type Props = {
@@ -123,6 +138,78 @@ export default function AgendaCliente({
   const [quitarActividad, setQuitarActividad] =
     useState<Actividad | null>(null);
 
+  const [etapasAgenda, setEtapasAgenda] =
+    useState<EtapaAgenda[]>([]);
+
+  const [etapaElegida, setEtapaElegida] =
+    useState("");
+
+  const [cargandoEtapas, setCargandoEtapas] =
+    useState(true);
+
+  const [errorEtapas, setErrorEtapas] =
+    useState("");
+
+  function reiniciarSeleccionEtapa() {
+    setEtapaElegida("");
+    setEtapasAgenda([]);
+    setCargandoEtapas(true);
+    setErrorEtapas("");
+  }
+
+  useEffect(() => {
+    if (
+      !modalAbierto ||
+      !seguimientoId ||
+      actividadEditando
+    ) {
+      return;
+    }
+
+    let vigente = true;
+
+    fetch(
+      `/api/admin/seguimiento/clientes/${seguimientoId}/etapas`,
+      { cache: "no-store" }
+    )
+      .then(async (respuesta) => {
+        const datos = await respuesta.json();
+
+        if (
+          !respuesta.ok ||
+          !Array.isArray(datos.etapas)
+        ) {
+          throw new Error(
+            datos.error ||
+            "No se pudieron consultar las etapas."
+          );
+        }
+
+        if (vigente) {
+          setEtapasAgenda(datos.etapas);
+          setErrorEtapas("");
+        }
+      })
+      .catch((error: unknown) => {
+        if (vigente) {
+          setErrorEtapas(
+            error instanceof Error
+              ? error.message
+              : "Error al consultar las etapas."
+          );
+        }
+      })
+      .finally(() => {
+        if (vigente) {
+          setCargandoEtapas(false);
+        }
+      });
+
+    return () => {
+      vigente = false;
+    };
+  }, [modalAbierto, seguimientoId, actividadEditando]);
+
   function abrirNueva() {
     setActividadEditando(null);
     setForm(
@@ -139,6 +226,7 @@ export default function AgendaCliente({
           }
         : vacio
     );
+    reiniciarSeleccionEtapa();
     setModalAbierto(true);
   }
 
@@ -162,6 +250,7 @@ export default function AgendaCliente({
       activo: actividad.activo,
     });
 
+    reiniciarSeleccionEtapa();
     setModalAbierto(true);
   }
 
@@ -176,6 +265,55 @@ export default function AgendaCliente({
     if (!titulo) {
       toast.error("El título es obligatorio");
       return;
+    }
+
+    if (seguimientoId && !actividadEditando) {
+      if (cargandoEtapas) {
+        toast.error("Espera mientras se consultan las etapas.");
+        return;
+      }
+
+      if (errorEtapas) {
+        toast.error(errorEtapas);
+        return;
+      }
+
+      if (etapasAgenda.length > 0) {
+        const etapa = etapasAgenda.find(
+          (item) =>
+            item.id === etapaElegida &&
+            item.estado === "BORRADOR"
+        );
+
+        if (!etapa) {
+          toast.error("Selecciona una etapa en borrador.");
+          return;
+        }
+
+        const inicio = Number(form.diaInicio);
+        const fin = form.diaFin
+          ? Number(form.diaFin)
+          : null;
+
+        if (
+          !Number.isInteger(inicio) ||
+          inicio < etapa.diaInicio ||
+          inicio > etapa.diaFin ||
+          (
+            fin !== null &&
+            (
+              !Number.isInteger(fin) ||
+              fin < inicio ||
+              fin > etapa.diaFin
+            )
+          )
+        ) {
+          toast.error(
+            `Los días deben estar entre ${etapa.diaInicio} y ${etapa.diaFin}.`
+          );
+          return;
+        }
+      }
     }
 
     setProcesando(true);
@@ -205,6 +343,9 @@ export default function AgendaCliente({
         },
 
         body: JSON.stringify({
+          ...(actividadEditando
+            ? {}
+            : { etapaId: etapaElegida || null }),
           tipo: form.tipo,
           seccion: form.seccion,
           recordatorio: form.recordatorio,
@@ -551,6 +692,7 @@ export default function AgendaCliente({
                     tipo: "TAREA",
                     diaInicio: String(diaActual ?? 1),
                   });
+                  reiniciarSeleccionEtapa();
                   setModalAbierto(true);
                 }}
                 className="rounded-lg border border-purple-300 bg-purple-50 px-4 py-2 text-sm font-semibold text-purple-800 hover:bg-purple-100"
@@ -651,6 +793,24 @@ export default function AgendaCliente({
                           )}
                         </span>
 
+                        {actividad.etapa && (
+                          <span className="rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-800">
+                            {actividad.etapa.nombre}
+                            {" · "}
+                            Días {actividad.etapa.diaInicio} al {actividad.etapa.diaFin}
+                            {" · "}
+                            {actividad.etapa.estado === "BORRADOR"
+                              ? "Borrador — No publicada"
+                              : actividad.etapa.estado === "PROGRAMADA"
+                              ? "Programada — No publicada"
+                              : actividad.etapa.estado === "PUBLICADA"
+                              ? "Publicada"
+                              : actividad.etapa.estado === "FINALIZADA"
+                              ? "Finalizada"
+                              : actividad.etapa.estado}
+                          </span>
+                        )}
+
                         {actividad.hora && (
                           <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
                             {actividad.hora}
@@ -729,16 +889,21 @@ export default function AgendaCliente({
                         editable={
                           !bloqueado &&
                           actividad.activo &&
-                          actividad.seccion ===
-                            "ADICIONAL" &&
                           (
-                            diaActual === null ||
-                            aplicaEnDia(
-                              actividad,
-                              diaActual
-                            ) ||
-                            actividad.diaInicio >
-                              diaActual
+                            actividad.etapaId
+                              ? actividad.etapa?.estado ===
+                                  "BORRADOR"
+                              : actividad.seccion ===
+                                  "ADICIONAL" &&
+                                (
+                                  diaActual === null ||
+                                  aplicaEnDia(
+                                    actividad,
+                                    diaActual
+                                  ) ||
+                                  actividad.diaInicio >
+                                    diaActual
+                                )
                           )
                         }
                       />
@@ -755,7 +920,28 @@ export default function AgendaCliente({
                     </div>
 
 
-                    {!bloqueado && (
+                    {!bloqueado && actividad.etapaId && (
+                      <div className="shrink-0">
+                        {actividad.etapa?.estado === "BORRADOR" ? (
+                          <button
+                            type="button"
+                            disabled={procesando}
+                            onClick={() => abrirEditar(actividad)}
+                            className="rounded-lg border border-violet-300 bg-violet-50 px-3 py-2 text-xs font-semibold text-violet-800 hover:bg-violet-100 disabled:opacity-50"
+                          >
+                            Editar borrador
+                          </button>
+                        ) : (
+                          <div className="max-w-56 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
+                            Edicion protegida para conservar
+                            el contenido y el historial de
+                            esta etapa.
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {!bloqueado && !actividad.etapaId && (
 
                       <div className="flex shrink-0 flex-wrap gap-2">
 
@@ -944,6 +1130,88 @@ export default function AgendaCliente({
               </section>
             )}
 
+            {seguimientoId && !actividadEditando && (
+              <section className="rounded-2xl border border-violet-200 bg-violet-50 p-4">
+                <p className="text-sm font-bold text-violet-900">
+                  Etapa de destino
+                </p>
+
+                {cargandoEtapas ? (
+                  <p className="mt-2 text-sm text-violet-700">
+                    Consultando etapas...
+                  </p>
+                ) : errorEtapas ? (
+                  <p className="mt-2 text-sm text-red-700">
+                    {errorEtapas}
+                  </p>
+                ) : etapasAgenda.length === 0 ? (
+                  <p className="mt-2 text-sm text-violet-700">
+                    No hay etapas. La actividad se guardará
+                    en la agenda tradicional.
+                  </p>
+                ) : (
+                  <>
+                    <select
+                      value={etapaElegida}
+                      onChange={(evento) => {
+                        const id = evento.target.value;
+                        const etapa = etapasAgenda.find(
+                          (item) => item.id === id
+                        );
+
+                        setEtapaElegida(id);
+
+                        if (etapa) {
+                          setForm((anterior) => ({
+                            ...anterior,
+                            diaInicio: String(etapa.diaInicio),
+                            diaFin: String(etapa.diaFin),
+                          }));
+                        }
+                      }}
+                      className="admin-input mt-3"
+                      required
+                    >
+                      <option value="">
+                        Selecciona una etapa en borrador
+                      </option>
+
+                      {etapasAgenda
+                        .filter(
+                          (etapa) =>
+                            etapa.estado === "BORRADOR"
+                        )
+                        .map((etapa) => (
+                          <option
+                            key={etapa.id}
+                            value={etapa.id}
+                          >
+                            {etapa.nombre} — días {etapa.diaInicio} al {etapa.diaFin}
+                          </option>
+                        ))}
+                    </select>
+
+                    {etapaElegida && (
+                      <p className="mt-2 text-xs text-violet-700">
+                        Esta actividad permanecerá oculta
+                        al cliente mientras la etapa esté
+                        en borrador.
+                      </p>
+                    )}
+
+                    {!etapasAgenda.some(
+                      (etapa) =>
+                        etapa.estado === "BORRADOR"
+                    ) && (
+                      <p className="mt-2 text-sm text-amber-800">
+                        No hay etapas en borrador disponibles.
+                      </p>
+                    )}
+                  </>
+                )}
+              </section>
+            )}
+
             <section className="rounded-2xl border border-gray-200 bg-white p-4">
 
               <p className="mb-4 text-xs font-bold uppercase tracking-[0.12em] text-violet-600">
@@ -1028,7 +1296,10 @@ export default function AgendaCliente({
                   />
                 </div>
 
-                {(!seguimientoId || form.seccion === "ADICIONAL") && (
+                {(!seguimientoId ||
+                  form.seccion === "ADICIONAL" ||
+                  Boolean(etapaElegida) ||
+                  Boolean(actividadEditando?.etapaId)) && (
                   <>
                     {seguimientoId && form.seccion === "ADICIONAL" && (
                       <DuracionRapidaProtocolo
