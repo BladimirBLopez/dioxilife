@@ -242,11 +242,18 @@ export default function ProtocoloPrincipalPreparacion({
     );
 
 
+  const [
+    programacionModificada,
+    setProgramacionModificada,
+  ] = useState(false);
+
   function abrirNueva() {
+    setProgramacionModificada(false);
     setEditando(null);
 
     setForm({
       ...formVacio,
+      diaFin: String(duracionDias),
       orden:
         String(
           actividades.length
@@ -262,6 +269,7 @@ export default function ProtocoloPrincipalPreparacion({
   function abrirEditar(
     actividad: Actividad
   ) {
+    setProgramacionModificada(false);
     setEditando(
       actividad
     );
@@ -339,6 +347,43 @@ export default function ProtocoloPrincipalPreparacion({
             form.diaFin
           )
         : null;
+
+    if (
+      !Number.isInteger(diaInicio) ||
+      diaInicio < 1 ||
+      diaInicio > duracionDias
+    ) {
+      toast.error(
+        `Elige un día inicial entre 1 y ${duracionDias}.`
+      );
+      return;
+    }
+
+    if (
+      diaFin === null &&
+      (!editando ||
+        editando.diaFin !== null ||
+        programacionModificada)
+    ) {
+      toast.error(
+        "Selecciona un día final válido."
+      );
+      return;
+    }
+
+    if (
+      diaFin !== null &&
+      (
+        !Number.isInteger(diaFin) ||
+        diaFin < diaInicio ||
+        diaFin > duracionDias
+      )
+    ) {
+      toast.error(
+        `El día final debe estar entre ${diaInicio} y ${duracionDias}.`
+      );
+      return;
+    }
 
     setProcesando(
       true
@@ -879,17 +924,6 @@ export default function ProtocoloPrincipalPreparacion({
                   />
                 )}
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    setModalSerie(
-                      true
-                    )
-                  }
-                  className="rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-semibold text-violet-700 hover:bg-violet-100"
-                >
-                  Serie
-                </button>
 
                 <button
                   type="button"
@@ -1272,16 +1306,23 @@ export default function ProtocoloPrincipalPreparacion({
 
                 <div className="sm:col-span-2">
   <ProgramacionDiasActividad
+    key={editando ? String(editando.id) : "nueva"}
     diaInicio={form.diaInicio}
     diaFin={form.diaFin}
     duracionDias={duracionDias}
-    onChange={(diaInicio, diaFin) =>
+    modoSinFin={
+      editando?.diaFin === null
+        ? "UNICO"
+        : undefined
+    }
+    onChange={(diaInicio, diaFin) => {
+      setProgramacionModificada(true);
       setForm((actual) => ({
         ...actual,
         diaInicio,
         diaFin,
-      }))
-    }
+      }));
+    }}
   />
 </div>
 

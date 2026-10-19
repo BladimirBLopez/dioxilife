@@ -506,7 +506,10 @@ function actividadCorrespondeDia(
   dia: number
 ) {
   const diaFin =
-    actividad.diaFin ?? Number.MAX_SAFE_INTEGER;
+    actividad.diaFin ??
+    (actividad.seccion === "ADICIONAL"
+      ? Number.MAX_SAFE_INTEGER
+      : actividad.diaInicio);
 
   return (
     dia >=
@@ -1714,13 +1717,9 @@ export default function SeguimientoPublico({
           seguimiento.actividades
       ) {
         const aplicaEseDia =
-          actividad.diaInicio <=
-            dia &&
-          (
-            actividad.diaFin ===
-              null ||
-            actividad.diaFin >=
-              dia
+          actividadCorrespondeDia(
+            actividad,
+            dia
           );
 
         if (

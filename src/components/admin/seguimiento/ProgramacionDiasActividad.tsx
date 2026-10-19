@@ -8,12 +8,31 @@ type Props = {
   diaInicio: string;
   diaFin: string;
   duracionDias: number;
+  modoSinFin?: Modo;
   onChange: (inicio: string, fin: string) => void;
 };
 
-function detectarModo(inicio: string, fin: string): Modo {
-  if (inicio === "1" && fin === "") return "TODOS";
-  if (fin !== "" && inicio === fin) return "UNICO";
+function detectarModo(
+  inicio: string,
+  fin: string,
+  duracionDias: number,
+  modoSinFin?: Modo
+): Modo {
+  if (fin === "") {
+    return modoSinFin ?? "PERIODO";
+  }
+
+  if (
+    inicio === "1" &&
+    fin === String(duracionDias)
+  ) {
+    return "TODOS";
+  }
+
+  if (inicio === fin) {
+    return "UNICO";
+  }
+
   return "PERIODO";
 }
 
@@ -21,22 +40,33 @@ export default function ProgramacionDiasActividad({
   diaInicio,
   diaFin,
   duracionDias,
+  modoSinFin,
   onChange,
 }: Props) {
   const [seleccion, setSeleccion] = useState<{
     modo: Modo;
     clave: string;
   }>(() => ({
-    modo: detectarModo(diaInicio, diaFin),
-    clave: JSON.stringify([diaInicio, diaFin]),
+    modo: detectarModo(
+      diaInicio,
+      diaFin,
+      duracionDias,
+      modoSinFin
+    ),
+    clave: JSON.stringify([diaInicio, diaFin, modoSinFin]),
   }));
 
-  const claveActual = JSON.stringify([diaInicio, diaFin]);
+  const claveActual = JSON.stringify([diaInicio, diaFin, modoSinFin]);
 
   const modo =
     seleccion.clave === claveActual
       ? seleccion.modo
-      : detectarModo(diaInicio, diaFin);
+      : detectarModo(
+      diaInicio,
+      diaFin,
+      duracionDias,
+      modoSinFin
+    );
 
   function cambiarDias(
     inicio: string,
@@ -45,7 +75,7 @@ export default function ProgramacionDiasActividad({
   ) {
     setSeleccion({
       modo: nuevoModo,
-      clave: JSON.stringify([inicio, fin]),
+      clave: JSON.stringify([inicio, fin, modoSinFin]),
     });
     onChange(inicio, fin);
   }
@@ -61,7 +91,11 @@ export default function ProgramacionDiasActividad({
 
   function seleccionar(nuevo: Modo) {
     if (nuevo === "TODOS") {
-      cambiarDias("1", "", nuevo);
+      cambiarDias(
+        "1",
+        String(duracionDias),
+        nuevo
+      );
     } else if (nuevo === "UNICO") {
       cambiarDias(inicioValido, inicioValido, nuevo);
     } else {
@@ -145,10 +179,14 @@ export default function ProgramacionDiasActividad({
                 const nuevoInicio = e.target.value;
 
                 const nuevoFin =
-                  diaFin !== "" &&
-                  Number(diaFin) < Number(nuevoInicio)
-                    ? nuevoInicio
-                    : diaFin;
+                  diaFin === "" &&
+                  modoSinFin === "PERIODO"
+                    ? String(duracionDias)
+                    : diaFin !== "" &&
+                        nuevoInicio !== "" &&
+                        Number(diaFin) < Number(nuevoInicio)
+                      ? nuevoInicio
+                      : diaFin;
 
                 cambiarDias(nuevoInicio, nuevoFin);
               }}

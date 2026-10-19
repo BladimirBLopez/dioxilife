@@ -54,11 +54,15 @@ function aplicaEnDia(
     etapa?.diaInicio ?? actividad.diaInicio
   );
 
-  // Sin etapa, mantener la duracion
-  // tradicional del seguimiento.
+  // Conservar la regla historica sin etapa.
+  // Las etapas mantienen sus propios limites.
   const fin = Math.min(
     actividad.diaFin ??
-      (etapa?.diaFin ?? duracionDias),
+      (etapa
+        ? etapa.diaFin
+        : actividad.seccion === "ADICIONAL"
+          ? duracionDias
+          : actividad.diaInicio),
     etapa?.diaFin ?? duracionDias
   );
 

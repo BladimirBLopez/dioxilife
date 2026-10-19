@@ -127,15 +127,25 @@ export default function ProtocolosAdicionalesPreparacion({
   const [procesando, setProcesando] =
     useState(false);
 
+  const [
+    programacionModificada,
+    setProgramacionModificada,
+  ] = useState(false);
+
   function abrirNuevo() {
+    setProgramacionModificada(false);
     setActividadEditando(null);
-    setForm(formularioVacio);
+    setForm({
+      ...formularioVacio,
+      diaFin: String(duracionDias),
+    });
     setModalAbierto(true);
   }
 
   function abrirEditar(
     actividad: ActividadAdicional
   ) {
+    setProgramacionModificada(false);
     setActividadEditando(
       actividad
     );
@@ -216,6 +226,18 @@ export default function ProtocolosAdicionalesPreparacion({
     ) {
       toast.error(
         `El día inicial debe estar entre 1 y ${duracionDias}.`
+      );
+      return;
+    }
+
+    if (
+      diaFin === null &&
+      (!actividadEditando ||
+        actividadEditando.diaFin !== null ||
+        programacionModificada)
+    ) {
+      toast.error(
+        "Selecciona un día final válido."
       );
       return;
     }
@@ -955,16 +977,29 @@ export default function ProtocolosAdicionalesPreparacion({
 
                 <div className="sm:col-span-2">
   <ProgramacionDiasActividad
+    key={
+      actividadEditando
+        ? String(actividadEditando.id)
+        : "nueva"
+    }
     diaInicio={form.diaInicio}
     diaFin={form.diaFin}
     duracionDias={duracionDias}
-    onChange={(diaInicio, diaFin) =>
+    modoSinFin={
+      actividadEditando?.diaFin === null
+        ? actividadEditando.diaInicio === 1
+          ? "TODOS"
+          : "PERIODO"
+        : undefined
+    }
+    onChange={(diaInicio, diaFin) => {
+      setProgramacionModificada(true);
       setForm((actual) => ({
         ...actual,
         diaInicio,
         diaFin,
-      }))
-    }
+      }));
+    }}
   />
 </div>
 

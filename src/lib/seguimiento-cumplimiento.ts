@@ -223,7 +223,14 @@ export async function calcularCumplimiento(
     },
     d: number
   ) => {
-    const ultimoDia = actividad.diaFin ?? duracionAplicable;
+    const ultimoDia =
+      actividad.diaFin ??
+      (
+        actividad.seccion ===
+          "ADICIONAL"
+          ? duracionAplicable
+          : actividad.diaInicio
+      );
 
     return (
       d >= actividad.diaInicio &&
