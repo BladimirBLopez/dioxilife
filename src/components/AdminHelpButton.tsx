@@ -49,9 +49,11 @@ export default function AdminHelpButton() {
   return (
     <>
       <button
+        type="button"
         onClick={() => setAbierto(true)}
-        className="fixed bottom-5 right-5 z-50 h-14 min-w-14 px-4 rounded-full bg-brand-pink text-white text-2xl shadow-lg hover:scale-105 transition flex items-center justify-center gap-2"
+        className="fixed bottom-[calc(1rem_+_env(safe-area-inset-bottom))] right-4 z-20 flex h-11 min-w-11 items-center justify-center gap-2 rounded-full bg-brand-pink px-2 text-xl text-white shadow-lg transition focus-visible:outline-2 focus-visible:outline-offset-2 sm:bottom-5 sm:right-5 sm:h-12 sm:min-w-12 sm:px-3 sm:hover:scale-105"
         aria-label="Ayuda"
+        aria-expanded={abierto}
       >
         <span>?</span>
         <span className="hidden sm:inline text-sm font-semibold">

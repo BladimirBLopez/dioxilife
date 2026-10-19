@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Modal from "@/components/Modal";
 import SelectorHora from "@/components/admin/seguimiento/SelectorHora";
+import ProgramacionDiasActividad from "@/components/admin/seguimiento/ProgramacionDiasActividad";
 import IndicacionesActividadPreparacion from "@/components/admin/seguimiento/IndicacionesActividadPreparacion";
 import AgregarDesdeBiblioteca from "@/components/admin/seguimiento/AgregarDesdeBiblioteca";
 import SeleccionarProtocoloGuardado from "@/components/admin/seguimiento/SeleccionarProtocoloGuardado";
@@ -525,7 +526,7 @@ export default function ProtocolosAdicionalesPreparacion({
                 </h2>
 
                 <p className="mt-1 text-sm leading-6 text-gray-500">
-                  Organiza los distintos protocolos o fases que tendrá el cliente durante su seguimiento general.
+                  Opcional: añade protocolos complementarios.
                 </p>
 
               </div>
@@ -568,7 +569,7 @@ export default function ProtocolosAdicionalesPreparacion({
             </div>
 
 
-            <div className="mt-5 overflow-hidden rounded-2xl border border-gray-200">
+            <div className="mt-3 overflow-hidden rounded-2xl border border-gray-200">
 
               <div className="hidden border-b border-gray-200 bg-gray-50 px-4 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 sm:grid sm:grid-cols-[110px_minmax(0,1fr)_140px] sm:gap-4">
 
@@ -590,25 +591,16 @@ export default function ProtocolosAdicionalesPreparacion({
               {actividadesOrdenadas.length ===
               0 ? (
 
-                <div className="p-7 text-center">
+                <div className="px-4 py-5 text-center sm:p-6">
 
                   <p className="font-semibold text-gray-800">
                     Sin protocolos adicionales
                   </p>
 
                   <p className="mt-1 text-sm leading-6 text-gray-500">
-                    Esta sección es opcional. Agrégala únicamente cuando el cliente tenga un protocolo complementario.
+                    Usa + Agregar protocolo cuando necesites uno.
                   </p>
 
-                  <button
-                    type="button"
-                    onClick={
-                      abrirNuevo
-                    }
-                    className="mt-4 rounded-xl border border-purple-200 bg-purple-50 px-4 py-2.5 text-sm font-semibold text-purple-700 hover:bg-purple-100"
-                  >
-                    + Agregar protocolo adicional
-                  </button>
 
                 </div>
 
@@ -961,78 +953,34 @@ export default function ProtocolosAdicionalesPreparacion({
                   />
                 </div>
 
-                <div>
-                  <label className="admin-label">
-                    Día de inicio
-                  </label>
-
-                  <input
-                    type="number"
-                    min={1}
-                    max={duracionDias}
-                    value={form.diaInicio}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        diaInicio: e.target.value,
-                      })
-                    }
-                    className="admin-input"
-                  />
-                </div>
-
-                <div>
-                  <label className="admin-label">
-                    Día final
-                  </label>
-
-                  <input
-                    type="number"
-                    min={1}
-                    max={duracionDias}
-                    value={form.diaFin}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        diaFin: e.target.value,
-                      })
-                    }
-                    className="admin-input"
-                    placeholder="Opcional: hasta el último día"
-                  />
-                </div>
+                <div className="sm:col-span-2">
+  <ProgramacionDiasActividad
+    diaInicio={form.diaInicio}
+    diaFin={form.diaFin}
+    duracionDias={duracionDias}
+    onChange={(diaInicio, diaFin) =>
+      setForm((actual) => ({
+        ...actual,
+        diaInicio,
+        diaFin,
+      }))
+    }
+  />
+</div>
 
               </div>
 
-              <div className="mt-3 rounded-xl border border-blue-100 bg-white px-4 py-3">
-                <p className="text-xs font-semibold text-blue-800">
-                  Periodo configurado
-                </p>
 
-                <p className="mt-1 text-sm font-bold text-gray-900">
-                  Día{" "}
-                  {
-                    Number(
-                      form.diaInicio
-                    ) ||
-                    1
-                  }
-                  {" al "}
-                  {
-                    form.diaFin
-                      ? Number(
-                          form.diaFin
-                        )
-                      : duracionDias
-                  }
-                </p>
 
-                <p className="mt-1 text-xs leading-5 text-gray-500">
-                  Puedes programar varios protocolos el mismo día. Si no defines un día final, continuará hasta terminar el seguimiento.
-                </p>
-              </div>
-
-              <div className="mt-4">
+              <details className="mt-3 overflow-hidden rounded-xl border border-gray-200 bg-white">
+  <summary className="cursor-pointer px-3 py-3 text-sm font-medium text-gray-700">
+    Recordatorios (opcional)
+    <span className="ml-2 text-xs font-normal text-gray-500">
+      {form.recordatorio === "NINGUNO" ? "Desactivados" : "Configurados"}
+    </span>
+  </summary>
+  <div className="border-t border-gray-100 px-3 pb-3">
+    <div className="mt-4">
                 <label className="admin-label">
                   Avisar al cliente
                 </label>
@@ -1069,6 +1017,8 @@ export default function ProtocolosAdicionalesPreparacion({
                   </option>
                 </select>
               </div>
+  </div>
+</details>
 
             </section>
 

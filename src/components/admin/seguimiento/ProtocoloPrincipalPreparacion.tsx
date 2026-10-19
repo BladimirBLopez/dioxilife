@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import Modal from "@/components/Modal";
 
 import SelectorHora from "@/components/admin/seguimiento/SelectorHora";
+import ProgramacionDiasActividad from "@/components/admin/seguimiento/ProgramacionDiasActividad";
 import IndicacionesActividadPreparacion from "@/components/admin/seguimiento/IndicacionesActividadPreparacion";
 import AgregarDesdeBiblioteca from "@/components/admin/seguimiento/AgregarDesdeBiblioteca";
 
@@ -858,7 +859,7 @@ export default function ProtocoloPrincipalPreparacion({
                 </h2>
 
                 <p className="mt-1 text-sm leading-6 text-gray-500">
-                  Organiza las actividades e indicaciones del cliente.
+                  Actividades e indicaciones del cliente.
                 </p>
 
               </div>
@@ -905,30 +906,21 @@ export default function ProtocoloPrincipalPreparacion({
             </div>
 
 
-            <div className="mt-5 overflow-visible rounded-2xl border border-gray-200">
+            <div className="mt-3 overflow-visible rounded-2xl border border-gray-200">
 
               {actividadesOrdenadas.length ===
               0 ? (
 
-                <div className="p-7 text-center">
+                <div className="px-4 py-5 text-center sm:p-6">
 
                   <p className="font-semibold text-gray-800">
-                    El protocolo todavía está vacío
+                    Sin actividades
                   </p>
 
                   <p className="mt-1 text-sm leading-6 text-gray-500">
-                    Agrega la primera actividad para comenzar a construir el protocolo del cliente.
+                    Usa + Actividad para comenzar.
                   </p>
 
-                  <button
-                    type="button"
-                    onClick={
-                      abrirNueva
-                    }
-                    className="mt-4 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
-                  >
-                    + Agregar primera actividad
-                  </button>
 
                 </div>
 
@@ -1278,73 +1270,38 @@ export default function ProtocoloPrincipalPreparacion({
                 </div>
 
 
-                <div>
-
-                  <label className="admin-label">
-                    Desde el día
-                  </label>
-
-                  <input
-                    type="number"
-                    min={1}
-                    max={
-                      duracionDias
-                    }
-                    value={
-                      form.diaInicio
-                    }
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        diaInicio:
-                          e.target.value,
-                      })
-                    }
-                    className="admin-input"
-                  />
-
-                </div>
-
-
-                <div>
-
-                  <label className="admin-label">
-                    Hasta el día
-                  </label>
-
-                  <input
-                    type="number"
-                    min={1}
-                    max={
-                      duracionDias
-                    }
-                    value={
-                      form.diaFin
-                    }
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        diaFin:
-                          e.target.value,
-                      })
-                    }
-                    className="admin-input"
-                    placeholder="Opcional"
-                  />
-
-                </div>
+                <div className="sm:col-span-2">
+  <ProgramacionDiasActividad
+    diaInicio={form.diaInicio}
+    diaFin={form.diaFin}
+    duracionDias={duracionDias}
+    onChange={(diaInicio, diaFin) =>
+      setForm((actual) => ({
+        ...actual,
+        diaInicio,
+        diaFin,
+      }))
+    }
+  />
+</div>
 
               </div>
 
 
-              <p className="mt-2 text-xs leading-5 text-gray-500">
-                Si no defines un día final, la actividad continuará hasta terminar el seguimiento.
-              </p>
+
 
 
               {form.hora ? (
 
-                <div className="mt-4">
+                <details className="mt-3 overflow-hidden rounded-xl border border-gray-200 bg-white">
+  <summary className="cursor-pointer px-3 py-3 text-sm font-medium text-gray-700">
+    Recordatorios (opcional)
+    <span className="ml-2 text-xs font-normal text-gray-500">
+      {form.recordatorio === "NINGUNO" ? "Desactivados" : "Configurados"}
+    </span>
+  </summary>
+  <div className="border-t border-gray-100 px-3 pb-3">
+    <div className="mt-4">
 
                   <label className="admin-label">
                     Avisar al cliente
@@ -1387,18 +1344,10 @@ export default function ProtocoloPrincipalPreparacion({
                   </select>
 
                 </div>
+  </div>
+</details>
 
-              ) : (
-
-                <div className="mt-4 rounded-xl border border-gray-200 bg-white px-3 py-2.5">
-
-                  <p className="text-xs leading-5 text-gray-500">
-                    Si agregas una hora también podrás programar un recordatorio.
-                  </p>
-
-                </div>
-
-              )}
+              ) : null}
 
             </section>
 
