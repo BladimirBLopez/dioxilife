@@ -814,12 +814,10 @@ export default async function SeguimientoClientePage({
           <div>
 
             <p className="text-sm font-semibold text-gray-900">
-              Ver agenda completa y editar
+              Actividades programadas
             </p>
 
-            <p className="mt-1 text-xs text-gray-500">
-              Edita actividades, horarios, indicaciones y protocolos adicionales.
-            </p>
+
 
           </div>
 
@@ -833,8 +831,8 @@ export default async function SeguimientoClientePage({
         <div className="border-t border-gray-100 p-3 sm:p-4">
 
           <AgendaCliente
-        tituloAgenda="Agenda del seguimiento"
-        descripcionAgenda="Configuración completa del protocolo de este cliente."
+        tituloAgenda=""
+        descripcionAgenda=""
         seguimientoId={seguimiento.id}
         duracionDias={seguimiento.duracionDias}
         estado={seguimiento.estado}

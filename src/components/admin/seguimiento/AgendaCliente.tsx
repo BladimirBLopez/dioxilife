@@ -659,17 +659,20 @@ export default function AgendaCliente({
 
         <div className="flex flex-col gap-3 border-b border-gray-100 p-5 sm:flex-row sm:items-center sm:justify-between">
 
-          <div>
-
-            <h2 className="text-lg font-semibold text-gray-900">
-              {tituloAgenda}
-            </h2>
-
-            <p className="mt-1 text-sm text-gray-500">
-              {descripcionAgenda}
-            </p>
-
-          </div>
+          {(tituloAgenda || descripcionAgenda) && (
+            <div>
+              {tituloAgenda && (
+                <h2 className="text-lg font-semibold text-gray-900">
+                  {tituloAgenda}
+                </h2>
+              )}
+              {descripcionAgenda && (
+                <p className="mt-1 text-sm text-gray-500">
+                  {descripcionAgenda}
+                </p>
+              )}
+            </div>
+          )}
 
           {!bloqueado && (
             <div className="flex flex-wrap items-center gap-2">
@@ -858,64 +861,74 @@ export default function AgendaCliente({
                       </h3>
 
 
-                      {actividad.descripcion && (
-                        <div className="mt-2 rounded-xl bg-gray-50 px-3 py-2.5">
+                      <details className="group mt-3 overflow-hidden rounded-xl border border-gray-200 bg-gray-50/60">
+                        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-xs font-semibold text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-600">
+                          <span>Ver detalles</span>
+                          <span aria-hidden="true" className="text-gray-400 transition-transform group-open:rotate-180">
+                            ▾
+                          </span>
+                        </summary>
+                        <div className="space-y-3 border-t border-gray-200 p-3">
+                          {actividad.descripcion && (
+                            <div className="mt-2 rounded-xl bg-gray-50 px-3 py-2.5">
 
-                          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400">
-                            Instrucciones del título
+                              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400">
+                                Instrucciones del título
+                              </p>
+
+                              <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-gray-600">
+                                {actividad.descripcion}
+                              </p>
+
+                            </div>
+                          )}
+
+
+                          <IndicacionesActividadPreparacion
+                            seguimientoId={
+                              seguimientoId
+                            }
+                            apiBase={
+                              baseApi
+                            }
+                            actividadId={
+                              actividad.id
+                            }
+                            indicaciones={
+                              actividad.indicaciones
+                            }
+                            editable={
+                              !bloqueado &&
+                              actividad.activo &&
+                              (
+                                actividad.etapaId
+                                  ? actividad.etapa?.estado ===
+                                      "BORRADOR"
+                                  : actividad.seccion ===
+                                      "ADICIONAL" &&
+                                    (
+                                      diaActual === null ||
+                                      aplicaEnDia(
+                                        actividad,
+                                        diaActual
+                                      ) ||
+                                      actividad.diaInicio >
+                                        diaActual
+                                    )
+                              )
+                            }
+                          />
+
+
+                          <p className="mt-2 text-xs text-gray-400">
+                            Orden: {actividad.orden} ·{" "}
+                            {actividad.cantidadProgresos} progreso
+                            {actividad.cantidadProgresos === 1
+                              ? ""
+                              : "s"}
                           </p>
-
-                          <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-gray-600">
-                            {actividad.descripcion}
-                          </p>
-
                         </div>
-                      )}
-
-
-                      <IndicacionesActividadPreparacion
-                        seguimientoId={
-                          seguimientoId
-                        }
-                        apiBase={
-                          baseApi
-                        }
-                        actividadId={
-                          actividad.id
-                        }
-                        indicaciones={
-                          actividad.indicaciones
-                        }
-                        editable={
-                          !bloqueado &&
-                          actividad.activo &&
-                          (
-                            actividad.etapaId
-                              ? actividad.etapa?.estado ===
-                                  "BORRADOR"
-                              : actividad.seccion ===
-                                  "ADICIONAL" &&
-                                (
-                                  diaActual === null ||
-                                  aplicaEnDia(
-                                    actividad,
-                                    diaActual
-                                  ) ||
-                                  actividad.diaInicio >
-                                    diaActual
-                                )
-                          )
-                        }
-                      />
-
-
-                      <p className="mt-2 text-xs text-gray-400">
-                        Orden: {actividad.orden} ·{" "}
-                        {actividad.cantidadProgresos} progreso
-                        {actividad.cantidadProgresos === 1
-                          ? ""
-                          : "s"}
-                      </p>
+                      </details>
 
                     </div>
 
@@ -957,62 +970,75 @@ export default function AgendaCliente({
                           Editar
                         </button>
 
-                        {actividad.seccion === "ADICIONAL" ? (
-                          actividad.activo &&
-                          (
-                            diaActual === null ||
-                            aplicaEnDia(
-                              actividad,
-                              diaActual
-                            )
-                          ) && (
-                            <button
-                              type="button"
-                              disabled={procesando}
-                              onClick={() =>
-                                setQuitarActividad(
-                                  actividad
+                        {(actividad.seccion !== "ADICIONAL" ||
+                          (actividad.activo &&
+                            (diaActual === null ||
+                              aplicaEnDia(actividad, diaActual)))) && (
+                          <details className="group min-w-0">
+                            <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-600">
+                              Más opciones
+                              <span aria-hidden="true" className="text-gray-400 transition group-open:rotate-180">▾</span>
+                            </summary>
+                            <div className="mt-2 flex flex-wrap gap-2 rounded-lg border border-gray-200 bg-gray-50 p-2">
+                            {actividad.seccion === "ADICIONAL" ? (
+                              actividad.activo &&
+                              (
+                                diaActual === null ||
+                                aplicaEnDia(
+                                  actividad,
+                                  diaActual
                                 )
-                              }
-                              className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60"
-                            >
-                              {diaActual !== null
-                                ? "Quitar desde hoy"
-                                : "Quitar protocolo"}
-                            </button>
-                          )
-                        ) : (
-                          <>
-                            <button
-                              type="button"
-                              disabled={procesando}
-                              onClick={() =>
-                                void cambiarEstado(
-                                  actividad
-                                )
-                              }
-                              className="rounded-lg border border-amber-200 px-3 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50 disabled:opacity-60"
-                            >
-                              {actividad.activo
-                                ? "Desactivar"
-                                : "Activar"}
-                            </button>
+                              ) && (
+                                <button
+                                  type="button"
+                                  disabled={procesando}
+                                  onClick={() =>
+                                    setQuitarActividad(
+                                      actividad
+                                    )
+                                  }
+                                  className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60"
+                                >
+                                  {diaActual !== null
+                                    ? "Quitar desde hoy"
+                                    : "Quitar protocolo"}
+                                </button>
+                              )
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  disabled={procesando}
+                                  onClick={() =>
+                                    void cambiarEstado(
+                                      actividad
+                                    )
+                                  }
+                                  className="rounded-lg border border-amber-200 px-3 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50 disabled:opacity-60"
+                                >
+                                  {actividad.activo
+                                    ? "Desactivar"
+                                    : "Activar"}
+                                </button>
 
-                            {actividad.cantidadProgresos === 0 && (
-                              <button
-                                type="button"
-                                disabled={procesando}
-                                onClick={() =>
-                                  setEliminarActividad(
-                                    actividad
-                                  )
-                                }
-                                className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60"
-                              >
-                                Eliminar
-                              </button>
+                                {actividad.cantidadProgresos === 0 && (
+                                  <button
+                                    type="button"
+                                    disabled={procesando}
+                                    onClick={() =>
+                                      setEliminarActividad(
+                                        actividad
+                                      )
+                                    }
+                                    className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60"
+                                  >
+                                    Eliminar
+                                  </button>
+                                )}
+                              </>
                             )}
-                          </>
+                            </div>
+                          </details>
                         )}
 
                       </div>
