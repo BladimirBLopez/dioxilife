@@ -8,11 +8,16 @@ import {
 
 import {
   Clock3,
+  Frown,
   LoaderCircle,
+  Meh,
   Save,
+  Smile,
 } from "lucide-react";
 
 import { toast } from "sonner";
+
+import CloudinaryUpload from "@/components/CloudinaryUpload";
 
 
 type MedicionGlucosa = {
@@ -34,14 +39,22 @@ type Registro = {
   peso: number | null;
   cinturaCm: number | null;
   glucemiaAyunas: number | null;
+  estadoAnimo: string | null;
+  observacion: string | null;
 };
 
 type Respuesta = {
   diaActual: number | null;
   editable?: boolean;
+  diaMinimo?: number;
+  diaMaximo?: number | null;
+  historialDisponible?: boolean;
   registro: Registro | null;
   medicionesGlucosa?: MedicionGlucosa[];
+  fotos?: string[];
 };
+
+const MAX_FOTOS = 6;
 
 
 function crearMedicionesVacias():
@@ -134,6 +147,18 @@ export default function MedicionesSeguimientoPublico({
     useState("");
 
   const [
+    estadoAnimo,
+    setEstadoAnimo,
+  ] =
+    useState<string | null>(null);
+
+  const [
+    observacionTexto,
+    setObservacionTexto,
+  ] =
+    useState("");
+
+  const [
     medicionesGlucosa,
     setMedicionesGlucosa,
   ] =
@@ -142,6 +167,12 @@ export default function MedicionesSeguimientoPublico({
     >(
       crearMedicionesVacias
     );
+
+  const [fotos, setFotos] =
+    useState<string[]>([]);
+
+  const [subiendoFoto, setSubiendoFoto] =
+    useState(false);
 
   const [
     cargando,
@@ -160,6 +191,9 @@ export default function MedicionesSeguimientoPublico({
     setEditable,
   ] =
     useState(false);
+  const [historialDisponible, setHistorialDisponible] = useState(false);
+  const [diaMinimo, setDiaMinimo] = useState(1);
+  const [diaMaximo, setDiaMaximo] = useState(1);
 
   const [
     sucio,
@@ -170,15 +204,15 @@ export default function MedicionesSeguimientoPublico({
 
   const cargar =
     useCallback(
-      async () => {
+      async (dia?: number) => {
         setCargando(true);
 
         try {
           const res =
             await fetch(
-              `/api/seguimiento/${encodeURIComponent(
+              (`/api/seguimiento/${encodeURIComponent(
                 token
-              )}/mediciones`,
+              )}/mediciones` + (dia === undefined ? "" : `?dia=${dia}`)),
               {
                 cache:
                   "no-store",
@@ -207,6 +241,9 @@ export default function MedicionesSeguimientoPublico({
             respuesta.editable ===
               true
           );
+      setHistorialDisponible(respuesta.historialDisponible === true);
+      setDiaMinimo(typeof respuesta.diaMinimo === "number" ? respuesta.diaMinimo : 1);
+      setDiaMaximo(typeof respuesta.diaMaximo === "number" ? respuesta.diaMaximo : 1);
 
           setPeso(
             respuesta.registro
@@ -242,6 +279,22 @@ export default function MedicionesSeguimientoPublico({
               respuesta
                 .medicionesGlucosa
             )
+          );
+
+          setEstadoAnimo(
+            respuesta.registro
+              ?.estadoAnimo ??
+              null
+          );
+
+          setObservacionTexto(
+            respuesta.registro
+              ?.observacion ??
+              ""
+          );
+
+          setFotos(
+            respuesta.fotos ?? []
           );
 
           setSucio(false);
@@ -285,10 +338,25 @@ export default function MedicionesSeguimientoPublico({
   }
 
 
+  function agregarFoto(url: string) {
+    setFotos((actual) => [...actual, url]);
+    setSucio(true);
+  }
+
+
+  function quitarFoto(indice: number) {
+    setFotos((actual) =>
+      actual.filter((_, i) => i !== indice)
+    );
+    setSucio(true);
+  }
+
+
   async function guardar() {
     if (
       !editable ||
       guardando ||
+      subiendoFoto ||
       !sucio
     ) {
       return;
@@ -324,6 +392,15 @@ export default function MedicionesSeguimientoPublico({
                 cinturaCm:
                   cinturaCm.trim() ||
                   null,
+
+                estadoAnimo:
+                  estadoAnimo,
+
+                observacion:
+                  observacionTexto.trim() ||
+                  null,
+
+                fotos,
 
                 medicionesGlucosa:
                   medicionesGlucosa.map(
@@ -403,6 +480,20 @@ export default function MedicionesSeguimientoPublico({
         )
       );
 
+      setEstadoAnimo(
+        data.registro
+          .estadoAnimo ??
+          null
+      );
+
+      setObservacionTexto(
+        data.registro
+          .observacion ??
+          ""
+      );
+
+      setFotos(data.fotos ?? []);
+
       setSucio(false);
 
       if (onGuardado) {
@@ -474,6 +565,29 @@ export default function MedicionesSeguimientoPublico({
       </div>
 
 
+      {historialDisponible && diaMaximo >= diaMinimo && (
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#E9E4F2] bg-[#FAF9FC] p-3">
+          <button
+            type="button"
+            onClick={() => void cargar(Math.max(diaMinimo, (diaActual ?? diaMinimo) - 1))}
+            disabled={(diaActual ?? diaMinimo) <= diaMinimo}
+            className="rounded-lg border border-[#E9E4F2] bg-white px-3 py-2 text-sm font-semibold text-brand-blue disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            ← Anterior
+          </button>
+          <span className="text-sm font-bold text-brand-blue">
+            Día {diaActual} de {diaMaximo}
+          </span>
+          <button
+            type="button"
+            onClick={() => void cargar(Math.min(diaMaximo, (diaActual ?? diaMinimo) + 1))}
+            disabled={(diaActual ?? diaMinimo) >= diaMaximo}
+            className="rounded-lg border border-[#E9E4F2] bg-white px-3 py-2 text-sm font-semibold text-brand-blue disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Siguiente →
+          </button>
+        </div>
+      )}
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
 
         <div>
@@ -732,6 +846,128 @@ export default function MedicionesSeguimientoPublico({
           )}
 
         </div>
+
+      </div>
+
+
+      <div className="mt-6">
+
+        <h3 className="font-extrabold text-[#1F1B24]">
+          ¿Cómo te sientes hoy?
+        </h3>
+
+        <div className="mt-3 grid grid-cols-3 gap-2">
+
+          {(
+            [
+              {
+                valor: "BIEN",
+                texto: "Bien",
+                Icono: Smile,
+              },
+              {
+                valor: "REGULAR",
+                texto: "Regular",
+                Icono: Meh,
+              },
+              {
+                valor: "MAL",
+                texto: "Mal",
+                Icono: Frown,
+              },
+            ] as const
+          ).map((opcion) => (
+            <button
+              key={opcion.valor}
+              type="button"
+              disabled={!editable}
+              onClick={() => {
+                setEstadoAnimo(
+                  estadoAnimo === opcion.valor
+                    ? null
+                    : opcion.valor
+                );
+                setSucio(true);
+              }}
+              className={`flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                estadoAnimo === opcion.valor
+                  ? "border-brand-pink bg-brand-pink/10 text-brand-pink"
+                  : "border-[#DDD7E8] bg-[#FAF9FC] text-brand-gray"
+              }`}
+            >
+              <opcion.Icono className="h-5 w-5" />
+              {opcion.texto}
+            </button>
+          ))}
+
+        </div>
+
+        <label className="mb-1.5 mt-3 block text-xs font-bold uppercase tracking-wide text-brand-gray">
+          Detalles (opcional)
+        </label>
+
+        <textarea
+          disabled={!editable}
+          value={observacionTexto}
+          onChange={(event) => {
+            setObservacionTexto(event.target.value);
+            setSucio(true);
+          }}
+          maxLength={500}
+          rows={3}
+          placeholder="Contanos cómo te sentiste hoy..."
+          className="w-full rounded-xl border border-[#DDD7E8] bg-[#FAF9FC] px-4 py-3 text-sm text-[#1F1B24] outline-none transition focus:border-brand-blue focus:bg-white disabled:opacity-70"
+        />
+
+      </div>
+
+
+      <div className="mt-6">
+
+        <h3 className="font-extrabold text-[#1F1B24]">
+          Fotos de hoy (opcional)
+        </h3>
+
+        <p className="mt-1 text-xs text-brand-gray">
+          Podés subir hasta {MAX_FOTOS} fotos de tu evolución.
+        </p>
+
+        {fotos.length > 0 && (
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {fotos.map((url, indice) => (
+              <div
+                key={url + indice}
+                className="relative aspect-square overflow-hidden rounded-xl border border-[#DDD7E8]"
+              >
+                <img
+                  src={url}
+                  alt={`Foto ${indice + 1}`}
+                  className="h-full w-full object-cover"
+                />
+                {editable && (
+                  <button
+                    type="button"
+                    onClick={() => quitarFoto(indice)}
+                    className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-xs font-bold text-white"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {editable && fotos.length < MAX_FOTOS && (
+          <div className="mt-3">
+            <CloudinaryUpload
+              value=""
+              soloImagen
+              onUploadingChange={setSubiendoFoto}
+              onChange={agregarFoto}
+            />
+          </div>
+        )}
 
       </div>
 

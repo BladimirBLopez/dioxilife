@@ -397,20 +397,6 @@ export async function GET(
   if (
     !miembroGrupo
   ) {
-    if (
-      seguimiento.estado ===
-        "COMPLETADO"
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "Este seguimiento ha finalizado.",
-        },
-        {
-          status: 410,
-        }
-      );
-    }
 
     if (
       seguimiento.estado ===
@@ -459,15 +445,7 @@ export async function GET(
         },
       });
 
-      return NextResponse.json(
-        {
-          error:
-            "Este seguimiento ha finalizado.",
-        },
-        {
-          status: 410,
-        }
-      );
+      seguimiento.estado = "COMPLETADO";
     }
   }
 

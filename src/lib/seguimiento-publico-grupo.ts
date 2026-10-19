@@ -94,10 +94,7 @@ export function resolverDiaRegistroPublico({
       };
     }
 
-    if (
-      estado !==
-      "ACTIVO"
-    ) {
+    if (!["ACTIVO", "PAUSADO"].includes(estado)) {
       return {
         ok: false as const,
         status: 409,
@@ -162,11 +159,7 @@ export function resolverDiaRegistroPublico({
    *
    * Mantiene el comportamiento actual.
    */
-  if (
-    estado !==
-      "ACTIVO" ||
-    !fechaInicio
-  ) {
+  if (!["ACTIVO", "PAUSADO"].includes(estado) || !fechaInicio) {
     return {
       ok: false as const,
       status: 409,

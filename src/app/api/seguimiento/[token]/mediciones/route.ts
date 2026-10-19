@@ -71,6 +71,66 @@ function numeroOpcional(
   };
 }
 
+const ESTADOS_ANIMO_VALIDOS = [
+  "BIEN",
+  "REGULAR",
+  "MAL",
+] as const;
+
+function estadoAnimoOpcional(
+  valor: unknown
+):
+  | { ok: true; valor: (typeof ESTADOS_ANIMO_VALIDOS)[number] | null }
+  | { ok: false; error: string } {
+  if (valor === null || valor === undefined || valor === "") {
+    return { ok: true, valor: null };
+  }
+
+  if (
+    typeof valor !== "string" ||
+    !ESTADOS_ANIMO_VALIDOS.includes(
+      valor as (typeof ESTADOS_ANIMO_VALIDOS)[number]
+    )
+  ) {
+    return {
+      ok: false,
+      error: "El estado de ánimo no es válido.",
+    };
+  }
+
+  return { ok: true, valor: valor as (typeof ESTADOS_ANIMO_VALIDOS)[number] };
+}
+
+function textoOpcional(
+  valor: unknown,
+  nombre: string,
+  maximo: number
+):
+  | { ok: true; valor: string | null }
+  | { ok: false; error: string } {
+  if (valor === null || valor === undefined || valor === "") {
+    return { ok: true, valor: null };
+  }
+
+  if (typeof valor !== "string") {
+    return {
+      ok: false,
+      error: `${nombre} no es válida.`,
+    };
+  }
+
+  const texto = valor.trim();
+
+  if (texto.length > maximo) {
+    return {
+      ok: false,
+      error: `${nombre} es demasiado larga (máximo ${maximo} caracteres).`,
+    };
+  }
+
+  return { ok: true, valor: texto || null };
+}
+
 type MedicionGlucosaEntrada = {
   numero: number;
   valor: number | null;
@@ -299,6 +359,51 @@ function normalizarMedicionesGlucosa(
 }
 
 
+function normalizarFotos(
+  valor: unknown
+):
+  | { ok: true; fotos: string[] }
+  | { ok: false; error: string } {
+  if (valor === undefined || valor === null) {
+    return { ok: true, fotos: [] };
+  }
+
+  if (!Array.isArray(valor)) {
+    return {
+      ok: false,
+      error: "Las fotos no son válidas.",
+    };
+  }
+
+  if (valor.length > 6) {
+    return {
+      ok: false,
+      error:
+        "Solo se permiten hasta 6 fotos por día.",
+    };
+  }
+
+  const fotos: string[] = [];
+
+  for (const item of valor) {
+    if (
+      typeof item !== "string" ||
+      !item.startsWith("https://") ||
+      item.length > 500
+    ) {
+      return {
+        ok: false,
+        error: "Una de las fotos no es válida.",
+      };
+    }
+
+    fotos.push(item);
+  }
+
+  return { ok: true, fotos };
+}
+
+
 async function obtenerSeguimiento(
   token: string
 ) {
@@ -498,7 +603,7 @@ function resolverConsultaMediciones(
 
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   {
     params,
   }: {
@@ -530,65 +635,64 @@ export async function GET(
 
   if (
     !seguimiento.miembroGrupo &&
-    (
-      seguimiento.estado ===
-        "COMPLETADO" ||
-      seguimiento.estado ===
-        "CANCELADO" ||
-      (
-        seguimiento.estado ===
-          "ACTIVO" &&
-        seguimientoIndividualVencido(
-          seguimiento.fechaInicio,
-          seguimiento.duracionDias
-        )
-      )
+    seguimiento.estado === "CANCELADO"
+  ) {
+    return NextResponse.json(
+      { error: "Este seguimiento fue cancelado." },
+      { status: 410 }
+    );
+  }
+
+  if (
+    !seguimiento.miembroGrupo &&
+    seguimiento.estado === "ACTIVO" &&
+    seguimientoIndividualVencido(
+      seguimiento.fechaInicio,
+      seguimiento.duracionDias
     )
   ) {
-    if (
-      seguimiento.estado ===
-        "ACTIVO"
-    ) {
-      await prisma.seguimientoCliente.updateMany({
-        where: {
-          id:
-            seguimiento.id,
-
-          estado:
-            "ACTIVO",
-        },
-
-        data: {
-          estado:
-            "COMPLETADO",
-
-          fechaFinalizado:
-            new Date(),
-
-          pausadoAt:
-            null,
-        },
-      });
-    }
-
-    return NextResponse.json(
-      {
-        error:
-          seguimiento.estado ===
-            "CANCELADO"
-            ? "Este seguimiento fue cancelado."
-            : "Este seguimiento ha finalizado.",
+    await prisma.seguimientoCliente.updateMany({
+      where: {
+        id: seguimiento.id,
+        estado: "ACTIVO",
       },
-      {
-        status: 410,
-      }
-    );
+      data: {
+        estado: "COMPLETADO",
+        fechaFinalizado: new Date(),
+        pausadoAt: null,
+      },
+    });
   }
 
   const consulta =
     resolverConsultaMediciones(
       seguimiento
     );
+
+const parametroDia = new URL(req.url).searchParams.get("dia");
+let diaHistorico: number | null = null;
+
+if (parametroDia !== null) {
+  const dia = Number(parametroDia);
+  const diaMinimo = seguimiento.miembroGrupo?.diaIngreso ?? 1;
+
+  if (
+    seguimiento.estado !== "COMPLETADO" ||
+    !/^[1-9][0-9]*$/.test(parametroDia) ||
+    !Number.isSafeInteger(dia) ||
+    !consulta.diaActual ||
+    dia < diaMinimo ||
+    dia > consulta.diaActual
+  ) {
+    return NextResponse.json(
+      { error: "Dia historico no permitido." },
+      { status: 400 }
+    );
+  }
+
+  diaHistorico = dia;
+}
+
 
   if (!consulta.diaActual) {
     return NextResponse.json({
@@ -599,15 +703,13 @@ export async function GET(
   }
 
   const registro =
-    consulta.editable
-      ? await prisma.registroDiaSeguimiento.findUnique({
+    (consulta.editable || diaHistorico !== null) ? await prisma.registroDiaSeguimiento.findUnique({
           where: {
             seguimientoId_diaPlan: {
               seguimientoId:
                 seguimiento.id,
 
-              diaPlan:
-                consulta.diaActual,
+              diaPlan: diaHistorico ?? consulta.diaActual,
             },
           },
 
@@ -616,9 +718,14 @@ export async function GET(
             peso: true,
             cinturaCm: true,
             glucemiaAyunas: true,
+            estadoAnimo: true,
+            observacion: true,
+            fotos: {
+              orderBy: { orden: "asc" as const },
+              select: { url: true },
+            },
           },
-        })
-      : await prisma.registroDiaSeguimiento.findFirst({
+        }) : await prisma.registroDiaSeguimiento.findFirst({
           where: {
             seguimientoId:
               seguimiento.id,
@@ -649,12 +756,17 @@ export async function GET(
             peso: true,
             cinturaCm: true,
             glucemiaAyunas: true,
+            estadoAnimo: true,
+            observacion: true,
+            fotos: {
+              orderBy: { orden: "asc" as const },
+              select: { url: true },
+            },
           },
         });
 
   const diaMostrado =
-    registro?.diaPlan ??
-    consulta.diaActual;
+    registro?.diaPlan ?? (diaHistorico ?? consulta.diaActual);
 
   const glucosasGuardadas =
     await prisma.medicionGlucosaSeguimiento.findMany({
@@ -717,6 +829,10 @@ export async function GET(
     );
 
   return NextResponse.json({
+      diaMinimo: seguimiento.miembroGrupo?.diaIngreso ?? 1,
+      diaMaximo: consulta.diaActual,
+      historialDisponible: seguimiento.estado === "COMPLETADO",
+
     diaActual:
       diaMostrado,
 
@@ -756,9 +872,19 @@ export async function GET(
               registro.glucemiaAyunas
             )
           : null,
+
+      estadoAnimo:
+        registro?.estadoAnimo ?? null,
+
+      observacion:
+        registro?.observacion ?? null,
     },
 
     medicionesGlucosa,
+
+    fotos: (registro?.fotos ?? []).map(
+      (f) => f.url
+    ),
   });
 }
 
@@ -893,6 +1019,32 @@ export async function PUT(
     );
   }
 
+  const estadoAnimo =
+    estadoAnimoOpcional(
+      datos.estadoAnimo
+    );
+
+  if (!estadoAnimo.ok) {
+    return NextResponse.json(
+      { error: estadoAnimo.error },
+      { status: 400 }
+    );
+  }
+
+  const observacionResultado =
+    textoOpcional(
+      datos.observacion,
+      "La observación",
+      500
+    );
+
+  if (!observacionResultado.ok) {
+    return NextResponse.json(
+      { error: observacionResultado.error },
+      { status: 400 }
+    );
+  }
+
   const tieneGlucemiaLegacy =
     Object.prototype.hasOwnProperty.call(
       datos,
@@ -939,6 +1091,17 @@ export async function PUT(
     );
   }
 
+  const fotosResultado = normalizarFotos(
+    datos.fotos
+  );
+
+  if (!fotosResultado.ok) {
+    return NextResponse.json(
+      { error: fotosResultado.error },
+      { status: 400 }
+    );
+  }
+
   const resultado =
     await prisma.$transaction(
       async (tx) => {
@@ -971,6 +1134,12 @@ export async function PUT(
           tieneGlucemiaLegacy
             ? glucemiaLegacy.valor
             : null,
+
+        estadoAnimo:
+          estadoAnimo.valor,
+
+        observacion:
+          observacionResultado.valor,
       },
 
       update: {
@@ -979,6 +1148,12 @@ export async function PUT(
 
         cinturaCm:
           cintura.valor,
+
+        estadoAnimo:
+          estadoAnimo.valor,
+
+        observacion:
+          observacionResultado.valor,
 
         ...(tieneGlucemiaLegacy
           ? {
@@ -989,10 +1164,13 @@ export async function PUT(
       },
 
       select: {
+        id: true,
         diaPlan: true,
         peso: true,
         cinturaCm: true,
         glucemiaAyunas: true,
+        estadoAnimo: true,
+        observacion: true,
       },
     });
 
@@ -1071,6 +1249,24 @@ export async function PUT(
           }
         }
 
+        await tx.fotoRegistroDiaSeguimiento.deleteMany({
+          where: {
+            registroId: registro.id,
+          },
+        });
+
+        if (fotosResultado.fotos.length > 0) {
+          await tx.fotoRegistroDiaSeguimiento.createMany({
+            data: fotosResultado.fotos.map(
+              (url, indice) => ({
+                registroId: registro.id,
+                url,
+                orden: indice,
+              })
+            ),
+          });
+        }
+
         const glucosas =
           await tx.medicionGlucosaSeguimiento.findMany({
             where: {
@@ -1097,6 +1293,7 @@ export async function PUT(
         return {
           registro,
           glucosas,
+          fotos: fotosResultado.fotos,
         };
       }
     );
@@ -1171,8 +1368,16 @@ export async function PUT(
               registro.glucemiaAyunas
             )
           : null,
+
+      estadoAnimo:
+        registro.estadoAnimo ?? null,
+
+      observacion:
+        registro.observacion ?? null,
     },
 
     medicionesGlucosa,
+
+    fotos: resultado.fotos,
   });
 }

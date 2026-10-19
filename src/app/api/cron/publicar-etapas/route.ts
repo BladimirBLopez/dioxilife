@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
         publicadaAt: null,
         seguimiento: {
           is: {
-            estado: "ACTIVO",
+            estado: { in: ["ACTIVO", "PAUSADO"] },
             fechaInicio: {
               not: null,
             },
@@ -147,7 +147,7 @@ export async function GET(req: NextRequest) {
 
           if (
             !seguimiento ||
-            seguimiento.estado !== "ACTIVO" ||
+            !["ACTIVO", "PAUSADO"].includes(seguimiento.estado) ||
             !seguimiento.fechaInicio
           ) {
             return "omitida";
@@ -335,7 +335,7 @@ export async function GET(req: NextRequest) {
         },
         seguimiento: {
           is: {
-            estado: "ACTIVO",
+            estado: { in: ["ACTIVO", "PAUSADO"] },
             fechaInicio: {
               not: null,
             },
@@ -415,7 +415,7 @@ export async function GET(req: NextRequest) {
 
           if (
             !seguimiento ||
-            seguimiento.estado !== "ACTIVO" ||
+            !["ACTIVO", "PAUSADO"].includes(seguimiento.estado) ||
             !seguimiento.fechaInicio
           ) {
             return false;

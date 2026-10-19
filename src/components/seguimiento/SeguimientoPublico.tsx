@@ -1852,8 +1852,7 @@ export default function SeguimientoPublico({
   const puedeRegistrarChecks =
     Boolean(
       seguimiento &&
-      seguimiento.estado ===
-        "ACTIVO" &&
+      ["ACTIVO", "PAUSADO"].includes(seguimiento.estado) &&
       seguimiento.diaActual &&
       (
         !seguimiento.grupo ||
@@ -2633,21 +2632,6 @@ export default function SeguimientoPublico({
   }
 
 
-  if (
-    seguimiento.estado ===
-      "PAUSADO" &&
-    !seguimiento.grupo
-  ) {
-    return (
-      <EstadoEspecial
-        titulo="Seguimiento pausado"
-        descripcion="Tu seguimiento está temporalmente pausado. Contacta con DioxiLife antes de continuar."
-        icono={
-          <PauseCircle className="h-8 w-8" />
-        }
-      />
-    );
-  }
 
 
   if (
@@ -2667,21 +2651,6 @@ export default function SeguimientoPublico({
   }
 
 
-  if (
-    seguimiento.estado ===
-      "COMPLETADO" &&
-    !seguimiento.grupo
-  ) {
-    return (
-      <EstadoEspecial
-        titulo="Seguimiento completado"
-        descripcion="Tu agenda fue completada. Tus registros anteriores permanecen guardados."
-        icono={
-          <Trophy className="h-8 w-8" />
-        }
-      />
-    );
-  }
 
   const diaActual =
     seguimiento.diaActual ??
