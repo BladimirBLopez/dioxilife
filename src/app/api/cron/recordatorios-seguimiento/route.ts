@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-import { timingSafeEqual } from "crypto";
+import { randomUUID, timingSafeEqual } from "crypto";
 import {
   NextRequest,
   NextResponse,
@@ -140,6 +140,11 @@ type ActividadAviso = {
   titulo: string;
   hora: string | null;
   recordatorio: string;
+  indicaciones: {
+    id: string;
+    hora: string;
+    texto: string;
+  }[];
   seccion:
     | "PRINCIPAL"
     | "ADICIONAL";
@@ -178,6 +183,230 @@ function actividadVigenteEnDia(
   return diaPlan >= inicio && diaPlan <= fin;
 }
 
+
+function agruparConActividad(
+  actividad: ActividadAviso,
+  indicacion: { hora: string }
+) {
+  return actividad.hora === indicacion.hora;
+}
+
+async function enviarIndicacionesIndependientes(
+  seguimiento: {
+    id: string;
+    actividades: ActividadAviso[];
+    suscripcionesPush: Suscripcion[];
+  },
+  diaPlan: number,
+  ahora: Date,
+  simulacion: boolean
+) {
+  let enviados = 0;
+  let omitidos = 0;
+  let fallidos = 0;
+
+  const detalle: {
+    seguimientoId: string;
+    actividadId: string;
+    diaPlan: number;
+    estado: string;
+  }[] = [];
+
+  const candidatas = seguimiento.actividades
+    .filter(a => actividadVigenteEnDia(a, diaPlan))
+    .flatMap(actividad =>
+      actividad.indicaciones.map(indicacion => ({
+        actividad,
+        indicacion,
+      }))
+    )
+    .filter(({ indicacion }) => {
+      const momentos = momentosRecordatorio(
+        ahora,
+        indicacion.hora,
+        "A_LA_HORA"
+      );
+
+      return (
+        indicacion.texto.trim().length > 0 &&
+        momentos !== null &&
+        recordatorioVigente(ahora, momentos)
+      );
+    });
+
+  if (!candidatas.length) {
+    return { enviados, omitidos, fallidos, detalle };
+  }
+
+  const progresos = await prisma.progresoIndicacion.findMany({
+    where: {
+      diaPlan,
+      completado: true,
+      indicacionActividadSeguimientoId: {
+        in: candidatas.map(x => x.indicacion.id),
+      },
+    },
+    select: {
+      indicacionActividadSeguimientoId: true,
+    },
+  });
+
+  const indicacionesCompletadas = new Set(
+    progresos.map(x => x.indicacionActividadSeguimientoId)
+  );
+
+  const progresosActividad = await prisma.progresoActividad.findMany({
+    where: {
+      seguimientoId: seguimiento.id,
+      diaPlan,
+      completado: true,
+    },
+    select: {
+      actividadSeguimientoId: true,
+    },
+  });
+
+  const actividadesCompletadas = new Set(
+    progresosActividad.map(x => x.actividadSeguimientoId)
+  );
+
+  for (const { actividad, indicacion } of candidatas) {
+    if (indicacionesCompletadas.has(indicacion.id)) {
+      omitidos++;
+      continue;
+    }
+
+    if (
+      agruparConActividad(actividad, indicacion) &&
+      !actividadesCompletadas.has(actividad.id)
+    ) {
+      const avisoPrincipal =
+        await prisma.recordatorioPushEnviado.findUnique({
+          where: {
+            actividadSeguimientoId_diaPlan: {
+              actividadSeguimientoId: actividad.id,
+              diaPlan,
+            },
+          },
+          select: { id: true },
+        });
+
+      if (!avisoPrincipal) {
+        // Todavia puede incluirse en el aviso principal.
+        continue;
+      }
+
+      // Si el principal ya salio, comprobar si esta
+      // indicacion fue registrada como notificada.
+      // Si no lo fue, permitir un aviso individual.
+    }
+
+    const yaEnviada = await prisma.$queryRaw<
+      { id: string }[]
+    >`
+      SELECT "id"
+      FROM "RecordatorioPushIndicacionEnviado"
+      WHERE "indicacionActividadSeguimientoId" = ${indicacion.id}
+        AND "diaPlan" = ${diaPlan}
+      LIMIT 1
+    `;
+
+    if (yaEnviada.length) {
+      omitidos++;
+      continue;
+    }
+
+    const marca = {
+      seguimientoId: seguimiento.id,
+      actividadId: actividad.id,
+      diaPlan,
+    };
+
+    if (simulacion) {
+      detalle.push({
+        ...marca,
+        estado: "indicación: se enviaría ahora",
+      });
+      continue;
+    }
+
+    const reservado = await prisma.$queryRaw<
+      { id: string }[]
+    >`
+      INSERT INTO "RecordatorioPushIndicacionEnviado"
+        (
+          "id",
+          "seguimientoId",
+          "indicacionActividadSeguimientoId",
+          "diaPlan"
+        )
+      VALUES (
+        ${randomUUID()},
+        ${seguimiento.id},
+        ${indicacion.id},
+        ${diaPlan}
+      )
+      ON CONFLICT (
+        "indicacionActividadSeguimientoId",
+        "diaPlan"
+      )
+      DO NOTHING
+      RETURNING "id"
+    `;
+
+    if (!reservado.length) {
+      omitidos++;
+      continue;
+    }
+
+    let entregadas = 0;
+
+    try {
+      const resultado = await enviarASuscripciones(
+        seguimiento.suscripcionesPush,
+        {
+          title: "DioxiLife - Indicación",
+          body: (
+            actividad.titulo +
+            " (" + indicacion.hora + "): " +
+            indicacion.texto.trim()
+          ).slice(0, 240),
+          tag: "ind-" + indicacion.id + "-" + diaPlan,
+        }
+      );
+
+      entregadas = resultado.entregadas;
+    } catch {
+      // Si falla el servicio de envío, liberar
+      // la reserva para poder reintentar.
+    } finally {
+      if (entregadas === 0) {
+        await prisma.$executeRaw`
+          DELETE FROM "RecordatorioPushIndicacionEnviado"
+          WHERE "id" = ${reservado[0].id}
+        `;
+      }
+    }
+
+    if (!entregadas) {
+      fallidos++;
+      detalle.push({
+        ...marca,
+        estado: "indicación fallida: reintentar",
+      });
+      continue;
+    }
+
+    enviados++;
+    detalle.push({
+      ...marca,
+      estado: "indicación enviada",
+    });
+  }
+
+  return { enviados, omitidos, fallidos, detalle };
+}
+
 async function procesarAvisosTardios({
   seguimiento,
   diaPlan,
@@ -213,7 +442,7 @@ async function procesarAvisosTardios({
       momentos: momentosRecordatorio(
         ahora,
         actividad.hora,
-        actividad.recordatorio
+        "A_LA_HORA"
       ),
     }))
     .filter(
@@ -333,7 +562,25 @@ async function procesarAvisosTardios({
         }),
         tag: `tarde-${actividad.id}-${diaPlan}`,
       }
-    );
+    ).catch(
+    async (error) => {
+      try {
+        await prisma.recordatorioPushTardio.deleteMany({
+          where: {
+            actividadSeguimientoId: actividad.id,
+            diaPlan,
+          },
+        });
+      } catch (errorLimpieza) {
+        console.error(
+          "No se pudo liberar la reserva del aviso:",
+          errorLimpieza
+        );
+      }
+
+      throw error;
+    }
+  );
 
     if (resultado.entregadas === 0) {
       await prisma.recordatorioPushTardio.deleteMany({
@@ -708,13 +955,6 @@ export async function GET(
               },
             ],
 
-            hora: {
-              not: null,
-            },
-
-            recordatorio: {
-              not: "NINGUNO",
-            },
           },
 
           select: {
@@ -722,6 +962,16 @@ export async function GET(
             titulo: true,
             hora: true,
             recordatorio: true,
+            indicaciones: {
+              where: {
+                activo: true,
+              },
+              select: {
+                id: true,
+                hora: true,
+                texto: true,
+              },
+            },
             seccion: true,
             diaInicio: true,
             diaFin: true,
@@ -820,6 +1070,19 @@ export async function GET(
       fallidos += tardios.fallidos;
       detalle.push(...tardios.detalle);
 
+      const individuales =
+        await enviarIndicacionesIndependientes(
+          seguimiento,
+          diaPlan,
+          ahora,
+          simulacion
+        );
+
+      enviados += individuales.enviados;
+      omitidos += individuales.omitidos;
+      fallidos += individuales.fallidos;
+      detalle.push(...individuales.detalle);
+
       const candidatas =
         seguimiento.actividades
           .filter((actividad) =>
@@ -829,10 +1092,10 @@ export async function GET(
             actividad,
             momentos:
               momentosRecordatorio(
-                ahora,
-                actividad.hora,
-                actividad.recordatorio
-              ),
+        ahora,
+        actividad.hora,
+        "A_LA_HORA"
+      ),
           }))
           .filter(
             (item) =>
@@ -965,6 +1228,46 @@ export async function GET(
           throw error;
         }
 
+
+        const coincidentes = actividad.indicaciones.filter(
+          indicacion =>
+            agruparConActividad(actividad, indicacion) &&
+            indicacion.texto.trim().length > 0
+        );
+
+        const realizadas = coincidentes.length
+          ? await prisma.progresoIndicacion.findMany({
+              where: {
+                diaPlan,
+                completado: true,
+                indicacionActividadSeguimientoId: {
+                  in: coincidentes.map(i => i.id),
+                },
+              },
+              select: {
+                indicacionActividadSeguimientoId: true,
+              },
+            })
+          : [];
+
+        const idsRealizadas = new Set(
+          realizadas.map(i => i.indicacionActividadSeguimientoId)
+        );
+
+        const indicacionesEnAviso = coincidentes
+          .filter(i => !idsRealizadas.has(i.id));
+
+        const resumenIndicaciones = indicacionesEnAviso
+          .map(i => i.texto.trim())
+          .join("; ");
+
+        const textoIndicaciones =
+          resumenIndicaciones.length <= 320
+            ? resumenIndicaciones
+            : indicacionesEnAviso.length +
+              " indicaciones programadas. " +
+              "Revísalas en tu seguimiento.";
+
         const resultado =
           await enviarASuscripciones(
             seguimiento.suscripcionesPush,
@@ -975,10 +1278,28 @@ export async function GET(
                   actividad.titulo,
                 hora: actividad.hora,
                 antes: momentos.antes,
-              }),
+              }) + (textoIndicaciones ? " | Indicaciones: " + textoIndicaciones : ""),
               tag: `act-${actividad.id}-${diaPlan}`,
             }
-          );
+          ).catch(
+    async (error) => {
+      try {
+        await prisma.recordatorioPushEnviado.deleteMany({
+          where: {
+            actividadSeguimientoId: actividad.id,
+            diaPlan,
+          },
+        });
+      } catch (errorLimpieza) {
+        console.error(
+          "No se pudo liberar la reserva del aviso:",
+          errorLimpieza
+        );
+      }
+
+      throw error;
+    }
+  );
 
         if (resultado.entregadas === 0) {
           await prisma.recordatorioPushEnviado.deleteMany(
@@ -1002,6 +1323,28 @@ export async function GET(
           continue;
         }
 
+        // Registrar las indicaciones notificadas junto
+        // con la actividad para evitar avisos repetidos.
+        for (const indicacion of indicacionesEnAviso) {
+          try {
+            await prisma.$executeRaw`
+              INSERT INTO "RecordatorioPushIndicacionEnviado"
+                ("id", "seguimientoId",
+                 "indicacionActividadSeguimientoId", "diaPlan")
+              VALUES (
+                ${randomUUID()},
+                ${seguimiento.id},
+                ${indicacion.id},
+                ${diaPlan}
+              )
+              ON CONFLICT ("indicacionActividadSeguimientoId", "diaPlan")
+              DO NOTHING
+            `;
+          } catch (error) {
+            console.error("Error registrando aviso agrupado:", error);
+          }
+        }
+
         enviados++;
 
         detalle.push({
@@ -1020,8 +1363,11 @@ export async function GET(
     }
   }
 
+  const errorDeEjecucion =
+    errores.length > 0 || fallidos > 0;
+
   return NextResponse.json({
-    ok: errores.length === 0,
+    ok: !errorDeEjecucion,
     simulacion,
     ahora: ahora.toISOString(),
     revisados: seguimientos.length,
@@ -1032,5 +1378,7 @@ export async function GET(
     detalle: esCron
       ? undefined
       : detalle,
+  }, {
+    status: errorDeEjecucion ? 500 : 200,
   });
 }

@@ -12,7 +12,6 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import {
   aplicaEnDia,
   describirDias,
-  horaDeAviso,
 } from "@/lib/seguimiento-agenda";
 
 type RecordatorioActividad =
@@ -348,7 +347,7 @@ export default function AgendaCliente({
             : { etapaId: etapaElegida || null }),
           tipo: form.tipo,
           seccion: form.seccion,
-          recordatorio: form.recordatorio,
+          recordatorio: "NINGUNO",
           titulo,
           descripcion:
             form.descripcion.trim() || null,
@@ -820,26 +819,6 @@ export default function AgendaCliente({
                           </span>
                         )}
 
-                        {actividad.hora &&
-                          (() => {
-                            const aviso =
-                              horaDeAviso(
-                                actividad.hora,
-                                actividad.recordatorio
-                              );
-
-                            if (!aviso) {
-                              return null;
-                            }
-
-                            return (
-                              <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
-                                {aviso.cruzaMedianoche
-                                  ? "🔔 Aviso la noche anterior"
-                                  : `🔔 Aviso ${aviso.texto}`}
-                              </span>
-                            );
-                          })()}
 
                         {actividad.momento && (
                           <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
@@ -1419,45 +1398,6 @@ export default function AgendaCliente({
                   </div>
                 )}
 
-              {form.hora ? (
-                <div className="mt-4">
-                  <label className="admin-label">
-                    Avisar al cliente
-                  </label>
-
-                  <select
-                    value={form.recordatorio}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        recordatorio:
-                          e.target.value as RecordatorioActividad,
-                      })
-                    }
-                    className="admin-input"
-                  >
-                    <option value="NINGUNO">
-                      Sin recordatorio
-                    </option>
-                    <option value="A_LA_HORA">
-                      A la hora indicada
-                    </option>
-                    <option value="MIN_15_ANTES">
-                      15 minutos antes
-                    </option>
-                    <option value="MIN_30_ANTES">
-                      30 minutos antes
-                    </option>
-                    <option value="MIN_60_ANTES">
-                      1 hora antes
-                    </option>
-                  </select>
-                </div>
-              ) : (
-                <p className="mt-3 text-xs leading-5 text-gray-500">
-                  Agrega una hora si deseas programar un recordatorio.
-                </p>
-              )}
 
             </section>
 

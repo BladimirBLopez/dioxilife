@@ -70,22 +70,6 @@ function duracionPeriodo(
 }
 
 
-function textoRecordatorio(
-  valor: Recordatorio
-) {
-  switch (valor) {
-    case "A_LA_HORA":
-      return "A la hora";
-    case "MIN_15_ANTES":
-      return "15 min antes";
-    case "MIN_30_ANTES":
-      return "30 min antes";
-    case "MIN_60_ANTES":
-      return "1 hora antes";
-    default:
-      return "Sin recordatorio";
-  }
-}
 
 export default function ProtocolosAdicionalesPreparacion({
   seguimientoId,
@@ -298,7 +282,7 @@ export default function ProtocolosAdicionalesPreparacion({
                   "ADICIONAL",
 
                 recordatorio:
-                  form.recordatorio,
+                  "NINGUNO",
 
                 titulo,
 
@@ -731,17 +715,6 @@ export default function ProtocolosAdicionalesPreparacion({
                             </span>
 
 
-                            {actividad.recordatorio !==
-                              "NINGUNO" && (
-
-                              <span className="rounded-full bg-blue-50 px-2.5 py-1 font-medium text-blue-700">
-                                🔔{" "}
-                                {textoRecordatorio(
-                                  actividad.recordatorio
-                                )}
-                              </span>
-
-                            )}
 
                           </div>
 
@@ -1008,53 +981,6 @@ export default function ProtocolosAdicionalesPreparacion({
 
 
 
-              <details className="mt-3 overflow-hidden rounded-xl border border-gray-200 bg-white">
-  <summary className="cursor-pointer px-3 py-3 text-sm font-medium text-gray-700">
-    Recordatorios (opcional)
-    <span className="ml-2 text-xs font-normal text-gray-500">
-      {form.recordatorio === "NINGUNO" ? "Desactivados" : "Configurados"}
-    </span>
-  </summary>
-  <div className="border-t border-gray-100 px-3 pb-3">
-    <div className="mt-4">
-                <label className="admin-label">
-                  Avisar al cliente
-                </label>
-
-                <select
-                  value={form.recordatorio}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      recordatorio:
-                        e.target.value as Recordatorio,
-                    })
-                  }
-                  className="admin-input"
-                >
-                  <option value="NINGUNO">
-                    Sin recordatorio
-                  </option>
-
-                  <option value="A_LA_HORA">
-                    A la hora indicada
-                  </option>
-
-                  <option value="MIN_15_ANTES">
-                    15 minutos antes
-                  </option>
-
-                  <option value="MIN_30_ANTES">
-                    30 minutos antes
-                  </option>
-
-                  <option value="MIN_60_ANTES">
-                    1 hora antes
-                  </option>
-                </select>
-              </div>
-  </div>
-</details>
 
             </section>
 
