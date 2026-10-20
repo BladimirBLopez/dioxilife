@@ -1,4 +1,9 @@
+import { timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+import {
+  crearHuellaRevisionEtapa,
+  seleccionRevisionEtapa,
+} from "@/lib/seguimiento-aprobacion-etapa";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { obtenerAdminActual } from "@/lib/admin-auth";
@@ -7,6 +12,14 @@ type Contexto = {
   params: Promise<{
     id: string;
   }>;
+};
+
+type AprobacionParaLista = {
+  id: string;
+  aprobadaAt: Date | null;
+  aprobadaPorAdminId: string | null;
+  aprobadaPorUsuario: string | null;
+  huellaAprobada: string | null;
 };
 
 export async function GET(
@@ -42,36 +55,116 @@ export async function GET(
     );
   }
 
-  const etapas =
-    await prisma.etapaSeguimiento.findMany({
-      where: {
-        seguimientoId: id,
-      },
-      orderBy: [
-        { diaInicio: "asc" },
-        { orden: "asc" },
-      ],
-      select: {
-        id: true,
-        nombre: true,
-        orden: true,
-        diaInicio: true,
-        diaFin: true,
-        estado: true,
-        modoPublicacion: true,
-        publicadaAt: true,
-        _count: {
-          select: {
-            actividades: true,
+  // Leer contenido y aprobaciones desde una
+  // misma instantanea de lectura.
+  const { etapas, aprobaciones } = await prisma.$transaction(
+    async (tx) => {
+      const etapas = await tx.etapaSeguimiento.findMany({
+        where: { seguimientoId: id },
+        orderBy: [
+          { diaInicio: "asc" },
+          { orden: "asc" },
+        ],
+        select: {
+          ...seleccionRevisionEtapa,
+          _count: {
+            select: { actividades: true },
           },
         },
-      },
-    });
+      });
 
-  return NextResponse.json({
-    seguimiento,
-    etapas,
+      // Una sola lectura parametrizada para todas
+      // las aprobaciones del seguimiento.
+      const aprobaciones =
+        await tx.$queryRaw<AprobacionParaLista[]>`
+          SELECT
+            "id",
+            "aprobadaAt",
+            "aprobadaPorAdminId",
+            "aprobadaPorUsuario",
+            "huellaAprobada"
+          FROM "EtapaSeguimiento"
+          WHERE "seguimientoId" = ${id}
+        `;
+
+      return { etapas, aprobaciones };
+    },
+    {
+      isolationLevel:
+        Prisma.TransactionIsolationLevel.RepeatableRead,
+    }
+  );
+
+  const aprobacionesPorId = new Map(
+    aprobaciones.map((registro) => [registro.id, registro])
+  );
+
+  const etapasConAprobacion = etapas.map((etapa) => {
+    const registro = aprobacionesPorId.get(etapa.id);
+
+    let estadoAprobacion:
+      | "PENDIENTE"
+      | "APROBADA"
+      | "REVISION_REQUERIDA" = "PENDIENTE";
+
+    const existenDatos =
+      registro &&
+      (registro.aprobadaAt !== null ||
+        registro.aprobadaPorAdminId !== null ||
+        registro.aprobadaPorUsuario !== null ||
+        registro.huellaAprobada !== null);
+
+    if (existenDatos) {
+      estadoAprobacion = "REVISION_REQUERIDA";
+
+      if (
+        registro.aprobadaAt &&
+        registro.aprobadaPorAdminId &&
+        registro.aprobadaPorUsuario &&
+        typeof registro.huellaAprobada === "string" &&
+        /^[a-f0-9]{64}$/.test(registro.huellaAprobada)
+      ) {
+        const huellaActual =
+          crearHuellaRevisionEtapa(etapa);
+
+        if (
+          timingSafeEqual(
+            Buffer.from(registro.huellaAprobada, "hex"),
+            Buffer.from(huellaActual, "hex")
+          )
+        ) {
+          estadoAprobacion = "APROBADA";
+        }
+      }
+    }
+
+    // No enviar actividades, huellas ni datos
+    // personales del administrador al navegador.
+    return {
+      id: etapa.id,
+      nombre: etapa.nombre,
+      orden: etapa.orden,
+      diaInicio: etapa.diaInicio,
+      diaFin: etapa.diaFin,
+      estado: etapa.estado,
+      modoPublicacion: etapa.modoPublicacion,
+      publicadaAt: etapa.publicadaAt,
+      _count: etapa._count,
+      estadoAprobacion,
+    };
   });
+
+  return NextResponse.json(
+    {
+      seguimiento,
+      etapas: etapasConAprobacion,
+    },
+    {
+      headers: {
+        "Cache-Control": "private, no-store, max-age=0",
+      },
+    }
+  );
 }
 
 export async function POST(

@@ -2,6 +2,7 @@ import { timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { obtenerDiaSeguimiento } from "@/lib/seguimiento-publico";
+import { verificarAprobacionEtapa } from "@/lib/seguimiento-aprobacion-etapa";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -37,6 +38,7 @@ type Resultado =
   | "pendiente"
   | "vencida"
   | "invalida"
+  | "sinAprobacion"
   | "omitida";
 
 export async function GET(req: NextRequest) {
@@ -85,6 +87,7 @@ export async function GET(req: NextRequest) {
     pendientes: 0,
     vencidas: 0,
     invalidas: 0,
+    sinAprobacion: 0,
     omitidas: 0,
     errores: 0,
   };
@@ -274,6 +277,20 @@ export async function GET(req: NextRequest) {
             }
           }
 
+          // Comprobar que exista aprobacion vigente.
+          // Las etapas antiguas sin aprobacion quedan
+          // pendientes de revision antes del despliegue.
+          const aprobacion =
+            await verificarAprobacionEtapa(
+              tx,
+              candidata.seguimientoId,
+              etapa.id
+            );
+
+          if (!aprobacion.valida) {
+            return "sinAprobacion";
+          }
+
           // La condicion evita una segunda
           // publicacion del mismo borrador.
           const actualizacion =
@@ -306,6 +323,9 @@ export async function GET(req: NextRequest) {
           break;
         case "vencida":
           resumen.vencidas++;
+          break;
+        case "sinAprobacion":
+          resumen.sinAprobacion++;
           break;
         case "invalida":
           resumen.invalidas++;
@@ -502,7 +522,7 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({
-    ok: resumen.errores === 0 && cierre.errores === 0,
+    ok: resumen.errores === 0 && resumen.sinAprobacion === 0 && cierre.errores === 0,
     fechaRevision: ahora.toISOString(),
     ...resumen,
     cierre,

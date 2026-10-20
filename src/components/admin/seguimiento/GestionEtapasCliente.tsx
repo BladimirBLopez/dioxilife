@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import VistaPreviaEtapa from "./VistaPreviaEtapa";
 
 type Etapa = {
   id: string;
@@ -12,6 +13,10 @@ type Etapa = {
   diaFin: number;
   estado: string;
   modoPublicacion: string;
+  estadoAprobacion:
+    | "PENDIENTE"
+    | "APROBADA"
+    | "REVISION_REQUERIDA";
   _count: {
     actividades: number;
   };
@@ -555,6 +560,33 @@ export default function GestionEtapasCliente({
               <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
                 {etapa.estado}
               </span>
+              {(etapa.estado === "BORRADOR" ||
+                etapa.estado === "PROGRAMADA") && (
+                <span
+                  className={
+                    etapa.estadoAprobacion === "APROBADA"
+                      ? "rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800"
+                      : etapa.estadoAprobacion === "REVISION_REQUERIDA"
+                        ? "rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800"
+                        : "rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700"
+                  }
+                >
+                  {etapa.estadoAprobacion === "APROBADA"
+                    ? "Aprobada"
+                    : etapa.estadoAprobacion === "REVISION_REQUERIDA"
+                      ? "Revisión requerida"
+                      : "Pendiente de aprobación"}
+                </span>
+              )}
+
+              <VistaPreviaEtapa
+                seguimientoId={seguimientoId}
+                etapaId={etapa.id}
+                onAprobada={() => {
+                  setRecarga((anterior) => anterior + 1);
+                  router.refresh();
+                }}
+              />
 
               {!bloqueado &&
                 etapa.estado === "BORRADOR" &&

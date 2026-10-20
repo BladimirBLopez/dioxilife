@@ -329,6 +329,13 @@ model EtapaSeguimiento {
 
   publicadaAt DateTime?
 
+  // Aprobacion administrativa del contenido.
+  // Los registros anteriores permanecen sin aprobacion.
+  aprobadaAt         DateTime?
+  aprobadaPorAdminId String?
+  aprobadaPorUsuario String?
+  huellaAprobada     String?
+
   actividades ActividadSeguimiento[]
 
   createdAt DateTime @default(now())

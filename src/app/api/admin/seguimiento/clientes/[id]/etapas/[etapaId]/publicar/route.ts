@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { obtenerAdminActual } from "@/lib/admin-auth";
 import { obtenerDiaSeguimiento } from "@/lib/seguimiento-publico";
+import { verificarAprobacionEtapa } from "@/lib/seguimiento-aprobacion-etapa";
 
 function horaValida(hora: string | null) {
   return Boolean(
@@ -274,6 +275,21 @@ export async function POST(
               { status: 409 }
             );
           }
+        }
+
+        // PASO 522: exigir aprobacion vigente.
+        const aprobacion =
+          await verificarAprobacionEtapa(
+            tx,
+            id,
+            etapaId
+          );
+
+        if (!aprobacion.valida) {
+          return NextResponse.json(
+            { error: aprobacion.motivo },
+            { status: 409 }
+          );
         }
 
         const publicada =
