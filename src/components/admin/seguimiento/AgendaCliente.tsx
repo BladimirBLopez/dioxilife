@@ -894,6 +894,7 @@ export default function AgendaCliente({
                             actividadId={
                               actividad.id
                             }
+                            horaActividad={actividad.hora}
                             indicaciones={
                               actividad.indicaciones
                             }

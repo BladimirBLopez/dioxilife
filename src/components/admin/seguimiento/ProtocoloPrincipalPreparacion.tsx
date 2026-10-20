@@ -1134,6 +1134,7 @@ export default function ProtocoloPrincipalPreparacion({
                               actividadId={
                                 actividad.id
                               }
+                              horaActividad={actividad.hora}
                               indicaciones={
                                 actividad.indicaciones
                               }

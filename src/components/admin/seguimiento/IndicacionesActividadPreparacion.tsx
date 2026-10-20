@@ -27,6 +27,7 @@ type Props = {
   seguimientoId?: string;
   apiBase?: string;
   actividadId: string;
+  horaActividad: string | null;
   indicaciones: Indicacion[];
   editable?: boolean;
 };
@@ -35,6 +36,7 @@ export default function IndicacionesActividadPreparacion({
   seguimientoId,
   apiBase,
   actividadId,
+  horaActividad,
   indicaciones,
   editable = true,
 }: Props) {
@@ -73,7 +75,7 @@ export default function IndicacionesActividadPreparacion({
     hora,
     setHora,
   ] =
-    useState("08:00");
+    useState(horaActividad || "08:00");
 
   const [
     texto,
@@ -98,10 +100,17 @@ export default function IndicacionesActividadPreparacion({
   function abrirNueva() {
     setEditando(null);
 
+    const ultimaHora = indicaciones.at(-1)?.hora;
+
+    const horaBase =
+      horaActividad ||
+      ultimaHora ||
+      "08:00";
+
     setHora(
-      indicaciones.at(-1)
-        ?.hora ||
-        "08:00"
+      ultimaHora && ultimaHora >= horaBase
+        ? ultimaHora
+        : horaBase
     );
 
     setTexto("");
