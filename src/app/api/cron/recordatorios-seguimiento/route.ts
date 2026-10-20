@@ -823,9 +823,11 @@ export async function GET(
     ? parametros.get("probar")
     : null;
 
+  // Las consultas administrativas siempre simulan.
+  // dry=1 tambien protege las peticiones autorizadas del cron.
+  // El parametro explicito "probar" tiene su propio flujo.
   const simulacion =
-    !esCron &&
-    parametros.get("dry") === "1";
+    parametros.get("dry") === "1" || !esCron;
 
   if (probar) {
     const suscripciones =
