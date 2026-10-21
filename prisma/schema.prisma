@@ -125,6 +125,7 @@ model PlanSeguimiento {
    * de plantillas.
    */
   esCopiaGrupo Boolean @default(false)
+  ordenVisual Int?
 
   actividades  ActividadPlan[]
   seguimientos SeguimientoCliente[]
@@ -134,6 +135,7 @@ model PlanSeguimiento {
   updatedAt DateTime @updatedAt
 
   @@index([estado])
+  @@index([ordenVisual])
 }
 
 enum TipoActividadSeguimiento {

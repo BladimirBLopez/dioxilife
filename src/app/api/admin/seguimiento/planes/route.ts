@@ -377,9 +377,16 @@ export async function GET() {
           false,
       },
 
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: [
+        {
+          ordenVisual: {
+            sort: "asc",
+            nulls: "last",
+          },
+        },
+        { createdAt: "desc" },
+        { id: "asc" },
+      ],
 
       include: {
         _count: {

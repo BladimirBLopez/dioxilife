@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
+import { DragDropProvider, type DragEndEvent } from "@dnd-kit/react";
+import { useSortable, isSortable } from "@dnd-kit/react/sortable";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Modal from "@/components/Modal";
@@ -13,17 +15,63 @@ type Plan = {
   descripcion: string | null;
   duracionDias: number;
   estado: "BORRADOR" | "ACTIVO" | "INACTIVO";
+  ordenVisual: number | null;
   _count: {
     actividades: number;
     seguimientos: number;
   };
 };
 
+
+function PlantillaArrastrable({
+  id,
+  index,
+  children,
+}: {
+  id: string;
+  index: number;
+  children: ReactNode;
+}) {
+  const {
+    ref,
+    handleRef,
+    isDragging,
+  } = useSortable({
+    id,
+    index,
+  });
+
+  return (
+    <div
+      ref={ref}
+      className={`min-w-0 ${
+        isDragging ? "opacity-50" : ""
+      }`}
+    >
+      <div className="mb-2 flex justify-end">
+        <button
+          type="button"
+          ref={handleRef}
+          aria-label="Arrastrar para reordenar plantilla"
+          title="Mantén pulsado y arrastra para cambiar el orden"
+          className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-violet-200 bg-white px-3 py-1.5 text-xs font-semibold text-violet-700 cursor-grab active:cursor-grabbing touch-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+        >
+          <span aria-hidden="true">⋮⋮</span>
+          Arrastrar
+        </button>
+      </div>
+      {children}
+    </div>
+  );
+}
+
 export default function PlanesSeguimientoPage() {
   const router = useRouter();
 
   const [planes, setPlanes] = useState<Plan[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [guardandoOrden, setGuardandoOrden] = useState(false);
+  const [ordenSinGuardar, setOrdenSinGuardar] = useState(false);
 
   const [nuevaPlantillaAbierta, setNuevaPlantillaAbierta] = useState(false);
 
@@ -47,27 +95,228 @@ export default function PlanesSeguimientoPage() {
   async function cargar() {
     setCargando(true);
 
-    const resPlanes =
-      await fetch("/api/admin/seguimiento/planes");
+    try {
+      const resPlanes = await fetch(
+        "/api/admin/seguimiento/planes",
+        { cache: "no-store" }
+      );
 
-    if (resPlanes.ok) {
-      setPlanes(await resPlanes.json());
+      if (!resPlanes.ok) {
+        toast.error(
+          "No se pudieron cargar las plantillas."
+        );
+        return;
+      }
+
+      const respuesta: unknown =
+        await resPlanes.json();
+
+      if (
+        !Array.isArray(respuesta) ||
+        !respuesta.every(
+          (dato) =>
+            dato !== null &&
+            typeof dato === "object" &&
+            typeof dato.id === "string" &&
+            typeof dato.nombre === "string"
+        )
+      ) {
+        toast.error(
+          "La respuesta de plantillas no es válida."
+        );
+        return;
+      }
+
+      setPlanes(respuesta as Plan[]);
+      setOrdenSinGuardar(false);
+    } catch {
+      toast.error(
+        "No hay conexión para cargar las plantillas."
+      );
+    } finally {
+      setCargando(false);
     }
-
-    setCargando(false);
   }
 
   useEffect(() => {
     cargar();
   }, []);
 
+  useEffect(() => {
+    if (!ordenSinGuardar) return;
+
+    const advertir = (evento: BeforeUnloadEvent) => {
+      evento.preventDefault();
+      evento.returnValue = "";
+    };
+
+    window.addEventListener(
+      "beforeunload",
+      advertir
+    );
+
+    return () => {
+      window.removeEventListener(
+        "beforeunload",
+        advertir
+      );
+    };
+  }, [ordenSinGuardar]);
+
+
+  function moverPlantilla(
+    indice: number,
+    direccion: -1 | 1
+  ) {
+    if (cargando || guardandoOrden) return;
+
+    setPlanes((anteriores) => {
+      const destino = indice + direccion;
+
+      if (
+        indice < 0 ||
+        indice >= anteriores.length ||
+        destino < 0 ||
+        destino >= anteriores.length
+      ) {
+        return anteriores;
+      }
+
+      const copia = [...anteriores];
+
+      [copia[indice], copia[destino]] = [
+        copia[destino],
+        copia[indice]
+      ];
+
+      return copia;
+    });
+
+    setOrdenSinGuardar(true);
+  }
+
+
+  function manejarFinArrastre(event: DragEndEvent) {
+    if (
+      event.canceled ||
+      cargando ||
+      guardandoOrden
+    ) {
+      return;
+    }
+
+    const { source } = event.operation;
+
+    if (!isSortable(source)) {
+      return;
+    }
+
+    const { initialIndex, index } = source;
+
+    if (
+      !Number.isInteger(initialIndex) ||
+      !Number.isInteger(index) ||
+      initialIndex === index ||
+      initialIndex < 0 ||
+      index < 0 ||
+      initialIndex >= planes.length ||
+      index >= planes.length
+    ) {
+      return;
+    }
+
+    setPlanes((anteriores) => {
+      if (
+        initialIndex >= anteriores.length ||
+        index >= anteriores.length
+      ) {
+        return anteriores;
+      }
+
+      const siguientes = [...anteriores];
+
+      const [movida] =
+        siguientes.splice(initialIndex, 1);
+
+      siguientes.splice(index, 0, movida);
+
+      return siguientes;
+    });
+
+    setOrdenSinGuardar(true);
+  }
+
+  async function guardarOrden() {
+    if (
+      !ordenSinGuardar ||
+      guardandoOrden ||
+      cargando
+    ) {
+      return;
+    }
+
+    setGuardandoOrden(true);
+
+    try {
+      const respuesta = await fetch(
+        "/api/admin/seguimiento/planes/reordenar",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            ids: planes.map((plan) => plan.id)
+          })
+        }
+      );
+
+      const resultado = await respuesta
+        .json()
+        .catch(() => null);
+
+      if (!respuesta.ok) {
+        toast.error(
+          resultado?.error ||
+          "No se pudo guardar el orden."
+        );
+        return;
+      }
+
+      toast.success("Orden de plantillas guardado.");
+      setOrdenSinGuardar(false);
+
+      await cargar();
+    } catch {
+      toast.error(
+        "No se pudo conectar para guardar el orden."
+      );
+    } finally {
+      setGuardandoOrden(false);
+    }
+  }
+
+  function confirmarDescarteOrden() {
+    if (!ordenSinGuardar) return true;
+
+    return window.confirm(
+      "Hay cambios de orden sin guardar. " +
+      "Si continúas, podrías perderlos. " +
+      "¿Continuar sin guardar?"
+    );
+  }
+
   function abrirNuevo() {
+    if (!confirmarDescarteOrden()) return;
+
     setNuevaPlantillaAbierta(true);
   }
 
   function abrirDuplicar(
     plan: Plan
   ) {
+    if (!confirmarDescarteOrden()) return;
+
     setPlanDuplicando(
       plan
     );
@@ -196,6 +445,7 @@ export default function PlanesSeguimientoPage() {
 
   async function confirmarBorrar() {
     if (!borrarId) return;
+    if (!confirmarDescarteOrden()) return;
 
     const res = await fetch(
       `/api/admin/seguimiento/planes/${borrarId}`,
@@ -235,6 +485,34 @@ export default function PlanesSeguimientoPage() {
           <h1 className="text-xl font-semibold text-[#1F1B24]">
             Plantillas de seguimiento
           </h1>
+            {planes.length > 0 && (
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => void guardarOrden()}
+                  disabled={
+                    cargando ||
+                    guardandoOrden ||
+                    !ordenSinGuardar
+                  }
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-violet-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+                >
+                  {guardandoOrden
+                    ? "Guardando..."
+                    : "Guardar orden"}
+                </button>
+
+                <span
+                  role="status"
+                  className="text-xs font-medium text-gray-600"
+                >
+                  {ordenSinGuardar
+                    ? "Tienes cambios de orden sin guardar"
+                    : "Usa las flechas de cada plantilla para moverla"}
+                </span>
+              </div>
+            )}
+
 
           <p className="mt-1 text-sm text-[#6B6870]">
             Crea plantillas reutilizables que luego podrás asignar y personalizar para cada cliente.
@@ -271,9 +549,15 @@ export default function PlanesSeguimientoPage() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {planes.map((plan) => (
-            <article
+        <DragDropProvider onDragEnd={manejarFinArrastre}>
+<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {planes.map((plan, indice) => (
+            <PlantillaArrastrable
+        key={plan.id}
+        id={plan.id}
+        index={indice}
+      >
+<article
               key={plan.id}
               className="admin-card p-5"
             >
@@ -292,9 +576,43 @@ export default function PlanesSeguimientoPage() {
                   </span>
                 </div>
 
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F8F6FF] text-brand-pink">
+                <div className="flex shrink-0 items-center gap-1.5">
+  <div className="flex flex-col gap-1">
+    <button
+      type="button"
+      onClick={() => moverPlantilla(indice, -1)}
+      disabled={
+        cargando ||
+        guardandoOrden ||
+        indice === 0
+      }
+      aria-label={"Subir " + plan.nombre}
+      title="Subir plantilla"
+      className="flex h-9 w-9 items-center justify-center rounded-lg border border-violet-200 bg-white text-lg font-bold text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+    >
+      ↑
+    </button>
+
+    <button
+      type="button"
+      onClick={() => moverPlantilla(indice, 1)}
+      disabled={
+        cargando ||
+        guardandoOrden ||
+        indice === planes.length - 1
+      }
+      aria-label={"Bajar " + plan.nombre}
+      title="Bajar plantilla"
+      className="flex h-9 w-9 items-center justify-center rounded-lg border border-violet-200 bg-white text-lg font-bold text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+    >
+      ↓
+    </button>
+  </div>
+
+  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F8F6FF] text-brand-pink">
                   ✓
                 </div>
+</div>
               </div>
 
               {plan.descripcion && (
@@ -359,8 +677,10 @@ export default function PlanesSeguimientoPage() {
                 </p>
               )}
             </article>
+</PlantillaArrastrable>
           ))}
         </div>
+</DragDropProvider>
       )}
 
       {nuevaPlantillaAbierta && (
