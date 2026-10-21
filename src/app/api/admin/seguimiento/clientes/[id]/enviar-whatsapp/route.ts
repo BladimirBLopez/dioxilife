@@ -1,3 +1,5 @@
+import { enlaceCortoSeguimiento } from "@/lib/enlace-seguimiento";
+import { acortarEnlacesVigentesEnMensaje } from "@/lib/enlace-seguimiento-mensajes";
 import {
   createHash,
   randomBytes,
@@ -160,7 +162,7 @@ export async function POST(
     mensaje =
       construirMensaje(
         seguimiento.nombreCliente,
-        `${baseUrl}/seguimiento/${tokenRecibido}`
+        enlaceCortoSeguimiento(baseUrl, tokenRecibido)
       );
   }
 
@@ -193,7 +195,10 @@ export async function POST(
         ultimo.fechaEnvio
     ) {
       mensaje =
-        ultimo.mensaje;
+        acortarEnlacesVigentesEnMensaje(
+          ultimo.mensaje,
+          seguimiento.tokenAccesoHash
+        );
 
       reutilizado =
         true;
@@ -227,7 +232,7 @@ export async function POST(
     mensaje =
       construirMensaje(
         seguimiento.nombreCliente,
-        `${baseUrl}/seguimiento/${token}`
+        enlaceCortoSeguimiento(baseUrl, token)
       );
   }
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { enlaceCortoSeguimiento } from "@/lib/enlace-seguimiento";
+
 import {
   useEffect,
   useState,
@@ -165,7 +167,7 @@ export default function AgregarParticipanteGrupo({
       }
 
       const url =
-        `${window.location.origin}/seguimiento/${data.token}`;
+        enlaceCortoSeguimiento(window.location.origin, data.token);
 
       setNombreCreado(
         data.seguimiento

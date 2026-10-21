@@ -1,3 +1,4 @@
+import { extraerEnlaceCortoVigente } from "@/lib/enlace-seguimiento-mensajes";
 import {
   NextRequest,
   NextResponse,
@@ -51,6 +52,7 @@ export async function POST(
         nombreCliente:true,
         telefonoCliente:true,
         tokenCreadoAt:true,
+        tokenAccesoHash:true,
       },
     });
 
@@ -133,14 +135,13 @@ export async function POST(
 
   for (const envio of envios) {
     const encontrado =
-      /https?:\/\/\S+\/seguimiento\/[A-Za-z0-9_-]+/.exec(
-        envio.mensaje
+      extraerEnlaceCortoVigente(
+        envio.mensaje,
+        seguimiento.tokenAccesoHash
       );
 
     if (encontrado) {
-      enlace =
-        encontrado[0];
-
+      enlace = encontrado;
       break;
     }
   }

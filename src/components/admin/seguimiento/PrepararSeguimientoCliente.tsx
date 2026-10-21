@@ -1,5 +1,7 @@
 "use client";
 
+import { enlaceCortoSeguimiento } from "@/lib/enlace-seguimiento";
+
 import type {
   ReactNode,
 } from "react";
@@ -417,7 +419,7 @@ export default function PrepararSeguimientoCliente({
       }
 
       const nuevoEnlace =
-        `${window.location.origin}/seguimiento/${nuevoToken}`;
+        enlaceCortoSeguimiento(window.location.origin, nuevoToken);
 
       setToken(
         nuevoToken
