@@ -2758,15 +2758,15 @@ export default function SeguimientoPublico({
               {seguimiento.estado ===
           "ACTIVO" && (
 
-          <section className="sticky top-0 z-40 border-b border-[#E9E4F2] bg-white/95 backdrop-blur">
+          <section className="sticky top-0 z-40 border-b border-[#EEE7F5] bg-white/95 shadow-[0_8px_24px_rgba(45,26,91,0.06)] backdrop-blur-xl">
 
-            <div className="mx-auto max-w-3xl px-4 py-2.5">
+            <div className="mx-auto max-w-3xl px-4 py-3">
 
               <div className="flex items-center justify-between gap-4">
 
                 <div className="min-w-0">
 
-                  <p className="truncate text-sm font-extrabold text-[#1F1B24]">
+                  <p className="truncate text-base font-extrabold tracking-tight text-[#1F1B24]">
                     {primerNombre(
                       seguimiento.nombreCliente
                     ) === "Hola"
@@ -2785,7 +2785,7 @@ export default function SeguimientoPublico({
 
                 <div className="flex shrink-0 items-center gap-3">
 
-                  <div className="text-right">
+                  <div className="rounded-2xl border border-[#EEE7FA] bg-[#F7F3FE] px-3 py-2 text-right">
 
                     <p className="text-base font-extrabold text-brand-blue">
                       {checksCompletadosHoy}/{totalChecksHoy}
@@ -3322,17 +3322,17 @@ export default function SeguimientoPublico({
 
           <>
 
-          <section className="mt-4 overflow-hidden rounded-2xl border border-[#E9E4F2] bg-white p-4 shadow-sm sm:p-5">
+          <section className="mt-4 overflow-hidden rounded-[28px] border border-[#E9E0F5] bg-gradient-to-br from-white via-white to-[#F7F1FF] p-5 shadow-[0_16px_42px_rgba(66,37,106,0.09)] sm:p-6">
 
             <div className="flex items-start justify-between gap-4">
 
               <div className="min-w-0">
 
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-brand-pink">
+                <p className="inline-flex rounded-full bg-[#F7EAFB] px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#87339A]">
                   Tu progreso
                 </p>
 
-                <h2 className="mt-1 text-xl font-extrabold tracking-tight text-[#1F1B24]">
+                <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#21172F] sm:text-[28px]">
                   Buen día{primerNombre(
                     seguimiento.nombreCliente
                   ) !== "Hola"
@@ -3342,16 +3342,16 @@ export default function SeguimientoPublico({
                     : ""}
                 </h2>
 
-                <p className="mt-1 text-xs leading-5 text-brand-gray">
+                <p className="mt-2 max-w-md text-sm leading-6 text-[#716B80]">
                   Revisa tu avance y continúa con tu protocolo de hoy.
                 </p>
 
               </div>
 
 
-              <div className="shrink-0 rounded-2xl bg-[#F8F6FF] px-4 py-3 text-center">
+              <div className="shrink-0 rounded-[22px] border border-[#E9DDF8] bg-white px-3 py-3 text-center shadow-[0_8px_20px_rgba(64,35,113,0.07)] sm:px-4">
 
-                <p className="text-2xl font-extrabold text-brand-blue">
+                <p className="text-2xl font-extrabold tabular-nums text-[#6932AA] sm:text-3xl">
                   {porcentajeAvance}%
                 </p>
 
@@ -3670,25 +3670,25 @@ export default function SeguimientoPublico({
           <div className="mt-5 border-t border-[#E9E4F2] pt-5">
 
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
-              Protocolo del día
+              MIS ACTIVIDADES
             </p>
 
           </div>
 
 
-          <section className="mt-4">
+          <section className="mt-3 rounded-[26px] border border-[#EEE8F6] bg-white/95 p-4 shadow-[0_12px_35px_rgba(70,40,118,0.06)] sm:p-5">
 
-            <div className="mb-3 flex items-end justify-between gap-3">
+            <div className="mb-5 flex items-end justify-between gap-3">
 
               <div className="min-w-0">
 
-                <h1 className="text-xl font-extrabold tracking-tight text-[#1F1B24]">
+                <h1 className="text-2xl font-extrabold tracking-tight text-[#21172F]">
                   {puedeRegistrarChecks
-                    ? "Tu agenda de hoy"
+                    ? "Agenda de hoy"
                     : "Tu agenda"}
                 </h1>
 
-                <p className="mt-1 text-xs font-medium text-brand-gray">
+                <p className="mt-1.5 text-sm font-medium leading-5 text-[#716A7E]">
                   {puedeRegistrarChecks
                     ? "Marca cada actividad a medida que la completes."
                     : "Consulta las actividades y registros de tu seguimiento."}
@@ -3699,7 +3699,7 @@ export default function SeguimientoPublico({
 
               {totalChecksHoy > 0 && (
 
-                <span className="shrink-0 rounded-full border border-[#E9E4F2] bg-white px-3 py-1.5 text-xs font-bold text-brand-blue">
+                <span className="shrink-0 rounded-2xl border border-[#EADDF8] bg-[#F8F1FF] px-3 py-2 text-sm font-extrabold text-[#622BA7]">
                   {checksCompletadosHoy}/{totalChecksHoy}
                 </span>
 
@@ -3725,7 +3725,7 @@ export default function SeguimientoPublico({
 
             ) : (
 
-              <div className="space-y-3">
+              <div className="space-y-3.5">
 
                 {actividadesHoy.map(
                   (
@@ -3855,9 +3855,9 @@ export default function SeguimientoPublico({
                             }
                           >
 
-                            <div className="rounded-xl bg-purple-700 px-4 py-3 text-center shadow-sm">
-                              <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-white">
-                                Protocolos adicionales
+                            <div className="rounded-2xl border border-[#EADCF8] bg-[#F7F1FF] px-4 py-3 text-left">
+                              <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#6936A1]">
+                                Actividades complementarias
                               </p>
                             </div>
 
@@ -3865,16 +3865,16 @@ export default function SeguimientoPublico({
                         )}
 
                         <article
-                        className={`overflow-hidden rounded-2xl border shadow-sm transition ${
+                        className={`overflow-hidden rounded-[24px] border shadow-[0_8px_28px_rgba(53,33,83,0.07)] transition-colors duration-200 ${
                           esInformacion
                             ? "border-blue-200 bg-blue-50/40"
                             : completada
                             ? "border-emerald-200 bg-emerald-50/30"
-                            : "border-[#E9E4F2] bg-white"
+                            : "border-[#EBE6F2] bg-white"
                         }`}
                       >
 
-                        <div className="p-4">
+                        <div className="p-4 sm:p-5">
 
                           <div className="flex items-start gap-3">
 
@@ -3883,7 +3883,7 @@ export default function SeguimientoPublico({
                               <div className="flex flex-wrap items-center gap-2">
 
                                 {actividad.hora && (
-                                  <span className="font-mono text-xs font-extrabold text-brand-blue">
+                                  <span className="inline-flex min-h-8 items-center rounded-xl border border-[#EADCF8] bg-[#F5EEFF] px-2.5 py-1 font-mono text-xs font-extrabold tabular-nums text-[#5A2F99]">
                                     {actividad.hora}
                                   </span>
                                 )}
@@ -3989,10 +3989,10 @@ export default function SeguimientoPublico({
                                     ? `Marcar como pendiente: ${actividad.titulo}`
                                     : `Marcar como realizada: ${actividad.titulo}`
                                 }
-                                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+                                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 shadow-sm transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
                                   completada
-                                    ? "border-brand-pink bg-brand-pink text-white"
-                                    : "border-brand-pink bg-white text-brand-pink"
+                                    ? "border-emerald-600 bg-emerald-600 text-white"
+                                    : "border-[#D7C7E9] bg-white text-[#6936A1]"
                                 }`}
                               >
 
@@ -4032,9 +4032,9 @@ export default function SeguimientoPublico({
 
                           {actividad.indicaciones.length > 0 ? (
 
-                            <details className="group mt-3 overflow-hidden rounded-xl border border-[#EEEAF3] bg-[#FCFBFD]">
+                            <details className="group mt-4 overflow-hidden rounded-2xl border border-[#EBE3F3] bg-[#FAF8FD]">
 
-                              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 [&::-webkit-details-marker]:hidden">
+                              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 [&::-webkit-details-marker]:hidden">
 
                                 <span className="text-xs font-bold text-[#4F4B56]">
                                   {esInformacion
@@ -4151,10 +4151,10 @@ export default function SeguimientoPublico({
                                                 ? `Marcar como pendiente: ${instruccion.texto}`
                                                 : `Marcar como realizada: ${instruccion.texto}`
                                             }
-                                            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+                                            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 shadow-sm transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
                                               indicacionRealizada
-                                                ? "border-brand-pink bg-brand-pink text-white"
-                                                : "border-brand-pink bg-white text-brand-pink"
+                                                ? "border-emerald-600 bg-emerald-600 text-white"
+                                                : "border-[#D7C7E9] bg-white text-[#6936A1]"
                                             }`}
                                           >
 
@@ -4316,17 +4316,17 @@ export default function SeguimientoPublico({
         {pestana ===
           "calendario" && (
 
-          <section className="mt-6">
+          <section className="mt-4 rounded-[28px] border border-[#EAE2F4] bg-gradient-to-b from-white to-[#FAF7FF] p-4 shadow-[0_12px_35px_rgba(70,40,118,0.07)] sm:p-6">
 
             <div className="flex items-end justify-between gap-4">
 
               <div>
 
-                <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
+                <p className="inline-flex rounded-full bg-[#F7EAFB] px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#87339A]">
                   Calendario
                 </p>
 
-                <h2 className="mt-1 text-lg font-bold text-[#1F1B24]">
+                <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#21172F]">
                   Tu agenda
                 </h2>
 
@@ -4337,13 +4337,13 @@ export default function SeguimientoPublico({
               </div>
 
 
-              <div className="rounded-xl bg-[#F8F6FF] px-3 py-2 text-center">
+              <div className="shrink-0 rounded-2xl border border-[#EADDF8] bg-white px-3.5 py-2.5 text-center shadow-sm">
 
                 <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-brand-gray">
                   Avance
                 </p>
 
-                <p className="mt-0.5 text-sm font-extrabold text-brand-blue">
+                <p className="mt-0.5 text-base font-extrabold tabular-nums text-[#6932AA]">
                   {porcentajeGeneral}%
                 </p>
 
@@ -4352,7 +4352,7 @@ export default function SeguimientoPublico({
             </div>
 
 
-            <div className="mt-4 space-y-3">
+            <div className="mt-5 space-y-3">
 
               {diasCalendario.map(
                 (dia) => {
@@ -4464,7 +4464,7 @@ export default function SeguimientoPublico({
                               : actual
                         );
                       }}
-                      className={`group overflow-hidden rounded-2xl border bg-white shadow-sm ${
+                      className={`group overflow-hidden rounded-[22px] border bg-white shadow-[0_8px_24px_rgba(60,35,99,0.06)] transition-colors duration-200 ${
                         esHoy
                           ? "border-brand-pink"
                           : diaCompleto
@@ -4473,14 +4473,14 @@ export default function SeguimientoPublico({
                       }`}
                     >
 
-                      <summary className="cursor-pointer list-none p-4">
+                      <summary className="cursor-pointer list-none p-4 sm:p-5 [&::-webkit-details-marker]:hidden">
 
                         <div className="flex items-center justify-between gap-3">
 
                           <div className="flex min-w-0 items-center gap-3">
 
                             <div
-                              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-extrabold ${
+                              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-sm font-extrabold shadow-sm ${
                                 esHoy
                                   ? "bg-brand-pink text-white"
                                   : diaCompleto
@@ -4560,7 +4560,7 @@ export default function SeguimientoPublico({
                         {tareasDia.length >
                           0 && (
 
-                          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#EEEAF5]">
+                          <div className="mt-3.5 h-2 overflow-hidden rounded-full bg-[#F0EBF7]">
 
                             <div
                               className={`h-full rounded-full transition-all ${
@@ -4618,9 +4618,9 @@ export default function SeguimientoPublico({
                                     {actividad.seccion === "ADICIONAL" &&
                                       (indice === 0 ||
                                         actividadesDia[indice - 1].seccion !== "ADICIONAL") && (
-                                        <div className="rounded-xl bg-purple-700 px-4 py-3 text-center shadow-sm">
-                                          <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-white">
-                                            Protocolos adicionales
+                                        <div className="rounded-xl border border-[#EADCF8] bg-[#F7F1FF] px-4 py-3 text-left">
+                                          <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#6936A1]">
+                                            Actividades complementarias
                                           </p>
                                         </div>
                                       )}
@@ -4628,7 +4628,7 @@ export default function SeguimientoPublico({
                                     key={
                                       actividad.id
                                     }
-                                    className={`flex items-start gap-3 rounded-xl px-3 py-2.5 ${
+                                    className={`flex items-start gap-3 rounded-2xl px-3 py-3.5 transition-colors ${
                                       esInformacion
                                         ? "bg-blue-50"
                                         : hecha
@@ -4730,7 +4730,7 @@ export default function SeguimientoPublico({
                       !actual
                   )
                 }
-                className="mt-4 inline-flex w-full items-center justify-center rounded-xl border border-[#E1DCEB] bg-white px-4 py-3 text-sm font-bold text-brand-blue transition hover:bg-[#F8F6FF]"
+                className="mt-4 inline-flex w-full items-center justify-center rounded-2xl border border-[#E8DBF7] bg-[#F8F2FE] px-4 py-3.5 text-sm font-bold text-brand-blue transition hover:bg-[#F8F6FF]"
               >
                 {mostrarTodosCalendario
                   ? "Mostrar alrededor de hoy"
@@ -4757,18 +4757,18 @@ export default function SeguimientoPublico({
         {pestana ===
           "plan" && (
 
-          <section className="mt-6">
+          <section className="mt-4">
 
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-pink">
+            <p className="inline-flex rounded-full bg-[#F7EAFB] px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#87339A]">
               Mi plan
             </p>
 
-            <h2 className="mt-1 text-lg font-bold text-[#1F1B24]">
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#21172F]">
               Tu seguimiento
             </h2>
 
 
-            <div className="mt-4 rounded-2xl border border-[#E9E4F2] bg-white p-5 shadow-sm">
+            <div className="mt-4 rounded-[28px] border border-[#E9E0F5] bg-gradient-to-br from-white via-white to-[#F7F1FF] p-5 shadow-[0_16px_42px_rgba(66,37,106,0.09)] sm:p-6">
 
               <p className="text-sm font-bold text-[#1F1B24]">
                 {seguimiento.nombrePlan}
@@ -4777,23 +4777,23 @@ export default function SeguimientoPublico({
 
               <div className="mt-4 grid grid-cols-2 gap-3">
 
-                <div className="rounded-xl bg-[#F8F6FF] p-3">
+                <div className="rounded-2xl border border-[#EEE5F7] bg-white p-4 shadow-sm">
                   <p className="text-xs text-brand-gray">
                     Duración
                   </p>
 
-                  <p className="mt-1 text-lg font-bold text-brand-blue">
+                  <p className="mt-2 text-xl font-extrabold tabular-nums text-[#6932AA]">
                     {seguimiento.duracionDias} días
                   </p>
                 </div>
 
 
-                <div className="rounded-xl bg-emerald-50 p-3">
+                <div className="rounded-2xl border border-[#D7EFE4] bg-white p-4 shadow-sm">
                   <p className="text-xs text-emerald-700">
                     Progreso
                   </p>
 
-                  <p className="mt-1 text-lg font-bold text-emerald-700">
+                  <p className="mt-2 text-xl font-extrabold tabular-nums text-emerald-700">
                     {porcentajeGeneral}%
                   </p>
                 </div>
@@ -4813,9 +4813,9 @@ export default function SeguimientoPublico({
                   </span>
                 </div>
 
-                <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-[#EEEAF5]">
+                <div className="mt-2 h-3 overflow-hidden rounded-full bg-[#EEE8F7]">
                   <div
-                    className="h-full rounded-full bg-brand-pink transition-all"
+                    className="h-full rounded-full bg-[#743AB5] transition-all duration-300"
                     style={{
                       width:
                         `${porcentajeGeneral}%`,
@@ -4826,7 +4826,7 @@ export default function SeguimientoPublico({
               </div>
 
 
-              <div className="mt-5 grid gap-3 border-t border-[#EEEAF5] pt-4 sm:grid-cols-2">
+              <div className="mt-5 grid gap-4 border-t border-[#EEE7F5] pt-5 sm:grid-cols-2">
 
                 <div className="flex items-center gap-3">
                   <CalendarDays className="h-5 w-5 shrink-0 text-brand-blue" />
@@ -5149,9 +5149,9 @@ export default function SeguimientoPublico({
       </div>
 
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-[#E9E4F2] bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-[#EEE7F5] bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_32px_rgba(60,29,109,0.08)] backdrop-blur-xl">
 
-        <div className="mx-auto grid max-w-md grid-cols-3">
+        <div className="mx-auto grid max-w-md grid-cols-3 gap-2 px-3 py-1">
 
           <BotonNavegacion
             activo={
@@ -5230,9 +5230,9 @@ function BotonNavegacion({
       onClick={
         onClick
       }
-      className={`flex min-h-16 flex-col items-center justify-center gap-1 px-2 text-xs font-semibold transition ${
+      className={`flex min-h-16 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-1 text-xs font-bold transition-colors duration-200 ${
         activo
-          ? "text-brand-pink"
+          ? "bg-[#F9EEFC] text-brand-pink"
           : "text-brand-gray"
       }`}
     >
