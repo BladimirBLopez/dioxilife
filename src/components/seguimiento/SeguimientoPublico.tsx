@@ -3423,11 +3423,11 @@ export default function SeguimientoPublico({
 
                           {actividad.indicaciones.length > 0 ? (
 
-                            <details className="group mt-4 overflow-hidden rounded-2xl border border-[#EBE3F3] bg-[#FAF8FD]">
+                            <details className="group mt-3 overflow-hidden rounded-[20px] border border-[#E5D8F1] bg-[#FCFAFF]">
 
-                              <summary className="flex cursor-pointer list-none rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[#8051B3] focus-visible:ring-offset-2 items-center justify-between gap-3 px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+                              <summary className="flex cursor-pointer list-none rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[#8051B3] focus-visible:ring-offset-2 items-center justify-between gap-3 px-4 py-4 transition-colors active:bg-[#F2EBFA] [&::-webkit-details-marker]:hidden">
 
-                                <span className="text-xs font-bold text-[#4F4B56]">
+                                <span className="text-sm font-extrabold leading-5 text-[#30243D]">
                                   {esInformacion
                                     ? "Indicaciones"
                                     : `${actividad.indicaciones.length} ${
@@ -3438,7 +3438,7 @@ export default function SeguimientoPublico({
                                 </span>
 
 
-                                <span className="shrink-0 text-xs font-bold text-brand-blue">
+                                <span className="shrink-0 text-xs font-extrabold text-[#6737A5]">
 
                                   <span className="group-open:hidden">
                                     {actividad.tipo === "TAREA"
@@ -3463,7 +3463,7 @@ export default function SeguimientoPublico({
                               </summary>
 
 
-                              <ul className="space-y-2 border-t border-[#EEEAF3] p-2.5">
+                              <ul className="space-y-2.5 border-t border-[#EAE1F3] p-3">
 
                                 {instrucciones.map(
                                   (
@@ -3490,7 +3490,7 @@ export default function SeguimientoPublico({
                                     return (
                                       <li
                                         key={`${actividad.id}-${instruccion.id}`}
-                                        className={`flex items-start gap-2.5 rounded-lg px-2 py-2 text-sm leading-6 transition ${
+                                        className={`flex items-start gap-3 rounded-xl border border-[#EEE7F2] px-3 py-3 text-sm leading-6 transition ${
                                           indicacionRealizada
                                             ? "bg-emerald-50/70 text-emerald-800"
                                             : "bg-white text-[#4F4B56]"
@@ -3498,7 +3498,7 @@ export default function SeguimientoPublico({
                                       >
 
                                         {instruccion.hora && (
-                                          <span className="mt-0.5 min-w-[52px] shrink-0 font-mono text-xs font-bold text-brand-blue">
+                                          <span className="mt-0.5 min-w-[54px] shrink-0 rounded-lg bg-[#F0E9FA] px-2 py-0.5 text-center font-mono text-xs font-extrabold text-[#61349B]">
                                             {instruccion.hora}
                                           </span>
                                         )}
@@ -3512,7 +3512,7 @@ export default function SeguimientoPublico({
                                         <span
                                           className={`min-w-0 flex-1 ${
                                             indicacionRealizada
-                                              ? "opacity-70"
+                                              ? "font-medium text-emerald-900"
                                               : ""
                                           }`}
                                         >

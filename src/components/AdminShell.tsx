@@ -204,6 +204,18 @@ const grupos: NavGroup[] = [
     titulo: "Seguimiento",
     items: [
       {
+        href: "/admin/seguimiento",
+        label: "Control general",
+        exact: true,
+        icon: (
+          <>
+            <rect x="3" y="3" width="7" height="7" rx="1.5" />
+            <rect x="14" y="3" width="7" height="7" rx="1.5" />
+            <path d="M3 20h18M6 16v2M12 12v6M18 14v4" />
+          </>
+        ),
+      },
+      {
         href: "/admin/seguimiento/planes",
         label: "Plantillas",
         icon: (
