@@ -3244,7 +3244,7 @@ export default function SeguimientoPublico({
                         )}
 
                         <article
-                        className={`overflow-hidden rounded-[24px] border shadow-[0_8px_28px_rgba(53,33,83,0.07)] transition-colors duration-200 ${
+                        className={`overflow-hidden rounded-[20px] border shadow-[0_4px_16px_rgba(53,33,83,0.06)] transition-colors duration-200 ${
                           esInformacion
                             ? "border-blue-200 bg-blue-50/40"
                             : completada
@@ -3253,7 +3253,7 @@ export default function SeguimientoPublico({
                         }`}
                       >
 
-                        <div className="p-4 sm:p-5">
+                        <div className="p-3.5 sm:p-5">
 
                           <div className="flex items-start gap-3">
 
@@ -3262,7 +3262,7 @@ export default function SeguimientoPublico({
                               <div className="flex flex-wrap items-center gap-2">
 
                                 {actividad.hora && (
-                                  <span className="inline-flex min-h-8 items-center rounded-xl border border-[#EADCF8] bg-[#F5EEFF] px-2.5 py-1 font-mono text-xs font-extrabold tabular-nums text-[#5A2F99]">
+                                  <span className="inline-flex min-h-9 items-center rounded-xl border border-[#EADCF8] bg-[#F5EEFF] px-2.5 py-1 font-mono text-sm font-extrabold tabular-nums text-[#5A2F99]">
                                     {actividad.hora}
                                   </span>
                                 )}
@@ -3311,6 +3311,17 @@ export default function SeguimientoPublico({
                                   </span>
                                 )}
 
+                                {actividad.tipo === "TAREA" && (
+                                  <span
+                                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                                      completada
+                                        ? "bg-emerald-50 text-emerald-700"
+                                        : "bg-[#F4F0F9] text-[#5C5171]"
+                                    }`}
+                                  >
+                                    {completada ? "Realizada" : "Pendiente"}
+                                  </span>
+                                )}
                               </div>
 
 
@@ -3363,12 +3374,13 @@ export default function SeguimientoPublico({
                                   actualizandoActividad ===
                                     actividad.id
                                 }
-                                aria-label={
+                                aria-pressed={completada}
+                                             aria-label={
                                   completada
                                     ? `Marcar como pendiente: ${actividad.titulo}`
                                     : `Marcar como realizada: ${actividad.titulo}`
                                 }
-                                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 shadow-sm transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+                                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8051B3] focus-visible:ring-offset-2 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
                                   completada
                                     ? "border-emerald-600 bg-emerald-600 text-white"
                                     : "border-[#D7C7E9] bg-white text-[#6936A1]"
@@ -3413,7 +3425,7 @@ export default function SeguimientoPublico({
 
                             <details className="group mt-4 overflow-hidden rounded-2xl border border-[#EBE3F3] bg-[#FAF8FD]">
 
-                              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+                              <summary className="flex cursor-pointer list-none rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[#8051B3] focus-visible:ring-offset-2 items-center justify-between gap-3 px-4 py-3.5 [&::-webkit-details-marker]:hidden">
 
                                 <span className="text-xs font-bold text-[#4F4B56]">
                                   {esInformacion
@@ -3525,12 +3537,13 @@ export default function SeguimientoPublico({
                                                 instruccion.id
                                               )
                                             }
-                                            aria-label={
+                                            aria-pressed={indicacionRealizada}
+                                             aria-label={
                                               indicacionRealizada
                                                 ? `Marcar como pendiente: ${instruccion.texto}`
                                                 : `Marcar como realizada: ${instruccion.texto}`
                                             }
-                                            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 shadow-sm transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+                                            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8051B3] focus-visible:ring-offset-2 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
                                               indicacionRealizada
                                                 ? "border-emerald-600 bg-emerald-600 text-white"
                                                 : "border-[#D7C7E9] bg-white text-[#6936A1]"
