@@ -20,6 +20,7 @@ import GestionSeguimientoCliente from "@/components/admin/seguimiento/GestionSeg
 import HistorialWhatsApp from "@/components/admin/seguimiento/HistorialWhatsApp";
 import ResumenCumplimiento from "@/components/admin/seguimiento/ResumenCumplimiento";
 import RegistroDiarioCliente from "@/components/admin/seguimiento/RegistroDiarioCliente";
+import ImagenResumenDiario from "@/components/admin/seguimiento/ImagenResumenDiario";
 
 function estiloEstado(estado: string) {
   switch (estado) {
@@ -700,6 +701,12 @@ export default async function SeguimientoClientePage({
           />
 
           <RegistroDiarioCliente
+            seguimientoId={seguimiento.id}
+            duracionDias={seguimiento.duracionDias}
+            diaInicial={diaActual ?? 1}
+          />
+
+          <ImagenResumenDiario
             seguimientoId={seguimiento.id}
             duracionDias={seguimiento.duracionDias}
             diaInicial={diaActual ?? 1}
