@@ -173,9 +173,9 @@ function crearEventos(datos: DatosDia): Evento[] {
       completado: actividad.completado,
       clase:
         actividad.tipo === "INFORMACION"
-          ? "Información"
+          ? "Para leer"
           : actividad.tipo === "CONTROL"
-            ? "Control"
+            ? "Revisión"
             : "Actividad",
       orden: orden * 10000,
     });
@@ -184,12 +184,12 @@ function crearEventos(datos: DatosDia): Evento[] {
       if (!indicacion.activo) continue;
 
       eventos.push({
-        titulo: `Indicación · ${actividad.titulo || "Actividad"}`,
+        titulo: `Ten en cuenta · ${actividad.titulo || "Actividad"}`,
         detalle: indicacion.texto || "",
         hora: indicacion.hora || actividad.hora,
         momento: actividad.momento,
         completado: indicacion.completado,
-        clase: "Indicación",
+        clase: "Detalle",
         orden:
           orden * 10000 +
           (Number.isFinite(indicacion.orden)
@@ -317,7 +317,7 @@ function dibujarTarjeta(
   ctx.fillStyle = "#176d69";
 
   const hora = minutos(evento.hora) === 9999
-    ? "SIN HORARIO"
+    ? "SIN HORA"
     : evento.hora || "";
 
   ctx.fillText(
@@ -338,7 +338,7 @@ function dibujarTarjeta(
 
   ctx.fillText(
     evento.completado === null
-      ? "INFORMATIVA"
+      ? "PARA LEER"
       : evento.completado
         ? "REALIZADA"
         : "PENDIENTE",
@@ -447,41 +447,71 @@ async function crearImagenes(
     ctx.fillStyle = "#f0f5f5";
     ctx.fillRect(0, 0, ANCHO, canvas.height);
 
-    ctx.fillStyle = "#103b45";
-    ctx.fillRect(0, 0, ANCHO, 118);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, ANCHO, 119);
 
-    if (logo) {
-      try {
-        ctx.drawImage(logo, 54, 20, 78, 78);
-      } catch {
-        // El logo es opcional.
+      ctx.fillStyle = "#d5e9e6";
+      ctx.fillRect(0, 119, ANCHO, 3);
+
+      ctx.fillStyle = "#eef8f6";
+      ctx.fillRect(48, 11, 106, 100);
+
+      ctx.strokeStyle = "#c4e3de";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(48, 11, 106, 100);
+
+      let logoDibujado = false;
+
+      if (logo && logo.naturalWidth > 0 && logo.naturalHeight > 0) {
+        try {
+          const escala = Math.min(
+            92 / logo.naturalWidth,
+            86 / logo.naturalHeight
+          );
+          const anchoLogo = logo.naturalWidth * escala;
+          const altoLogo = logo.naturalHeight * escala;
+
+          ctx.drawImage(
+            logo,
+            101 - anchoLogo / 2,
+            61 - altoLogo / 2,
+            anchoLogo,
+            altoLogo
+          );
+          logoDibujado = true;
+        } catch {
+          // Mostrar iniciales si falla el dibujo.
+        }
       }
-    }
 
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 40px Arial";
+      if (!logoDibujado) {
+        ctx.fillStyle = "#0f766e";
+        ctx.font = "bold 35px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("DL", 101, 72);
+      }
 
-    ctx.fillText(
-      "DioxiLife Bolivia",
-      logo ? 155 : 58,
-      74
-    );
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#103b45";
+      ctx.font = "bold 39px Arial";
+      ctx.fillText("DioxiLife Bolivia", 172, 73, 580);
 
-    ctx.font = "26px Arial";
-    ctx.textAlign = "right";
+      ctx.font = "24px Arial";
+      ctx.fillStyle = "#475569";
+      ctx.textAlign = "right";
+      ctx.fillText(
+        `Página ${i + 1} de ${paginas.length}`,
+        1020,
+        73,
+        240
+      );
 
-    ctx.fillText(
-      `Página ${i + 1} de ${paginas.length}`,
-      1020,
-      72
-    );
-
-    ctx.textAlign = "left";
-    ctx.fillStyle = "#102b3b";
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#102b3b";
     ctx.font = "bold 38px Arial";
 
     ctx.fillText(
-      `Agenda del día ${dia}`,
+      `Tu agenda · Día ${dia} del plan`,
       58,
       172
     );
@@ -489,7 +519,7 @@ async function crearImagenes(
     ctx.font = "30px Arial";
 
     ctx.fillText(
-      `Cliente: ${datos.seguimiento.nombreCliente || "Sin nombre"}`,
+      datos.seguimiento.nombreCliente ? `Para: ${datos.seguimiento.nombreCliente}` : "Tu agenda personal",
       58,
       220,
       965
@@ -499,7 +529,7 @@ async function crearImagenes(
     ctx.fillStyle = "#475569";
 
     ctx.fillText(
-      `Plan: ${datos.seguimiento.nombrePlan}`,
+      `Tu plan: ${datos.seguimiento.nombrePlan}`,
       58,
       262,
       965
@@ -508,7 +538,7 @@ async function crearImagenes(
     const avance =
       datos.resumen &&
       typeof datos.resumen.total === "number"
-        ? `Avance registrado: ${datos.resumen.realizadas}/${datos.resumen.total}`
+        ? `Tu avance: ${datos.resumen.realizadas} de ${datos.resumen.total}`
         : "Resumen de actividades";
 
     const peso =
@@ -555,7 +585,7 @@ async function crearImagenes(
     ctx.font = "23px Arial";
 
     ctx.fillText(
-      `Generado: ${fecha} (Bolivia)`,
+      `Preparado: ${fecha} (Bolivia)`,
       58,
       canvas.height - 73
     );
