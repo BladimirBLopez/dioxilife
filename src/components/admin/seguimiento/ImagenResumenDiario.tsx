@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 
 type Indicacion = {
   id: string;
@@ -61,6 +61,90 @@ type ImagenLista = {
   url: string;
   archivo: File;
 };
+
+
+function EnlaceDescargaPNG({
+  imagen,
+  numero,
+  mostrarNumero,
+}: {
+  imagen: ImagenLista;
+  numero: number;
+  mostrarNumero: boolean;
+}) {
+  const [iniciando, setIniciando] = useState(false);
+  const [solicitada, setSolicitada] = useState(false);
+
+  const bloqueoRef = useRef(false);
+
+  // En el navegador, window.setTimeout devuelve number.
+  const temporizadorRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (temporizadorRef.current !== null) {
+        window.clearTimeout(temporizadorRef.current);
+      }
+    };
+  }, []);
+
+  function iniciarDescarga(
+    evento: MouseEvent<HTMLAnchorElement>
+  ) {
+    if (bloqueoRef.current) {
+      evento.preventDefault();
+      return;
+    }
+
+    bloqueoRef.current = true;
+    setIniciando(true);
+    setSolicitada(false);
+
+    temporizadorRef.current = window.setTimeout(() => {
+      bloqueoRef.current = false;
+      setIniciando(false);
+      setSolicitada(true);
+      temporizadorRef.current = null;
+    }, 800);
+  }
+
+  return (
+    <div className="flex flex-col items-start gap-1">
+      <a
+        href={imagen.url}
+        download={imagen.archivo.name}
+        onClick={iniciarDescarga}
+        aria-busy={iniciando}
+        aria-disabled={iniciando}
+        className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-800"
+      >
+        {iniciando ? (
+          <>
+            <span
+              aria-hidden="true"
+              className="h-4 w-4 animate-spin rounded-full border-2 border-teal-700 border-t-transparent"
+            />
+            Iniciando descarga...
+          </>
+        ) : (
+          <>
+            Descargar PNG
+            {mostrarNumero ? " " + numero : ""}
+          </>
+        )}
+      </a>
+
+      {solicitada && (
+        <span
+          role="status"
+          className="text-xs text-slate-500"
+        >
+          Descarga solicitada. Revisa tus archivos descargados.
+        </span>
+      )}
+    </div>
+  );
+}
 
 const ANCHO = 1080;
 const INICIO = 330;
@@ -731,9 +815,17 @@ export default function ImagenResumenDiario({
           onClick={() => void generar()}
           className="rounded-lg bg-teal-700 px-4 py-2 font-semibold text-white disabled:opacity-50"
         >
-          {generando
-            ? "Generando imagen..."
-            : "Generar imagen del día"}
+          {generando ? (
+              <span className="inline-flex items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+                />
+                Generando imagen...
+              </span>
+            ) : (
+              "Generar imagen del día"
+            )}
         </button>
       </div>
 
@@ -779,15 +871,12 @@ export default function ImagenResumenDiario({
             </button>
 
             {imagenes.map((img, i) => (
-              <a
-                key={img.url}
-                href={img.url}
-                download={img.archivo.name}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-800"
-              >
-                Descargar PNG{" "}
-                {imagenes.length > 1 ? i + 1 : ""}
-              </a>
+              <EnlaceDescargaPNG
+                  key={img.url}
+                  imagen={img}
+                  numero={i + 1}
+                  mostrarNumero={imagenes.length > 1}
+                />
             ))}
           </div>
 
