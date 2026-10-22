@@ -73,7 +73,6 @@ function EnlaceDescargaPNG({
   mostrarNumero: boolean;
 }) {
   const [iniciando, setIniciando] = useState(false);
-  const [solicitada, setSolicitada] = useState(false);
 
   const bloqueoRef = useRef(false);
 
@@ -98,12 +97,10 @@ function EnlaceDescargaPNG({
 
     bloqueoRef.current = true;
     setIniciando(true);
-    setSolicitada(false);
 
     temporizadorRef.current = window.setTimeout(() => {
       bloqueoRef.current = false;
       setIniciando(false);
-      setSolicitada(true);
       temporizadorRef.current = null;
     }, 800);
   }
@@ -134,14 +131,6 @@ function EnlaceDescargaPNG({
         )}
       </a>
 
-      {solicitada && (
-        <span
-          role="status"
-          className="text-xs text-slate-500"
-        >
-          Descarga solicitada. Revisa tus archivos descargados.
-        </span>
-      )}
     </div>
   );
 }
@@ -854,12 +843,8 @@ export default function ImagenResumenDiario({
       {imagenes.length > 0 && (
         <div className="mt-5 space-y-3">
           <p className="text-sm font-medium text-slate-700">
-            Vista previa · {imagenes.length}{" "}
-            {imagenes.length === 1
-              ? "imagen"
-              : "imágenes"}.
-            La vista es una copia del momento en que la generaste.
-          </p>
+              Vista previa
+            </p>
 
           <div className="flex flex-wrap gap-2">
             <button
@@ -881,10 +866,8 @@ export default function ImagenResumenDiario({
           </div>
 
           <p className="text-xs text-slate-500">
-            Verifica el contenido y el destinatario antes de
-            compartir información privada.
-            El envío por WhatsApp requiere tu confirmación.
-          </p>
+              Verifica el destinatario antes de compartir.
+            </p>
 
           <div className="grid gap-3 md:grid-cols-2">
             {imagenes.map((img, i) => (
