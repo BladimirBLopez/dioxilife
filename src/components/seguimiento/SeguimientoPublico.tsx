@@ -191,6 +191,107 @@ function valorVisibleAvance(
 }
 
 
+
+function MiniGraficoMedicion({
+  datos,
+  color,
+  nombre,
+}: {
+  datos: PuntoGraficoAvance[];
+  color: string;
+  nombre: string;
+}) {
+  const valores = datos
+    .map((punto) => punto.valor)
+    .filter((valor) => Number.isFinite(valor))
+    .slice(-12);
+
+  if (valores.length === 0) {
+    return (
+      <div className="mt-2 flex h-12 items-center justify-center rounded-lg border border-dashed border-[#E5DEEE] bg-white px-1 text-center">
+        <span className="text-[9px] font-medium text-[#817A8C]">
+          Sin registros
+        </span>
+      </div>
+    );
+  }
+
+  const minimo = Math.min(...valores);
+  const maximo = Math.max(...valores);
+  const rango = maximo - minimo;
+
+  const obtenerX = (indice: number) =>
+    valores.length === 1
+      ? 60
+      : 8 + (indice / (valores.length - 1)) * 104;
+
+  const obtenerY = (valor: number) =>
+    rango === 0
+      ? 21
+      : 6 + ((maximo - valor) / rango) * 29;
+
+  const puntos = valores
+    .map((valor, indice) =>
+      [obtenerX(indice), obtenerY(valor)].join(",")
+    )
+    .join(" ");
+
+  const ultimo = valores.length - 1;
+
+  return (
+    <div className="mt-2 rounded-lg bg-white px-1 py-1">
+      <svg
+        viewBox="0 0 120 42"
+        preserveAspectRatio="none"
+        className="block h-14 w-full"
+        role="img"
+        aria-label={
+          "Evolución de " +
+          nombre +
+          ": " +
+          valores.length +
+          " registros"
+        }
+      >
+        <line
+          x1="5"
+          y1="36"
+          x2="115"
+          y2="36"
+          stroke="#E9E4F2"
+          strokeWidth="1"
+        />
+
+        {valores.length > 1 && (
+          <polyline
+            points={puntos}
+            fill="none"
+            stroke={color}
+            strokeWidth="2.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        )}
+
+        <circle
+          cx={obtenerX(ultimo)}
+          cy={obtenerY(valores[ultimo])}
+          r="3.6"
+          fill={color}
+          stroke="white"
+          strokeWidth="1.5"
+        />
+      </svg>
+
+      <p className="mt-0.5 text-center text-[9px] text-[#817A8C]">
+        {valores.length === 1
+          ? "1 registro"
+          : "Últimos registros"}
+      </p>
+    </div>
+  );
+}
+
 function GraficoAvancePublico({
   datos,
   nombre,
@@ -3061,6 +3162,174 @@ export default function SeguimientoPublico({
 
 
 
+          <section className="mt-5 overflow-hidden rounded-[22px] border border-[#E9E4F2] bg-white p-4 shadow-sm sm:p-5">
+
+            <div className="flex items-start justify-between gap-4">
+
+              <div className="min-w-0">
+
+                <p className="inline-flex rounded-full bg-[#F7EAFB] px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#87339A]">
+                  Salud y evolución
+                </p>
+
+                <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#21172F] sm:text-[28px]">Mis mediciones</h2>
+
+                <p className="mt-2 max-w-md text-sm leading-6 text-[#716B80]">
+                  Consulta tus mediciones y revisa tu evolución cuando lo necesites.
+                </p>
+
+              </div>
+
+
+
+
+            </div>
+
+
+
+
+
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+
+              <div className="min-w-0 rounded-2xl border border-[#E9E4F2] bg-[#FAF9FC] p-3 shadow-sm">
+
+                <p className="text-[11px] font-bold uppercase tracking-wide text-brand-gray">
+                  Peso
+                </p>
+
+                <p className="mt-1 break-words text-base font-extrabold tabular-nums text-[#1F1B24] sm:text-lg">
+                  {ultimoPeso
+                    ? `${ultimoPeso.peso.toLocaleString(
+                        "es-BO",
+                        {
+                          maximumFractionDigits:
+                            2,
+                        }
+                      )} kg`
+                    : "—"}
+                </p>
+
+                <p className="mt-0.5 text-[10px] text-brand-gray">
+                  Actual
+                </p>
+                <MiniGraficoMedicion
+                  datos={graficaPeso}
+                  color="#149A8B"
+                  nombre="peso"
+                />
+              </div>
+
+
+              <div className="min-w-0 rounded-2xl border border-[#E9E4F2] bg-[#FAF9FC] p-3 shadow-sm">
+
+                <p className="text-[11px] font-bold uppercase tracking-wide text-brand-gray">
+                  Glucosa
+                </p>
+
+                <p className="mt-1 break-words text-base font-extrabold tabular-nums text-[#1F1B24] sm:text-lg">
+                  {ultimaGlucosa
+                    ? ultimaGlucosa.valor.toLocaleString(
+                        "es-BO",
+                        {
+                          maximumFractionDigits:
+                            2,
+                        }
+                      )
+                    : "—"}
+                </p>
+
+                <p className="mt-0.5 text-[10px] text-brand-gray">
+                  mg/dL
+                </p>
+                <MiniGraficoMedicion
+                  datos={graficaGlucosa}
+                  color="#6750A4"
+                  nombre="glucosa"
+                />
+              </div>
+
+
+              <div className="col-span-2 min-w-0 rounded-2xl border border-[#E9E4F2] bg-[#FAF9FC] p-3 shadow-sm sm:col-span-1">
+
+                <p className="text-[11px] font-bold uppercase tracking-wide text-brand-gray">
+                  Cintura
+                </p>
+
+                <p className="mt-1 break-words text-base font-extrabold tabular-nums text-[#1F1B24] sm:text-lg">
+                  {ultimaCintura
+                    ? `${ultimaCintura.cinturaCm.toLocaleString(
+                        "es-BO",
+                        {
+                          maximumFractionDigits:
+                            2,
+                        }
+                      )} cm`
+                    : "—"}
+                </p>
+
+                <p className="mt-0.5 text-[10px] text-brand-gray">
+                  Actual
+                </p>
+                <MiniGraficoMedicion
+                  datos={graficaCintura}
+                  color="#D68C27"
+                  nombre="cintura"
+                />
+              </div>
+
+            </div>
+
+
+            <details className="group mt-4 overflow-hidden rounded-xl border border-[#E9E4F2] bg-white">
+
+              <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3">
+
+                <div className="min-w-0">
+
+                  <p className="text-sm font-extrabold text-[#1F1B24]">
+                    Registrar mediciones de hoy
+                  </p>
+
+                  <p className="mt-0.5 text-[11px] leading-4 text-brand-gray">
+                    Peso, cintura y glucosa del día.
+                  </p>
+
+                </div>
+
+
+                <div className="flex shrink-0 items-center gap-2">
+
+                  <span className="rounded-full bg-[#F8F6FF] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-blue">
+                    Registrar
+                  </span>
+
+                  <span className="text-lg leading-none text-brand-blue transition-transform group-open:rotate-180">
+                    ⌄
+                  </span>
+
+                </div>
+
+              </summary>
+
+
+              <div className="border-t border-[#EEEAF5] px-3 pb-3 pt-1">
+
+                <MedicionesSeguimientoPublico
+                  token={token}
+                  onGuardado={
+                    cargarSeguimiento
+                  }
+                />
+
+              </div>
+
+            </details>
+
+
+
+
+          </section>
+
           <section className="mt-3">
 
             <div className="mb-5 flex items-end justify-between gap-3">
@@ -3628,161 +3897,6 @@ export default function SeguimientoPublico({
             )}
           </section>
 
-<section className="mt-5 overflow-hidden rounded-[22px] border border-[#E9E4F2] bg-white p-4 shadow-sm sm:p-5">
-
-            <div className="flex items-start justify-between gap-4">
-
-              <div className="min-w-0">
-
-                <p className="inline-flex rounded-full bg-[#F7EAFB] px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#87339A]">
-                  Salud y evolución
-                </p>
-
-                <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#21172F] sm:text-[28px]">Mis mediciones</h2>
-
-                <p className="mt-2 max-w-md text-sm leading-6 text-[#716B80]">
-                  Consulta tus mediciones y revisa tu evolución cuando lo necesites.
-                </p>
-
-              </div>
-
-
-
-
-            </div>
-
-
-
-
-
-            <div className="mt-4 grid grid-cols-3 gap-2">
-
-              <div className="min-w-0 rounded-xl bg-[#FAF9FC] p-3">
-
-                <p className="text-[9px] font-bold uppercase tracking-wide text-brand-gray">
-                  Peso
-                </p>
-
-                <p className="mt-1 truncate text-sm font-extrabold text-[#1F1B24] sm:text-base">
-                  {ultimoPeso
-                    ? `${ultimoPeso.peso.toLocaleString(
-                        "es-BO",
-                        {
-                          maximumFractionDigits:
-                            2,
-                        }
-                      )} kg`
-                    : "—"}
-                </p>
-
-                <p className="mt-0.5 text-[9px] text-brand-gray">
-                  Actual
-                </p>
-
-              </div>
-
-
-              <div className="min-w-0 rounded-xl bg-[#FAF9FC] p-3">
-
-                <p className="text-[9px] font-bold uppercase tracking-wide text-brand-gray">
-                  Glucosa
-                </p>
-
-                <p className="mt-1 truncate text-sm font-extrabold text-[#1F1B24] sm:text-base">
-                  {ultimaGlucosa
-                    ? ultimaGlucosa.valor.toLocaleString(
-                        "es-BO",
-                        {
-                          maximumFractionDigits:
-                            2,
-                        }
-                      )
-                    : "—"}
-                </p>
-
-                <p className="mt-0.5 text-[9px] text-brand-gray">
-                  mg/dL
-                </p>
-
-              </div>
-
-
-              <div className="min-w-0 rounded-xl bg-[#FAF9FC] p-3">
-
-                <p className="text-[9px] font-bold uppercase tracking-wide text-brand-gray">
-                  Cintura
-                </p>
-
-                <p className="mt-1 truncate text-sm font-extrabold text-[#1F1B24] sm:text-base">
-                  {ultimaCintura
-                    ? `${ultimaCintura.cinturaCm.toLocaleString(
-                        "es-BO",
-                        {
-                          maximumFractionDigits:
-                            2,
-                        }
-                      )} cm`
-                    : "—"}
-                </p>
-
-                <p className="mt-0.5 text-[9px] text-brand-gray">
-                  Actual
-                </p>
-
-              </div>
-
-            </div>
-
-
-            <details className="group mt-4 overflow-hidden rounded-xl border border-[#E9E4F2] bg-white">
-
-              <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3">
-
-                <div className="min-w-0">
-
-                  <p className="text-sm font-extrabold text-[#1F1B24]">
-                    Registrar mediciones de hoy
-                  </p>
-
-                  <p className="mt-0.5 text-[11px] leading-4 text-brand-gray">
-                    Peso, cintura y glucosa del día.
-                  </p>
-
-                </div>
-
-
-                <div className="flex shrink-0 items-center gap-2">
-
-                  <span className="rounded-full bg-[#F8F6FF] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-blue">
-                    Registrar
-                  </span>
-
-                  <span className="text-lg leading-none text-brand-blue transition-transform group-open:rotate-180">
-                    ⌄
-                  </span>
-
-                </div>
-
-              </summary>
-
-
-              <div className="border-t border-[#EEEAF5] px-3 pb-3 pt-1">
-
-                <MedicionesSeguimientoPublico
-                  token={token}
-                  onGuardado={
-                    cargarSeguimiento
-                  }
-                />
-
-              </div>
-
-            </details>
-
-
-
-
-          </section>
 
 
                     <section className="mt-6">
