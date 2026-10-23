@@ -201,10 +201,26 @@ function MiniGraficoMedicion({
   color: string;
   nombre: string;
 }) {
-  const valores = datos
+  const todosLosValores = datos
     .map((punto) => punto.valor)
-    .filter((valor) => Number.isFinite(valor))
-    .slice(-12);
+    .filter((valor) => Number.isFinite(valor));
+
+  const valores = todosLosValores.slice(-12);
+
+  const promedio =
+    todosLosValores.length > 0
+      ? todosLosValores.reduce(
+          (suma, valor) => suma + valor,
+          0
+        ) / todosLosValores.length
+      : null;
+
+  const unidad =
+    nombre === "glucosa"
+      ? "mg/dL"
+      : nombre === "cintura"
+        ? "cm"
+        : "kg";
 
   if (valores.length === 0) {
     return (
@@ -283,10 +299,15 @@ function MiniGraficoMedicion({
         />
       </svg>
 
-      <p className="mt-0.5 text-center text-[9px] text-[#817A8C]">
-        {valores.length === 1
-          ? "1 registro"
-          : "Últimos registros"}
+      <p className="mt-1 text-center text-[10px] font-semibold leading-4 text-[#51465C]">
+        {"Promedio: "}
+        {promedio === null
+          ? "—"
+          : promedio.toLocaleString("es-BO", {
+              maximumFractionDigits: 2,
+            })}
+        {" "}
+        {unidad}
       </p>
     </div>
   );
