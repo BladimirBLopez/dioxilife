@@ -222,7 +222,7 @@ export default function InstallAppPrompt() {
     >
       <div className="flex items-start gap-3">
         <Image
-          src="/icon-192-dioxilife-v2.png"
+          src="/icon-blanco-192-v3.png"
           alt=""
           width={56}
           height={56}
