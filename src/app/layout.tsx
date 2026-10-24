@@ -44,12 +44,12 @@ export const metadata: Metadata = {
         type: "image/png",
       },
       {
-        url: "/icon-192.png",
+        url: "/icon-192-dioxilife-v2.png",
         sizes: "192x192",
         type: "image/png",
       },
       {
-        url: "/icon-512.png",
+        url: "/icon-512-dioxilife-v2.png",
         sizes: "512x512",
         type: "image/png",
       },
