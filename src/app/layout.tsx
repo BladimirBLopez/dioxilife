@@ -10,6 +10,7 @@ import "./globals.css";
 import { CartProvider } from "@/lib/cart-context";
 import ReferralTracker from "@/components/ReferralTracker";
 import RegisterServiceWorker from "@/components/RegisterServiceWorker";
+import InstallAppPrompt from "@/components/InstallAppPrompt";
 
 const geistSans = Geist({
   variable:
@@ -109,6 +110,7 @@ export default function RootLayout({
 
         <RegisterServiceWorker />
         <ReferralTracker />
+        <InstallAppPrompt />
 
         <CartProvider>
           {children}
