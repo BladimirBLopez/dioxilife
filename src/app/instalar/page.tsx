@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import InstalacionCarrusel from "@/components/InstalacionCarrusel";
 import {
   useState,
   useSyncExternalStore,
@@ -199,6 +200,10 @@ export default function PaginaInstalar() {
           </p>
         )}
       </div>
+
+      {!instalada && plataforma !== "ios" && (
+        <InstalacionCarrusel />
+      )}
 
       {!instalada && (
         <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5">
