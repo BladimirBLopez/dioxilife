@@ -251,6 +251,7 @@ model SeguimientoCliente {
   progresos               ProgresoActividad[]
   registrosDiarios        RegistroDiaSeguimiento[]
   medicionesGlucosa       MedicionGlucosaSeguimiento[]
+  pruebasAlimentos ClientePruebaAlimento[] @relation("Seguimiento_PruebasAlimentos")
   suscripcionesPush       SuscripcionPush[]
   enviosWhatsApp          SeguimientoEnvioWhatsApp[]
 
@@ -1034,4 +1035,62 @@ model RecordatorioPushIndicacionEnviado {
 
   @@unique([indicacionActividadSeguimientoId, diaPlan], map: "uq_push_indicacion_dia")
   @@index([seguimientoId], map: "idx_push_indicacion_seguimiento")
+}
+
+
+/**
+ * Acceso independiente a las pruebas de alimentos.
+ * El enlace utiliza un token cuyo hash se almacena.
+ */
+model ClientePruebaAlimento {
+  id              String   @id @default(cuid())
+  nombre          String
+  telefono        String?
+
+  seguimientoId   String?
+  seguimiento     SeguimientoCliente? @relation("Seguimiento_PruebasAlimentos", fields: [seguimientoId], references: [id], onDelete: SetNull)
+
+  tokenAccesoHash String   @unique
+  tokenCreadoAt   DateTime @default(now())
+  tokenExpiraAt   DateTime
+  tokenRevocadoAt DateTime?
+
+  registros       RegistroPruebaAlimento[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([seguimientoId])
+  @@index([tokenExpiraAt])
+}
+
+/**
+ * Medicion de glucosa relacionada con un alimento.
+ * La glucosa posterior puede quedar pendiente.
+ */
+model RegistroPruebaAlimento {
+  id                  String   @id @default(cuid())
+
+  clienteId           String
+  cliente             ClientePruebaAlimento @relation(fields: [clienteId], references: [id], onDelete: Restrict)
+
+  fecha               DateTime @db.Date
+
+  glucosaAyunas       Decimal? @db.Decimal(7, 2)
+  glucosaAntes        Decimal  @db.Decimal(7, 2)
+
+  alimento            String
+  cantidad            String?
+  horaComida          DateTime
+
+  glucosaDespues      Decimal? @db.Decimal(7, 2)
+  horaMedicionDespues DateTime?
+
+  observacion         String?
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([clienteId, fecha])
+  @@index([clienteId, alimento])
 }
