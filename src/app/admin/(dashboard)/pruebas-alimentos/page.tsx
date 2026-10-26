@@ -1,3 +1,4 @@
+import { pruebasAlimentosHabilitadas } from "@/lib/pruebas-alimentos/activacion";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +31,7 @@ const secciones = [
 ] as const;
 
 export default function PruebasAlimentosAdminPage() {
+  const moduloActivo = pruebasAlimentosHabilitadas();
   return (
     <main className="mx-auto w-full max-w-6xl space-y-6 p-4 pb-12 sm:p-6">
       <div>
@@ -55,8 +57,10 @@ export default function PruebasAlimentosAdminPage() {
           los alimentos, mediante enlaces privados para cada cliente.
         </p>
 
-        <div className="mt-5 inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-900">
-          Módulo en preparación
+        <div className={moduloActivo
+            ? "mt-5 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-900"
+            : "mt-5 inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-900"}>
+          {moduloActivo ? "Módulo habilitado" : "Módulo en preparación"}
         </div>
       </header>
 
@@ -120,8 +124,9 @@ export default function PruebasAlimentosAdminPage() {
       </section>
 
       <p className="text-xs leading-5 text-slate-500">
-        Las funciones reales permanecerán protegidas hasta su
-        activación autorizada.
+        {moduloActivo
+          ? "El módulo está activado para uso autorizado."
+          : "Las funciones reales permanecerán protegidas hasta su activación autorizada."}
       </p>
     </main>
   );
