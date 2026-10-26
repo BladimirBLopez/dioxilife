@@ -1,3 +1,4 @@
+import { pruebasAlimentosHabilitadas } from "@/lib/pruebas-alimentos/activacion";
 import Link from "next/link";
 
 import ReporteIndividualAdminCliente from
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic";
  *
  * La API mantiene un bloqueo independiente.
  */
-const REPORTES_REALES_UI_HABILITADOS = false;
+const REPORTES_REALES_UI_HABILITADOS = pruebasAlimentosHabilitadas();
 
 const FORMATO_ID = /^[A-Za-z0-9_-]{5,128}$/;
 

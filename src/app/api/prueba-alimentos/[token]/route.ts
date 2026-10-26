@@ -1,3 +1,4 @@
+import { pruebasAlimentosHabilitadas } from "@/lib/pruebas-alimentos/activacion";
 import {
   NextRequest,
   NextResponse,
@@ -28,7 +29,7 @@ export const dynamic = "force-dynamic";
  * - contador distribuido configurado;
  * - comprobación completa de seguridad.
  */
-const ACCESO_PUBLICO_HABILITADO = false;
+const ACCESO_PUBLICO_HABILITADO = pruebasAlimentosHabilitadas();
 
 type Contexto = {
   params: Promise<{

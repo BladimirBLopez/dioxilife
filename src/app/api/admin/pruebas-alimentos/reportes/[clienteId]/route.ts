@@ -1,3 +1,4 @@
+import { pruebasAlimentosHabilitadas } from "@/lib/pruebas-alimentos/activacion";
 import {
   NextRequest,
   NextResponse,
@@ -11,7 +12,7 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const REPORTES_ADMIN_HABILITADOS = false;
+const REPORTES_ADMIN_HABILITADOS = pruebasAlimentosHabilitadas();
 
 const FORMATO_ID = /^[A-Za-z0-9_-]{5,128}$/;
 

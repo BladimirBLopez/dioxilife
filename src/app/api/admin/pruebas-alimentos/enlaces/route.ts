@@ -1,3 +1,4 @@
+import { pruebasAlimentosHabilitadas } from "@/lib/pruebas-alimentos/activacion";
 import { NextRequest, NextResponse } from "next/server";
 
 import { origenAdministrativoValido } from "@/lib/pruebas-alimentos/origen-admin";
@@ -36,7 +37,7 @@ const MAX_BYTES = 4096;
  * Solo se activará después de comprobar
  * el flujo completo de clientes y mediciones.
  */
-const ENLACES_ADMIN_HABILITADOS = false;
+const ENLACES_ADMIN_HABILITADOS = pruebasAlimentosHabilitadas();
 
 function responder(
   status: number,

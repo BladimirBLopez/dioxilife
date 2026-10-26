@@ -1,3 +1,4 @@
+import { pruebasAlimentosHabilitadas } from "@/lib/pruebas-alimentos/activacion";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -11,7 +12,7 @@ export const dynamic = "force-dynamic";
  * Bloqueo independiente de las API.
  * No activar sin autorización y auditoría final.
  */
-const FORMULARIO_CLIENTE_HABILITADO = false;
+const FORMULARIO_CLIENTE_HABILITADO = pruebasAlimentosHabilitadas();
 
 export const metadata: Metadata = {
   title: "Pruebas de alimentos | DioxiLife Bolivia",

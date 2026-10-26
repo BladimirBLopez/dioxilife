@@ -1,3 +1,4 @@
+import { pruebasAlimentosHabilitadas } from "@/lib/pruebas-alimentos/activacion";
 import {
   NextRequest,
   NextResponse,
@@ -29,7 +30,7 @@ export const dynamic = "force-dynamic";
  * La conexión de datos y los controles
  * reales de producción siguen pendientes.
  */
-const ESCRITURAS_HABILITADAS = false;
+const ESCRITURAS_HABILITADAS = pruebasAlimentosHabilitadas();
 
 type Contexto = {
   params: Promise<{

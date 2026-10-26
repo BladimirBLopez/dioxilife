@@ -1,3 +1,4 @@
+import { pruebasAlimentosHabilitadas } from "@/lib/pruebas-alimentos/activacion";
 import {
   NextRequest,
   NextResponse,
@@ -15,7 +16,7 @@ export const dynamic = "force-dynamic";
  * No activar sin autorización,
  * revisión de seguridad y pruebas reales.
  */
-const LISTADO_ENLACES_ADMIN_HABILITADO = false;
+const LISTADO_ENLACES_ADMIN_HABILITADO = pruebasAlimentosHabilitadas();
 
 const CABECERAS_PRIVADAS = {
   "Cache-Control": "private, no-store, max-age=0",

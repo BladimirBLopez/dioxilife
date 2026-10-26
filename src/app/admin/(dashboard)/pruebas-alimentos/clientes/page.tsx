@@ -1,3 +1,4 @@
+import { pruebasAlimentosHabilitadas } from "@/lib/pruebas-alimentos/activacion";
 import Link from "next/link";
 import VistaPreviaGestionClientes from
   "@/components/pruebas-alimentos/VistaPreviaGestionClientes";
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic";
  * No cambiar a true antes de las pruebas finales
  * y de autorizar la activación del backend.
  */
-const GESTION_ENLACES_REAL_HABILITADA = false;
+const GESTION_ENLACES_REAL_HABILITADA = pruebasAlimentosHabilitadas();
 
 export default function PruebasAlimentosClientesPage() {
   if (GESTION_ENLACES_REAL_HABILITADA) {
