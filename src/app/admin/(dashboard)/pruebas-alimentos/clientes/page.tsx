@@ -1,7 +1,5 @@
 import { pruebasAlimentosHabilitadas } from "@/lib/pruebas-alimentos/activacion";
 import Link from "next/link";
-import VistaPreviaGestionClientes from
-  "@/components/pruebas-alimentos/VistaPreviaGestionClientes";
 
 import GestionEnlacesCliente from
   "@/components/pruebas-alimentos/GestionEnlacesCliente";
@@ -66,7 +64,16 @@ export default function PruebasAlimentosClientesPage() {
         </p>
       </header>
 
-      <VistaPreviaGestionClientes />
+      <section className="rounded-2xl border border-slate-200 bg-white p-5">
+        <h2 className="text-lg font-bold text-slate-900">
+          Módulo desactivado
+        </h2>
+        <p className="mt-2 text-sm text-slate-600">
+          La gestión real estará disponible después
+          de la activación autorizada.
+          No se muestran clientes ficticios.
+        </p>
+      </section>
     </main>
   );
 }

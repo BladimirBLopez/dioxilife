@@ -41,16 +41,10 @@ export default async function ReportesIndividualesPage({
 
           <p className="mt-3 text-sm leading-6 text-slate-700">
             Los reportes reales todavía no están habilitados.
-            Puedes continuar revisando las gráficas
-            de demostración sin utilizar datos de clientes.
+            Al activar el módulo se mostrarán únicamente
+            los registros existentes en Neon.
+            Si no hay mediciones, no habrá gráficas.
           </p>
-
-          <Link
-            href="/admin/pruebas-alimentos/vista-previa/reportes"
-            className="mt-4 inline-block text-sm font-bold text-fuchsia-800 underline"
-          >
-            Ver reportes de demostración
-          </Link>
         </section>
       </main>
     );

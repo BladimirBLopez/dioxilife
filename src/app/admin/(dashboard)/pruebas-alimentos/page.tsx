@@ -62,10 +62,10 @@ export default function PruebasAlimentosAdminPage() {
 
       <div>
         <Link
-          href="/admin/pruebas-alimentos/vista-previa"
+          href="/admin/pruebas-alimentos/reportes"
           className="inline-flex rounded-xl bg-fuchsia-700 px-5 py-3 text-sm font-bold text-white hover:bg-fuchsia-800"
         >
-          Ver formulario de demostración →
+          Consultar reportes reales →
         </Link>
       </div>
 
@@ -74,7 +74,7 @@ export default function PruebasAlimentosAdminPage() {
           href="/admin/pruebas-alimentos/clientes"
           className="inline-flex rounded-xl border border-fuchsia-200 bg-white px-5 py-3 text-sm font-bold text-fuchsia-800 hover:bg-fuchsia-50"
         >
-          Preparar clientes y enlaces →
+          Gestionar clientes y enlaces →
         </Link>
       </div>
 
@@ -110,27 +110,18 @@ export default function PruebasAlimentosAdminPage() {
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
         <h2 className="text-lg font-bold text-slate-900">
-          Generación de enlaces
+          Registros reales
         </h2>
-
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          Próximamente podrás seleccionar un cliente, generar un
-          enlace individual y compartirlo por WhatsApp.
-          Los accesos serán independientes del seguimiento habitual.
+          Las mediciones se consultarán desde Neon.
+          Si todavía no existen pruebas registradas,
+          no se mostrarán mediciones ni gráficas ficticias.
         </p>
-
-        <button
-          type="button"
-          disabled
-          className="mt-4 rounded-xl bg-slate-200 px-5 py-3 text-sm font-semibold text-slate-500"
-        >
-          Generar enlace (próximamente)
-        </button>
       </section>
 
       <p className="text-xs leading-5 text-slate-500">
-        Esta primera versión no recopila mediciones, no genera enlaces
-        y no escribe información en la base de datos.
+        Las funciones reales permanecerán protegidas hasta su
+        activación autorizada.
       </p>
     </main>
   );

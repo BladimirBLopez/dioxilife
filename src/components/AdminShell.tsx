@@ -205,8 +205,8 @@ const grupos: NavGroup[] = [
     titulo: "Pruebas de alimentos",
     items: [
       {
-        href: "/admin/pruebas-alimentos/vista-previa",
-        label: "Formulario de demostración",
+        href: "/admin/pruebas-alimentos/clientes",
+        label: "Clientes y enlaces",
         exact: true,
         icon: (
           <>
@@ -216,8 +216,8 @@ const grupos: NavGroup[] = [
         ),
       },
       {
-        href: "/admin/pruebas-alimentos/vista-previa/reportes",
-        label: "Gráficas y reportes",
+        href: "/admin/pruebas-alimentos/reportes",
+        label: "Reportes reales",
         icon: (
           <>
             <path d="M4 20V4M4 20h16" />
