@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import type {
   RegistroHistorialCliente,
 } from "./historial-formulario-cliente";
@@ -22,7 +24,40 @@ function mostrarNumero(valor: number): string {
 export default function GraficaHistorialCliente({
   registros,
 }: Propiedades) {
+  const [vista, setVista] = useState<"promedios" | "individuales">("promedios");
   const resumen = calcularResumenHistorial(registros);
+  const alimentosOrdenados = [...resumen.alimentos]
+    .sort((a, b) =>
+      b.diferencia - a.diferencia ||
+      b.pruebas - a.pruebas
+    )
+    .slice(0, 8);
+
+  const filas = vista === "promedios"
+    ? alimentosOrdenados.map(a => ({
+        ...a, clave: a.alimento, detalle: ""
+      }))
+    : registros.slice(0, 50)
+        .filter(r =>
+          r.glucosaDespues !== null &&
+          r.horaMedicionDespues !== null
+        )
+        .sort((a, b) =>
+          ((b.glucosaDespues ?? 0) - b.glucosaAntes) -
+          ((a.glucosaDespues ?? 0) - a.glucosaAntes)
+        )
+        .slice(0, 8)
+        .map(r => ({
+          alimento: r.alimento,
+          pruebas: 1,
+          promedioAntes: r.glucosaAntes,
+          promedioDespues: r.glucosaDespues!,
+          diferencia: Math.round(
+            (r.glucosaDespues! - r.glucosaAntes) * 100
+          ) / 100,
+          clave: r.id,
+          detalle: r.fecha,
+        }));
 
   if (resumen.totalCompletadas === 0) {
     return (
@@ -42,7 +77,7 @@ export default function GraficaHistorialCliente({
 
   const maximo = Math.max(
     1,
-    ...resumen.alimentos.flatMap(alimento => [
+    ...filas.flatMap(alimento => [
       alimento.promedioAntes,
       alimento.promedioDespues,
     ])
@@ -64,16 +99,36 @@ export default function GraficaHistorialCliente({
       </h2>
 
       <p className="mt-2 text-sm leading-6 text-slate-600">
-        Promedios de glucosa antes y después
+        Comparación de glucosa antes y después
         de comer, expresados en mg/dL.
       </p>
 
       <p className="mt-2 text-xs text-slate-500">
         {resumen.totalCompletadas} pruebas completas
         analizadas del historial reciente.
-        Se muestran hasta ocho alimentos.
+        {vista === "promedios"
+          ? "Hasta ocho alimentos por mayor aumento promedio."
+          : "Hasta ocho mediciones por mayor aumento registrado."}
       </p>
 
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button type="button"
+          aria-pressed={vista === "promedios"}
+          onClick={() => setVista("promedios")}
+          className={vista === "promedios"
+            ? "rounded-xl border border-fuchsia-700 bg-fuchsia-700 px-4 py-2 text-sm font-semibold text-white"
+            : "rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700"}>
+          Promedios por alimento
+        </button>
+        <button type="button"
+          aria-pressed={vista === "individuales"}
+          onClick={() => setVista("individuales")}
+          className={vista === "individuales"
+            ? "rounded-xl border border-fuchsia-700 bg-fuchsia-700 px-4 py-2 text-sm font-semibold text-white"
+            : "rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700"}>
+          Mediciones individuales
+        </button>
+      </div>
       <div className="mt-4 flex flex-wrap gap-4 text-xs text-slate-700">
         <span className="flex items-center gap-2">
           <span className="h-3 w-3 rounded bg-sky-500" />
@@ -87,15 +142,20 @@ export default function GraficaHistorialCliente({
       </div>
 
       <div className="mt-6 space-y-6">
-        {resumen.alimentos.map(alimento => (
+        {filas.map(alimento => (
           <div
-            key={alimento.alimento}
+            key={alimento.clave}
             className="rounded-xl border border-slate-100 p-4"
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="font-semibold text-slate-900">
                 {alimento.alimento}
               </h3>
+              {alimento.detalle && (
+                <p className="text-xs text-slate-500">
+                  Fecha: {alimento.detalle}
+                </p>
+              )}
 
               <span className="text-xs text-slate-500">
                 {alimento.pruebas}{" "}
@@ -156,7 +216,7 @@ export default function GraficaHistorialCliente({
             </div>
 
             <p className="mt-3 text-xs text-slate-600">
-              Diferencia promedio:{" "}
+              Diferencia {vista === "promedios" ? "promedio" : "registrada"}:{" "}
               <strong>
                 {alimento.diferencia > 0 ? "+" : ""}
                 {mostrarNumero(alimento.diferencia)}
@@ -168,7 +228,7 @@ export default function GraficaHistorialCliente({
       </div>
 
       <p className="mt-5 text-xs leading-5 text-slate-500">
-        Estos promedios describen mediciones
+        Estas comparaciones describen mediciones
         registradas. No determinan por sí solos
         si un alimento es saludable o perjudicial,
         ni constituyen un diagnóstico médico.

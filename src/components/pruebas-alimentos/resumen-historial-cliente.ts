@@ -119,8 +119,7 @@ export function calcularResumenHistorial(
           b.alimento,
           "es"
         )
-    )
-    .slice(0, 8);
+    );
 
   return {
     totalCompletadas,
