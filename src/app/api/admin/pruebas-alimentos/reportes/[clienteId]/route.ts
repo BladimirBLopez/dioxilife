@@ -140,10 +140,15 @@ export async function GET(
       );
     }
 
+    const { obtenerAvisosAutorizados } =
+      await import("@/lib/pruebas-alimentos/avisos-entrega-servidor");
+
+    const alertas = await obtenerAvisosAutorizados(clienteId);
+
     return NextResponse.json(
       {
         ok: true,
-        reporte,
+        reporte: { ...reporte, ...alertas },
       },
       {
         status: 200,

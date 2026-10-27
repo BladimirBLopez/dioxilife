@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { avisosHistorialSchema } from "./contrato-avisos-historial";
 
 import {
   fechaPruebaSchema,
@@ -40,6 +41,8 @@ const respuestaSchema = z.strictObject({
   ok: z.literal(true),
   registros: z.array(registroSchema).max(50),
   pendiente: registroSchema.nullable(),
+  avisos: avisosHistorialSchema.optional(),
+  alertasActivas: z.boolean().optional(),
 });
 
 export type RegistroHistorialCliente =
@@ -56,6 +59,8 @@ export function leerHistorialCliente(entrada: unknown) {
     ? {
         registros: resultado.data.registros,
         pendiente: resultado.data.pendiente,
+        avisos: resultado.data.avisos ?? [],
+        alertasActivas: resultado.data.alertasActivas ?? false,
       }
     : null;
 }

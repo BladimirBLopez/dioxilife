@@ -11,6 +11,7 @@ import {
 } from "./contrato-reporte-individual-admin";
 
 import { ordenarAlimentosPorAumento } from "@/lib/pruebas-alimentos/analisis-mejoras";
+import AvisosGlucosa from "./AvisosGlucosa";
 
 type Propiedades = {
   clienteId: string;
@@ -197,6 +198,15 @@ export default function ReporteIndividualAdminCliente({
 
       {estado === "lista" && reporte && (
         <>
+          {reporte.alertasActivas &&
+            reporte.avisos &&
+            reporte.avisos.length > 0 && (
+              <AvisosGlucosa
+                avisosDirectos={reporte.avisos
+                  .slice(0, 20)
+                  .map(item => item.aviso)}
+              />
+            )}
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <h3 className="text-lg font-bold text-slate-900">
               {reporte.cliente.nombre}

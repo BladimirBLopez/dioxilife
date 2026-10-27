@@ -22,6 +22,8 @@ import {
 } from "./historial-formulario-cliente";
 
 import GraficaHistorialCliente from "./GraficaHistorialCliente";
+import AvisosGlucosa from "./AvisosGlucosa";
+import type { AvisoHistorialUI } from "./contrato-avisos-historial";
 
 import {
   decidirRecuperacionGuardado,
@@ -207,6 +209,9 @@ export default function FormularioClientePruebaAlimento({
     RegistroHistorialCliente[]
   >([]);
 
+  const [avisosGlucosa, setAvisosGlucosa] =
+    useState<AvisoHistorialUI[]>([]);
+
   const refrescandoHistorial = useRef(false);
 
   const [actualizandoHistorial, setActualizandoHistorial] =
@@ -284,6 +289,9 @@ export default function FormularioClientePruebaAlimento({
         }
 
         setHistorial(datos.registros);
+        setAvisosGlucosa(
+          datos.alertasActivas ? datos.avisos : []
+        );
 
         if (datos.pendiente) {
           setRegistroId(datos.pendiente.id);
@@ -412,6 +420,9 @@ export default function FormularioClientePruebaAlimento({
       }
 
       setHistorial(datos.registros);
+        setAvisosGlucosa(
+          datos.alertasActivas ? datos.avisos : []
+        );
       setAvisoHistorial("");
     } catch {
       setAvisoHistorial(
@@ -470,6 +481,9 @@ export default function FormularioClientePruebaAlimento({
       }
 
       setHistorial(datos.registros);
+        setAvisosGlucosa(
+          datos.alertasActivas ? datos.avisos : []
+        );
 
       const recuperacion = decidirRecuperacionGuardado(
         tipo,
@@ -1064,6 +1078,13 @@ export default function FormularioClientePruebaAlimento({
         )}
       </div>
 
+      {avisosGlucosa.length > 0 && (
+        <AvisosGlucosa
+          avisosDirectos={avisosGlucosa
+            .slice(0, 20)
+            .map(item => item.aviso)}
+        />
+      )}
       {historial.length > 0 && (
         <GraficaHistorialCliente
           registros={historial}

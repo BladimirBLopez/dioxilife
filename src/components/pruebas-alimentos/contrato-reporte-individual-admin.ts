@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { avisosHistorialSchema } from "./contrato-avisos-historial";
 
 /**
  * Contrato estricto del reporte individual.
@@ -39,6 +40,8 @@ const reporteSchema = z.strictObject({
   pruebasCompletas: z.number()
     .int().min(0).max(50),
   alimentos: z.array(alimentoSchema).max(50),
+  avisos: avisosHistorialSchema.optional(),
+  alertasActivas: z.boolean().optional(),
 }).superRefine((reporte, contexto) => {
   if (
     reporte.pruebasCompletas >

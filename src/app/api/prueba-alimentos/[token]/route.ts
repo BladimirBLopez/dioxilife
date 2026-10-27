@@ -177,9 +177,18 @@ export async function GET(
       resultado.cliente.id
     );
 
+    const { obtenerAvisosAutorizados } =
+      await import("@/lib/pruebas-alimentos/avisos-entrega-servidor");
+
+    const alertas = await obtenerAvisosAutorizados(
+      resultado.cliente.id,
+      historial.registros
+    );
+
     return NextResponse.json(
       {
         ok: true,
+        ...alertas,
         registros: historial.registros,
         pendiente: historial.pendiente,
       },
