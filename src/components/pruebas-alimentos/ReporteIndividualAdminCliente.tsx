@@ -12,6 +12,7 @@ import {
 
 import { ordenarAlimentosPorAumento } from "@/lib/pruebas-alimentos/analisis-mejoras";
 import AvisosGlucosa from "./AvisosGlucosa";
+import GraficaMedicionesAdmin from "./GraficaMedicionesAdmin";
 
 type Propiedades = {
   clienteId: string;
@@ -369,7 +370,12 @@ export default function ReporteIndividualAdminCliente({
             </section>
           )}
 
-          <p className="text-xs leading-5 text-slate-500">
+          {reporte.mediciones && reporte.mediciones.length > 0 && (
+        <GraficaMedicionesAdmin
+          mediciones={reporte.mediciones}
+        />
+      )}
+      <p className="text-xs leading-5 text-slate-500">
             Los resultados describen mediciones
             registradas. No constituyen un diagnóstico
             ni permiten determinar por sí solos

@@ -96,6 +96,14 @@ export async function construirReporteIndividualAdmin(
     throw new Error("Historial no válido");
   }
 
+  const medicionesCompletas: Array<{
+    alimento: string;
+    glucosaAntes: number;
+    glucosaDespues: number;
+    diferencia: number;
+    fecha: string;
+  }> = [];
+
   const grupos = new Map<
     string,
     {
@@ -139,7 +147,17 @@ export async function construirReporteIndividualAdmin(
       .trim()
       .replace(/\s+/g, " ");
 
-    const clave = alimento.toLocaleLowerCase("es");
+    medicionesCompletas.push({
+    alimento,
+    glucosaAntes: registro.glucosaAntes,
+    glucosaDespues: registro.glucosaDespues,
+    diferencia: redondear(
+      registro.glucosaDespues - registro.glucosaAntes
+    ),
+    fecha: registro.horaMedicionDespues.toISOString(),
+  });
+
+  const clave = alimento.toLocaleLowerCase("es");
 
     let grupo = grupos.get(clave);
 
@@ -196,5 +214,11 @@ export async function construirReporteIndividualAdmin(
     registrosRevisados: registros.length,
     pruebasCompletas,
     alimentos,
+    mediciones: medicionesCompletas
+      .sort((a, b) =>
+        b.diferencia - a.diferencia ||
+        b.fecha.localeCompare(a.fecha)
+      )
+      .slice(0, 8),
   };
 }

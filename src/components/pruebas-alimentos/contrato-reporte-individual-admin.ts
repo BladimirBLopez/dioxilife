@@ -30,6 +30,14 @@ const alimentoSchema = z.strictObject({
   diferencia,
 });
 
+const medicionSchema = z.strictObject({
+  alimento: z.string().trim().min(2).max(120),
+  glucosaAntes: glucosa,
+  glucosaDespues: glucosa,
+  diferencia,
+  fecha: z.string().datetime(),
+});
+
 const reporteSchema = z.strictObject({
   cliente: z.strictObject({
     id: identificador,
@@ -40,6 +48,7 @@ const reporteSchema = z.strictObject({
   pruebasCompletas: z.number()
     .int().min(0).max(50),
   alimentos: z.array(alimentoSchema).max(50),
+  mediciones: z.array(medicionSchema).max(8).optional(),
   avisos: avisosHistorialSchema.optional(),
   alertasActivas: z.boolean().optional(),
 }).superRefine((reporte, contexto) => {
