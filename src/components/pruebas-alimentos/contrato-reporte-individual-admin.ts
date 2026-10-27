@@ -38,7 +38,7 @@ const reporteSchema = z.strictObject({
     .int().min(0).max(50),
   pruebasCompletas: z.number()
     .int().min(0).max(50),
-  alimentos: z.array(alimentoSchema).max(8),
+  alimentos: z.array(alimentoSchema).max(50),
 }).superRefine((reporte, contexto) => {
   if (
     reporte.pruebasCompletas >

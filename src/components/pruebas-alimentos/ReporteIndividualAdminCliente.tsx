@@ -10,6 +10,8 @@ import {
   type ReporteIndividualCliente,
 } from "./contrato-reporte-individual-admin";
 
+import { ordenarAlimentosPorAumento } from "@/lib/pruebas-alimentos/analisis-mejoras";
+
 type Propiedades = {
   clienteId: string;
 };
@@ -57,6 +59,9 @@ export default function ReporteIndividualAdminCliente({
     useState<ReporteIndividualCliente | null>(null);
 
   const [error, setError] = useState("");
+
+  const [ordenAlimentos, setOrdenAlimentos] =
+    useState<"frecuencia" | "aumento">("frecuencia");
 
   useEffect(() => {
     const controlador = new AbortController();
@@ -126,10 +131,16 @@ export default function ReporteIndividualAdminCliente({
     };
   }, [clienteId, recarga]);
 
+  const alimentosOrdenados = reporte
+    ? ordenAlimentos === "aumento"
+      ? ordenarAlimentosPorAumento(reporte.alimentos)
+      : reporte.alimentos.slice(0, 8)
+    : [];
+
   const maximo = reporte
     ? Math.max(
         1,
-        ...reporte.alimentos.flatMap(alimento => [
+        ...alimentosOrdenados.flatMap(alimento => [
           alimento.promedioAntes,
           alimento.promedioDespues,
         ])
@@ -233,6 +244,37 @@ export default function ReporteIndividualAdminCliente({
                 Comparación por alimento
               </h3>
 
+              <div className="mt-4 space-y-2">
+                <label
+                  htmlFor="orden-alimentos"
+                  className="block text-sm font-semibold text-slate-700"
+                >
+                  Ordenar alimentos
+                </label>
+                <select
+                  id="orden-alimentos"
+                  value={ordenAlimentos}
+                  onChange={(evento) =>
+                    setOrdenAlimentos(
+                      evento.target.value as "frecuencia" | "aumento"
+                    )
+                  }
+                  className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-900 sm:max-w-sm"
+                >
+                  <option value="frecuencia">
+                    Mayor cantidad de pruebas
+                  </option>
+                  <option value="aumento">
+                    Mayor aumento promedio de glucosa
+                  </option>
+                </select>
+                <p className="text-xs text-slate-500">
+                  Se muestran hasta 8 alimentos de los
+                  50 registros recientes. Este orden
+                  no constituye una clasificación médica.
+                </p>
+              </div>
+
               <div className="mt-4 flex flex-wrap gap-4 text-xs text-slate-700">
                 <span className="flex items-center gap-2">
                   <span className="h-3 w-3 rounded bg-sky-500" />
@@ -246,7 +288,7 @@ export default function ReporteIndividualAdminCliente({
               </div>
 
               <div className="mt-5 space-y-5">
-                {reporte.alimentos.map(alimento => (
+                {alimentosOrdenados.map(alimento => (
                   <article
                     key={alimento.alimento}
                     className="rounded-xl border border-slate-200 p-4"

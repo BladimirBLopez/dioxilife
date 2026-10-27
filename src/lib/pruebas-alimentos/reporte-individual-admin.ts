@@ -2,7 +2,7 @@
  * Reportes individuales administrativos.
  *
  * Máximo 50 mediciones recientes.
- * Máximo ocho alimentos.
+ * Hasta 50 alimentos agrupados de los registros recientes.
  * Solo mediciones completas para promedios.
  *
  * No realiza diagnósticos.
@@ -186,8 +186,7 @@ export async function construirReporteIndividualAdmin(
           b.alimento,
           "es"
         )
-    )
-    .slice(0, 8);
+    );
 
   return {
     cliente: {
