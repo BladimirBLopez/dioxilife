@@ -7,6 +7,7 @@ import {
 } from "react";
 
 import ListadoEnlacesCliente from "./ListadoEnlacesCliente";
+import TarjetaQRPrivada from "./TarjetaQRPrivada";
 
 type OrigenCliente = "nuevo" | "existente";
 type Vigencia = 7 | 30 | 90;
@@ -537,6 +538,7 @@ export default function GestionEnlacesCliente() {
             Compartir por WhatsApp
           </a>
 
+          <TarjetaQRPrivada url={enlace.url} />
           <p className="mt-3 text-xs leading-5 text-slate-600">
             No compartas este enlace públicamente.
             Cualquier persona que lo obtenga
