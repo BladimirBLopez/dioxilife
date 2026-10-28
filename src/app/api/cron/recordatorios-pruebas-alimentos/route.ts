@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { pruebasAlimentosHabilitadas } from "@/lib/pruebas-alimentos/activacion";
+import { obtenerClientePilotoPush } from "@/lib/pruebas-alimentos/piloto-push";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,7 +34,8 @@ export async function GET(req: NextRequest) {
 
   if (
     !pruebasAlimentosHabilitadas() ||
-    process.env.PRUEBAS_ALIMENTOS_PUSH_ACTIVO !== "true"
+    process.env.PRUEBAS_ALIMENTOS_PUSH_ACTIVO !== "true" ||
+    !obtenerClientePilotoPush()
   ) {
     return NextResponse.json(
       { ok: false, mensaje: "Recordatorios desactivados" },

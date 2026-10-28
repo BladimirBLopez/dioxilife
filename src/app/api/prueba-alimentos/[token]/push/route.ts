@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { pruebasAlimentosHabilitadas } from
   "@/lib/pruebas-alimentos/activacion";
 import { z } from "zod";
+import { obtenerClientePilotoPush } from
+  "@/lib/pruebas-alimentos/piloto-push";
+import { resolverClientePruebaPorToken } from
+  "@/lib/pruebas-alimentos/autorizar-acceso";
 import { evaluarAccesoPublicoPrueba } from
   "@/lib/pruebas-alimentos/puerta-publica";
 import { obtenerIpVerificadaVercel } from
@@ -49,6 +53,7 @@ const revocarSchema = z.strictObject({
 
 function pushHabilitado() {
   return (
+    Boolean(obtenerClientePilotoPush()) &&
     pruebasAlimentosHabilitadas() &&
     process.env.PRUEBAS_ALIMENTOS_PUSH_ACTIVO === "true" &&
     Boolean(process.env.VAPID_PRIVATE_KEY) &&
@@ -124,6 +129,12 @@ async function procesar(
       resultado.motivo === "limite" ? 429 : 404,
       "Acceso no disponible."
     );
+  }
+
+  if (
+    resultado.cliente.id !== obtenerClientePilotoPush()
+  ) {
+    return responder(404, "Acceso no disponible.");
   }
 
   try {
@@ -208,9 +219,29 @@ export async function GET(
   const clave =
     process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 
-  const habilitado =
+  let habilitado = false;
+
+  if (
     pushHabilitado() &&
-    /^[A-Za-z0-9_-]{86,88}$/.test(clave);
+    /^[A-Za-z0-9_-]{86,88}$/.test(clave)
+  ) {
+    try {
+      const { buscarClientePorHash } = await import(
+        "@/lib/pruebas-alimentos/buscador-cliente-prisma"
+      );
+
+      const cliente = await resolverClientePruebaPorToken(
+        token,
+        buscarClientePorHash
+      );
+
+      habilitado =
+        cliente !== null &&
+        cliente.id === obtenerClientePilotoPush();
+    } catch {
+      habilitado = false;
+    }
+  }
 
   return NextResponse.json(
     {

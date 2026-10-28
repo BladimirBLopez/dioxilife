@@ -3,6 +3,8 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { obtenerWebPush } from "@/lib/web-push";
+import { obtenerClientePilotoPush } from
+  "@/lib/pruebas-alimentos/piloto-push";
 import { pruebasAlimentosHabilitadas } from
   "@/lib/pruebas-alimentos/activacion";
 
@@ -22,7 +24,10 @@ type Suscripcion = {
 };
 
 export async function ejecutarRecordatoriosPush() {
+  const piloto = obtenerClientePilotoPush();
+
   if (
+    !piloto ||
     !pruebasAlimentosHabilitadas() ||
     process.env.PRUEBAS_ALIMENTOS_PUSH_ACTIVO !== "true" ||
     !process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
@@ -48,6 +53,13 @@ export async function ejecutarRecordatoriosPush() {
           'EN_PROCESO'::"EstadoRecordatorioPruebaAlimento"
       AND "reservadoAt" <
         (NOW() AT TIME ZONE 'UTC') - INTERVAL '20 minutes'
+      AND EXISTS (
+        SELECT 1
+        FROM "RegistroPruebaAlimento" r
+        WHERE r."id" =
+          "RecordatorioPushPruebaAlimento"."registroId"
+          AND r."clienteId" = ${piloto}
+      )
   `;
 
   const pendientes = await prisma.$queryRaw<Candidato[]>`
@@ -55,7 +67,8 @@ export async function ejecutarRecordatoriosPush() {
     FROM "RegistroPruebaAlimento" r
     JOIN "ClientePruebaAlimento" c
       ON c."id" = r."clienteId"
-    WHERE r."glucosaDespues" IS NULL
+    WHERE r."clienteId" = ${piloto}
+      AND r."glucosaDespues" IS NULL
       AND r."horaMedicionDespues" IS NULL
       AND r."horaComida" <=
         (NOW() AT TIME ZONE 'UTC') - INTERVAL '120 minutes'
@@ -98,6 +111,7 @@ export async function ejecutarRecordatoriosPush() {
         JOIN "ClientePruebaAlimento" c
           ON c."id" = r."clienteId"
         WHERE r."id" = ${item.registroId}
+          AND r."clienteId" = ${piloto}
           AND r."glucosaDespues" IS NULL
           AND r."horaMedicionDespues" IS NULL
           AND r."horaComida" <=
@@ -133,6 +147,7 @@ export async function ejecutarRecordatoriosPush() {
         JOIN "ClientePruebaAlimento" c
           ON c."id" = r."clienteId"
         WHERE r."id" = ${item.registroId}
+          AND r."clienteId" = ${piloto}
           AND r."glucosaDespues" IS NULL
           AND r."horaMedicionDespues" IS NULL
           AND c."tokenRevocadoAt" IS NULL
