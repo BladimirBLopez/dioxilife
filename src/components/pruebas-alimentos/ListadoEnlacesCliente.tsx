@@ -8,7 +8,7 @@ import {
 } from "react";
 
 import {
-  leerListadoEnlacesCliente,
+  leerListadoPaginadoCliente,
   type EnlaceListadoCliente,
 } from "./contrato-listado-enlaces";
 
@@ -21,6 +21,12 @@ type EstadoCarga =
   | "cargando"
   | "lista"
   | "error";
+
+type FiltroEnlaces =
+  | "todos"
+  | "vigente"
+  | "vencido"
+  | "revocado";
 
 const API_LISTADO =
   "/api/admin/pruebas-alimentos/enlaces/lista";
@@ -106,6 +112,14 @@ export default function ListadoEnlacesCliente({
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
 
+  const [textoBusqueda, setTextoBusqueda] =
+    useState("");
+  const [busqueda, setBusqueda] = useState("");
+  const [filtroEstado, setFiltroEstado] =
+    useState<FiltroEnlaces>("todos");
+  const [pagina, setPagina] = useState(1);
+  const [total, setTotal] = useState(0);
+
   const [confirmarId, setConfirmarId] =
     useState<string | null>(null);
 
@@ -124,8 +138,14 @@ export default function ListadoEnlacesCliente({
       setError("");
 
       try {
+        const parametros = new URLSearchParams({
+          pagina: String(pagina),
+          q: busqueda,
+          estado: filtroEstado,
+        });
+
         const respuesta = await fetch(
-          API_LISTADO,
+          API_LISTADO + "?" + parametros.toString(),
           {
             method: "GET",
             headers: {
@@ -148,7 +168,7 @@ export default function ListadoEnlacesCliente({
           await respuesta.json();
 
         const datos =
-          leerListadoEnlacesCliente(
+          leerListadoPaginadoCliente(
             contenido
           );
 
@@ -160,12 +180,24 @@ export default function ListadoEnlacesCliente({
 
         if (!activo) return;
 
-        setEnlaces(datos);
+        const ultimaPagina = Math.max(
+          1,
+          Math.ceil(datos.total / 20)
+        );
+
+        if (pagina > ultimaPagina) {
+          setPagina(ultimaPagina);
+          return;
+        }
+
+        setEnlaces(datos.enlaces);
+        setTotal(datos.total);
         setEstado("lista");
       } catch (fallo) {
         if (!activo) return;
 
         setEnlaces([]);
+        setTotal(0);
         setEstado("error");
 
         setError(
@@ -182,7 +214,7 @@ export default function ListadoEnlacesCliente({
       activo = false;
       controlador.abort();
     };
-  }, [version, recarga]);
+  }, [version, recarga, pagina, busqueda, filtroEstado]);
 
   async function revocar(id: string) {
     if (
@@ -280,11 +312,85 @@ export default function ListadoEnlacesCliente({
         </button>
       </div>
 
+      <form
+        onSubmit={evento => {
+          evento.preventDefault();
+          setConfirmarId(null);
+          setPagina(1);
+          setBusqueda(textoBusqueda.trim());
+          setRecarga(valor => valor + 1);
+        }}
+        className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]"
+      >
+        <div>
+          <label
+            htmlFor="pa-buscar-enlaces"
+            className="mb-2 block text-sm font-semibold text-slate-700"
+          >
+            Buscar cliente por nombre
+          </label>
+          <input
+            id="pa-buscar-enlaces"
+            type="search"
+            maxLength={80}
+            autoComplete="off"
+            value={textoBusqueda}
+            onChange={evento =>
+              setTextoBusqueda(evento.target.value)
+            }
+            placeholder="Nombre del cliente"
+            className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900"
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={revocandoId !== null}
+          className="self-end rounded-xl bg-fuchsia-700 px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
+        >
+          Buscar
+        </button>
+      </form>
+
+      <div className="mt-4">
+        <label
+          htmlFor="pa-filtrar-enlaces"
+          className="mb-2 block text-sm font-semibold text-slate-700"
+        >
+          Estado del enlace
+        </label>
+        <select
+          id="pa-filtrar-enlaces"
+          value={filtroEstado}
+          disabled={revocandoId !== null}
+          onChange={evento => {
+            setConfirmarId(null);
+            setPagina(1);
+            setFiltroEstado(
+              evento.target.value as FiltroEnlaces
+            );
+          }}
+          className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900"
+        >
+          <option value="todos">Todos</option>
+          <option value="vigente">Vigentes</option>
+          <option value="vencido">Vencidos</option>
+          <option value="revocado">Revocados</option>
+        </select>
+      </div>
+
       <p className="mt-3 text-xs leading-5 text-slate-500">
-        Se muestran hasta 100 accesos recientes.
-        Los enlaces privados no pueden recuperarse
-        de esta tabla.
+        Hasta 20 resultados por página.
+        Puedes buscar también enlaces antiguos.
+        Los tokens privados no se muestran ni pueden
+        recuperarse desde esta tabla.
       </p>
+
+      {estado === "lista" && (
+        <p className="mt-2 text-sm text-slate-600">
+          Resultados encontrados: {total}
+        </p>
+      )}
 
       {estado === "cargando" && (
         <p
@@ -343,9 +449,7 @@ export default function ListadoEnlacesCliente({
                       {enlace.nombre}
                     </h3>
 
-                    <p className="mt-1 break-all text-xs text-slate-500">
-                      ID: {enlace.id}
-                    </p>
+
                   </div>
 
                   <span
@@ -386,12 +490,7 @@ export default function ListadoEnlacesCliente({
                     </p>
                   )}
 
-                  {enlace.seguimientoId && (
-                    <p className="break-all">
-                      Seguimiento:{" "}
-                      {enlace.seguimientoId}
-                    </p>
-                  )}
+
                 </div>
 
                 <div className="mt-4">
@@ -402,12 +501,12 @@ export default function ListadoEnlacesCliente({
                     Ver reporte individual
                   </Link>
                 </div>
-                {enlace.estado !== "revocado" && (
+                {enlace.estado === "vigente" && (
                   <div className="mt-4">
                     {confirmarId === enlace.id ? (
                       <div className="rounded-xl border border-red-200 bg-red-50 p-3">
                         <p className="text-sm font-semibold text-red-900">
-                          ¿Revocar el acceso de este cliente?
+                          ¿Revocar el enlace de {enlace.nombre}?
                         </p>
 
                         <p className="mt-1 text-xs leading-5 text-red-800">
@@ -468,6 +567,48 @@ export default function ListadoEnlacesCliente({
             ))}
           </div>
         )}
+      {estado === "lista" && total > 20 && (
+        <nav
+          aria-label="Paginas de enlaces de clientes"
+          className="mt-5 flex flex-wrap items-center justify-between gap-3"
+        >
+          <button
+            type="button"
+            disabled={
+              pagina <= 1 ||
+              revocandoId !== null
+            }
+            onClick={() => {
+              setConfirmarId(null);
+              setPagina(actual =>
+                Math.max(1, actual - 1)
+              );
+            }}
+            className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold disabled:opacity-40"
+          >
+            Anterior
+          </button>
+
+          <span className="text-sm text-slate-600">
+            Página {pagina} de {Math.ceil(total / 20)}
+          </span>
+
+          <button
+            type="button"
+            disabled={
+              pagina >= Math.ceil(total / 20) ||
+              revocandoId !== null
+            }
+            onClick={() => {
+              setConfirmarId(null);
+              setPagina(actual => actual + 1);
+            }}
+            className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold disabled:opacity-40"
+          >
+            Siguiente
+          </button>
+        </nav>
+      )}
     </section>
   );
 }

@@ -61,3 +61,23 @@ export function leerListadoEnlacesCliente(
     ? resultado.data.enlaces
     : null;
 }
+
+
+const respuestaPaginadaSchema = z.strictObject({
+  ok: z.literal(true),
+  enlaces: z.array(enlaceSchema).max(20),
+  total: z.number().int().min(0),
+  pagina: z.number().int().min(1).max(1000),
+  porPagina: z.literal(20),
+});
+
+export function leerListadoPaginadoCliente(
+  entrada: unknown
+) {
+  const resultado =
+    respuestaPaginadaSchema.safeParse(entrada);
+
+  return resultado.success
+    ? resultado.data
+    : null;
+}

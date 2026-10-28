@@ -111,8 +111,7 @@ export default function GestionEnlacesCliente() {
   const [vigenciaDias, setVigenciaDias] =
     useState<Vigencia>(30);
 
-  const [idRevocar, setIdRevocar] =
-    useState("");
+
 
   const [enlace, setEnlace] =
     useState<EnlaceCreado | null>(null);
@@ -229,9 +228,7 @@ export default function GestionEnlacesCliente() {
 
       setDialogoEnlaceAbierto(true);
 
-      setIdRevocar(
-        resultado.clientePruebaId
-      );
+
 
       setVersionListado(
         valor => valor + 1
@@ -267,70 +264,6 @@ export default function GestionEnlacesCliente() {
       setMensaje(
         "Selecciona y copia manualmente el enlace."
       );
-    }
-  }
-
-  async function revocar(
-    evento: FormEvent<HTMLFormElement>
-  ) {
-    evento.preventDefault();
-
-    if (ejecutando.current) return;
-
-    setError("");
-    setMensaje("");
-
-    const id = idRevocar.trim();
-
-    if (!FORMATO_ID.test(id)) {
-      setError(
-        "Introduce un identificador de acceso válido."
-      );
-      return;
-    }
-
-    ejecutando.current = true;
-    setOcupado(true);
-
-    try {
-      const resultado = await solicitar(
-        "DELETE",
-        {clientePruebaId: id}
-      );
-
-      if (
-        !esObjeto(resultado) ||
-        resultado.ok !== true
-      ) {
-        throw new Error(
-          "No se pudo confirmar la revocación."
-        );
-      }
-
-      if (
-        enlace?.clientePruebaId === id
-      ) {
-        setEnlace(null);
-      }
-
-      setIdRevocar("");
-
-      setVersionListado(
-        valor => valor + 1
-      );
-
-      setMensaje(
-        "Acceso revocado correctamente."
-      );
-    } catch (fallo) {
-      setError(
-        fallo instanceof Error
-          ? fallo.message
-          : "No se pudo revocar el acceso."
-      );
-    } finally {
-      ejecutando.current = false;
-      setOcupado(false);
     }
   }
 
@@ -606,63 +539,14 @@ export default function GestionEnlacesCliente() {
         </>
       )}
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <h2 className="text-lg font-bold text-slate-900">
-          Revocar un enlace
-        </h2>
-
-        <p className="mt-2 text-sm leading-6 text-slate-600">
-          Utiliza el identificador del acceso
-          que deseas deshabilitar.
-        </p>
-
-        <form
-          onSubmit={revocar}
-          className="mt-4 space-y-4"
-        >
-          <div>
-            <label
-              htmlFor="pa-revocar"
-              className={etiqueta}
-            >
-              Identificador del acceso
-            </label>
-
-            <input
-              id="pa-revocar"
-              className={campo}
-              required
-              maxLength={128}
-              value={idRevocar}
-              onChange={e =>
-                setIdRevocar(e.target.value)
-              }
-            />
-          </div>
-
-          <button
-            type="submit"
-            className={boton}
-            disabled={ocupado}
-          >
-            {ocupado
-              ? "Procesando..."
-              : "Revocar enlace"}
-          </button>
-        </form>
-      </section>
       <ListadoEnlacesCliente
         version={versionListado}
-        onRevocado={(id) => {
-          if (
-            enlace?.clientePruebaId === id
-          ) {
-            setEnlace(null);
-          }
-
-          if (idRevocar === id) {
-            setIdRevocar("");
-          }
+        onRevocado={id => {
+          setEnlace(actual =>
+            actual?.clientePruebaId === id
+              ? null
+              : actual
+          );
         }}
       />
 

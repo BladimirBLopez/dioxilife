@@ -1,4 +1,5 @@
 import { pruebasAlimentosHabilitadas } from "@/lib/pruebas-alimentos/activacion";
+import type { Prisma } from "@prisma/client";
 import {
   NextRequest,
   NextResponse,
@@ -111,6 +112,107 @@ export async function GET(
       );
     }
 
+
+    // Mantener la respuesta antigua cuando no se pide pagina.
+    if (request.nextUrl.searchParams.has("pagina")) {
+      if (
+        administrador.rol !== "ADMIN" &&
+        administrador.rol !== "SUPER_ADMIN"
+      ) {
+        return responderError(
+          403,
+          "No autorizado para consultar enlaces."
+        );
+      }
+      const parametros = request.nextUrl.searchParams;
+      const q = (parametros.get("q") ?? "").trim();
+      const filtro = parametros.get("estado") ?? "todos";
+      const paginaTexto = parametros.get("pagina") ?? "";
+
+      if (
+        q.length > 80 ||
+        !/^[1-9][0-9]{0,3}$/.test(paginaTexto) ||
+        Number(paginaTexto) > 1000 ||
+        ![
+          "todos",
+          "vigente",
+          "vencido",
+          "revocado",
+        ].includes(filtro)
+      ) {
+        return responderError(
+          400,
+          "Filtros de consulta no validos."
+        );
+      }
+
+      const pagina = Number(paginaTexto);
+      const porPagina = 20;
+
+      const { prisma } = await import("@/lib/prisma");
+      const ahora = new Date();
+
+      const where: Prisma.ClientePruebaAlimentoWhereInput = {};
+
+      if (q) {
+        where.nombre = {
+          contains: q,
+          mode: "insensitive",
+        };
+      }
+
+      if (filtro === "vigente") {
+        where.tokenRevocadoAt = null;
+        where.tokenExpiraAt = { gt: ahora };
+      } else if (filtro === "vencido") {
+        where.tokenRevocadoAt = null;
+        where.tokenExpiraAt = { lte: ahora };
+      } else if (filtro === "revocado") {
+        where.tokenRevocadoAt = { not: null };
+      }
+
+      const [filas, total] = await Promise.all([
+        prisma.clientePruebaAlimento.findMany({
+          where,
+          orderBy: [
+            { createdAt: "desc" },
+            { id: "desc" },
+          ],
+          skip: (pagina - 1) * porPagina,
+          take: porPagina,
+          select: {
+            id: true,
+            nombre: true,
+            seguimientoId: true,
+            tokenCreadoAt: true,
+            tokenExpiraAt: true,
+            tokenRevocadoAt: true,
+          },
+        }),
+        prisma.clientePruebaAlimento.count({
+          where,
+        }),
+      ]);
+
+      const enlaces =
+        await listarEnlacesAdministrativos({
+          listar: async () => filas,
+        }, ahora);
+
+      return NextResponse.json(
+        {
+          ok: true,
+          enlaces,
+          total,
+          pagina,
+          porPagina,
+        },
+        {
+          status: 200,
+          headers: CABECERAS_PRIVADAS,
+        }
+      );
+    }
 
     const { obtenerListadoEnlacesPrisma } =
       await import(
