@@ -75,10 +75,13 @@ async function autorizar(request: NextRequest) {
     });
   }
 
-  if (admin.rol !== "SUPER_ADMIN") {
+  if (
+    admin.rol !== "SUPER_ADMIN" &&
+    admin.rol !== "ADMIN"
+  ) {
     return responder(403, {
       ok: false,
-      mensaje: "Solo SUPER_ADMIN puede eliminar clientes.",
+      mensaje: "No autorizado para eliminar clientes.",
     });
   }
 

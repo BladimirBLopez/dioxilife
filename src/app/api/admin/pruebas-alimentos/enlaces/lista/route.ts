@@ -207,7 +207,10 @@ export async function GET(
           pagina,
           porPagina,
           puedeEliminar:
-            administrador.rol === "SUPER_ADMIN" &&
+            (
+              administrador.rol === "SUPER_ADMIN" ||
+              administrador.rol === "ADMIN"
+            ) &&
             process.env.PRUEBAS_ALIMENTOS_ELIMINACION_HABILITADA === "true",
         },
         {
