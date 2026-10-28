@@ -209,6 +209,34 @@ export default function ControlRecordatoriosPush({
         Recordatorios de glucosa
       </h2>
 
+        <div
+          role="status"
+          aria-live="polite"
+          className={
+            "mt-3 rounded-xl border p-3 " +
+            (suscrito
+              ? "border-emerald-200 bg-emerald-50"
+              : "border-amber-200 bg-amber-50")
+          }
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+            Estado de avisos en este celular
+          </p>
+
+          <p className="mt-1 text-sm font-bold text-slate-900">
+            {suscrito
+              ? "✓ Suscripción reconocida"
+              : "Recordatorios sin activar"}
+          </p>
+
+          <p className="mt-1 text-xs leading-5 text-slate-600">
+            {suscrito
+              ? "Este navegador tiene una suscripción reconocida por DioxiLife. La entrega de cada aviso depende de la conexión y los permisos del dispositivo."
+              : "Activa los recordatorios usando el botón de esta sección para recibir avisos cuando corresponda."}
+          </p>
+        </div>
+
+
       {suscrito ? (
         <p className="mt-3 text-sm font-medium text-emerald-700">
           ✓ Notificaciones autorizadas en este celular

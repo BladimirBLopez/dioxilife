@@ -717,6 +717,89 @@ export default function FormularioClientePruebaAlimento({
 
   return (
     <section className="space-y-6">
+
+      <section
+        aria-label="Progreso de la prueba"
+        className="rounded-2xl border border-fuchsia-200 bg-white p-4 shadow-sm sm:p-5"
+      >
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-fuchsia-700">
+              Tu prueba paso a paso
+            </p>
+            <h2 className="mt-1 text-lg font-bold text-slate-900">
+              Mi medición de glucosa
+            </h2>
+          </div>
+
+          <span className="rounded-full bg-fuchsia-50 px-3 py-1 text-xs font-semibold text-fuchsia-800">
+            Paso {fase === "inicio" ? 1 : fase === "pendiente" ? 2 : 3} de 3
+          </span>
+        </div>
+
+        <ol className="grid grid-cols-3 gap-2">
+          {([
+            "Primera medición",
+            "Segunda medición",
+            "Resultados",
+          ] as const).map((nombre, indice) => {
+            const actual =
+              fase === "inicio"
+                ? 0
+                : fase === "pendiente"
+                  ? 1
+                  : 2;
+
+            const activo = indice === actual;
+            const completado = indice < actual;
+
+            return (
+              <li
+                key={nombre}
+                aria-current={activo ? "step" : undefined}
+                className={
+                  "rounded-xl border p-2 text-center " +
+                  (activo
+                    ? "border-fuchsia-600 bg-fuchsia-50"
+                    : completado
+                      ? "border-emerald-200 bg-emerald-50"
+                      : "border-slate-200 bg-slate-50")
+                }
+              >
+                <span
+                  className={
+                    "mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold " +
+                    (activo
+                      ? "bg-fuchsia-700 text-white"
+                      : completado
+                        ? "bg-emerald-700 text-white"
+                        : "bg-slate-200 text-slate-600")
+                  }
+                >
+                  {completado ? "✓" : indice + 1}
+                </span>
+
+                <p className="mt-2 text-xs font-semibold leading-4 text-slate-800">
+                  {nombre}
+                </p>
+              </li>
+            );
+          })}
+        </ol>
+
+        <p
+          role="status"
+          aria-live="polite"
+          className="mt-4 rounded-xl bg-slate-50 p-3 text-sm leading-6 text-slate-700"
+        >
+          {fase === "inicio"
+            ? "Registra tu alimento y primera medición de glucosa."
+            : fase === "pendiente"
+              ? "Tu primera medición está guardada. Completa la segunda cuando corresponda, aproximadamente dos horas después de comer."
+              : "Prueba completada. Consulta los resultados en tu historial."}
+        </p>
+      </section>
+
       <ControlRecordatoriosPush token={token} />
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h1 className="text-2xl font-bold text-slate-900">
@@ -864,8 +947,13 @@ export default function FormularioClientePruebaAlimento({
           </div>
 
           {sugerencia && (
-            <div className="rounded-xl bg-fuchsia-50 p-4 text-sm text-fuchsia-950">
-              Segunda medición sugerida:{" "}
+            <div className="rounded-2xl border border-fuchsia-200 bg-fuchsia-50 p-4 text-sm text-fuchsia-950 shadow-sm">
+              <span className="block text-xs font-bold uppercase tracking-wide text-fuchsia-800">
+                  Próxima medición
+                </span>
+                <span className="mt-2 inline-block">
+                  Horario sugerido:{" "}
+                </span>
               <strong>
                 {sugerencia.fecha} a las{" "}
                 {sugerencia.hora}
@@ -874,8 +962,7 @@ export default function FormularioClientePruebaAlimento({
                 ? " (día siguiente)"
                 : ""}
               <p className="mt-2 text-xs">
-                Es una sugerencia de horario,
-                no una alarma automática.
+                Este horario es orientativo. Después de guardar la primera medición, DioxiLife podrá intentar enviarte un aviso si los recordatorios están habilitados y activados para este celular. También puedes agregar el horario a tu calendario.
               </p>
               <button
                 type="button"
