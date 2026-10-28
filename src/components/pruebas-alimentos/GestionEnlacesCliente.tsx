@@ -8,6 +8,7 @@ import {
 
 import ListadoEnlacesCliente from "./ListadoEnlacesCliente";
 import TarjetaQRPrivada from "./TarjetaQRPrivada";
+import SelectorClienteSeguimiento from "./SelectorClienteSeguimiento";
 
 type OrigenCliente = "nuevo" | "existente";
 type Vigencia = 7 | 30 | 90;
@@ -137,6 +138,11 @@ export default function GestionEnlacesCliente() {
     setError("");
     setMensaje("");
     setEnlace(null);
+
+    if (origen === "existente" && !seguimientoId.trim()) {
+      setError("Selecciona un cliente del seguimiento.");
+      return;
+    }
 
     const datos =
       origen === "nuevo"
@@ -332,13 +338,14 @@ export default function GestionEnlacesCliente() {
               className={campo}
               value={origen}
               disabled={ocupado}
-              onChange={e =>
+              onChange={e => {
                 setOrigen(
                   e.target.value === "existente"
                     ? "existente"
                     : "nuevo"
-                )
-              }
+                );
+                setSeguimientoId("");
+              }}
             >
               <option value="nuevo">
                 Cliente nuevo
@@ -395,31 +402,11 @@ export default function GestionEnlacesCliente() {
               </div>
             </>
           ) : (
-            <div>
-              <label
-                className={etiqueta}
-                htmlFor="pa-seguimiento"
-              >
-                Identificador del seguimiento
-              </label>
-
-              <input
-                id="pa-seguimiento"
-                className={campo}
-                required
-                minLength={5}
-                maxLength={128}
-                value={seguimientoId}
-                onChange={e =>
-                  setSeguimientoId(e.target.value)
-                }
-              />
-
-              <p className="mt-2 text-xs text-slate-500">
-                Introduce el identificador del
-                cliente ya registrado en seguimiento.
-              </p>
-            </div>
+            <SelectorClienteSeguimiento
+              value={seguimientoId}
+              onChange={setSeguimientoId}
+              disabled={ocupado}
+            />
           )}
 
           <div>
