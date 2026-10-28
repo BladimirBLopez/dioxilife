@@ -13,6 +13,7 @@ import {
 import { ordenarAlimentosPorAumento } from "@/lib/pruebas-alimentos/analisis-mejoras";
 import AvisosGlucosa from "./AvisosGlucosa";
 import GraficaMedicionesAdmin from "./GraficaMedicionesAdmin";
+import BotonDescargarReporteAlimentosPDF from "./BotonDescargarReporteAlimentosPDF";
 
 type Propiedades = {
   clienteId: string;
@@ -180,6 +181,12 @@ export default function ReporteIndividualAdminCliente({
         >
           Actualizar reporte
         </button>
+
+        {estado === "lista" && reporte && (
+          <BotonDescargarReporteAlimentosPDF
+            reporte={reporte}
+          />
+        )}
       </div>
 
       {estado === "cargando" && (
