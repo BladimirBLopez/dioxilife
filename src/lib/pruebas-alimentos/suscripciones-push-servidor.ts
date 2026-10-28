@@ -47,3 +47,20 @@ export async function revocarSuscripcionPush(
       AND "endpoint" = ${endpoint}
   `;
 }
+
+export async function consultarSuscripcionPush(
+  clienteId: string,
+  endpoint: string
+): Promise<boolean> {
+  const filas = await prisma.$queryRaw<
+    Array<{ activa: boolean }>
+  >`
+    SELECT "activa"
+    FROM "SuscripcionPushPruebaAlimento"
+    WHERE "clienteId" = ${clienteId}
+      AND "endpoint" = ${endpoint}
+    LIMIT 1
+  `;
+
+  return filas[0]?.activa === true;
+}

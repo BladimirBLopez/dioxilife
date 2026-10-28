@@ -16,6 +16,7 @@ export default function ControlRecordatoriosPush({
     useState<Estado>("cargando");
   const [clave, setClave] = useState("");
   const [ocupado, setOcupado] = useState(false);
+  const [suscrito, setSuscrito] = useState(false);
   const [mensaje, setMensaje] = useState("");
 
   const ruta = `/api/prueba-alimentos/${token}/push`;
@@ -25,6 +26,22 @@ export default function ControlRecordatoriosPush({
 
     async function comprobar() {
       try {
+        let endpoint: string | null = null;
+
+        if (
+          "serviceWorker" in navigator &&
+          "Notification" in window &&
+          Notification.permission === "granted"
+        ) {
+          const registro =
+            await navigator.serviceWorker.getRegistration("/");
+
+          const suscripcion =
+            await registro?.pushManager.getSubscription();
+
+          endpoint = suscripcion?.endpoint ?? null;
+        }
+
         const respuesta = await fetch(
           ruta,
           {
@@ -32,6 +49,9 @@ export default function ControlRecordatoriosPush({
             credentials: "same-origin",
             referrerPolicy: "no-referrer",
             signal: controlador.signal,
+            headers: endpoint
+              ? { "X-DioxiLife-Push-Endpoint": endpoint }
+              : {},
           }
         );
 
@@ -51,6 +71,10 @@ export default function ControlRecordatoriosPush({
         ) {
           if (!controlador.signal.aborted) {
             setClave(datos.clavePublica);
+            setSuscrito(
+              "suscrito" in datos &&
+              datos.suscrito === true
+            );
             setEstado("disponible");
           }
         } else if (!controlador.signal.aborted) {
@@ -105,10 +129,8 @@ export default function ControlRecordatoriosPush({
         );
       }
 
-      setMensaje(
-        "Recordatorios activados para este cliente. " +
-        "Recibirás avisos de mediciones pendientes."
-      );
+      setSuscrito(true);
+      setMensaje("");
     } catch (error) {
       setMensaje(
         error instanceof Error
@@ -138,9 +160,8 @@ export default function ControlRecordatoriosPush({
         await registro.pushManager.getSubscription();
 
       if (!suscripcion) {
-        setMensaje(
-          "Este navegador no tiene una suscripción activa."
-        );
+        setSuscrito(false);
+        setMensaje("");
         return;
       }
 
@@ -165,10 +186,8 @@ export default function ControlRecordatoriosPush({
 
       // No ejecutar unsubscribe().
       // La suscripción puede servir a Seguimiento.
-      setMensaje(
-        "Recordatorios de glucosa desactivados " +
-        "para este cliente en este dispositivo."
-      );
+      setSuscrito(false);
+      setMensaje("");
     } catch (error) {
       setMensaje(
         error instanceof Error
@@ -185,47 +204,54 @@ export default function ControlRecordatoriosPush({
   }
 
   return (
-    <section className="rounded-2xl border border-fuchsia-200 bg-fuchsia-50 p-5">
-      <h2 className="text-lg font-bold text-fuchsia-950">
-        Recordatorios automáticos
+    <section className="rounded-2xl border border-fuchsia-200 bg-white p-5 shadow-sm">
+      <h2 className="text-lg font-bold text-slate-900">
+        Recordatorios de glucosa
       </h2>
 
-      <p className="mt-2 text-sm text-fuchsia-900">
-        DioxiLife puede recordarte que registres tu
-        segunda medición dos horas después de comer.
-        Primero debes autorizar las notificaciones.
-      </p>
+      {suscrito ? (
+        <p className="mt-3 text-sm font-medium text-emerald-700">
+          ✓ Notificaciones autorizadas en este celular
+        </p>
+      ) : (
+        <p className="mt-3 text-sm text-slate-600">
+          Activa las notificaciones para recibir un aviso
+          dos horas después de comer cuando tengas una
+          segunda medición pendiente.
+        </p>
+      )}
 
-      <div className="mt-4 flex flex-wrap gap-3">
-        <button
-          type="button"
-          disabled={ocupado}
-          onClick={() => void activar()}
-          className="rounded-xl bg-fuchsia-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
-        >
-          Activar recordatorios
-        </button>
-
-        <button
-          type="button"
-          disabled={ocupado}
-          onClick={() => void desactivar()}
-          className="rounded-xl border border-fuchsia-400 px-4 py-3 text-sm font-semibold text-fuchsia-900 disabled:opacity-50"
-        >
-          Desactivar en este celular
-        </button>
+      <div className="mt-4">
+        {suscrito ? (
+          <button
+            type="button"
+            disabled={ocupado}
+            onClick={() => void desactivar()}
+            className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 disabled:opacity-50"
+          >
+            {ocupado ? "Procesando..." : "Desactivar recordatorios"}
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={ocupado}
+            onClick={() => void activar()}
+            className="rounded-xl bg-fuchsia-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
+          >
+            {ocupado ? "Procesando..." : "Activar recordatorios"}
+          </button>
+        )}
       </div>
 
       {mensaje && (
-        <p role="status" className="mt-3 text-sm">
+        <p role="status" className="mt-3 text-sm text-slate-700">
           {mensaje}
         </p>
       )}
 
-      <p className="mt-3 text-xs text-fuchsia-800">
-        Las notificaciones requieren conexión y
-        permisos del dispositivo. No constituyen
-        una alarma médica garantizada.
+      <p className="mt-4 text-xs text-slate-500">
+        El envío automático depende de que el programador
+        de recordatorios esté funcionando.
       </p>
     </section>
   );

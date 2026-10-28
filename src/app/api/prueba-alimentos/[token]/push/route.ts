@@ -220,6 +220,7 @@ export async function GET(
     process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 
   let habilitado = false;
+  let suscrito = false;
 
   if (
     pushHabilitado() &&
@@ -235,9 +236,33 @@ export async function GET(
         buscarClientePorHash
       );
 
-      habilitado =
+      if (
         cliente !== null &&
-        cliente.id === obtenerClientePilotoPush();
+        cliente.id === obtenerClientePilotoPush()
+      ) {
+        habilitado = true;
+
+        const endpoint = _req.headers.get(
+          "x-dioxilife-push-endpoint"
+        );
+
+        if (endpoint) {
+          const validacion =
+            endpointSchema.safeParse(endpoint);
+
+          if (validacion.success) {
+            const { consultarSuscripcionPush } =
+              await import(
+                "@/lib/pruebas-alimentos/suscripciones-push-servidor"
+              );
+
+            suscrito = await consultarSuscripcionPush(
+              cliente.id,
+              validacion.data
+            );
+          }
+        }
+      }
     } catch {
       habilitado = false;
     }
@@ -246,6 +271,7 @@ export async function GET(
   return NextResponse.json(
     {
       habilitado,
+      suscrito,
       ...(habilitado ? { clavePublica: clave } : {}),
     },
     {
