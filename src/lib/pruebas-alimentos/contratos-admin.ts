@@ -28,6 +28,7 @@ const clienteNuevoSchema = z.strictObject({
 
   telefono: z
     .string()
+    .regex(/^[0-9]*$/, "El teléfono solo admite dígitos")
     .trim()
     .max(30)
     .optional(),

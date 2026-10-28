@@ -382,11 +382,14 @@ export default function GestionEnlacesCliente() {
 
                 <input
                   id="pa-telefono"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   className={campo}
                   maxLength={30}
                   value={telefono}
                   onChange={e =>
-                    setTelefono(e.target.value)
+                    setTelefono(e.target.value.replace(/[^0-9]/g, ""))
                   }
                 />
               </div>
