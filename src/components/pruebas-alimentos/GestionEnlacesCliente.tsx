@@ -486,7 +486,7 @@ export default function GestionEnlacesCliente() {
         </p>
       )}
 
-      {mensaje && (
+      {mensaje && !enlace && (
         <p
           role="status"
           className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-800"
@@ -515,7 +515,7 @@ export default function GestionEnlacesCliente() {
             ref={dialogoEnlace}
             onClose={() => setDialogoEnlaceAbierto(false)}
             aria-labelledby="pa-modal-enlace-titulo"
-            className="max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg overflow-y-auto overscroll-contain rounded-2xl border border-fuchsia-200 bg-white p-4 text-slate-900 shadow-2xl backdrop:bg-slate-950/60 sm:p-6"
+            className="fixed inset-0 m-auto max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg overflow-y-auto overscroll-contain rounded-2xl border border-fuchsia-200 bg-white p-4 text-slate-900 shadow-2xl backdrop:bg-slate-950/60 sm:p-6"
           >
             <div className="mb-3 flex justify-end">
               <button
@@ -565,7 +565,7 @@ export default function GestionEnlacesCliente() {
           <button
             type="button"
             onClick={() => void copiarEnlace()}
-            className={`${boton} mt-3`}
+            className={`${boton} mt-3 w-full justify-center text-center sm:w-auto`}
           >
             Copiar enlace
           </button>
@@ -580,7 +580,7 @@ export default function GestionEnlacesCliente() {
             }
             target="_blank"
             rel="noopener noreferrer"
-            className={`${boton} mt-3 ml-2 inline-flex`}
+            className={`${boton} mt-3 inline-flex w-full justify-center text-center sm:ml-2 sm:w-auto`}
           >
             Compartir por WhatsApp
           </a>
