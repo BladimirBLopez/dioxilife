@@ -5,35 +5,46 @@ import type { ReporteIndividualCliente } from "./contrato-reporte-individual-adm
 
 type Color = [number, number, number];
 
-const C = {
-  tinta: [30, 45, 64] as Color,
-  gris: [100, 115, 132] as Color,
-  azul: [8, 145, 190] as Color,
-  fucsia: [177, 31, 151] as Color,
-  palido: [244, 248, 251] as Color,
-  suave: [251, 247, 250] as Color,
+const colores = {
+  texto: [37, 49, 66] as Color,
+  gris: [101, 113, 129] as Color,
+  azul: [8, 143, 199] as Color,
+  fucsia: [188, 30, 193] as Color,
   blanco: [255, 255, 255] as Color,
+  fondo: [247, 249, 252] as Color,
+  borde: [226, 231, 237] as Color,
 };
 
-const numero = (n: number) =>
-  n.toLocaleString("es-BO", {
+function numero(valor: number): string {
+  return valor.toLocaleString("es-BO", {
     maximumFractionDigits: 2,
   });
+}
 
-const cambio = (n: number) =>
-  `${n > 0 ? "+" : ""}${numero(n)}`;
+function cambio(valor: number): string {
+  return `${valor > 0 ? "+" : ""}${numero(valor)}`;
+}
 
-const corto = (s: string, longitud = 24) =>
-  s.length > longitud
-    ? `${s.slice(0, longitud - 3)}...`
-    : s;
-
-const fecha = (d: Date) =>
-  d.toLocaleString("es-BO", {
+function fechaHora(valor: Date): string {
+  return new Intl.DateTimeFormat("es-BO", {
     timeZone: "America/La_Paz",
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(valor);
+}
+
+function nombreCorto(
+  nombre: string,
+  largo = 21
+): string {
+  return nombre.length <= largo
+    ? nombre
+    : `${nombre.slice(0, largo - 3)}...`;
+}
 
 async function cargarLogo(): Promise<string> {
   const respuesta = await fetch("/logo.png", {
@@ -43,26 +54,27 @@ async function cargarLogo(): Promise<string> {
 
   if (!respuesta.ok) {
     throw new Error(
-      "No se pudo obtener el logo de DioxiLife."
+      "No se pudo cargar el logo de DioxiLife."
     );
   }
 
-  const imagen = await respuesta.blob();
+  const archivo = await respuesta.blob();
 
-  return await new Promise<string>((resolve, reject) => {
+  return new Promise<string>((resolver, rechazar) => {
     const lector = new FileReader();
 
-    lector.onload = () =>
-      typeof lector.result === "string"
-        ? resolve(lector.result)
-        : reject(
-            new Error("El logo no tiene formato válido.")
-          );
+    lector.onload = () => {
+      if (typeof lector.result === "string") {
+        resolver(lector.result);
+      } else {
+        rechazar(new Error("Logo no válido."));
+      }
+    };
 
     lector.onerror = () =>
-      reject(new Error("No se pudo leer el logo."));
+      rechazar(new Error("Error al leer el logo."));
 
-    lector.readAsDataURL(imagen);
+    lector.readAsDataURL(archivo);
   });
 }
 
@@ -92,43 +104,51 @@ export default function BotonDescargarReporteAlimentosPDF({
       ]);
 
       const doc = new jsPDF({
+        orientation: "portrait",
         unit: "mm",
         format: "a4",
-        orientation: "portrait",
         compress: true,
       });
 
       const ahora = new Date();
 
-      const datos = [...reporte.alimentos].sort(
-        (a, b) => b.diferencia - a.diferencia
-      );
+      const alimentos = [...reporte.alimentos]
+        .sort(
+          (a, b) =>
+            b.diferencia - a.diferencia ||
+            b.pruebas - a.pruebas
+        );
 
-      const destacados = datos.slice(0, 8);
+      const destacados = alimentos.slice(0, 8);
 
-      const logoInfo = doc.getImageProperties(logo);
+      const mediciones = [...(reporte.mediciones ?? [])]
+        .sort((a, b) =>
+          b.fecha.localeCompare(a.fecha)
+        );
+
+      const imagen = doc.getImageProperties(logo);
 
       const proporcion =
-        logoInfo.width / logoInfo.height;
+        imagen.width / imagen.height;
 
       if (
         !Number.isFinite(proporcion) ||
         proporcion <= 0
       ) {
         throw new Error(
-          "No se pudo establecer el tamaño del logo."
+          "Las dimensiones del logo no son válidas."
         );
       }
 
-      function logoEn(
+      function colocarLogo(
         x: number,
         y: number,
-        maxAncho: number,
-        maxAlto: number
+        anchoMaximo: number,
+        altoMaximo: number
       ) {
         const ancho = Math.min(
-          maxAncho,
-          maxAlto * proporcion
+          anchoMaximo,
+          altoMaximo * proporcion
         );
 
         const alto = ancho / proporcion;
@@ -136,582 +156,473 @@ export default function BotonDescargarReporteAlimentosPDF({
         doc.addImage(
           logo,
           "PNG",
-          x + (maxAncho - ancho) / 2,
-          y + (maxAlto - alto) / 2,
+          x + (anchoMaximo - ancho) / 2,
+          y + (altoMaximo - alto) / 2,
           ancho,
           alto
         );
       }
 
-      function texto(
+      function escribir(
         contenido: string,
         x: number,
         y: number,
-        tam: number,
+        tamano = 9,
         negrita = false,
-        color: Color = C.tinta
+        color: Color = colores.texto
       ) {
         doc.setFont(
           "helvetica",
           negrita ? "bold" : "normal"
         );
 
-        doc.setFontSize(tam);
+        doc.setFontSize(tamano);
         doc.setTextColor(...color);
-
         doc.text(contenido, x, y);
       }
 
-      function tarjeta(
-        x: number,
-        y: number,
-        ancho: number,
-        titulo: string,
-        valor: string
-      ) {
-        doc.setFillColor(...C.palido);
+      function encabezado() {
+        doc.setFillColor(...colores.fucsia);
+        doc.rect(0, 0, 210, 3, "F");
 
-        doc.roundedRect(
-          x, y, ancho, 23, 2.5, 2.5, "F"
-        );
+        colocarLogo(16, 7, 26, 20);
 
-        texto(
-          titulo,
-          x + 5,
-          y + 7,
-          7.5,
-          false,
-          C.gris
-        );
-
-        texto(
-          valor,
-          x + 5,
-          y + 17.5,
-          16,
-          true
-        );
-      }
-
-      function encabezadoPagina() {
-        doc.setFillColor(...C.fucsia);
-        doc.rect(0, 0, 210, 3.2, "F");
-
-        logoEn(16, 8, 24, 19);
-
-        texto(
+        escribir(
           "DIOXILIFE BOLIVIA",
-          46, 18, 10.2, true
+          48, 17, 11, true
         );
 
-        texto(
+        escribir(
           "Reporte de pruebas de alimentos",
-          46, 25, 8, false, C.gris
+          48, 24, 8, false, colores.gris
         );
 
-        doc.setDrawColor(223, 230, 236);
-        doc.line(16, 32, 194, 32);
+        doc.setDrawColor(...colores.borde);
+        doc.line(16, 33, 194, 33);
       }
 
-      // PAGINA 1: INFORME EJECUTIVO
+      // PAGINA 1: RESUMEN Y GRAFICA
 
-      doc.setFillColor(...C.palido);
-      doc.rect(0, 0, 210, 61, "F");
+      doc.setFillColor(...colores.fondo);
+      doc.rect(0, 0, 210, 55, "F");
 
-      doc.setFillColor(...C.fucsia);
+      doc.setFillColor(...colores.fucsia);
       doc.rect(0, 0, 210, 4, "F");
 
-      logoEn(16, 12, 33, 33);
+      colocarLogo(16, 10, 32, 31);
 
-      texto(
+      escribir(
         "DIOXILIFE BOLIVIA",
-        57, 23, 15.5, true
+        56, 21, 15, true
       );
 
-      texto(
-        "INFORME DE RESPUESTA DE GLUCOSA",
-        57, 33, 10.7, true, C.fucsia
+      escribir(
+        "REPORTE DE PRUEBAS DE ALIMENTOS",
+        56, 32, 10, true, colores.fucsia
       );
 
-      texto(
-        "Comparación descriptiva de pruebas de alimentos",
-        57, 41, 9, false, C.gris
+      escribir(
+        `Emisión: ${fechaHora(ahora)}`,
+        56, 41, 8, false, colores.gris
       );
 
-      texto(
-        `Emitido: ${fecha(ahora)}`,
-        57, 49, 8, false, C.gris
-      );
+      // DATOS DEL CLIENTE
 
-      // IDENTIFICACION DEL CLIENTE
-
-      doc.setFillColor(...C.suave);
-
+      doc.setFillColor(...colores.fondo);
       doc.roundedRect(
-        16, 69, 178, 33, 3, 3, "F"
+        16, 61, 178, 27, 2.5, 2.5, "F"
       );
 
-      texto(
+      escribir(
         "CLIENTE",
-        21, 77, 7.5, true, C.fucsia
+        21, 69, 7.5, true, colores.gris
       );
 
       const nombre = doc.splitTextToSize(
         reporte.cliente.nombre,
-        165
+        160
       ) as string[];
 
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(
-        nombre.length > 2 ? 9 : 12
-      );
-      doc.setTextColor(...C.tinta);
-      doc.text(nombre.slice(0, 2), 21, 85);
+      doc.setFontSize(11);
+      doc.setTextColor(...colores.texto);
+      doc.text(nombre.slice(0, 2), 21, 77);
 
-      // INDICADORES DEL REPORTE
+      // GRAFICO HORIZONTAL
 
-      tarjeta(
-        16, 108, 56,
-        "REGISTROS REVISADOS",
-        numero(reporte.registrosRevisados)
+      escribir(
+        "Comparación por alimento",
+        16, 101, 13, true
       );
 
-      tarjeta(
-        77, 108, 56,
-        "PRUEBAS COMPLETAS",
-        numero(reporte.pruebasCompletas)
+      escribir(
+        "Glucosa antes y después de comer (mg/dL)",
+        16, 109, 8, false, colores.gris
       );
 
-      tarjeta(
-        138, 108, 56,
-        "ALIMENTOS ANALIZADOS",
-        numero(reporte.alimentos.length)
+      doc.setFillColor(...colores.azul);
+      doc.roundedRect(
+        16, 114, 4, 3, 0.5, 0.5, "F"
       );
 
-      // GRAFICO DE PUNTOS CONECTADOS
-
-      texto(
-        "Glucosa antes y después de comer",
-        16, 144, 12, true
+      escribir(
+        "Antes de comer",
+        23, 117, 7.5
       );
 
-      texto(
-        "Promedios por alimento (mg/dL)",
-        16, 151, 8.5, false, C.gris
+      doc.setFillColor(...colores.fucsia);
+      doc.roundedRect(
+        78, 114, 4, 3, 0.5, 0.5, "F"
       );
 
-      doc.setFillColor(...C.azul);
-      doc.circle(121, 149, 1.5, "F");
-
-      texto(
-        "Antes",
-        125, 150, 7.6, false, C.gris
+      escribir(
+        "Después de comer",
+        85, 117, 7.5
       );
 
-      doc.setFillColor(...C.fucsia);
-      doc.circle(153, 149, 1.5, "F");
-
-      texto(
-        "Después",
-        157, 150, 7.6, false, C.gris
-      );
-
-      if (destacados.length) {
-        const mayor = Math.max(
+      if (destacados.length > 0) {
+        const maximo = Math.max(
           1,
-          ...destacados.flatMap(a => [
-            a.promedioAntes,
-            a.promedioDespues,
+          ...destacados.flatMap(item => [
+            item.promedioAntes,
+            item.promedioDespues,
           ])
         );
 
         const paso =
-          mayor <= 100 ? 25 :
-          mayor <= 250 ? 50 :
-          mayor <= 500 ? 100 : 250;
+          maximo <= 150 ? 50 :
+          maximo <= 350 ? 100 :
+          maximo <= 600 ? 200 : 250;
 
-        const techo = Math.max(
+        const escala = Math.max(
           paso,
-          Math.ceil(mayor / paso) * paso
+          Math.ceil(maximo / paso) * paso
         );
 
-        const xInicio = 79;
-        const ancho = 80;
+        const inicioX = 77;
+        const anchoGrafico = 90;
 
-        // ESCALA Y EJES
+        // EJES VERTICALES
 
         for (let i = 0; i <= 4; i++) {
           const x =
-            xInicio + ancho * i / 4;
+            inicioX + anchoGrafico * i / 4;
 
-          doc.setDrawColor(227, 233, 239);
-          doc.setLineWidth(0.3);
-          doc.line(x, 163, x, 259);
-
-          const etiqueta = numero(
-            techo * i / 4
-          );
+          doc.setDrawColor(...colores.borde);
+          doc.setLineWidth(0.25);
+          doc.line(x, 127, x, 261);
 
           doc.setFont("helvetica", "normal");
           doc.setFontSize(7);
-          doc.setTextColor(...C.gris);
+          doc.setTextColor(...colores.gris);
 
           doc.text(
-            etiqueta,
-            x, 160,
+            numero(escala * i / 4),
+            x,
+            124,
             { align: "center" }
           );
         }
 
-        // PUNTOS ANTES Y DESPUES
+        destacados.forEach((item, indice) => {
+          const y = 131 + indice * 16.5;
 
-        destacados.forEach((a, i) => {
-          const y = 170 + i * 11.5;
-
-          const aX =
-            xInicio +
-            ancho * a.promedioAntes / techo;
-
-          const dX =
-            xInicio +
-            ancho * a.promedioDespues / techo;
-
-          texto(
-            corto(a.alimento, 23),
-            17, y, 8, true
+          escribir(
+            nombreCorto(item.alimento),
+            17, y + 4, 8, true
           );
 
-          texto(
-            `${a.pruebas} ${
-              a.pruebas === 1
+          escribir(
+            `${item.pruebas} ${
+              item.pruebas === 1
                 ? "prueba"
                 : "pruebas"
             }`,
-            17, y + 4, 7, false, C.gris
+            17, y + 8.5, 7, false, colores.gris
           );
 
-          doc.setDrawColor(168, 181, 194);
-          doc.setLineWidth(0.9);
+          const antes =
+            anchoGrafico *
+            item.promedioAntes / escala;
 
-          doc.line(
-            aX, y + 0.5,
-            dX, y + 0.5
-          );
+          const despues =
+            anchoGrafico *
+            item.promedioDespues / escala;
 
-          doc.setFillColor(...C.azul);
-          doc.circle(aX, y + 0.5, 1.9, "F");
-
-          doc.setFillColor(...C.fucsia);
-          doc.circle(dX, y + 0.5, 1.9, "F");
-
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(7);
-          doc.setTextColor(...C.gris);
-
-          doc.text(
-            `${numero(a.promedioAntes)} / ${numero(a.promedioDespues)}`,
-            193,
-            y + 1.5,
-            { align: "right" }
-          );
-
-          if (i < destacados.length - 1) {
-            doc.setDrawColor(237, 241, 244);
-            doc.line(16, y + 7, 194, y + 7);
-          }
-        });
-
-      } else {
-        texto(
-          "Aún no existen pruebas completas para graficar.",
-          16, 177, 9, false, C.gris
-        );
-      }
-
-      texto(
-        "Se representan hasta 8 alimentos; se analizan hasta 50 registros recientes.",
-        16, 267, 7.5, false, C.gris
-      );
-
-      // PAGINA 2: GRAFICO DE VARIACIONES
-
-      if (datos.length) {
-        doc.addPage();
-
-        texto(
-          "Variación promedio por alimento",
-          16, 44, 12, true
-        );
-
-        texto(
-          "La línea central representa un cambio de cero mg/dL.",
-          16, 51, 8, false, C.gris
-        );
-
-        const extremo = Math.max(
-          1,
-          ...destacados.map(
-            a => Math.abs(a.diferencia)
-          )
-        );
-
-        const escala =
-          Math.ceil(extremo / 25) * 25;
-
-        const centro = 121;
-        const semiancho = 43;
-
-        doc.setDrawColor(170, 180, 192);
-        doc.setLineWidth(0.35);
-
-        doc.line(
-          centro, 63,
-          centro, 163
-        );
-
-        texto(
-          `-${numero(escala)}`,
-          centro - semiancho - 7,
-          61, 7, false, C.gris
-        );
-
-        texto(
-          "0",
-          centro - 1,
-          61, 7, false, C.gris
-        );
-
-        texto(
-          `+${numero(escala)}`,
-          centro + semiancho - 8,
-          61, 7, false, C.gris
-        );
-
-        destacados.forEach((a, i) => {
-          const y = 70 + i * 11.6;
-
-          texto(
-            corto(a.alimento, 22),
-            16, y + 1, 8
-          );
-
-          const longitud =
-            a.diferencia === 0
-              ? 0
-              : Math.max(
-                  0.8,
-                  Math.abs(a.diferencia) /
-                    escala * semiancho
-                );
-
-          if (longitud > 0) {
-            doc.setFillColor(
-              ...(
-                a.diferencia >= 0
-                  ? C.fucsia
-                  : C.azul
-              )
-            );
-
+          if (antes > 0) {
+            doc.setFillColor(...colores.azul);
             doc.roundedRect(
-              a.diferencia >= 0
-                ? centro
-                : centro - longitud,
-              y - 2,
-              longitud,
-              4.5,
-              0.4,
-              0.4,
+              inicioX,
+              y,
+              Math.max(1.4, antes),
+              4,
+              0.6,
+              0.6,
               "F"
             );
           }
 
-          texto(
-            `${cambio(a.diferencia)} mg/dL`,
-            173, y + 1, 8, true,
-            a.diferencia >= 0
-              ? C.fucsia
-              : C.azul
+          if (despues > 0) {
+            doc.setFillColor(...colores.fucsia);
+            doc.roundedRect(
+              inicioX,
+              y + 6,
+              Math.max(1.4, despues),
+              4,
+              0.6,
+              0.6,
+              "F"
+            );
+          }
+
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(7.5);
+          doc.setTextColor(...colores.texto);
+
+          doc.text(
+            numero(item.promedioAntes),
+            192,
+            y + 3.5,
+            { align: "right" }
+          );
+
+          doc.text(
+            numero(item.promedioDespues),
+            192,
+            y + 9.5,
+            { align: "right" }
+          );
+
+          escribir(
+            `Diferencia: ${cambio(item.diferencia)} mg/dL`,
+            17,
+            y + 14,
+            7,
+            false,
+            colores.gris
           );
         });
 
-        // TABLA DETALLADA
-
-        texto(
-          "Resumen completo por alimento",
-          16, 179, 11.5, true
+      } else {
+        escribir(
+          "No existen pruebas completas para graficar.",
+          17, 148, 9, false, colores.gris
         );
-
-        texto(
-          "Promedios y diferencias en mg/dL; N = cantidad de pruebas completas.",
-          16, 186, 7.5, false, C.gris
-        );
-
-        autoTable(doc, {
-          startY: 192,
-
-          margin: {
-            left: 16,
-            right: 16,
-            top: 40,
-            bottom: 27,
-          },
-
-          theme: "grid",
-
-          head: [[
-            "Alimento",
-            "N",
-            "Antes",
-            "Después",
-            "Diferencia",
-          ]],
-
-          body: datos.map(a => [
-            a.alimento,
-            `${a.pruebas}`,
-            numero(a.promedioAntes),
-            numero(a.promedioDespues),
-            cambio(a.diferencia),
-          ]),
-
-          styles: {
-            font: "helvetica",
-            fontSize: 8.2,
-            cellPadding: 3,
-            textColor: C.tinta,
-            overflow: "linebreak",
-          },
-
-          headStyles: {
-            fillColor: C.tinta,
-            textColor: C.blanco,
-            fontStyle: "bold",
-          },
-
-          alternateRowStyles: {
-            fillColor: C.palido,
-          },
-
-          columnStyles: {
-            0: { cellWidth: 56 },
-            1: {
-              cellWidth: 16,
-              halign: "center",
-            },
-            2: {
-              cellWidth: 33,
-              halign: "right",
-            },
-            3: {
-              cellWidth: 36,
-              halign: "right",
-            },
-            4: {
-              cellWidth: 37,
-              halign: "right",
-            },
-          },
-        });
       }
 
-      // MEDICIONES INDIVIDUALES
+      escribir(
+        "Gráfico de hasta 8 alimentos; promedios de hasta 50 registros recientes.",
+        16, 269, 7.2, false, colores.gris
+      );
 
-      if (reporte.mediciones?.length) {
-        const anterior = (
-          doc as typeof doc & {
-            lastAutoTable?: {
-              finalY: number;
-            };
-          }
-        ).lastAutoTable;
+      // PAGINA 2: DETALLE Y FECHAS
 
-        let inicio = datos.length
-          ? (anterior?.finalY ?? 252) + 16
-          : 42;
+      if (
+        alimentos.length > 0 ||
+        mediciones.length > 0
+      ) {
+        doc.addPage();
 
-        if (inicio > 225) {
-          doc.addPage();
-          inicio = 43;
-        } else if (!datos.length) {
-          doc.addPage();
+        let siguienteY = 43;
+
+        if (alimentos.length > 0) {
+          escribir(
+            "Detalle de las mediciones por alimento",
+            16, siguienteY, 12, true
+          );
+
+          escribir(
+            "Promedios de glucosa y diferencia en mg/dL.",
+            16, siguienteY + 7,
+            8, false, colores.gris
+          );
+
+          autoTable(doc, {
+            startY: siguienteY + 12,
+
+            margin: {
+              left: 16,
+              right: 16,
+              top: 40,
+              bottom: 24,
+            },
+
+            theme: "grid",
+
+            head: [[
+              "Alimento",
+              "Pruebas",
+              "Antes",
+              "Después",
+              "Diferencia",
+            ]],
+
+            body: alimentos.map(item => [
+              item.alimento,
+              String(item.pruebas),
+              numero(item.promedioAntes),
+              numero(item.promedioDespues),
+              cambio(item.diferencia),
+            ]),
+
+            styles: {
+              font: "helvetica",
+              fontSize: 8,
+              cellPadding: 3,
+              textColor: colores.texto,
+              overflow: "linebreak",
+            },
+
+            headStyles: {
+              fillColor: colores.fucsia,
+              textColor: colores.blanco,
+              fontStyle: "bold",
+            },
+
+            alternateRowStyles: {
+              fillColor: colores.fondo,
+            },
+
+            columnStyles: {
+              0: { cellWidth: 55 },
+              1: {
+                cellWidth: 18,
+                halign: "center",
+              },
+              2: {
+                cellWidth: 33,
+                halign: "right",
+              },
+              3: {
+                cellWidth: 35,
+                halign: "right",
+              },
+              4: {
+                cellWidth: 37,
+                halign: "right",
+              },
+            },
+          });
+
+          const ultimaTabla = (
+            doc as typeof doc & {
+              lastAutoTable?: {
+                finalY: number;
+              };
+            }
+          ).lastAutoTable;
+
+          siguienteY =
+            (ultimaTabla?.finalY ?? 55) + 17;
         }
 
-        texto(
-          "Mediciones individuales disponibles",
-          16, inicio, 11.5, true
-        );
+        // FECHA Y HORA DE LA SEGUNDA MEDICION
 
-        texto(
-          "La API entrega un máximo de 8 mediciones individuales.",
-          16, inicio + 7, 8, false, C.gris
-        );
+        if (mediciones.length > 0) {
+          if (siguienteY > 232) {
+            doc.addPage();
+            siguienteY = 44;
+          }
 
-        autoTable(doc, {
-          startY: inicio + 13,
+          escribir(
+            "Reporte por fecha y hora",
+            16, siguienteY, 12, true
+          );
 
-          margin: {
-            left: 16,
-            right: 16,
-            top: 40,
-            bottom: 27,
-          },
+          escribir(
+            "Fecha y hora de la medición después de comer.",
+            16,
+            siguienteY + 7,
+            8,
+            false,
+            colores.gris
+          );
 
-          theme: "striped",
+          autoTable(doc, {
+            startY: siguienteY + 13,
 
-          head: [[
-            "Fecha y hora",
-            "Alimento",
-            "Antes",
-            "Después",
-            "Diferencia",
-          ]],
-
-          body: reporte.mediciones.map(m => [
-            fecha(new Date(m.fecha)),
-            m.alimento,
-            numero(m.glucosaAntes),
-            numero(m.glucosaDespues),
-            cambio(m.diferencia),
-          ]),
-
-          styles: {
-            font: "helvetica",
-            fontSize: 7.7,
-            cellPadding: 3,
-            overflow: "linebreak",
-          },
-
-          headStyles: {
-            fillColor: C.azul,
-            textColor: C.blanco,
-            fontStyle: "bold",
-          },
-
-          alternateRowStyles: {
-            fillColor: C.palido,
-          },
-
-          columnStyles: {
-            0: { cellWidth: 39 },
-            1: { cellWidth: 53 },
-            2: {
-              cellWidth: 28,
-              halign: "right",
+            margin: {
+              left: 16,
+              right: 16,
+              top: 40,
+              bottom: 27,
             },
-            3: {
-              cellWidth: 29,
-              halign: "right",
+
+            theme: "striped",
+
+            head: [[
+              "Fecha y hora",
+              "Alimento",
+              "Antes",
+              "Después",
+              "Diferencia",
+            ]],
+
+            body: mediciones.map(item => [
+              fechaHora(new Date(item.fecha)),
+              item.alimento,
+              numero(item.glucosaAntes),
+              numero(item.glucosaDespues),
+              cambio(item.diferencia),
+            ]),
+
+            styles: {
+              font: "helvetica",
+              fontSize: 7.7,
+              cellPadding: 3,
+              textColor: colores.texto,
+              overflow: "linebreak",
             },
-            4: {
-              cellWidth: 29,
-              halign: "right",
+
+            headStyles: {
+              fillColor: colores.azul,
+              textColor: colores.blanco,
+              fontStyle: "bold",
             },
-          },
-        });
+
+            alternateRowStyles: {
+              fillColor: colores.fondo,
+            },
+
+            columnStyles: {
+              0: { cellWidth: 42 },
+              1: { cellWidth: 50 },
+              2: {
+                cellWidth: 27,
+                halign: "right",
+              },
+              3: {
+                cellWidth: 29,
+                halign: "right",
+              },
+              4: {
+                cellWidth: 30,
+                halign: "right",
+              },
+            },
+          });
+
+          const ultimaTabla = (
+            doc as typeof doc & {
+              lastAutoTable?: {
+                finalY: number;
+              };
+            }
+          ).lastAutoTable;
+
+          const notaY =
+            (ultimaTabla?.finalY ?? 250) + 8;
+
+          if (notaY < 269) {
+            escribir(
+              "Se muestran hasta 8 mediciones disponibles, seleccionadas por mayor diferencia.",
+              16, notaY, 7, false, colores.gris
+            );
+          }
+        }
       }
 
-      // ENCABEZADOS Y PIES DE PAGINA
+      // ENCABEZADOS Y PIES
 
       const paginas = doc.getNumberOfPages();
 
@@ -723,35 +634,33 @@ export default function BotonDescargarReporteAlimentosPDF({
         doc.setPage(pagina);
 
         if (pagina > 1) {
-          encabezadoPagina();
+          encabezado();
         }
 
-        doc.setDrawColor(224, 231, 237);
-        doc.line(16, 276, 194, 276);
+        doc.setDrawColor(...colores.borde);
+        doc.line(16, 278, 194, 278);
 
-        texto(
-          "Informe descriptivo, no equivale a diagnóstico ni indicación médica.",
-          16, 283, 7.2, false, C.gris
+        escribir(
+          "Informe descriptivo. No constituye un diagnóstico médico.",
+          16, 284, 7.2, false, colores.gris
         );
 
         doc.setFont("helvetica", "normal");
         doc.setFontSize(7.2);
-        doc.setTextColor(...C.gris);
+        doc.setTextColor(...colores.gris);
 
         doc.text(
           `Página ${pagina} de ${paginas}`,
-          194, 288,
+          194, 289,
           { align: "right" }
         );
       }
 
-      // DESCARGA DEL ARCHIVO
-
-      const nombreArchivo = reporte.cliente.nombre
+      const archivo = reporte.cliente.nombre
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-zA-Z0-9_-]+/g, "_")
-        .slice(0, 42) || "Cliente";
+        .replace(/[^A-Za-z0-9_-]+/g, "_")
+        .slice(0, 40) || "Cliente";
 
       const dia = new Intl.DateTimeFormat(
         "sv-SE",
@@ -764,14 +673,14 @@ export default function BotonDescargarReporteAlimentosPDF({
       ).format(ahora);
 
       doc.save(
-        `DioxiLife_Informe_${nombreArchivo}_${dia}.pdf`
+        `DioxiLife_Reporte_${archivo}_${dia}.pdf`
       );
 
     } catch (fallo) {
       setError(
         fallo instanceof Error
           ? fallo.message
-          : "No se pudo generar el PDF."
+          : "No se pudo generar el reporte PDF."
       );
     } finally {
       setGenerando(false);
@@ -782,12 +691,12 @@ export default function BotonDescargarReporteAlimentosPDF({
     <div className="space-y-1">
       <button
         type="button"
-        onClick={() => void descargar()}
         disabled={generando}
-        className="inline-flex min-h-11 items-center justify-center rounded-xl bg-fuchsia-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-fuchsia-800 disabled:cursor-wait disabled:opacity-60"
+        onClick={() => void descargar()}
+        className="inline-flex min-h-11 items-center justify-center rounded-xl bg-fuchsia-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-fuchsia-800 disabled:opacity-60"
       >
         {generando
-          ? "Preparando informe PDF..."
+          ? "Preparando PDF..."
           : "Descargar reporte PDF"}
       </button>
 
