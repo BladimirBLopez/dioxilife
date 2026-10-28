@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import EliminarClientePrueba from "./EliminarClientePrueba";
 
 import {
   useEffect,
@@ -119,6 +120,8 @@ export default function ListadoEnlacesCliente({
     useState<FiltroEnlaces>("todos");
   const [pagina, setPagina] = useState(1);
   const [total, setTotal] = useState(0);
+  const [puedeEliminar, setPuedeEliminar] =
+    useState(false);
 
   const [confirmarId, setConfirmarId] =
     useState<string | null>(null);
@@ -192,12 +195,14 @@ export default function ListadoEnlacesCliente({
 
         setEnlaces(datos.enlaces);
         setTotal(datos.total);
+        setPuedeEliminar(datos.puedeEliminar);
         setEstado("lista");
       } catch (fallo) {
         if (!activo) return;
 
         setEnlaces([]);
         setTotal(0);
+        setPuedeEliminar(false);
         setEstado("error");
 
         setError(
@@ -562,6 +567,18 @@ export default function ListadoEnlacesCliente({
                       </button>
                     )}
                   </div>
+                )}
+                {puedeEliminar && (
+                  <EliminarClientePrueba
+                    clienteId={enlace.id}
+                    deshabilitado={revocandoId !== null}
+                    onEliminado={() => {
+                      setConfirmarId(null);
+                      setMensaje("Cliente y datos relacionados eliminados correctamente.");
+                      onRevocado?.(enlace.id);
+                      setRecarga(valor => valor + 1);
+                    }}
+                  />
                 )}
               </article>
             ))}

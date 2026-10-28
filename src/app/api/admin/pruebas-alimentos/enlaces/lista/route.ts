@@ -206,6 +206,9 @@ export async function GET(
           total,
           pagina,
           porPagina,
+          puedeEliminar:
+            administrador.rol === "SUPER_ADMIN" &&
+            process.env.PRUEBAS_ALIMENTOS_ELIMINACION_HABILITADA === "true",
         },
         {
           status: 200,

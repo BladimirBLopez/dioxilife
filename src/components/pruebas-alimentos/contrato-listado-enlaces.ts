@@ -69,6 +69,7 @@ const respuestaPaginadaSchema = z.strictObject({
   total: z.number().int().min(0),
   pagina: z.number().int().min(1).max(1000),
   porPagina: z.literal(20),
+  puedeEliminar: z.boolean(),
 });
 
 export function leerListadoPaginadoCliente(
