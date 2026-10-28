@@ -22,6 +22,7 @@ import {
 } from "./historial-formulario-cliente";
 
 import GraficaHistorialCliente from "./GraficaHistorialCliente";
+import ControlRecordatoriosPush from "./ControlRecordatoriosPush";
 import AvisosGlucosa from "./AvisosGlucosa";
 import type { AvisoHistorialUI } from "./contrato-avisos-historial";
 
@@ -716,6 +717,7 @@ export default function FormularioClientePruebaAlimento({
 
   return (
     <section className="space-y-6">
+      <ControlRecordatoriosPush token={token} />
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h1 className="text-2xl font-bold text-slate-900">
           Mi respuesta a los alimentos

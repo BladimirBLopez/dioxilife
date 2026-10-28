@@ -1062,6 +1062,7 @@ model ClientePruebaAlimento {
 
   @@index([seguimientoId])
   @@index([tokenExpiraAt])
+  suscripcionesPushPruebas SuscripcionPushPruebaAlimento[]
 }
 
 /**
@@ -1093,4 +1094,55 @@ model RegistroPruebaAlimento {
 
   @@index([clienteId, fecha])
   @@index([clienteId, alimento])
+  recordatorioPush RecordatorioPushPruebaAlimento?
+}
+
+
+// Notificaciones independientes de Pruebas de alimentos.
+model SuscripcionPushPruebaAlimento {
+  id String @id @default(cuid())
+
+  clienteId String
+  cliente ClientePruebaAlimento @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  endpoint String
+  p256dh String
+  auth String
+
+  activa Boolean @default(true)
+  autorizadaAt DateTime @default(now())
+  revocadaAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([clienteId, endpoint])
+  @@index([clienteId, activa])
+}
+
+enum EstadoRecordatorioPruebaAlimento {
+  PENDIENTE
+  EN_PROCESO
+  ENVIADO
+  CANCELADO
+}
+
+model RecordatorioPushPruebaAlimento {
+  id String @id @default(cuid())
+
+  registroId String @unique
+  registro RegistroPruebaAlimento @relation(fields: [registroId], references: [id], onDelete: Cascade)
+
+  programadoPara DateTime
+  estado EstadoRecordatorioPruebaAlimento @default(PENDIENTE)
+
+  reservadoAt DateTime?
+  enviadoAt DateTime?
+  intentos Int @default(0)
+  ultimoErrorAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([estado, programadoPara])
 }
