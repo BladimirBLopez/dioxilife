@@ -2,6 +2,7 @@
 
 import {
   useRef,
+  useEffect,
   useState,
   type FormEvent,
 } from "react";
@@ -116,6 +117,25 @@ export default function GestionEnlacesCliente() {
   const [enlace, setEnlace] =
     useState<EnlaceCreado | null>(null);
 
+  const [dialogoEnlaceAbierto, setDialogoEnlaceAbierto] =
+    useState(false);
+
+  const dialogoEnlace = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const nodo = dialogoEnlace.current;
+
+    if (!nodo) return;
+
+    if (dialogoEnlaceAbierto && enlace && !nodo.open) {
+      nodo.showModal();
+    }
+
+    if ((!dialogoEnlaceAbierto || !enlace) && nodo.open) {
+      nodo.close();
+    }
+  }, [dialogoEnlaceAbierto, enlace]);
+
   const [ocupado, setOcupado] =
     useState(false);
 
@@ -137,6 +157,7 @@ export default function GestionEnlacesCliente() {
 
     setError("");
     setMensaje("");
+    setDialogoEnlaceAbierto(false);
     setEnlace(null);
 
     if (origen === "existente" && !seguimientoId.trim()) {
@@ -205,6 +226,8 @@ export default function GestionEnlacesCliente() {
         tokenExpiraAt:
           resultado.tokenExpiraAt,
       });
+
+      setDialogoEnlaceAbierto(true);
 
       setIdRevocar(
         resultado.clientePruebaId
@@ -473,8 +496,42 @@ export default function GestionEnlacesCliente() {
       )}
 
       {enlace && (
-        <section className="rounded-2xl border border-fuchsia-200 bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-bold text-slate-900">
+        <>
+          <section className="rounded-2xl border border-fuchsia-200 bg-white p-4 shadow-sm">
+            <p className="text-sm text-slate-700">
+              Enlace generado para <strong>{enlace.nombre}</strong>.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setDialogoEnlaceAbierto(true)}
+              className="mt-3 inline-flex rounded-xl bg-fuchsia-700 px-4 py-3 text-sm font-semibold text-white"
+            >
+              Ver enlace generado
+            </button>
+          </section>
+
+          <dialog
+            ref={dialogoEnlace}
+            onClose={() => setDialogoEnlaceAbierto(false)}
+            aria-labelledby="pa-modal-enlace-titulo"
+            className="max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg overflow-y-auto overscroll-contain rounded-2xl border border-fuchsia-200 bg-white p-4 text-slate-900 shadow-2xl backdrop:bg-slate-950/60 sm:p-6"
+          >
+            <div className="mb-3 flex justify-end">
+              <button
+                type="button"
+                onClick={() => dialogoEnlace.current?.close()}
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700"
+              >
+                Cerrar ×
+              </button>
+            </div>
+
+            <section className="space-y-3">
+          <h2
+            id="pa-modal-enlace-titulo"
+            className="text-lg font-bold text-slate-900"
+          >
             Enlace generado
           </h2>
 
@@ -535,7 +592,18 @@ export default function GestionEnlacesCliente() {
             podría acceder a las mediciones
             mientras siga vigente.
           </p>
-        </section>
+            </section>
+
+            {mensaje && (
+              <p
+                role="status"
+                className="mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-700"
+              >
+                {mensaje}
+              </p>
+            )}
+          </dialog>
+        </>
       )}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
