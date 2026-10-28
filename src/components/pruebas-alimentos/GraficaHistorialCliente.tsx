@@ -10,229 +10,132 @@ import {
   calcularResumenHistorial,
 } from "./resumen-historial-cliente";
 
+import GraficaComparativaGlucosa, {
+  type FilaComparacionGlucosa,
+} from "./GraficaComparativaGlucosa";
+
 type Propiedades = {
   registros: readonly RegistroHistorialCliente[];
 };
 
-function mostrarNumero(valor: number): string {
-  return valor.toLocaleString("es-BO", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  });
-}
-
 export default function GraficaHistorialCliente({
   registros,
 }: Propiedades) {
-  const [vista, setVista] = useState<"promedios" | "individuales">("promedios");
+  const [vista, setVista] = useState<
+    "promedios" | "individuales"
+  >("promedios");
+
   const resumen = calcularResumenHistorial(registros);
+
   const alimentosOrdenados = [...resumen.alimentos]
-    .sort((a, b) =>
-      b.diferencia - a.diferencia ||
-      b.pruebas - a.pruebas
+    .sort(
+      (a, b) =>
+        b.diferencia - a.diferencia ||
+        b.pruebas - a.pruebas
     )
     .slice(0, 8);
 
-  const filas = vista === "promedios"
-    ? alimentosOrdenados.map(a => ({
-        ...a, clave: a.alimento, detalle: ""
-      }))
-    : registros.slice(0, 50)
-        .filter(r =>
-          r.glucosaDespues !== null &&
-          r.horaMedicionDespues !== null
-        )
-        .sort((a, b) =>
-          ((b.glucosaDespues ?? 0) - b.glucosaAntes) -
-          ((a.glucosaDespues ?? 0) - a.glucosaAntes)
-        )
-        .slice(0, 8)
-        .map(r => ({
-          alimento: r.alimento,
-          pruebas: 1,
-          promedioAntes: r.glucosaAntes,
-          promedioDespues: r.glucosaDespues!,
-          diferencia: Math.round(
-            (r.glucosaDespues! - r.glucosaAntes) * 100
+  const promedios: FilaComparacionGlucosa[] =
+    alimentosOrdenados.map((alimento) => ({
+      alimento: alimento.alimento,
+      detalle: "",
+      pruebas: alimento.pruebas,
+      antes: alimento.promedioAntes,
+      despues: alimento.promedioDespues,
+      diferencia: alimento.diferencia,
+    }));
+
+  const individuales: FilaComparacionGlucosa[] =
+    registros
+      .slice(0, 50)
+      .filter(
+        (registro) =>
+          registro.glucosaDespues !== null &&
+          registro.horaMedicionDespues !== null
+      )
+      .sort(
+        (a, b) =>
+          (Number(b.glucosaDespues) - b.glucosaAntes) -
+          (Number(a.glucosaDespues) - a.glucosaAntes)
+      )
+      .slice(0, 8)
+      .map((registro) => ({
+        alimento: registro.alimento,
+        detalle: registro.fecha,
+        pruebas: 1,
+        antes: registro.glucosaAntes,
+        despues: Number(registro.glucosaDespues),
+        diferencia:
+          Math.round(
+            (
+              Number(registro.glucosaDespues) -
+              registro.glucosaAntes
+            ) * 100
           ) / 100,
-          clave: r.id,
-          detalle: r.fecha,
-        }));
+      }));
 
-  if (resumen.totalCompletadas === 0) {
-    return (
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-bold text-slate-900">
-          Comparación de alimentos
-        </h2>
-
-        <p className="mt-3 text-sm leading-6 text-slate-600">
-          Las gráficas aparecerán cuando completes
-          al menos una prueba con las mediciones
-          antes y después de comer.
-        </p>
-      </section>
-    );
-  }
-
-  const maximo = Math.max(
-    1,
-    ...filas.flatMap(alimento => [
-      alimento.promedioAntes,
-      alimento.promedioDespues,
-    ])
-  );
-
-  function anchoBarra(valor: number): string {
-    const porcentaje = Math.min(
-      100,
-      Math.max(0, (valor / maximo) * 100)
-    );
-
-    return `${porcentaje}%`;
-  }
+  const filas =
+    vista === "promedios"
+      ? promedios
+      : individuales;
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h2 className="text-lg font-bold text-slate-900">
-        Comparación de alimentos
-      </h2>
+    <div className="min-w-0 space-y-3">
+      {resumen.totalCompletadas > 0 && (
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+          <p className="mb-3 text-xs text-slate-600">
+            {resumen.totalCompletadas} pruebas
+            completas analizadas del historial
+            reciente.
+          </p>
 
-      <p className="mt-2 text-sm leading-6 text-slate-600">
-        Comparación de glucosa antes y después
-        de comer, expresados en mg/dL.
-      </p>
-
-      <p className="mt-2 text-xs text-slate-500">
-        {resumen.totalCompletadas} pruebas completas
-        analizadas del historial reciente.
-        {vista === "promedios"
-          ? "Hasta ocho alimentos por mayor aumento promedio."
-          : "Hasta ocho mediciones por mayor aumento registrado."}
-      </p>
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button"
-          aria-pressed={vista === "promedios"}
-          onClick={() => setVista("promedios")}
-          className={vista === "promedios"
-            ? "rounded-xl border border-fuchsia-700 bg-fuchsia-700 px-4 py-2 text-sm font-semibold text-white"
-            : "rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700"}>
-          Promedios por alimento
-        </button>
-        <button type="button"
-          aria-pressed={vista === "individuales"}
-          onClick={() => setVista("individuales")}
-          className={vista === "individuales"
-            ? "rounded-xl border border-fuchsia-700 bg-fuchsia-700 px-4 py-2 text-sm font-semibold text-white"
-            : "rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700"}>
-          Mediciones individuales
-        </button>
-      </div>
-      <div className="mt-4 flex flex-wrap gap-4 text-xs text-slate-700">
-        <span className="flex items-center gap-2">
-          <span className="h-3 w-3 rounded bg-sky-500" />
-          Antes de comer
-        </span>
-
-        <span className="flex items-center gap-2">
-          <span className="h-3 w-3 rounded bg-fuchsia-600" />
-          Después de comer
-        </span>
-      </div>
-
-      <div className="mt-6 space-y-6">
-        {filas.map(alimento => (
           <div
-            key={alimento.clave}
-            className="rounded-xl border border-slate-100 p-4"
+            role="group"
+            aria-label="Tipo de comparación"
+            className="grid grid-cols-2 gap-2"
           >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="font-semibold text-slate-900">
-                {alimento.alimento}
-              </h3>
-              {alimento.detalle && (
-                <p className="text-xs text-slate-500">
-                  Fecha: {alimento.detalle}
-                </p>
-              )}
+            <button
+              type="button"
+              aria-pressed={vista === "promedios"}
+              onClick={() => setVista("promedios")}
+              className={
+                "min-h-11 rounded-xl px-3 py-2 text-sm font-semibold " +
+                (vista === "promedios"
+                  ? "bg-fuchsia-700 text-white"
+                  : "border border-slate-300 bg-white text-slate-700")
+              }
+            >
+              Por alimento
+            </button>
 
-              <span className="text-xs text-slate-500">
-                {alimento.pruebas}{" "}
-                {alimento.pruebas === 1
-                  ? "prueba"
-                  : "pruebas"}
-              </span>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              <div>
-                <div className="mb-1 flex justify-between gap-3 text-xs text-slate-700">
-                  <span>Antes</span>
-                  <span>
-                    {mostrarNumero(
-                      alimento.promedioAntes
-                    )}{" "}
-                    mg/dL
-                  </span>
-                </div>
-
-                <div className="h-3 overflow-hidden rounded-full bg-slate-100">
-                  <div
-                    aria-hidden="true"
-                    className="h-full rounded-full bg-sky-500"
-                    style={{
-                      width: anchoBarra(
-                        alimento.promedioAntes
-                      ),
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="mb-1 flex justify-between gap-3 text-xs text-slate-700">
-                  <span>Después</span>
-                  <span>
-                    {mostrarNumero(
-                      alimento.promedioDespues
-                    )}{" "}
-                    mg/dL
-                  </span>
-                </div>
-
-                <div className="h-3 overflow-hidden rounded-full bg-slate-100">
-                  <div
-                    aria-hidden="true"
-                    className="h-full rounded-full bg-fuchsia-600"
-                    style={{
-                      width: anchoBarra(
-                        alimento.promedioDespues
-                      ),
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <p className="mt-3 text-xs text-slate-600">
-              Diferencia {vista === "promedios" ? "promedio" : "registrada"}:{" "}
-              <strong>
-                {alimento.diferencia > 0 ? "+" : ""}
-                {mostrarNumero(alimento.diferencia)}
-                {" "}mg/dL
-              </strong>
-            </p>
+            <button
+              type="button"
+              aria-pressed={vista === "individuales"}
+              onClick={() => setVista("individuales")}
+              className={
+                "min-h-11 rounded-xl px-3 py-2 text-sm font-semibold " +
+                (vista === "individuales"
+                  ? "bg-fuchsia-700 text-white"
+                  : "border border-slate-300 bg-white text-slate-700")
+              }
+            >
+              Por medición
+            </button>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <p className="mt-5 text-xs leading-5 text-slate-500">
-        Estas comparaciones describen mediciones
-        registradas. No determinan por sí solos
-        si un alimento es saludable o perjudicial,
-        ni constituyen un diagnóstico médico.
-      </p>
-    </section>
+      <GraficaComparativaGlucosa
+        titulo="Comparación de alimentos"
+        descripcion={
+          vista === "promedios"
+            ? "Hasta ocho alimentos ordenados por mayor aumento promedio de glucosa."
+            : "Hasta ocho mediciones individuales ordenadas por mayor aumento registrado."
+        }
+        filas={filas}
+        nivelTitulo={2}
+        mensajeVacio="Las gráficas aparecerán cuando completes una prueba con las dos mediciones de glucosa."
+      />
+    </div>
   );
 }
