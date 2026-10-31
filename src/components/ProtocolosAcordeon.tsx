@@ -99,7 +99,7 @@ export default function ProtocolosAcordeon({
           {seleccionado.videoUrl && (
             <div className="mb-4">
               <h4 className="text-sm font-semibold text-[#1F1B24] mb-2">
-                Video
+                Imagen o video
               </h4>
 
               <div className="bg-gray-100 relative rounded-lg overflow-hidden aspect-video">

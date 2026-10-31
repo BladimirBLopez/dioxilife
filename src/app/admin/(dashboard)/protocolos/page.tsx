@@ -243,12 +243,11 @@ export default function ProtocolosPage() {
             </div>
 
             <div>
-              <label className="admin-label">Video del protocolo (opcional)</label>
+              <label className="admin-label">Imagen o video del modal (opcional)</label>
               <CloudinaryUpload
                 value={form.videoUrl}
                 onChange={(url) => setForm({ ...form, videoUrl: url })}
                 onUploadingChange={setSubiendoArchivo}
-                soloVideo
               />
             </div>
 
