@@ -96,6 +96,23 @@ export default function ProtocolosAcordeon({
 
       {seleccionado && (
         <Modal title={seleccionado.titulo} onClose={() => setSeleccionado(null)}>
+          {seleccionado.videoUrl && (
+            <div className="mb-4">
+              <h4 className="text-sm font-semibold text-[#1F1B24] mb-2">
+                Video
+              </h4>
+
+              <div className="bg-gray-100 relative rounded-lg overflow-hidden aspect-video">
+                <Media
+                  src={seleccionado.videoUrl}
+                  alt={`Video de ${seleccionado.titulo}`}
+                  fill
+                  className="object-contain"
+                  variant="full"
+                />
+              </div>
+            </div>
+          )}
           <p
             className={`text-sm text-brand-gray whitespace-pre-line ${
               !expandido && esLargo ? "line-clamp-4" : ""
@@ -219,23 +236,6 @@ export default function ProtocolosAcordeon({
             </div>
           )}
 
-          {seleccionado.videoUrl && (
-            <div className="mt-5 border-t pt-4">
-              <h4 className="text-sm font-semibold text-[#1F1B24] mb-2">
-                Video
-              </h4>
-
-              <div className="bg-gray-100 relative rounded-lg overflow-hidden aspect-video">
-                <Media
-                  src={seleccionado.videoUrl}
-                  alt={`Video de ${seleccionado.titulo}`}
-                  fill
-                  className="object-contain"
-                  variant="full"
-                />
-              </div>
-            </div>
-          )}
         </Modal>
       )}
     </>
