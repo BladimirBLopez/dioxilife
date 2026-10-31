@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Media from "./Media";
 import Modal from "./Modal";
-import { esVideo } from "@/lib/media";
 
 type Protocolo = {
   id: string;
@@ -97,23 +96,6 @@ export default function ProtocolosAcordeon({
 
       {seleccionado && (
         <Modal title={seleccionado.titulo} onClose={() => setSeleccionado(null)}>
-          {seleccionado.imagenUrl && (
-            <div
-              className={`bg-gray-100 relative rounded-lg overflow-hidden mb-4 ${
-                esVideo(seleccionado.imagenUrl)
-                  ? "aspect-[9/16] max-w-[240px] mx-auto"
-                  : "aspect-video"
-              }`}
-            >
-              <Media
-                src={seleccionado.imagenUrl}
-                alt={seleccionado.titulo}
-                fill
-                className="object-cover"
-                variant="full"
-              />
-            </div>
-          )}
           <p
             className={`text-sm text-brand-gray whitespace-pre-line ${
               !expandido && esLargo ? "line-clamp-4" : ""
