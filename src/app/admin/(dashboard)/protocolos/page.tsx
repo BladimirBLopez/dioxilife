@@ -96,37 +96,64 @@ export default function ProtocolosPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (loading || subiendoArchivo) return;
+
     if (!form.titulo || !form.contenido) {
       alert("Título y contenido son obligatorios");
       return;
     }
+
     setLoading(true);
 
-    const body = {
-      ...form,
-      productoId: null,
-      activo: true,
-    };
+    try {
+      const body = {
+        ...form,
+        productoId: null,
+        activo: true,
+      };
 
-    if (editandoId) {
-      await fetch(`/api/admin/protocolos/${editandoId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-    } else {
-      await fetch("/api/admin/protocolos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+      const respuesta = await fetch(
+        editandoId
+          ? `/api/admin/protocolos/${editandoId}`
+          : "/api/admin/protocolos",
+        {
+          method: editandoId ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }
+      );
+
+      if (!respuesta.ok) {
+        const datos = await respuesta.json().catch(() => null);
+
+        throw new Error(
+          datos && typeof datos.error === "string"
+            ? datos.error
+            : "No se pudieron guardar los cambios."
+        );
+      }
+
+      setModalAbierto(false);
+      setForm(vacio);
+      setEditandoId(null);
+
+      try {
+        await cargar();
+      } catch {
+        alert(
+          "Los cambios se guardaron, pero no se pudo actualizar la lista. Recarga la página."
+        );
+      }
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Error de conexión al guardar."
+      );
+    } finally {
+      setLoading(false);
     }
-
-    setModalAbierto(false);
-    setForm(vacio);
-    setEditandoId(null);
-    setLoading(false);
-    cargar();
   }
 
   async function confirmarBorrar() {
@@ -240,6 +267,21 @@ export default function ProtocolosPage() {
                 onUploadingChange={setSubiendoArchivo}
                 soloImagen
               />
+                {form.imagenUrl && (
+                  <button
+                    type="button"
+                    disabled={loading || subiendoArchivo}
+                    onClick={() =>
+                      setForm(actual => ({
+                        ...actual,
+                        imagenUrl: ""
+                      }))
+                    }
+                    className="mt-2 rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                  >
+                    Quitar imagen del protocolo
+                  </button>
+                )}
             </div>
 
             <div>
@@ -249,6 +291,21 @@ export default function ProtocolosPage() {
                 onChange={(url) => setForm({ ...form, videoUrl: url })}
                 onUploadingChange={setSubiendoArchivo}
               />
+                {form.videoUrl && (
+                  <button
+                    type="button"
+                    disabled={loading || subiendoArchivo}
+                    onClick={() =>
+                      setForm(actual => ({
+                        ...actual,
+                        videoUrl: ""
+                      }))
+                    }
+                    className="mt-2 rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                  >
+                    Quitar imagen o video del modal
+                  </button>
+                )}
             </div>
 
             <div>
