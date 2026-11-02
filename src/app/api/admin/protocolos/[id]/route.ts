@@ -1,3 +1,4 @@
+import { validarContenidoPublicable } from "@/lib/protocolos-contenido";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { obtenerAdminActual } from "@/lib/admin-auth";
@@ -27,11 +28,52 @@ export async function PUT(
     activo,
   } = await req.json();
 
+  if (typeof activo !== "boolean") {
+    return NextResponse.json(
+      { error: "Estado de publicación inválido" },
+      { status: 400 }
+    );
+  }
+
   if (!titulo || !contenido) {
     return NextResponse.json(
       { error: "Título y contenido son requeridos" },
       { status: 400 }
     );
+  }
+
+  if (activo === true) {
+    const existente = await prisma.protocolo.findUnique({
+      where: { id },
+      select: {
+        activo: true,
+        contenido: true,
+      },
+    });
+
+    if (!existente) {
+      return NextResponse.json(
+        { error: "Protocolo no encontrado" },
+        { status: 404 }
+      );
+    }
+
+    const conservarContenidoAnterior =
+      existente.activo &&
+      existente.contenido === contenido;
+
+    if (!conservarContenidoAnterior) {
+      const problema = validarContenidoPublicable(
+        contenido
+      );
+
+      if (problema) {
+        return NextResponse.json(
+          { error: problema },
+          { status: 400 }
+        );
+      }
+    }
   }
 
   const idsRelacionados = Array.isArray(productoIds)

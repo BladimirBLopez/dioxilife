@@ -4,6 +4,13 @@ import { useEffect, useState } from "react";
 import Modal from "@/components/Modal";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import CloudinaryUpload from "@/components/CloudinaryUpload";
+import EditorContenidoProtocolo from "@/components/admin/protocolos/EditorContenidoProtocolo";
+import {
+  FORMATO_PROTOCOLO,
+  guardarContenidoProtocolo,
+  leerContenidoProtocolo,
+  validarContenidoPublicable,
+} from "@/lib/protocolos-contenido";
 import { esVideo } from "@/lib/media";
 
 type Producto = { id: string; nombre: string };
@@ -23,11 +30,33 @@ type Protocolo = {
 
 const vacio = {
   titulo: "",
-  contenido: "",
+  contenido: guardarContenidoProtocolo({
+    formato: FORMATO_PROTOCOLO,
+    resumen: "",
+    seguridad: "",
+    secciones: [],
+  }),
   imagenUrl: "",
   videoUrl: "",
   productoIds: [] as string[],
+  activo: false,
 };
+
+function vistaPreviaContenido(valor: string): string {
+  const lectura = leerContenidoProtocolo(valor);
+
+  if (lectura.tipo === "anterior") {
+    return lectura.texto;
+  }
+
+  return (
+    lectura.documento.resumen.trim() ||
+    lectura.documento.secciones.find(
+      (s) => s.contenido.trim()
+    )?.contenido ||
+    "Contenido organizado"
+  );
+}
 
 export default function ProtocolosPage() {
   const [protocolos, setProtocolos] = useState<Protocolo[]>([]);
@@ -87,6 +116,7 @@ export default function ProtocolosPage() {
       productoIds: p.productosRelacionados.map(
         ({ producto }) => producto.id
       ),
+        activo: p.activo,
     };
     setEditandoId(p.id);
     setForm(datos);
@@ -104,13 +134,42 @@ export default function ProtocolosPage() {
       return;
     }
 
+    const registroActual = editandoId
+      ? protocolos.find((p) => p.id === editandoId)
+      : undefined;
+
+    const contenidoSinCambios = Boolean(
+      registroActual?.activo &&
+      registroActual.contenido === form.contenido
+    );
+
+    if (form.activo && !contenidoSinCambios) {
+      const problema = validarContenidoPublicable(
+        form.contenido
+      );
+
+      if (problema) {
+        alert(problema);
+        return;
+      }
+    }
+
+    const estabaPublicado = Boolean(registroActual?.activo);
+
+    if (form.activo && !estabaPublicado) {
+      if (!window.confirm(
+        "¿Confirmas que la información fue revisada " +
+        "y deseas publicarla?"
+      )) return;
+    }
+
     setLoading(true);
 
     try {
       const body = {
         ...form,
         productoId: null,
-        activo: true,
+        activo: form.activo,
       };
 
       const respuesta = await fetch(
@@ -207,8 +266,17 @@ export default function ProtocolosPage() {
                   {p.productosRelacionados.length === 1 ? "" : "s"}
                 </p>
               )}
+              <span
+                className={
+                  p.activo
+                    ? "inline-flex mt-2 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700"
+                    : "inline-flex mt-2 rounded-full border border-gray-200 bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600"
+                }
+              >
+                {p.activo ? "Publicado" : "Borrador"}
+              </span>
               <p className="text-sm text-[#6B6870] line-clamp-2 mt-1">
-                {p.contenido}
+                {vistaPreviaContenido(p.contenido)}
               </p>
               <div className="flex gap-4 text-sm mt-2">
                 <button
@@ -246,17 +314,45 @@ export default function ProtocolosPage() {
               />
             </div>
 
+              <div>
+                <label className="admin-label">
+                  Estado de publicación
+                </label>
+                <select
+                  value={form.activo ? "publicado" : "borrador"}
+                  onChange={(e) =>
+                    setForm((actual) => ({
+                      ...actual,
+                      activo: e.target.value === "publicado",
+                    }))
+                  }
+                  disabled={loading || subiendoArchivo}
+                  className="admin-input"
+                >
+                  <option value="borrador">
+                    Borrador - No visible públicamente
+                  </option>
+                  <option value="publicado">
+                    Publicado - Visible públicamente
+                  </option>
+                </select>
+                <p className="mt-2 text-xs text-amber-700">
+                  Publicar solo información revisada y verificada.
+                </p>
+              </div>
+
             <div>
               <label className="admin-label">Contenido</label>
-              <textarea
-                value={form.contenido}
-                onChange={(e) =>
-                  setForm({ ...form, contenido: e.target.value })
-                }
-                className="admin-input"
-                rows={4}
-                required
-              />
+              <EditorContenidoProtocolo
+                  value={form.contenido}
+                  onChange={(contenido) =>
+                    setForm((actual) => ({
+                      ...actual,
+                      contenido,
+                    }))
+                  }
+                  disabled={loading || subiendoArchivo}
+                />
             </div>
 
             <div>

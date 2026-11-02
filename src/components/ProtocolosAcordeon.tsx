@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Media from "./Media";
 import Modal from "./Modal";
+import { leerContenidoProtocolo } from "@/lib/protocolos-contenido";
 
 type Protocolo = {
   id: string;
@@ -55,6 +56,9 @@ export default function ProtocolosAcordeon({
   }, [protocoloInicialId, protocolos]);
 
   const esLargo = (seleccionado?.contenido.length || 0) > 220;
+  const contenidoLeido = seleccionado
+    ? leerContenidoProtocolo(seleccionado.contenido)
+    : null;
 
   return (
     <>
@@ -113,6 +117,85 @@ export default function ProtocolosAcordeon({
               </div>
             </div>
           )}
+
+          {contenidoLeido?.tipo === "organizado" ? (
+            <div className="space-y-5">
+
+              <section className="rounded-2xl border border-pink-100 bg-gradient-to-br from-pink-50 via-white to-sky-50 p-4 sm:p-5">
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-pink">
+                  Información general
+                </p>
+                <h3 className="mb-2 text-lg font-bold text-[#25143C]">
+                  Descripción del protocolo
+                </h3>
+                <p className="whitespace-pre-line text-sm leading-7 text-[#514B5C]">
+                  {contenidoLeido.documento.resumen}
+                </p>
+              </section>
+
+              <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:p-5">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-800">
+                    !
+                  </span>
+                  <h3 className="text-sm font-bold text-amber-950">
+                    Seguridad y evidencia
+                  </h3>
+                </div>
+                <p className="text-sm leading-6 text-amber-950">
+                  La información presentada no sustituye una evaluación médica.
+                  La ingestión de dióxido de cloro puede causar daños graves
+                  y no es un tratamiento aprobado para enfermedades.
+                </p>
+                {contenidoLeido.documento.seguridad && (
+                  <p className="mt-3 whitespace-pre-line border-t border-amber-200 pt-3 text-sm leading-6 text-amber-950">
+                    {contenidoLeido.documento.seguridad}
+                  </p>
+                )}
+              </section>
+
+              {contenidoLeido.documento.secciones.length > 0 && (
+                <section className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-7 w-1 rounded-full bg-brand-pink" />
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-brand-pink">
+                        Detalles
+                      </p>
+                      <h3 className="text-base font-bold text-[#25143C]">
+                        Información del protocolo
+                      </h3>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {contenidoLeido.documento.secciones.map(
+                      (seccion, indice) => (
+                        <article
+                          key={indice}
+                          className="min-w-0 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+                        >
+                          <div className="mb-3 flex items-start gap-3">
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-pink-50 text-xs font-bold text-brand-pink">
+                              {String(indice + 1).padStart(2, "0")}
+                            </span>
+                            <h4 className="pt-1 text-sm font-bold leading-6 text-[#25143C]">
+                              {seccion.titulo}
+                            </h4>
+                          </div>
+
+                          <p className="whitespace-pre-line break-words text-sm leading-7 text-[#514B5C]">
+                            {seccion.contenido}
+                          </p>
+                        </article>
+                      )
+                    )}
+                  </div>
+                </section>
+              )}
+            </div>
+          ) : (
+            <>
           <p
             className={`text-sm text-brand-gray whitespace-pre-line ${
               !expandido && esLargo ? "line-clamp-4" : ""
@@ -128,6 +211,9 @@ export default function ProtocolosAcordeon({
             >
               {expandido ? "Ver menos" : "Ver más"}
             </button>
+          )}
+
+            </>
           )}
 
           {seleccionado.productosRelacionados.length > 0 && (
@@ -146,7 +232,7 @@ export default function ProtocolosAcordeon({
                   <Link
                     key={producto.id}
                     href={`/producto/${producto.slug}`}
-                    className="group flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-2.5 transition hover:bg-white hover:shadow-sm"
+                    className="group flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm transition hover:border-pink-200 hover:shadow-md"
                   >
                     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white">
                       {producto.imagenUrl ? (
@@ -194,7 +280,7 @@ export default function ProtocolosAcordeon({
                   <Link
                     key={aplicacion.id}
                     href={`/aplicaciones-cds?aplicacion=${aplicacion.id}`}
-                    className="group flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-2.5 transition hover:bg-white hover:shadow-sm"
+                    className="group flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm transition hover:border-pink-200 hover:shadow-md"
                   >
                     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white">
                       {aplicacion.imagenUrl ? (

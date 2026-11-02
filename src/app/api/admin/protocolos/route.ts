@@ -1,3 +1,4 @@
+import { validarContenidoPublicable } from "@/lib/protocolos-contenido";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { obtenerAdminActual } from "@/lib/admin-auth";
@@ -51,6 +52,7 @@ export async function POST(req: NextRequest) {
     videoUrl,
     productoId,
     productoIds,
+    activo,
   } = await req.json();
 
   if (!titulo || !contenido) {
@@ -58,6 +60,17 @@ export async function POST(req: NextRequest) {
       { error: "Título y contenido son requeridos" },
       { status: 400 }
     );
+  }
+
+  if (activo === true) {
+    const problema = validarContenidoPublicable(contenido);
+
+    if (problema) {
+      return NextResponse.json(
+        { error: problema },
+        { status: 400 }
+      );
+    }
   }
 
   const idsRelacionados = Array.isArray(productoIds)
@@ -72,6 +85,7 @@ export async function POST(req: NextRequest) {
     data: {
       titulo,
       contenido,
+      activo: activo === true,
       imagenUrl: imagenUrl || null,
       videoUrl: videoUrl || null,
 

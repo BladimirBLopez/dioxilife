@@ -1,3 +1,4 @@
+import { prepararContenidoPublico } from "@/lib/protocolos-contenido";
 import { prisma } from "@/lib/prisma";
 import SiteHeader from "@/components/SiteHeader";
 import BotonWhatsapp from "@/components/BotonWhatsapp";
@@ -77,7 +78,10 @@ export default async function ProtocolosPage({
           </div>
         ) : (
           <ProtocolosAcordeon
-            protocolos={protocolos}
+            protocolos={protocolos.map((p) => ({
+                ...p,
+                contenido: prepararContenidoPublico(p.contenido),
+              }))}
             protocoloInicialId={protocolo}
           />
         )}
