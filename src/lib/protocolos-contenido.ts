@@ -164,6 +164,16 @@ export function validarContenidoPublicable(
     return "Agrega al menos un apartado antes de publicar.";
   }
 
+  if (
+    doc.secciones.some(
+      (s) =>
+        s.titulo.trim().toLowerCase() ===
+        "pendiente de clasificar"
+    )
+  ) {
+    return "Debes clasificar todos los apartados antes de publicar.";
+  }
+
   if (doc.secciones.some(
     (s) => !s.titulo.trim() || !s.contenido.trim()
   )) {

@@ -19,20 +19,17 @@ type Props = {
 
 function organizarBloquesOriginales(
   texto: string
-): SeccionProtocolo[] {
+): SeccionProtocolo[] | null {
   const bloques = texto
     .replace(/\r\n/g, "\n")
     .split(/\n\s*\n+/)
     .filter((bloque) => bloque.trim().length > 0);
 
-  // Conservar todos los bloques incluso si hay muchos.
-  const grupos = bloques.slice(0, 39);
-
-  if (bloques.length > 39) {
-    grupos.push(bloques.slice(39).join("\n\n"));
+  if (bloques.length > 40) {
+    return null;
   }
 
-  return grupos.map((bloque, indice) => {
+  return bloques.map((bloque) => {
     const primeraLinea = bloque.split("\n")[0];
 
     const encabezado = primeraLinea.match(
@@ -42,12 +39,11 @@ function organizarBloquesOriginales(
     return {
       titulo:
         encabezado?.[1].trim() ||
-        `Información adicional ${indice + 1}`,
-      contenido: bloque.trim(),
+        "Pendiente de clasificar",
+      contenido: bloque,
     };
   });
 }
-
 
 const TIPOS_SECCION: string[] = [
   "Objetivo",
@@ -200,11 +196,34 @@ export default function EditorContenidoProtocolo({
             type="button"
             disabled={disabled}
             onClick={() => {
+              const secciones =
+                organizarBloquesOriginales(value);
+
+              if (secciones === null) {
+                alert(
+                  "Este contenido tiene más de 40 bloques. " +
+                  "No se ha realizado la conversión para " +
+                  "evitar mezclar información."
+                );
+                return;
+              }
+
+              if (
+                secciones.some(
+                  (s) => s.titulo === "Pendiente de clasificar"
+                )
+              ) {
+                alert(
+                  "Hay apartados pendientes de clasificar. " +
+                  "Revisa sus títulos y contenidos antes de guardar."
+                );
+              }
+
               const documento: DocumentoProtocolo = {
                 formato: FORMATO_PROTOCOLO,
                 resumen: resumenAnterior,
                 seguridad: avisoAnterior,
-                secciones: organizarBloquesOriginales(value),
+                secciones,
                 textoOriginal: value,
               };
 
@@ -375,6 +394,24 @@ export default function EditorContenidoProtocolo({
                       </option>
                     ))}
                   </select>
+                </div>
+
+                <div>
+                  <label className="admin-label">
+                    Nombre específico del apartado
+                  </label>
+                  <input
+                    type="text"
+                    value={seccion.titulo}
+                    onChange={(e) =>
+                      actualizarSeccion(indice, {
+                        titulo: e.target.value,
+                      })
+                    }
+                    disabled={disabled}
+                    className="admin-input"
+                    placeholder="Nombre del apartado"
+                  />
                 </div>
 
                 <div>
