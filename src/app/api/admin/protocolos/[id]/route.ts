@@ -95,6 +95,21 @@ export async function PUT(
     );
   }
 
+  if (
+    existente.activo &&
+    contenido !== existente.contenido &&
+    activo === true
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Los cambios de contenido publicado deben " +
+          "guardarse primero como borrador."
+      },
+      { status: 409 }
+    );
+  }
+
   const lecturaAnterior =
     leerContenidoProtocolo(existente.contenido);
 
@@ -105,6 +120,16 @@ export async function PUT(
     lecturaAnterior.tipo === "anterior" &&
     lecturaNueva.tipo === "organizado"
   ) {
+    if (activo === true) {
+      return NextResponse.json(
+        {
+          error:
+            "Guarda primero la organizacion como borrador."
+        },
+        { status: 409 }
+      );
+    }
+
     const sinEspacios = (texto: string) =>
       texto.replace(/\s/g, "");
 
@@ -115,7 +140,8 @@ export async function PUT(
 
     if (
       sinEspacios(textoReconstruido) !==
-      sinEspacios(existente.contenido)
+        sinEspacios(existente.contenido) &&
+      confirmarCambiosApartados !== true
     ) {
       return NextResponse.json(
         {

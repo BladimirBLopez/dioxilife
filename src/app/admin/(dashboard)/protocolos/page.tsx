@@ -75,7 +75,6 @@ export default function ProtocolosPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [form, setForm] = useState(vacio);
   const [formInicial, setFormInicial] = useState(vacio);
-  const [borradorEditor, setBorradorEditor] = useState(false);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [subiendoArchivo, setSubiendoArchivo] = useState(false);
@@ -101,8 +100,7 @@ export default function ProtocolosPage() {
   }, []);
 
   function hayCambiosSinGuardar() {
-    return borradorEditor ||
-      JSON.stringify(form) !== JSON.stringify(formInicial);
+    return JSON.stringify(form) !== JSON.stringify(formInicial);
   }
 
   function pedirCerrarModal() {
@@ -119,7 +117,6 @@ export default function ProtocolosPage() {
   }
 
   function abrirNuevo() {
-    setBorradorEditor(false);
     setEditandoId(null);
     setForm(vacio);
     setFormInicial(vacio);
@@ -127,7 +124,6 @@ export default function ProtocolosPage() {
   }
 
   function abrirEditar(p: Protocolo) {
-    setBorradorEditor(false);
     const datos = {
       titulo: p.titulo,
       contenido: p.contenido,
@@ -149,22 +145,33 @@ export default function ProtocolosPage() {
 
     if (loading || subiendoArchivo) return;
 
-    if (
-      borradorEditor &&
-      leerContenidoProtocolo(form.contenido).tipo === "anterior"
-    ) {
-      alert(
-        "Hay cambios pendientes en el editor. " +
-        "Pulsa Organizar en apartados para aplicar los " +
-        "nombres, la descripción y el aviso antes de guardar."
-      );
-      return;
-    }
-
     if (!form.titulo || !form.contenido) {
       alert("Título y contenido son obligatorios");
       return;
     }
+
+    const lecturaInicial =
+      leerContenidoProtocolo(formInicial.contenido);
+
+    const lecturaActual =
+      leerContenidoProtocolo(form.contenido);
+
+    const conversionAntigua =
+      Boolean(editandoId) &&
+      lecturaInicial.tipo === "anterior" &&
+      lecturaActual.tipo === "organizado";
+
+    const contenidoEditado =
+      Boolean(editandoId) &&
+      formInicial.contenido !== form.contenido;
+
+    const requiereBorrador =
+      Boolean(formInicial.activo) && contenidoEditado;
+
+    const activoEfectivo =
+      conversionAntigua || requiereBorrador
+        ? false
+        : form.activo;
 
     const registroActual = editandoId
       ? protocolos.find((p) => p.id === editandoId)
@@ -175,7 +182,7 @@ export default function ProtocolosPage() {
       registroActual.contenido === form.contenido
     );
 
-    if (form.activo && !contenidoSinCambios) {
+    if (activoEfectivo && !contenidoSinCambios) {
       const problema = validarContenidoPublicable(
         form.contenido
       );
@@ -188,7 +195,7 @@ export default function ProtocolosPage() {
 
     const estabaPublicado = Boolean(registroActual?.activo);
 
-    if (form.activo && !estabaPublicado) {
+    if (activoEfectivo && !estabaPublicado) {
       if (!window.confirm(
         "¿Confirmas que la información fue revisada " +
         "y deseas publicarla?"
@@ -200,16 +207,29 @@ export default function ProtocolosPage() {
     const nuevo =
       leerContenidoProtocolo(form.contenido);
 
+    const sinEspacios = (texto: string) =>
+      texto.replace(/\s/g, "");
+
     const cambiaronTextos =
-      Boolean(editandoId) &&
-      previo.tipo === "organizado" &&
-      nuevo.tipo === "organizado" &&
-      JSON.stringify(
-        previo.documento.secciones
-          .map((s) => s.contenido).sort()
-      ) !== JSON.stringify(
-        nuevo.documento.secciones
-          .map((s) => s.contenido).sort()
+      (
+        previo.tipo === "organizado" &&
+        nuevo.tipo === "organizado" &&
+        JSON.stringify(
+          previo.documento.secciones
+            .map((s) => s.contenido).sort()
+        ) !== JSON.stringify(
+          nuevo.documento.secciones
+            .map((s) => s.contenido).sort()
+        )
+      ) ||
+      (
+        previo.tipo === "anterior" &&
+        nuevo.tipo === "organizado" &&
+        sinEspacios(previo.texto) !==
+        sinEspacios(
+          nuevo.documento.secciones
+            .map((s) => s.contenido).join("")
+        )
       );
 
     if (
@@ -218,6 +238,19 @@ export default function ProtocolosPage() {
         "Has modificado textos de los apartados. " +
         "La copia original se conservará, pero la " +
         "presentación cambiará. ¿Confirmas el guardado?"
+      )
+    ) {
+      return;
+    }
+
+    if (
+      (conversionAntigua || requiereBorrador) &&
+      form.activo &&
+      !window.confirm(
+        "Los cambios de contenido se guardarán " +
+        "como BORRADOR para revisión. " +
+        "La copia original quedará conservada. " +
+        "¿Deseas continuar?"
       )
     ) {
       return;
@@ -235,7 +268,7 @@ export default function ProtocolosPage() {
         contenido: form.contenido,
         imagenUrl: form.imagenUrl,
         videoUrl: form.videoUrl,
-        activo: form.activo,
+        activo: activoEfectivo,
         ...(editandoId
           ? {
               contenidoInicial: formInicial.contenido,
@@ -555,7 +588,6 @@ export default function ProtocolosPage() {
 
               <EditorContenidoProtocolo
                   key={editandoId ?? "nuevo"}
-                  onCambiosBorrador={setBorradorEditor}
                   value={form.contenido}
                   onChange={(contenido) =>
                     setForm((actual) => ({

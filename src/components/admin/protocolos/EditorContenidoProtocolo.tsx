@@ -46,25 +46,6 @@ function organizarBloquesOriginales(
   });
 }
 
-function textoVistaPrevia(
-  seccion: SeccionProtocolo
-): string {
-  const encabezado = seccion.contenido.match(
-    /^([^:\n]{2,45}):[ \t]*/
-  );
-
-  if (
-    encabezado &&
-    encabezado[1].trim() === seccion.titulo
-  ) {
-    return seccion.contenido.slice(
-      encabezado[0].length
-    );
-  }
-
-  return seccion.contenido;
-}
-
 const TIPOS_SECCION: string[] = [
   "Objetivo",
   "Instrucciones",
@@ -138,251 +119,48 @@ export default function EditorContenidoProtocolo({
   value,
   onChange,
   disabled = false,
-  onCambiosBorrador,
 }: Props) {
   const [abiertos, setAbiertos] = useState<number[]>([]);
-  const [titulosPrevios, setTitulosPrevios] =
-    useState<Record<number, string>>({});
-    const [resumenAnterior, setResumenAnterior] = useState("");
-    const [avisoAnterior, setAvisoAnterior] = useState("");
   const lectura = leerContenidoProtocolo(value);
 
 
-    if (lectura.tipo === "anterior") {
-      const bloquesOriginales =
-        organizarBloquesOriginales(value);
+  const bloques =
+    lectura.tipo === "anterior"
+      ? organizarBloquesOriginales(value)
+      : null;
 
-      const vistaPrevia = bloquesOriginales?.map(
-        (seccion, indice) => ({
-          ...seccion,
-          titulo:
-            titulosPrevios[indice] ?? seccion.titulo,
-        })
-      ) ?? null;
+  if (
+    lectura.tipo === "anterior" &&
+    bloques === null
+  ) {
+    return (
+      <div className="space-y-3">
+        <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm">
+          Este contenido supera el límite de apartados.
+          No se ha modificado.
+        </p>
+        <textarea
+          value={value}
+          readOnly
+          rows={12}
+          className="admin-input"
+        />
+      </div>
+    );
+  }
 
-      const pendientes = vistaPrevia?.filter(
-        (s) =>
-          !s.titulo.trim() ||
-          s.titulo.trim().toLowerCase() ===
-            "pendiente de clasificar"
-      ).length ?? 0;
-
-      return (
-        <div className="space-y-5">
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold text-[#25143C]">
-                Vista previa de apartados
-              </h3>
-
-              {vistaPrevia !== null && (
-                <span className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-700">
-                  {vistaPrevia.length} apartados detectados
-                  {" · "}
-                  {pendientes} por revisar
-                </span>
-              )}
-            </div>
-
-            {vistaPrevia === null ? (
-              <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-                El contenido supera el límite de apartados.
-                No se ha dividido ni modificado.
-              </p>
-            ) : (
-              <>
-                {vistaPrevia.map((seccion, indice) => (
-                  <details
-                    key={indice}
-                    className="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
-                  >
-                    <summary className="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
-                      <IconoSeccionAdmin
-                        titulo={seccion.titulo}
-                      />
-
-                      <span className="min-w-0 flex-1 break-words text-sm font-semibold text-[#25143C]">
-                        {seccion.titulo}
-                      </span>
-
-                      <svg
-                        viewBox="0 0 24 24"
-                        className="h-5 w-5 shrink-0 text-gray-400 group-open:rotate-180"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        aria-hidden="true"
-                      >
-                        <path d="m6 9 6 6 6-6" />
-                      </svg>
-                    </summary>
-
-                    <div className="space-y-3 border-t border-gray-100 px-4 py-3">
-                      <div>
-                        <label className="admin-label">
-                          Nombre del apartado
-                        </label>
-                        <input
-                          type="text"
-                          value={seccion.titulo}
-                          onChange={(e) => {
-                            setTitulosPrevios(
-                              (actual) => ({
-                                ...actual,
-                                [indice]: e.target.value,
-                              })
-                            );
-                            onCambiosBorrador?.(true);
-                          }}
-                          disabled={disabled}
-                          className="admin-input"
-                          aria-label={
-                            "Nombre del apartado " +
-                            (indice + 1)
-                          }
-                        />
-                      </div>
-
-                      <p className="whitespace-pre-wrap break-words text-sm leading-6 text-[#514B5C]">
-                        {textoVistaPrevia(
-                          bloquesOriginales?.[indice] ??
-                          seccion
-                        )}
-                      </p>
-                    </div>
-                  </details>
-                ))}
-              </>
-            )}
-          </div>
-
-          <div>
-            <label className="admin-label">
-              Descripción breve
-            </label>
-            <textarea
-              value={resumenAnterior}
-              onChange={(e) => {
-                setResumenAnterior(e.target.value);
-                onCambiosBorrador?.(true);
-              }}
-              disabled={disabled}
-              rows={3}
-              className="admin-input"
-              placeholder="Escribe una descripción breve del protocolo"
-            />
-          </div>
-
-          <div>
-            <label className="admin-label">
-              Aviso debajo de la portada
-            </label>
-            <textarea
-              value={avisoAnterior}
-              onChange={(e) => {
-                setAvisoAnterior(e.target.value);
-                onCambiosBorrador?.(true);
-              }}
-              disabled={disabled}
-              rows={4}
-              className="admin-input"
-              placeholder="Información de seguridad verificada"
-            />
-          </div>
-
-          <div>
-            <label className="admin-label">
-              Contenido original
-            </label>
-            <textarea
-              value={value}
-              onChange={(e) => {
-                setTitulosPrevios({});
-                onCambiosBorrador?.(
-                  Boolean(
-                    resumenAnterior.trim() ||
-                    avisoAnterior.trim()
-                  )
-                );
-                onChange(e.target.value);
-              }}
-              disabled={disabled}
-              rows={8}
-              className="admin-input"
-            />
-            <p className="mt-2 text-xs text-gray-500">
-              El texto original se mantiene editable.
-              Revisa la exactitud y seguridad de la información
-              antes de organizarla o publicarla.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={() => {
-              const originales =
-                organizarBloquesOriginales(value);
-
-              const secciones = originales?.map(
-                (seccion, indice) => ({
-                  ...seccion,
-                  titulo:
-                    titulosPrevios[indice] ??
-                    seccion.titulo,
-                })
-              ) ?? null;
-
-              if (secciones === null) {
-                alert(
-                  "Este contenido supera el límite de " +
-                  MAX_SECCIONES_PROTOCOLO + " bloques. " +
-                  "No se ha realizado la conversión para " +
-                  "evitar mezclar información."
-                );
-                return;
-              }
-
-              if (
-                secciones.some(
-                  (s) => s.titulo === "Pendiente de clasificar"
-                )
-              ) {
-                alert(
-                  "Hay apartados pendientes de clasificar. " +
-                  "Revisa sus títulos y contenidos antes de guardar."
-                );
-              }
-
-              const documento: DocumentoProtocolo = {
-                formato: FORMATO_PROTOCOLO,
-                resumen: resumenAnterior,
-                seguridad: avisoAnterior,
-                secciones,
-                textoOriginal: value,
-              };
-
-              onChange(
-                guardarContenidoProtocolo(documento)
-              );
-              setTitulosPrevios({});
-              onCambiosBorrador?.(false);
-            }}
-            className="rounded-xl border border-brand-pink px-4 py-3 text-sm font-semibold text-brand-pink transition-colors hover:bg-pink-50 disabled:opacity-50"
-          >
-            Organizar en apartados
-          </button>
-
-          <p className="text-xs leading-relaxed text-gray-500">
-            La descripción y el aviso se incluirán al organizar
-            el contenido. Revisa los apartados antes de guardar.
-          </p>
-        </div>
-      );
-    }
+  const documento: DocumentoProtocolo =
+    lectura.tipo === "organizado"
+      ? lectura.documento
+      : {
+          formato: FORMATO_PROTOCOLO,
+          resumen: "",
+          seguridad: "",
+          secciones: bloques ?? [],
+          textoOriginal: value,
+        };
 
 
-  const documento = lectura.documento;
 
   function actualizar(
     cambios: Partial<DocumentoProtocolo>
@@ -502,34 +280,6 @@ export default function EditorContenidoProtocolo({
               </summary>
 
               <div className="space-y-3 border-t border-gray-100 px-4 pb-4 pt-4">
-                <div>
-                  <label className="admin-label">
-                    Tipo de sección
-                  </label>
-                  <select
-                    value={seccion.titulo}
-                    onChange={(e) =>
-                      actualizarSeccion(indice, {
-                        titulo: e.target.value,
-                      })
-                    }
-                    disabled={disabled}
-                    className="admin-input"
-                    aria-label={"Tipo de sección " + (indice + 1)}
-                  >
-                    {!TIPOS_SECCION.includes(seccion.titulo) && (
-                      <option value={seccion.titulo}>
-                        {seccion.titulo || "Seleccionar sección"}
-                      </option>
-                    )}
-                    {TIPOS_SECCION.map((tipo) => (
-                      <option key={tipo} value={tipo}>
-                        {tipo}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
                 <div>
                   <label className="admin-label">
                     Nombre específico del apartado
@@ -689,6 +439,17 @@ export default function EditorContenidoProtocolo({
       </div>
 
 
+
+      {documento.textoOriginal !== undefined && (
+        <details className="rounded-xl border border-gray-200 p-3">
+          <summary className="cursor-pointer text-sm font-semibold">
+            Ver texto original (solo lectura)
+          </summary>
+          <pre className="mt-3 whitespace-pre-wrap break-words text-xs text-gray-600">
+            {documento.textoOriginal}
+          </pre>
+        </details>
+      )}
 
       <p className="text-xs text-gray-500">
         Los cambios solo serán definitivos después
