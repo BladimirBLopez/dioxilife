@@ -198,10 +198,19 @@ export default function ProtocolosPage() {
     setLoading(true);
 
     try {
+      const productosCambiaron =
+        JSON.stringify(form.productoIds) !==
+        JSON.stringify(formInicial.productoIds);
+
       const body = {
-        ...form,
-        productoId: null,
+        titulo: form.titulo,
+        contenido: form.contenido,
+        imagenUrl: form.imagenUrl,
+        videoUrl: form.videoUrl,
         activo: form.activo,
+        ...(!editandoId || productosCambiaron
+          ? { productoIds: form.productoIds }
+          : {}),
       };
 
       const respuesta = await fetch(

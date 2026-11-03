@@ -23,7 +23,6 @@ export async function PUT(
     contenido,
     imagenUrl,
     videoUrl,
-    productoId,
     productoIds,
     activo,
   } = await req.json();
@@ -76,6 +75,26 @@ export async function PUT(
     }
   }
 
+  const actualizarRelaciones =
+    productoIds !== undefined;
+
+  if (
+    actualizarRelaciones &&
+    (
+      !Array.isArray(productoIds) ||
+      !productoIds.every(
+        (valor: unknown) =>
+          typeof valor === "string" &&
+          valor.trim().length > 0
+      )
+    )
+  ) {
+    return NextResponse.json(
+      { error: "Lista de productos inválida" },
+      { status: 400 }
+    );
+  }
+
   const idsRelacionados = Array.isArray(productoIds)
     ? [...new Set(
         productoIds.filter(
@@ -94,18 +113,21 @@ export async function PUT(
       imagenUrl: imagenUrl || null,
       videoUrl: videoUrl || null,
 
-      // Se mantiene por ahora para compatibilidad.
-      productoId: productoId || null,
-
       activo,
 
-      productosRelacionados: {
-        deleteMany: {},
-        create: idsRelacionados.map((productoId, index) => ({
-          productoId,
-          orden: index,
-        })),
-      },
+      ...(actualizarRelaciones
+        ? {
+            productosRelacionados: {
+              deleteMany: {},
+              create: idsRelacionados.map(
+                (productoId, index) => ({
+                  productoId,
+                  orden: index,
+                })
+              ),
+            },
+          }
+        : {}),
     },
     include: {
       producto: true,

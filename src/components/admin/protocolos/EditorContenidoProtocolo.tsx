@@ -456,6 +456,16 @@ export default function EditorContenidoProtocolo({
                     type="button"
                     disabled={disabled}
                     onClick={() => {
+                      if (seccion.contenido.trim()) {
+                        alert(
+                          "Esta sección contiene información. " +
+                          "Para evitar una eliminación accidental, " +
+                          "no se puede borrar directamente. " +
+                          "Puedes editar su título o moverla."
+                        );
+                        return;
+                      }
+
                       setAbiertos((actual) =>
                         actual
                           .filter((i) => i !== indice)
