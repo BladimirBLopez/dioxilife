@@ -21,6 +21,7 @@ export async function PUT(
   const {
     titulo,
     contenido,
+    contenidoInicial,
     imagenUrl,
     videoUrl,
     productoIds,
@@ -41,6 +42,17 @@ export async function PUT(
     );
   }
 
+  if (typeof contenidoInicial !== "string") {
+    return NextResponse.json(
+      {
+        error:
+          "Falta la versión inicial del contenido. " +
+          "Recarga el formulario."
+      },
+      { status: 400 }
+    );
+  }
+
   const existente = await prisma.protocolo.findUnique({
     where: { id },
     select: {
@@ -53,6 +65,17 @@ export async function PUT(
     return NextResponse.json(
       { error: "Protocolo no encontrado" },
       { status: 404 }
+    );
+  }
+
+  if (existente.contenido !== contenidoInicial) {
+    return NextResponse.json(
+      {
+        error:
+          "El contenido fue modificado después de abrir " +
+          "el formulario. Recarga antes de guardar."
+      },
+      { status: 409 }
     );
   }
 
@@ -153,7 +176,10 @@ export async function PUT(
     : [];
 
   const protocolo = await prisma.protocolo.update({
-    where: { id },
+    where: {
+      id,
+      contenido: contenidoInicial,
+    },
     data: {
       titulo,
       contenido,
@@ -185,7 +211,29 @@ export async function PUT(
         },
       },
     },
+  }).catch((error: unknown) => {
+    if (
+      error !== null &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "P2025"
+    ) {
+      return null;
+    }
+
+    throw error;
   });
+
+  if (!protocolo) {
+    return NextResponse.json(
+      {
+        error:
+          "El protocolo cambió durante el guardado. " +
+          "Recarga la página antes de editar."
+      },
+      { status: 409 }
+    );
+  }
 
   return NextResponse.json(protocolo);
 }

@@ -208,6 +208,9 @@ export default function ProtocolosPage() {
         imagenUrl: form.imagenUrl,
         videoUrl: form.videoUrl,
         activo: form.activo,
+        ...(editandoId
+          ? { contenidoInicial: formInicial.contenido }
+          : {}),
         ...(!editandoId || productosCambiaron
           ? { productoIds: form.productoIds }
           : {}),
