@@ -251,16 +251,9 @@ export default function ProtocolosAcordeon({
 
               <div className="space-y-2">
 
-              <p className="border-t border-gray-100 pt-3 text-sm leading-6 text-gray-600">
-                La ingestión de dióxido de cloro puede causar
-                daños graves y no es un tratamiento aprobado
-                para enfermedades.
-              </p>
-                {contenidoLeido.documento.seguridad && (
-                  <p className="whitespace-pre-line text-sm leading-6 text-gray-600">
-                    {contenidoLeido.documento.seguridad}
-                  </p>
-                )}
+              <p className="border-t border-gray-100 pt-3 text-sm leading-6 text-gray-600 whitespace-pre-line">
+        {contenidoLeido.documento.seguridad.trim() || "Aviso de salud: ingerir dióxido de cloro puede ser peligroso."}
+      </p>
               </div>
 
               {contenidoLeido.documento.secciones.length > 0 && (
@@ -304,11 +297,7 @@ export default function ProtocolosAcordeon({
 
 
 
-              <p className="border-t border-gray-100 pt-3 text-sm leading-6 text-gray-600">
-                La ingestión de dióxido de cloro puede causar
-                daños graves y no es un tratamiento aprobado
-                para enfermedades.
-              </p>
+              <p className="border-t border-gray-100 pt-3 text-sm leading-6 text-gray-600">Aviso de salud: ingerir dióxido de cloro puede ser peligroso.</p>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {agruparContenidoOriginal(seleccionado.contenido)
