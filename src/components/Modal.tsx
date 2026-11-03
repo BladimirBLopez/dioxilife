@@ -8,11 +8,13 @@ export default function Modal({
   onClose,
   children,
   maxWidthClassName = "max-w-md",
+    hideHeader = false,
 }: {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
   maxWidthClassName?: string;
+    hideHeader?: boolean;
 }) {
   const [montado, setMontado] = useState(false);
 
@@ -40,11 +42,11 @@ export default function Modal({
       onClick={onClose}
     >
       <div
-        className={`my-4 w-full ${maxWidthClassName} rounded-2xl bg-white shadow-2xl sm:my-8`}
+        className={`relative my-4 w-full ${maxWidthClassName} rounded-2xl bg-white shadow-2xl sm:my-8`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-gray-100 bg-white px-5 py-4">
-          <h2 className="text-base font-semibold text-[#1F1B24]">
+        <div className={hideHeader ? "absolute right-3 top-3 z-10 flex items-center justify-end" : "sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-gray-100 bg-white px-5 py-4"}>
+          <h2 className={hideHeader ? "sr-only" : "text-base font-semibold text-[#1F1B24]"}>
             {title}
           </h2>
 

@@ -217,8 +217,8 @@ export default function ProtocolosAcordeon({
 
       {seleccionado && (
 
-        <Modal title="" onClose={() => setSeleccionado(null)}>
-          <h2 className="mb-5 break-words text-xl font-bold leading-snug text-[#25143C]">
+        <Modal title={seleccionado.titulo} hideHeader onClose={() => setSeleccionado(null)}>
+          <h2 className="mb-5 break-words pr-12 text-xl font-bold leading-snug text-[#25143C]">
             {seleccionado.titulo}
           </h2>
           {seleccionado.videoUrl && (
