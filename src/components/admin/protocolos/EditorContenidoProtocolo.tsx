@@ -123,84 +123,106 @@ export default function EditorContenidoProtocolo({
   disabled = false,
 }: Props) {
   const [abiertos, setAbiertos] = useState<number[]>([]);
+    const [resumenAnterior, setResumenAnterior] = useState("");
+    const [avisoAnterior, setAvisoAnterior] = useState("");
   const lectura = leerContenidoProtocolo(value);
 
-  if (lectura.tipo === "anterior") {
-    return (
-      <div className="space-y-3">
-        <div>
-          <label className="admin-label">
-            Aviso debajo de la portada
-          </label>
 
-          <textarea
-            value=""
-            onChange={(e) => {
-              const texto = lectura.texto.trim();
-              const secciones = organizarBloquesOriginales(texto);
+    if (lectura.tipo === "anterior") {
+      return (
+        <div className="space-y-5">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+            <p className="text-sm font-semibold text-amber-900">
+              Contenido pendiente de organización
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-amber-800">
+              Este protocolo conserva su formato anterior.
+              Puedes revisar el texto y preparar la información.
+              Solo se organizará cuando pulses el botón correspondiente.
+            </p>
+          </div>
 
+          <div>
+            <label className="admin-label">
+              Descripción breve
+            </label>
+            <textarea
+              value={resumenAnterior}
+              onChange={(e) =>
+                setResumenAnterior(e.target.value)
+              }
+              disabled={disabled}
+              rows={3}
+              className="admin-input"
+              placeholder="Escribe una descripción breve del protocolo"
+            />
+          </div>
+
+          <div>
+            <label className="admin-label">
+              Aviso debajo de la portada
+            </label>
+            <textarea
+              value={avisoAnterior}
+              onChange={(e) =>
+                setAvisoAnterior(e.target.value)
+              }
+              disabled={disabled}
+              rows={4}
+              className="admin-input"
+              placeholder="Información de seguridad verificada"
+            />
+          </div>
+
+          <div>
+            <label className="admin-label">
+              Contenido original
+            </label>
+            <textarea
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              disabled={disabled}
+              rows={8}
+              className="admin-input"
+            />
+            <p className="mt-2 text-xs text-gray-500">
+              El texto original se mantiene editable.
+              Revisa la exactitud y seguridad de la información
+              antes de organizarla o publicarla.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => {
               const documento: DocumentoProtocolo = {
                 formato: FORMATO_PROTOCOLO,
-                resumen:
-                  "Información del protocolo pendiente de revisión editorial.",
-                seguridad: e.target.value,
-                secciones,
-                textoOriginal: lectura.texto,
+                resumen: resumenAnterior,
+                seguridad: avisoAnterior,
+                secciones: organizarBloquesOriginales(value),
+                textoOriginal: value,
               };
 
-              onChange(guardarContenidoProtocolo(documento));
+              onChange(
+                guardarContenidoProtocolo(documento)
+              );
             }}
-            disabled={disabled}
-            rows={3}
-            placeholder="Escribe aquí el aviso que aparecerá debajo de la portada"
-            className="admin-input"
-          />
-          <p className="mt-1 text-xs text-gray-500">
-            Al editar este campo se organiza el contenido existente
-            sin eliminar el texto original.
+            className="rounded-xl border border-brand-pink px-4 py-3 text-sm font-semibold text-brand-pink transition-colors hover:bg-pink-50 disabled:opacity-50"
+          >
+            Organizar en apartados
+          </button>
+
+          <p className="text-xs leading-relaxed text-gray-500">
+            La descripción y el aviso se aplicarán al organizar
+            el contenido. Después podrás revisar los apartados.
+            Nada se guardará en la base de datos hasta que
+            confirmes el formulario.
           </p>
         </div>
+      );
+    }
 
-        <label className="admin-label">
-          Contenido original
-        </label>
-
-        <textarea
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={disabled}
-          rows={7}
-          className="admin-input"
-        />
-
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => {
-            const documento: DocumentoProtocolo = {
-              formato: FORMATO_PROTOCOLO,
-              resumen: "",
-              seguridad: "",
-              secciones: organizarBloquesOriginales(value),
-              textoOriginal: value,
-            };
-
-            onChange(
-              guardarContenidoProtocolo(documento)
-            );
-          }}
-          className="rounded-lg border border-brand-pink px-3 py-2 text-sm font-semibold text-brand-pink disabled:opacity-50"
-        >
-          Organizar en apartados
-        </button>
-
-        <p className="text-xs text-gray-500">
-          El contenido existente se conservará.
-          Puedes cancelar sin guardar.
-        </p>
-      </div>
-    );
-  }
 
   const documento = lectura.documento;
 
