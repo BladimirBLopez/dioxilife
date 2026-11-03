@@ -1,4 +1,4 @@
-import { validarContenidoPublicable } from "@/lib/protocolos-contenido";
+import { leerContenidoProtocolo, validarContenidoPublicable } from "@/lib/protocolos-contenido";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { obtenerAdminActual } from "@/lib/admin-auth";
@@ -41,30 +41,77 @@ export async function PUT(
     );
   }
 
-  if (activo === true) {
-    const existente = await prisma.protocolo.findUnique({
-      where: { id },
-      select: {
-        activo: true,
-        contenido: true,
-      },
-    });
+  const existente = await prisma.protocolo.findUnique({
+    where: { id },
+    select: {
+      activo: true,
+      contenido: true,
+    },
+  });
 
-    if (!existente) {
+  if (!existente) {
+    return NextResponse.json(
+      { error: "Protocolo no encontrado" },
+      { status: 404 }
+    );
+  }
+
+  const lecturaAnterior =
+    leerContenidoProtocolo(existente.contenido);
+
+  const lecturaNueva =
+    leerContenidoProtocolo(contenido);
+
+  if (lecturaAnterior.tipo === "anterior") {
+    if (lecturaNueva.tipo === "organizado") {
+      if (
+        lecturaNueva.documento.textoOriginal !==
+        existente.contenido
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "El texto original no coincide con el registro " +
+              "almacenado. No se guardaron cambios.",
+          },
+          { status: 409 }
+        );
+      }
+    } else if (contenido !== existente.contenido) {
       return NextResponse.json(
-        { error: "Protocolo no encontrado" },
-        { status: 404 }
+        {
+          error:
+            "Para conservar el texto original, organiza el " +
+            "protocolo antes de modificar su contenido.",
+        },
+        { status: 409 }
       );
     }
+  } else {
+    if (
+      lecturaNueva.tipo !== "organizado" ||
+      lecturaNueva.documento.textoOriginal !==
+        lecturaAnterior.documento.textoOriginal
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "No se puede eliminar ni modificar la copia " +
+            "del texto original del protocolo.",
+        },
+        { status: 409 }
+      );
+    }
+  }
 
+  if (activo === true) {
     const conservarContenidoAnterior =
       existente.activo &&
       existente.contenido === contenido;
 
     if (!conservarContenidoAnterior) {
-      const problema = validarContenidoPublicable(
-        contenido
-      );
+      const problema =
+        validarContenidoPublicable(contenido);
 
       if (problema) {
         return NextResponse.json(
