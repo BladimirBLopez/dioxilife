@@ -304,7 +304,7 @@ export default function ProtocolosPage() {
           <p className="text-sm text-[#8A8790]">No hay protocolos aún.</p>
         )}
         {protocolos.map((p) => (
-          <div key={p.id} className="admin-card p-4 flex gap-3">
+          <div key={p.id} className="admin-card flex min-w-0 items-start gap-3 overflow-hidden rounded-2xl p-3 sm:p-4">
             {p.fotoPerfilUrl ? (
               esVideo(p.fotoPerfilUrl || "") ? (
                 <video
@@ -313,20 +313,20 @@ export default function ProtocolosPage() {
                   autoPlay
                   loop
                   playsInline
-                  className="w-16 h-16 object-cover rounded-lg shrink-0"
+                  className="h-14 w-14 shrink-0 rounded-xl object-cover sm:h-16 sm:w-16"
                 />
               ) : (
                 <img
                   src={p.fotoPerfilUrl || ""}
                   alt={p.titulo}
-                  className="w-16 h-16 object-cover rounded-lg shrink-0"
+                  className="h-14 w-14 shrink-0 rounded-xl object-cover sm:h-16 sm:w-16"
                 />
               )
             ) : (
-              <div className="w-16 h-16 rounded-lg bg-[#F7F7F9] shrink-0" />
+              <div className="h-14 w-14 shrink-0 rounded-xl border border-gray-100 bg-[#F7F7F9] sm:h-16 sm:w-16" />
             )}
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm text-[#1F1B24]">{p.titulo}</p>
+              <p className="break-words text-sm font-semibold leading-snug text-[#1F1B24]">{p.titulo}</p>
               {p.productosRelacionados.length > 0 && (
                 <p className="mt-0.5 text-xs font-medium text-brand-pink">
                   {p.productosRelacionados.length} producto
@@ -343,19 +343,19 @@ export default function ProtocolosPage() {
               >
                 {p.activo ? "Publicado" : "Borrador"}
               </span>
-              <p className="text-sm text-[#6B6870] line-clamp-2 mt-1">
+              <p className="mt-2 line-clamp-2 break-words text-xs leading-relaxed text-[#6B6870] sm:text-sm">
                 {vistaPreviaContenido(p.contenido)}
               </p>
-              <div className="flex gap-4 text-sm mt-2">
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
                 <button
                   onClick={() => abrirEditar(p)}
-                  className="text-brand-blue font-medium hover:underline"
+                  className="inline-flex min-h-9 items-center rounded-lg bg-blue-50 px-3 py-1.5 font-semibold text-brand-blue transition-colors hover:bg-blue-100"
                 >
                   Editar
                 </button>
                 <button
                   onClick={() => setBorrarId(p.id)}
-                  className="text-red-600 font-medium hover:underline"
+                  className="inline-flex min-h-9 items-center rounded-lg px-3 py-1.5 font-semibold text-red-600 transition-colors hover:bg-red-50"
                 >
                   Borrar
                 </button>
@@ -372,7 +372,7 @@ export default function ProtocolosPage() {
                         abrirFotoPerfil(p);
                       }
                     }}
-                    className="text-sm font-semibold text-brand-pink hover:underline disabled:opacity-50"
+                    className="inline-flex min-h-9 max-w-full items-center rounded-lg border border-pink-200 px-3 py-2 text-left text-xs font-semibold text-brand-pink transition-colors hover:bg-pink-50 disabled:opacity-50"
                   >
                     {fotoEditandoId === p.id
                       ? "Cerrar cambio de foto"
