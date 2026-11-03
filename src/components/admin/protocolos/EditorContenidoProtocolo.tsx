@@ -51,7 +51,6 @@ function organizarBloquesOriginales(
 const TIPOS_SECCION: string[] = [
   "Objetivo",
   "Instrucciones",
-  "Descripción",
   "Información general",
   "Características",
   "Consideraciones",
@@ -251,7 +250,7 @@ export default function EditorContenidoProtocolo({
     <div className="space-y-5">
       <div>
         <label className="admin-label">
-          Resumen principal
+          Descripción breve
         </label>
         <textarea
           value={documento.resumen}
@@ -353,7 +352,7 @@ export default function EditorContenidoProtocolo({
 
                 <div>
                   <label className="admin-label">
-                    Descripción
+                    Contenido de la sección
                   </label>
                   <textarea
                     value={seccion.contenido}
