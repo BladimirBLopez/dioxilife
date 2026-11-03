@@ -27,6 +27,9 @@ type Protocolo = {
   productosRelacionados: {
     producto: Producto;
   }[];
+  relacionesOrigen: {
+    relacionadoId: string;
+  }[];
   activo: boolean;
 };
 
@@ -41,6 +44,7 @@ const vacio = {
   imagenUrl: "",
   videoUrl: "",
   productoIds: [] as string[],
+  protocoloIds: [] as string[],
   activo: false,
 };
 
@@ -133,7 +137,10 @@ export default function ProtocolosPage() {
       productoIds: p.productosRelacionados.map(
         ({ producto }) => producto.id
       ),
-        activo: p.activo,
+      protocoloIds: (p.relacionesOrigen ?? []).map(
+        ({ relacionadoId }) => relacionadoId
+      ),
+      activo: p.activo,
     };
     setEditandoId(p.id);
     setForm(datos);
@@ -263,6 +270,10 @@ export default function ProtocolosPage() {
         JSON.stringify(form.productoIds) !==
         JSON.stringify(formInicial.productoIds);
 
+      const protocolosCambiaron =
+        JSON.stringify(form.protocoloIds) !==
+        JSON.stringify(formInicial.protocoloIds);
+
       const body = {
         titulo: form.titulo,
         contenido: form.contenido,
@@ -278,6 +289,9 @@ export default function ProtocolosPage() {
           : {}),
         ...(!editandoId || productosCambiaron
           ? { productoIds: form.productoIds }
+          : {}),
+        ...(!editandoId || protocolosCambiaron
+          ? { protocoloIds: form.protocoloIds }
           : {}),
       };
 
@@ -653,6 +667,68 @@ export default function ProtocolosPage() {
                 {form.productoIds.length} producto
                 {form.productoIds.length === 1 ? "" : "s"} seleccionado
                 {form.productoIds.length === 1 ? "" : "s"}
+              </p>
+            </div>
+
+            <div>
+              <label className="admin-label">
+                Protocolos relacionados (opcional)
+              </label>
+
+              <p className="mb-2 text-xs text-[#8A8790]">
+                Vincula otros protocolos existentes para consulta
+                administrativa.
+              </p>
+
+              <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border border-gray-200 bg-white p-3">
+                {protocolos.filter((p) => p.id !== editandoId).length === 0 ? (
+                  <p className="text-sm text-[#8A8790]">
+                    No hay otros protocolos disponibles.
+                  </p>
+                ) : (
+                  protocolos
+                    .filter((p) => p.id !== editandoId)
+                    .map((p) => {
+                      const seleccionado = form.protocoloIds.includes(p.id);
+
+                      return (
+                        <label
+                          key={p.id}
+                          className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-sm transition ${
+                            seleccionado
+                              ? "border-brand-pink bg-brand-pink/5"
+                              : "border-gray-100 hover:bg-gray-50"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={seleccionado}
+                            disabled={loading || subiendoArchivo}
+                            onChange={() =>
+                              setForm((actual) => ({
+                                ...actual,
+                                protocoloIds: seleccionado
+                                  ? actual.protocoloIds.filter(
+                                      (id) => id !== p.id
+                                    )
+                                  : [...actual.protocoloIds, p.id],
+                              }))
+                            }
+                            className="h-4 w-4 accent-pink-600"
+                          />
+                          <span className="min-w-0 flex-1 text-[#1F1B24]">
+                            {p.titulo}
+                          </span>
+                        </label>
+                      );
+                    })
+                )}
+              </div>
+
+              <p className="mt-2 text-xs text-[#8A8790]">
+                {form.protocoloIds.length} protocolo
+                {form.protocoloIds.length === 1 ? "" : "s"} seleccionado
+                {form.protocoloIds.length === 1 ? "" : "s"}
               </p>
             </div>
 

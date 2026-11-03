@@ -82,6 +82,8 @@ model Protocolo {
   producto              Producto?             @relation(fields: [productoId], references: [id])
   productosRelacionados ProductoProtocolo[]
   aplicaciones          AplicacionProtocolo[]
+  relacionesOrigen  RelacionProtocolo[] @relation("RelacionOrigen")
+  relacionesDestino RelacionProtocolo[] @relation("RelacionDestino")
   activo                Boolean               @default(true)
   createdAt             DateTime              @default(now())
   updatedAt             DateTime              @updatedAt
@@ -1146,4 +1148,19 @@ model RecordatorioPushPruebaAlimento {
   updatedAt DateTime @updatedAt
 
   @@index([estado, programadoPara])
+}
+
+
+model RelacionProtocolo {
+  protocoloId   String
+  relacionadoId String
+  orden         Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  protocolo Protocolo @relation("RelacionOrigen", fields: [protocoloId], references: [id], onDelete: Cascade)
+
+  relacionado Protocolo @relation("RelacionDestino", fields: [relacionadoId], references: [id], onDelete: Cascade)
+
+  @@id([protocoloId, relacionadoId])
+  @@index([relacionadoId])
 }

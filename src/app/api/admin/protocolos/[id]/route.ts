@@ -28,6 +28,7 @@ export async function PUT(
     imagenUrl,
     videoUrl,
     productoIds,
+    protocoloIds,
     activo,
   } = await req.json();
 
@@ -56,6 +57,10 @@ export async function PUT(
     typeof estadoInicial.activo !== "boolean" ||
     !Array.isArray(estadoInicial.productoIds) ||
     !estadoInicial.productoIds.every(
+      (valor: unknown) => typeof valor === "string"
+    ) ||
+    !Array.isArray(estadoInicial.protocoloIds) ||
+    !estadoInicial.protocoloIds.every(
       (valor: unknown) => typeof valor === "string"
     ) ||
     estadoInicial.contenido !== contenidoInicial
@@ -287,6 +292,37 @@ export async function PUT(
       )]
     : [];
 
+  const actualizarProtocolos =
+    protocoloIds !== undefined;
+
+  if (
+    actualizarProtocolos &&
+    (
+      !Array.isArray(protocoloIds) ||
+      !protocoloIds.every(
+        (valor: unknown) =>
+          typeof valor === "string" &&
+          valor.trim().length > 0
+      )
+    )
+  ) {
+    return NextResponse.json(
+      { error: "Lista de protocolos inválida" },
+      { status: 400 }
+    );
+  }
+
+  const idsProtocolos: string[] = Array.isArray(protocoloIds)
+    ? [...new Set(protocoloIds as string[])]
+    : [];
+
+  if (idsProtocolos.includes(id)) {
+    return NextResponse.json(
+      { error: "Un protocolo no puede relacionarse consigo mismo" },
+      { status: 400 }
+    );
+  }
+
   const protocolo = await prisma.$transaction(
     async (tx) => {
       const actual = await tx.protocolo.findUnique({
@@ -300,6 +336,10 @@ export async function PUT(
           productosRelacionados: {
             orderBy: { orden: "asc" },
             select: { productoId: true },
+          },
+          relacionesOrigen: {
+            orderBy: { orden: "asc" },
+            select: { relacionadoId: true },
           },
         },
       });
@@ -317,9 +357,22 @@ export async function PUT(
           actual.productosRelacionados.map(
             (r) => r.productoId
           )
-        ) !== JSON.stringify(estadoInicial.productoIds)
+        ) !== JSON.stringify(estadoInicial.productoIds) ||
+        JSON.stringify(
+          actual.relacionesOrigen.map((r) => r.relacionadoId)
+        ) !== JSON.stringify(estadoInicial.protocoloIds)
       ) {
         return null;
+      }
+
+      if (actualizarProtocolos && idsProtocolos.length > 0) {
+        const encontrados = await tx.protocolo.count({
+          where: { id: { in: idsProtocolos } },
+        });
+
+        if (encontrados !== idsProtocolos.length) {
+          return null;
+        }
       }
 
       return tx.protocolo.update({
@@ -343,6 +396,19 @@ export async function PUT(
                 (productoId, index) => ({
                   productoId,
                   orden: index,
+                })
+              ),
+            },
+          }
+        : {}),
+      ...(actualizarProtocolos
+        ? {
+            relacionesOrigen: {
+              deleteMany: {},
+              create: idsProtocolos.map(
+                (relacionadoId, orden) => ({
+                  relacionadoId,
+                  orden,
                 })
               ),
             },
