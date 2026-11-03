@@ -156,27 +156,20 @@ export default function EditorContenidoProtocolo({
 
       return (
         <div className="space-y-5">
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-            <p className="text-sm font-semibold text-amber-900">
-              Contenido pendiente de organización
-            </p>
-            <p className="mt-1 text-xs leading-relaxed text-amber-800">
-              Este protocolo conserva su formato anterior.
-              Puedes revisar el texto y preparar la información.
-              Solo se organizará cuando pulses el botón correspondiente.
-            </p>
-          </div>
-
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-[#25143C]">
-              Vista previa de apartados
-            </h3>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold text-[#25143C]">
+                Vista previa de apartados
+              </h3>
 
-            <p className="text-xs leading-relaxed text-gray-600">
-              Esta vista identifica bloques del texto original.
-              No cambia ni guarda información en Neon.
-              Revisa los títulos antes de organizar.
-            </p>
+              {vistaPrevia !== null && (
+                <span className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-700">
+                  {vistaPrevia.length} apartados detectados
+                  {" · "}
+                  {pendientes} por revisar
+                </span>
+              )}
+            </div>
 
             {vistaPrevia === null ? (
               <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
@@ -185,14 +178,6 @@ export default function EditorContenidoProtocolo({
               </p>
             ) : (
               <>
-                <p className="text-xs text-gray-500">
-                  {vistaPrevia.length} bloques detectados.
-                  {pendientes > 0
-                    ? " " + pendientes +
-                      " pendientes de clasificar."
-                    : " Sin títulos pendientes detectados."}
-                </p>
-
                 {vistaPrevia.map((seccion, indice) => (
                   <details
                     key={indice}
@@ -329,10 +314,8 @@ export default function EditorContenidoProtocolo({
           </button>
 
           <p className="text-xs leading-relaxed text-gray-500">
-            La descripción y el aviso se aplicarán al organizar
-            el contenido. Después podrás revisar los apartados.
-            Nada se guardará en la base de datos hasta que
-            confirmes el formulario.
+            La descripción y el aviso se incluirán al organizar
+            el contenido. Revisa los apartados antes de guardar.
           </p>
         </div>
       );
