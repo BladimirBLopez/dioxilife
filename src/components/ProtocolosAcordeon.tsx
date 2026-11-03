@@ -219,9 +219,7 @@ export default function ProtocolosAcordeon({
         <Modal title={seleccionado.titulo} onClose={() => setSeleccionado(null)}>
           {seleccionado.videoUrl && (
             <div className="mb-4">
-              <h4 className="text-sm font-semibold text-[#1F1B24] mb-2">
-                Imagen o video
-              </h4>
+
 
               <div className="bg-gray-100 relative rounded-lg overflow-hidden aspect-video">
                 <Media
@@ -249,12 +247,7 @@ export default function ProtocolosAcordeon({
               </section>
 
 
-              <div className="space-y-2">
 
-              <p className="border-t border-gray-100 pt-3 text-sm leading-6 text-gray-600 whitespace-pre-line">
-        {contenidoLeido.documento.seguridad.trim() || "Aviso de salud: ingerir dióxido de cloro puede ser peligroso."}
-      </p>
-              </div>
 
               {contenidoLeido.documento.secciones.length > 0 && (
                 <section className="space-y-3">
@@ -297,7 +290,7 @@ export default function ProtocolosAcordeon({
 
 
 
-              <p className="border-t border-gray-100 pt-3 text-sm leading-6 text-gray-600">Aviso de salud: ingerir dióxido de cloro puede ser peligroso.</p>
+
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {agruparContenidoOriginal(seleccionado.contenido)
@@ -434,6 +427,12 @@ export default function ProtocolosAcordeon({
             </div>
           )}
 
+                  <p className="mt-5 border-t border-gray-100 pt-3 text-xs leading-5 text-gray-500 whitespace-pre-line">
+            {contenidoLeido?.tipo === "organizado"
+              ? contenidoLeido.documento.seguridad.trim() ||
+                "Aviso de salud: ingerir dióxido de cloro puede ser peligroso."
+              : "Aviso de salud: ingerir dióxido de cloro puede ser peligroso."}
+          </p>
         </Modal>
       )}
     </>
