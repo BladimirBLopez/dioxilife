@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import {
   FORMATO_PROTOCOLO,
   guardarContenidoProtocolo,
@@ -58,11 +60,65 @@ const TIPOS_SECCION: string[] = [
   "Referencias"
 ];
 
+
+function IconoSeccionAdmin({ titulo }: { titulo: string }) {
+  const t = titulo
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  const tipo =
+    /objetivo/.test(t) ? "objetivo" :
+    /advertencia|seguridad|consideracion/.test(t) ? "escudo" :
+    /evidencia|referencia/.test(t) ? "libro" :
+    /pregunta/.test(t) ? "pregunta" :
+    /caracteristica/.test(t) ? "lista" :
+    /informacion/.test(t) ? "informacion" :
+    "documento";
+
+  const rutas: Record<string, string> = {
+    escudo: "M12 2 4 5v6c0 5 3.5 8.5 8 11 4.5-2.5 8-6 8-11V5l-8-3Zm0 6v5m0 3h.01",
+    libro: "M3 5c3-1 6-1 9 1 3-2 6-2 9-1v15c-3-1-6-1-9 1-3-2-6-2-9-1V5Zm9 1v15",
+    pregunta: "M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2-3 4m.1 3h.01M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18",
+    lista: "M9 6h12M9 12h12M9 18h12M3 6h2M3 12h2M3 18h2",
+    informacion: "M12 11v5m0-8h.01M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18",
+    documento: "M6 3h9l4 4v14H6V3Zm9 0v4h4M9 12h7M9 16h7",
+  };
+
+  return (
+    <span
+      aria-hidden="true"
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-pink-50 text-pink-600"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {tipo === "objetivo" ? (
+          <>
+            <circle cx="12" cy="12" r="9" />
+            <circle cx="12" cy="12" r="5" />
+            <circle cx="12" cy="12" r="1" />
+          </>
+        ) : (
+          <path d={rutas[tipo]} />
+        )}
+      </svg>
+    </span>
+  );
+}
+
 export default function EditorContenidoProtocolo({
   value,
   onChange,
   disabled = false,
 }: Props) {
+  const [abiertos, setAbiertos] = useState<number[]>([]);
   const lectura = leerContenidoProtocolo(value);
 
   if (lectura.tipo === "anterior") {
@@ -177,7 +233,13 @@ export default function EditorContenidoProtocolo({
       lista[indice],
     ];
 
-    actualizar({ secciones: lista });
+    setAbiertos((actual) =>
+        actual.map((i) =>
+          i === indice ? destino : i === destino ? indice : i
+        )
+      );
+
+      actualizar({ secciones: lista });
   }
 
   return (
@@ -219,108 +281,152 @@ export default function EditorContenidoProtocolo({
           Apartados del protocolo
         </h3>
 
-        {documento.secciones.map((seccion, indice) => (
-          <div
-            key={indice}
-            className="rounded-xl border border-gray-200 p-3 space-y-3"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-semibold">
-                Apartado {indice + 1}
-              </span>
 
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  disabled={disabled || indice === 0}
-                  onClick={() => mover(indice, -1)}
-                  className="text-sm disabled:opacity-30"
-                  aria-label="Subir apartado"
+          {documento.secciones.map((seccion, indice) => (
+            <details
+                key={indice}
+                open={abiertos.includes(indice)}
+                className="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+            >
+              <summary
+                  className="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setAbiertos((actual) =>
+                      actual.includes(indice)
+                        ? actual.filter((i) => i !== indice)
+                        : [...actual, indice]
+                    );
+                  }}
                 >
-                  ↑
-                </button>
+                <IconoSeccionAdmin titulo={seccion.titulo} />
 
-                <button
-                  type="button"
-                  disabled={
-                    disabled ||
-                    indice === documento.secciones.length - 1
-                  }
-                  onClick={() => mover(indice, 1)}
-                  className="text-sm disabled:opacity-30"
-                  aria-label="Bajar apartado"
+                <span className="min-w-0 flex-1 break-words text-sm font-semibold text-[#25143C]">
+                  {seccion.titulo.trim() || "Sección sin nombre"}
+                </span>
+
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-5 w-5 shrink-0 text-gray-400 transition-transform group-open:rotate-180"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  aria-hidden="true"
                 >
-                  ↓
-                </button>
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </summary>
 
-                <button
-                  type="button"
-                  disabled={disabled}
-                  onClick={() =>
-                    actualizar({
-                      secciones:
-                        documento.secciones.filter(
+              <div className="space-y-3 border-t border-gray-100 px-4 pb-4 pt-4">
+                <div>
+                  <label className="admin-label">
+                    Tipo de sección
+                  </label>
+                  <select
+                    value={seccion.titulo}
+                    onChange={(e) =>
+                      actualizarSeccion(indice, {
+                        titulo: e.target.value,
+                      })
+                    }
+                    disabled={disabled}
+                    className="admin-input"
+                    aria-label={"Tipo de sección " + (indice + 1)}
+                  >
+                    {!TIPOS_SECCION.includes(seccion.titulo) && (
+                      <option value={seccion.titulo}>
+                        {seccion.titulo || "Seleccionar sección"}
+                      </option>
+                    )}
+                    {TIPOS_SECCION.map((tipo) => (
+                      <option key={tipo} value={tipo}>
+                        {tipo}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="admin-label">
+                    Descripción
+                  </label>
+                  <textarea
+                    value={seccion.contenido}
+                    onChange={(e) =>
+                      actualizarSeccion(indice, {
+                        contenido: e.target.value,
+                      })
+                    }
+                    disabled={disabled}
+                    rows={5}
+                    className="admin-input"
+                    placeholder="Escribe el contenido de esta sección"
+                    aria-label={"Descripción de sección " + (indice + 1)}
+                  />
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3">
+                  <button
+                    type="button"
+                    disabled={disabled || indice === 0}
+                    onClick={() => mover(indice, -1)}
+                    className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium disabled:opacity-30"
+                  >
+                    ↑ Subir
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={disabled || indice === documento.secciones.length - 1}
+                    onClick={() => mover(indice, 1)}
+                    className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium disabled:opacity-30"
+                  >
+                    ↓ Bajar
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => {
+                      setAbiertos((actual) =>
+                        actual
+                          .filter((i) => i !== indice)
+                          .map((i) => i > indice ? i - 1 : i)
+                      );
+
+                      actualizar({
+                        secciones: documento.secciones.filter(
                           (_, i) => i !== indice
                         ),
-                    })
-                  }
-                  className="text-sm font-medium text-red-600 disabled:opacity-30"
-                >
-                  Quitar
-                </button>
+                      });
+                    }}
+                    className="ml-auto rounded-lg px-3 py-2 text-xs font-semibold text-red-600 disabled:opacity-30"
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </div>
-            </div>
-
-
-<select
-  aria-label="Tipo de sección"
-  value={seccion.titulo}
-  onChange={(e) =>
-                actualizarSeccion(indice, {
-                  titulo: e.target.value,
-                })
-              }
-  disabled={disabled}
-  className="admin-input"
->
-  {!TIPOS_SECCION.includes(seccion.titulo) && (
-    <option value={seccion.titulo}>
-      {seccion.titulo || "Seleccionar sección"}
-    </option>
-  )}
-  {TIPOS_SECCION.map(tipo => (
-    <option key={tipo} value={tipo}>{tipo}</option>
-  ))}
-</select>
-
-            <textarea
-              value={seccion.contenido}
-              onChange={(e) =>
-                actualizarSeccion(indice, {
-                  contenido: e.target.value,
-                })
-              }
-              disabled={disabled}
-              rows={4}
-              className="admin-input"
-              placeholder="Información del apartado"
-            />
-          </div>
-        ))}
+            </details>
+          ))}
 
         <button
           type="button"
           disabled={
             disabled || documento.secciones.length >= 40
           }
-          onClick={() =>
-            actualizar({
-              secciones: [
-                ...documento.secciones,
-                { titulo: "", contenido: "" },
-              ],
-            })
-          }
+          onClick={() => {
+              setAbiertos((actual) => [
+                ...actual,
+                documento.secciones.length,
+              ]);
+
+              actualizar({
+                secciones: [
+                  ...documento.secciones,
+                  { titulo: "", contenido: "" },
+                ],
+              });
+            }}
           className="rounded-lg border border-brand-pink px-3 py-2 text-sm font-semibold text-brand-pink disabled:opacity-50"
         >
           + Añadir apartado
