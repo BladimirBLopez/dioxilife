@@ -8,6 +8,8 @@
 export const FORMATO_PROTOCOLO =
   "dioxilife-protocolo-v1" as const;
 
+export const MAX_SECCIONES_PROTOCOLO = 100;
+
 export type SeccionProtocolo = {
   titulo: string;
   contenido: string;
@@ -62,7 +64,7 @@ export function leerContenidoProtocolo(
     }
 
     if (
-      obj.secciones.length > 40 ||
+      obj.secciones.length > MAX_SECCIONES_PROTOCOLO ||
       !obj.secciones.every(
         (item): item is SeccionProtocolo =>
           typeof item === "object" &&
@@ -97,7 +99,7 @@ export function guardarContenidoProtocolo(
 ): string {
   if (
     documento.formato !== FORMATO_PROTOCOLO ||
-    documento.secciones.length > 40
+    documento.secciones.length > MAX_SECCIONES_PROTOCOLO
   ) {
     throw new Error("Formato de protocolo invalido");
   }

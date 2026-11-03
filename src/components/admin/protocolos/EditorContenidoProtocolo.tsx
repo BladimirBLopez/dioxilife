@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import {
   FORMATO_PROTOCOLO,
+  MAX_SECCIONES_PROTOCOLO,
   guardarContenidoProtocolo,
   leerContenidoProtocolo,
   type DocumentoProtocolo,
@@ -25,7 +26,7 @@ function organizarBloquesOriginales(
     .split(/\n\s*\n+/)
     .filter((bloque) => bloque.trim().length > 0);
 
-  if (bloques.length > 40) {
+  if (bloques.length > MAX_SECCIONES_PROTOCOLO) {
     return null;
   }
 
@@ -201,7 +202,8 @@ export default function EditorContenidoProtocolo({
 
               if (secciones === null) {
                 alert(
-                  "Este contenido tiene más de 40 bloques. " +
+                  "Este contenido supera el límite de " +
+                  MAX_SECCIONES_PROTOCOLO + " bloques. " +
                   "No se ha realizado la conversión para " +
                   "evitar mezclar información."
                 );
@@ -505,7 +507,7 @@ export default function EditorContenidoProtocolo({
                 if (
                   !titulo ||
                   disabled ||
-                  documento.secciones.length >= 40 ||
+                  documento.secciones.length >= MAX_SECCIONES_PROTOCOLO ||
                   documento.secciones.some(
                     (item) => item.titulo === titulo
                   )
@@ -526,7 +528,7 @@ export default function EditorContenidoProtocolo({
                 });
               }}
               disabled={
-                disabled || documento.secciones.length >= 40
+                disabled || documento.secciones.length >= MAX_SECCIONES_PROTOCOLO
               }
               className="admin-input"
             >
