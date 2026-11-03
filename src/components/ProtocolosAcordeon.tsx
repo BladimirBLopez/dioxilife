@@ -216,7 +216,11 @@ export default function ProtocolosAcordeon({
       </div>
 
       {seleccionado && (
-        <Modal title={seleccionado.titulo} onClose={() => setSeleccionado(null)}>
+
+        <Modal title="" onClose={() => setSeleccionado(null)}>
+          <h2 className="mb-5 break-words text-xl font-bold leading-snug text-[#25143C]">
+            {seleccionado.titulo}
+          </h2>
           {seleccionado.videoUrl && (
             <div className="mb-4">
 
