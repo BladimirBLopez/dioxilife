@@ -304,45 +304,7 @@ export default function EditorContenidoProtocolo({
         </button>
       </div>
 
-      {documento.textoOriginal && (
-        <details open className="rounded-lg border border-gray-200 p-3">
-          <summary className="cursor-pointer text-sm font-medium">
-            Información original completa (solo administrador)
-          </summary>
-          <p className="mt-3 text-xs text-gray-600">
-            Se conserva todo el contenido original.
-            Revisa cada bloque antes de incorporarlo
-            a los apartados públicos.
-          </p>
 
-          <div className="mt-3 space-y-2">
-            {documento.textoOriginal
-              .split(/\r?\n/)
-              .map((bloque) => bloque.trim())
-              .filter(Boolean)
-              .map((bloque, indice) => (
-                <div
-                  key={indice}
-                  className="rounded-lg border border-gray-100 bg-gray-50 p-3"
-                >
-                  <p className="mb-1 text-xs font-semibold text-gray-600">
-                    Bloque original {indice + 1}
-                  </p>
-                  <p className="whitespace-pre-wrap break-words text-sm text-gray-800">
-                    {bloque}
-                  </p>
-                </div>
-              ))}
-          </div>
-
-          <textarea
-            readOnly
-            rows={7}
-            value={documento.textoOriginal}
-            className="admin-input mt-3"
-          />
-        </details>
-      )}
 
       <p className="text-xs text-gray-500">
         Los cambios solo serán definitivos después
