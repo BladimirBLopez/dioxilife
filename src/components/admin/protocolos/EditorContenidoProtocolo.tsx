@@ -69,6 +69,8 @@ function IconoSeccionAdmin({ titulo }: { titulo: string }) {
 
   const tipo =
     /objetivo/.test(t) ? "objetivo" :
+    /dosis/.test(t) ? "gota" :
+    /instruccion/.test(t) ? "instrucciones" :
     /advertencia|seguridad|consideracion/.test(t) ? "escudo" :
     /evidencia|referencia/.test(t) ? "libro" :
     /pregunta/.test(t) ? "pregunta" :
@@ -77,6 +79,8 @@ function IconoSeccionAdmin({ titulo }: { titulo: string }) {
     "documento";
 
   const rutas: Record<string, string> = {
+    gota: "M12 3C9 7 5 11 5 15a7 7 0 0 0 14 0c0-4-4-8-7-12Z",
+    instrucciones: "M7 3h10v4h3v14H4V7h3M9 3v4h6V3M8 12h8M8 16h8",
     escudo: "M12 2 4 5v6c0 5 3.5 8.5 8 11 4.5-2.5 8-6 8-11V5l-8-3Zm0 6v5m0 3h.01",
     libro: "M3 5c3-1 6-1 9 1 3-2 6-2 9-1v15c-3-1-6-1-9 1-3-2-6-2-9-1V5Zm9 1v15",
     pregunta: "M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2-3 4m.1 3h.01M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18",

@@ -317,7 +317,7 @@ export default function ProtocolosPage() {
 
 
             <div>
-              <label className="admin-label">Contenido</label>
+
               <EditorContenidoProtocolo
                   value={form.contenido}
                   onChange={(contenido) =>
