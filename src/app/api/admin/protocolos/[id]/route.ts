@@ -1,3 +1,4 @@
+import { esCambioSoloPresentacion } from "@/lib/protocolos-presentacion";
 import { leerContenidoProtocolo, validarContenidoPublicable } from "@/lib/protocolos-contenido";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -98,6 +99,10 @@ export async function PUT(
   if (
     existente.activo &&
     contenido !== existente.contenido &&
+    !esCambioSoloPresentacion(
+      existente.contenido,
+      contenido
+    ) &&
     activo === true
   ) {
     return NextResponse.json(
@@ -120,7 +125,13 @@ export async function PUT(
     lecturaAnterior.tipo === "anterior" &&
     lecturaNueva.tipo === "organizado"
   ) {
-    if (activo === true) {
+    if (
+      activo === true &&
+      !esCambioSoloPresentacion(
+        existente.contenido,
+        contenido
+      )
+    ) {
       return NextResponse.json(
         {
           error:
@@ -228,7 +239,10 @@ export async function PUT(
   if (activo === true) {
     const conservarContenidoAnterior =
       existente.activo &&
-      existente.contenido === contenido;
+      esCambioSoloPresentacion(
+        existente.contenido,
+        contenido
+      );
 
     if (!conservarContenidoAnterior) {
       const problema =

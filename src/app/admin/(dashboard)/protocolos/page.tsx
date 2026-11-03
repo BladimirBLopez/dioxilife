@@ -1,4 +1,5 @@
 "use client";
+import { esCambioSoloPresentacion } from "@/lib/protocolos-presentacion";
 
 import { useEffect, useState } from "react";
 import Modal from "@/components/Modal";
@@ -150,28 +151,20 @@ export default function ProtocolosPage() {
       return;
     }
 
-    const lecturaInicial =
-      leerContenidoProtocolo(formInicial.contenido);
-
-    const lecturaActual =
-      leerContenidoProtocolo(form.contenido);
-
-    const conversionAntigua =
-      Boolean(editandoId) &&
-      lecturaInicial.tipo === "anterior" &&
-      lecturaActual.tipo === "organizado";
-
     const contenidoEditado =
       Boolean(editandoId) &&
       formInicial.contenido !== form.contenido;
 
     const requiereBorrador =
-      Boolean(formInicial.activo) && contenidoEditado;
+      Boolean(formInicial.activo) &&
+      contenidoEditado &&
+      !esCambioSoloPresentacion(
+        formInicial.contenido,
+        form.contenido
+      );
 
     const activoEfectivo =
-      conversionAntigua || requiereBorrador
-        ? false
-        : form.activo;
+      requiereBorrador ? false : form.activo;
 
     const registroActual = editandoId
       ? protocolos.find((p) => p.id === editandoId)
@@ -182,7 +175,14 @@ export default function ProtocolosPage() {
       registroActual.contenido === form.contenido
     );
 
-    if (activoEfectivo && !contenidoSinCambios) {
+    if (
+      activoEfectivo &&
+      !contenidoSinCambios &&
+      !esCambioSoloPresentacion(
+        formInicial.contenido,
+        form.contenido
+      )
+    ) {
       const problema = validarContenidoPublicable(
         form.contenido
       );
@@ -244,7 +244,7 @@ export default function ProtocolosPage() {
     }
 
     if (
-      (conversionAntigua || requiereBorrador) &&
+      requiereBorrador &&
       form.activo &&
       !window.confirm(
         "Los cambios de contenido se guardarán " +
