@@ -440,16 +440,7 @@ export default function EditorContenidoProtocolo({
 
 
 
-      {documento.textoOriginal !== undefined && (
-        <details className="rounded-xl border border-gray-200 p-3">
-          <summary className="cursor-pointer text-sm font-semibold">
-            Ver texto original (solo lectura)
-          </summary>
-          <pre className="mt-3 whitespace-pre-wrap break-words text-xs text-gray-600">
-            {documento.textoOriginal}
-          </pre>
-        </details>
-      )}
+
 
       <p className="text-xs text-gray-500">
         Los cambios solo serán definitivos después
