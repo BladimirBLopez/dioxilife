@@ -314,32 +314,7 @@ export default function ProtocolosPage() {
               />
             </div>
 
-              <div>
-                <label className="admin-label">
-                  Estado de publicación
-                </label>
-                <select
-                  value={form.activo ? "publicado" : "borrador"}
-                  onChange={(e) =>
-                    setForm((actual) => ({
-                      ...actual,
-                      activo: e.target.value === "publicado",
-                    }))
-                  }
-                  disabled={loading || subiendoArchivo}
-                  className="admin-input"
-                >
-                  <option value="borrador">
-                    Borrador - No visible públicamente
-                  </option>
-                  <option value="publicado">
-                    Publicado - Visible públicamente
-                  </option>
-                </select>
-                <p className="mt-2 text-xs text-amber-700">
-                  Publicar solo información revisada y verificada.
-                </p>
-              </div>
+
 
             <div>
               <label className="admin-label">Contenido</label>
