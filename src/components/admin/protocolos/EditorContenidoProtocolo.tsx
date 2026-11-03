@@ -46,6 +46,25 @@ function organizarBloquesOriginales(
   });
 }
 
+function textoVistaPrevia(
+  seccion: SeccionProtocolo
+): string {
+  const encabezado = seccion.contenido.match(
+    /^([^:\n]{2,45}):[ \t]*/
+  );
+
+  if (
+    encabezado &&
+    encabezado[1].trim() === seccion.titulo
+  ) {
+    return seccion.contenido.slice(
+      encabezado[0].length
+    );
+  }
+
+  return seccion.contenido;
+}
+
 const TIPOS_SECCION: string[] = [
   "Objetivo",
   "Instrucciones",
@@ -128,6 +147,13 @@ export default function EditorContenidoProtocolo({
 
 
     if (lectura.tipo === "anterior") {
+      const vistaPrevia =
+        organizarBloquesOriginales(value);
+
+      const pendientes = vistaPrevia?.filter(
+        (s) => s.titulo === "Pendiente de clasificar"
+      ).length ?? 0;
+
       return (
         <div className="space-y-5">
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
@@ -139,6 +165,69 @@ export default function EditorContenidoProtocolo({
               Puedes revisar el texto y preparar la información.
               Solo se organizará cuando pulses el botón correspondiente.
             </p>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-[#25143C]">
+              Vista previa de apartados
+            </h3>
+
+            <p className="text-xs leading-relaxed text-gray-600">
+              Esta vista identifica bloques del texto original.
+              No cambia ni guarda información en Neon.
+              Revisa los títulos antes de organizar.
+            </p>
+
+            {vistaPrevia === null ? (
+              <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                El contenido supera el límite de apartados.
+                No se ha dividido ni modificado.
+              </p>
+            ) : (
+              <>
+                <p className="text-xs text-gray-500">
+                  {vistaPrevia.length} bloques detectados.
+                  {pendientes > 0
+                    ? " " + pendientes +
+                      " pendientes de clasificar."
+                    : " Sin títulos pendientes detectados."}
+                </p>
+
+                {vistaPrevia.map((seccion, indice) => (
+                  <details
+                    key={indice}
+                    className="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+                  >
+                    <summary className="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
+                      <IconoSeccionAdmin
+                        titulo={seccion.titulo}
+                      />
+
+                      <span className="min-w-0 flex-1 break-words text-sm font-semibold text-[#25143C]">
+                        {seccion.titulo}
+                      </span>
+
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-5 w-5 shrink-0 text-gray-400 group-open:rotate-180"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        aria-hidden="true"
+                      >
+                        <path d="m6 9 6 6 6-6" />
+                      </svg>
+                    </summary>
+
+                    <div className="border-t border-gray-100 px-4 py-3">
+                      <p className="whitespace-pre-wrap break-words text-sm leading-6 text-[#514B5C]">
+                        {textoVistaPrevia(seccion)}
+                      </p>
+                    </div>
+                  </details>
+                ))}
+              </>
+            )}
           </div>
 
           <div>
