@@ -244,15 +244,6 @@ export default function ProtocolosAcordeon({
           {contenidoLeido?.tipo === "organizado" ? (
             <div className="space-y-5">
 
-              <section className="rounded-2xl border border-pink-100 bg-gradient-to-br from-pink-50 via-white to-sky-50 p-4 sm:p-5">
-
-                <h3 className="mb-2 text-lg font-bold text-[#25143C]">
-                  Resumen
-                </h3>
-                <p className="whitespace-pre-line text-sm leading-7 text-[#514B5C]">
-                  {contenidoLeido.documento.resumen}
-                </p>
-              </section>
 
 
 
