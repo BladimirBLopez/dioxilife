@@ -141,17 +141,30 @@ export default function EditorContenidoProtocolo({
   onCambiosBorrador,
 }: Props) {
   const [abiertos, setAbiertos] = useState<number[]>([]);
+  const [titulosPrevios, setTitulosPrevios] =
+    useState<Record<number, string>>({});
     const [resumenAnterior, setResumenAnterior] = useState("");
     const [avisoAnterior, setAvisoAnterior] = useState("");
   const lectura = leerContenidoProtocolo(value);
 
 
     if (lectura.tipo === "anterior") {
-      const vistaPrevia =
+      const bloquesOriginales =
         organizarBloquesOriginales(value);
 
+      const vistaPrevia = bloquesOriginales?.map(
+        (seccion, indice) => ({
+          ...seccion,
+          titulo:
+            titulosPrevios[indice] ?? seccion.titulo,
+        })
+      ) ?? null;
+
       const pendientes = vistaPrevia?.filter(
-        (s) => s.titulo === "Pendiente de clasificar"
+        (s) =>
+          !s.titulo.trim() ||
+          s.titulo.trim().toLowerCase() ===
+            "pendiente de clasificar"
       ).length ?? 0;
 
       return (
@@ -204,9 +217,37 @@ export default function EditorContenidoProtocolo({
                       </svg>
                     </summary>
 
-                    <div className="border-t border-gray-100 px-4 py-3">
+                    <div className="space-y-3 border-t border-gray-100 px-4 py-3">
+                      <div>
+                        <label className="admin-label">
+                          Nombre del apartado
+                        </label>
+                        <input
+                          type="text"
+                          value={seccion.titulo}
+                          onChange={(e) => {
+                            setTitulosPrevios(
+                              (actual) => ({
+                                ...actual,
+                                [indice]: e.target.value,
+                              })
+                            );
+                            onCambiosBorrador?.(true);
+                          }}
+                          disabled={disabled}
+                          className="admin-input"
+                          aria-label={
+                            "Nombre del apartado " +
+                            (indice + 1)
+                          }
+                        />
+                      </div>
+
                       <p className="whitespace-pre-wrap break-words text-sm leading-6 text-[#514B5C]">
-                        {textoVistaPrevia(seccion)}
+                        {textoVistaPrevia(
+                          bloquesOriginales?.[indice] ??
+                          seccion
+                        )}
                       </p>
                     </div>
                   </details>
@@ -255,7 +296,16 @@ export default function EditorContenidoProtocolo({
             </label>
             <textarea
               value={value}
-              onChange={(e) => onChange(e.target.value)}
+              onChange={(e) => {
+                setTitulosPrevios({});
+                onCambiosBorrador?.(
+                  Boolean(
+                    resumenAnterior.trim() ||
+                    avisoAnterior.trim()
+                  )
+                );
+                onChange(e.target.value);
+              }}
               disabled={disabled}
               rows={8}
               className="admin-input"
@@ -271,8 +321,17 @@ export default function EditorContenidoProtocolo({
             type="button"
             disabled={disabled}
             onClick={() => {
-              const secciones =
+              const originales =
                 organizarBloquesOriginales(value);
+
+              const secciones = originales?.map(
+                (seccion, indice) => ({
+                  ...seccion,
+                  titulo:
+                    titulosPrevios[indice] ??
+                    seccion.titulo,
+                })
+              ) ?? null;
 
               if (secciones === null) {
                 alert(
@@ -306,6 +365,7 @@ export default function EditorContenidoProtocolo({
               onChange(
                 guardarContenidoProtocolo(documento)
               );
+              setTitulosPrevios({});
               onCambiosBorrador?.(false);
             }}
             className="rounded-xl border border-brand-pink px-4 py-3 text-sm font-semibold text-brand-pink transition-colors hover:bg-pink-50 disabled:opacity-50"

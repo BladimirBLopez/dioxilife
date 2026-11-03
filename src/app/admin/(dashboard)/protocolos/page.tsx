@@ -154,9 +154,9 @@ export default function ProtocolosPage() {
       leerContenidoProtocolo(form.contenido).tipo === "anterior"
     ) {
       alert(
-        "Hay una descripción o aviso pendiente. " +
-        "Debes organizar el contenido antes de guardar " +
-        "para conservar esos campos."
+        "Hay cambios pendientes en el editor. " +
+        "Pulsa Organizar en apartados para aplicar los " +
+        "nombres, la descripción y el aviso antes de guardar."
       );
       return;
     }
