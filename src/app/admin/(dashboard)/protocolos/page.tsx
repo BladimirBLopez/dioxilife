@@ -443,20 +443,6 @@ export default function ProtocolosPage() {
 
 
             <div>
-
-              <EditorContenidoProtocolo
-                  value={form.contenido}
-                  onChange={(contenido) =>
-                    setForm((actual) => ({
-                      ...actual,
-                      contenido,
-                    }))
-                  }
-                  disabled={loading || subiendoArchivo}
-                />
-            </div>
-
-            <div>
               <label className="admin-label">Imagen o video de portada (opcional)</label>
               <CloudinaryUpload
                 value={form.videoUrl}
@@ -478,6 +464,20 @@ export default function ProtocolosPage() {
                     Quitar imagen o video de portada
                   </button>
                 )}
+            </div>
+
+            <div>
+
+              <EditorContenidoProtocolo
+                  value={form.contenido}
+                  onChange={(contenido) =>
+                    setForm((actual) => ({
+                      ...actual,
+                      contenido,
+                    }))
+                  }
+                  disabled={loading || subiendoArchivo}
+                />
             </div>
 
             <div>
