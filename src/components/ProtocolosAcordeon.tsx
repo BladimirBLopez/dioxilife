@@ -29,6 +29,91 @@ type Protocolo = {
   }[];
 };
 
+
+function IconoDetalle({ titulo }: { titulo: string }) {
+  const t = titulo.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  let tipo = "documento";
+
+  if (t.includes("producto")) tipo = "producto";
+  else if (t.includes("relacionad") && t.includes("aplicacion")) tipo = "relacion";
+  else if (t.includes("objetivo")) tipo = "objetivo";
+  else if (t.includes("dosis")) tipo = "gota";
+  else if (t.includes("aplicacion")) tipo = "aplicacion";
+  else if (t.includes("consideracion")) tipo = "alerta";
+  else if (t.includes("recomendacion")) tipo = "estrella";
+  else if (t.includes("combinacion")) tipo = "enlace";
+  else if (t.includes("duracion")) tipo = "calendario";
+
+  const rutas: Record<string, string> = {
+    gota: "M12 3C9 7 5 11 5 15a7 7 0 0 0 14 0c0-4-4-8-7-12Z",
+    aplicacion: "M8 4h8M7 6H5v15h14V6h-2M9 11h6M9 15h6",
+    alerta: "M12 3 2 21h20L12 3Zm0 6v5m0 3h.01",
+    estrella: "m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3L7 14.2l-5-4.9 6.9-1L12 2Z",
+    enlace: "M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-2 2M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l2-2",
+    calendario: "M3 7h18v14H3V7ZM7 3v7M17 3v7M3 11h18M8 15h2m4 0h2",
+    producto: "m12 2 9 5-9 5-9-5 9-5ZM3 7v10l9 5 9-5V7M12 12v10",
+    relacion: "m12 2 9 5-9 5-9-5 9-5ZM3 12l9 5 9-5M3 16l9 5 9-5",
+    documento: "M7 3h8l4 4v14H7V3ZM15 3v4h4M9 12h6M9 16h6",
+  };
+
+  const rosa = [
+    "objetivo", "aplicacion", "estrella", "producto"
+  ].includes(tipo);
+
+  return (
+    <span
+      aria-hidden="true"
+      className={
+        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl " +
+        (rosa
+          ? "bg-pink-50 text-pink-600"
+          : "bg-sky-50 text-sky-600")
+      }
+    >
+      <svg
+        viewBox="0 0 24 24"
+        width="21"
+        height="21"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {tipo === "objetivo" ? (
+          <>
+            <circle cx="12" cy="12" r="9" />
+            <circle cx="12" cy="12" r="5" />
+            <circle cx="12" cy="12" r="1.5" />
+          </>
+        ) : (
+          <path d={rutas[tipo] || rutas.documento} />
+        )}
+      </svg>
+    </span>
+  );
+}
+
+function textoSinTitulo(titulo: string, contenido: string) {
+  const texto = contenido.trim();
+  const posicion = texto.indexOf(":");
+
+  if (posicion < 1 || posicion > 70) return contenido;
+
+  const normalizar = (s: string) =>
+    s.normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .toLowerCase();
+
+  return normalizar(texto.slice(0, posicion)) === normalizar(titulo)
+    ? texto.slice(posicion + 1).trim()
+    : contenido;
+}
+
 export default function ProtocolosAcordeon({
   protocolos,
   protocoloInicialId,
@@ -37,11 +122,9 @@ export default function ProtocolosAcordeon({
   protocoloInicialId?: string;
 }) {
   const [seleccionado, setSeleccionado] = useState<Protocolo | null>(null);
-  const [expandido, setExpandido] = useState(false);
 
   function abrir(p: Protocolo) {
     setSeleccionado(p);
-    setExpandido(false);
   }
 
   useEffect(() => {
@@ -51,11 +134,9 @@ export default function ProtocolosAcordeon({
 
     if (protocolo) {
       setSeleccionado(protocolo);
-      setExpandido(false);
     }
   }, [protocoloInicialId, protocolos]);
 
-  const esLargo = (seleccionado?.contenido.length || 0) > 220;
   const contenidoLeido = seleccionado
     ? leerContenidoProtocolo(seleccionado.contenido)
     : null;
@@ -133,26 +214,20 @@ export default function ProtocolosAcordeon({
                 </p>
               </section>
 
-              <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:p-5">
-                <div className="mb-2 flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-800">
-                    !
-                  </span>
-                  <h3 className="text-sm font-bold text-amber-950">
-                    Seguridad y evidencia
-                  </h3>
-                </div>
-                <p className="text-sm leading-6 text-amber-950">
-                  La información presentada no sustituye una evaluación médica.
-                  La ingestión de dióxido de cloro puede causar daños graves
-                  y no es un tratamiento aprobado para enfermedades.
-                </p>
+
+              <div className="space-y-2">
+
+              <p className="border-t border-gray-100 pt-3 text-sm leading-6 text-gray-600">
+                La ingestión de dióxido de cloro puede causar
+                daños graves y no es un tratamiento aprobado
+                para enfermedades.
+              </p>
                 {contenidoLeido.documento.seguridad && (
-                  <p className="mt-3 whitespace-pre-line border-t border-amber-200 pt-3 text-sm leading-6 text-amber-950">
+                  <p className="whitespace-pre-line text-sm leading-6 text-gray-600">
                     {contenidoLeido.documento.seguridad}
                   </p>
                 )}
-              </section>
+              </div>
 
               {contenidoLeido.documento.secciones.length > 0 && (
                 <section className="space-y-3">
@@ -176,16 +251,14 @@ export default function ProtocolosAcordeon({
                           className="min-w-0 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
                         >
                           <div className="mb-3 flex items-start gap-3">
-                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-pink-50 text-xs font-bold text-brand-pink">
-                              {String(indice + 1).padStart(2, "0")}
-                            </span>
+                            <IconoDetalle titulo={seccion.titulo} />
                             <h4 className="pt-1 text-sm font-bold leading-6 text-[#25143C]">
                               {seccion.titulo}
                             </h4>
                           </div>
 
                           <p className="whitespace-pre-line break-words text-sm leading-7 text-[#514B5C]">
-                            {seccion.contenido}
+                            {textoSinTitulo(seccion.titulo, seccion.contenido)}
                           </p>
                         </article>
                       )
@@ -195,25 +268,54 @@ export default function ProtocolosAcordeon({
               )}
             </div>
           ) : (
-            <>
-          <p
-            className={`text-sm text-brand-gray whitespace-pre-line ${
-              !expandido && esLargo ? "line-clamp-4" : ""
-            }`}
-          >
-            {seleccionado.contenido}
-          </p>
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-pink-100 bg-gradient-to-r from-pink-50 to-sky-50 p-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-brand-pink">
+                  Información del protocolo
+                </p>
+                <h3 className="mt-1 text-lg font-bold text-[#25143C]">
+                  Detalles organizados
+                </h3>
+              </div>
 
-          {esLargo && (
-            <button
-              onClick={() => setExpandido(!expandido)}
-              className="text-xs font-semibold text-brand-pink mt-2"
-            >
-              {expandido ? "Ver menos" : "Ver más"}
-            </button>
-          )}
 
-            </>
+              <p className="border-t border-gray-100 pt-3 text-sm leading-6 text-gray-600">
+                La ingestión de dióxido de cloro puede causar
+                daños graves y no es un tratamiento aprobado
+                para enfermedades.
+              </p>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {seleccionado.contenido
+                  .split(/\r?\n\s*\r?\n+/)
+                  .map((bloque) => bloque.trim())
+                  .filter(Boolean)
+                  .map((bloque, indice) => {
+                    const encabezado = bloque.match(
+                      /^([^:\n]{2,60}):\s*([\s\S]+)$/
+                    );
+
+                    return (
+                      <article
+                        key={indice}
+                        className="min-w-0 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+                      >
+                        <div className="mb-3 flex items-start gap-3">
+                          <IconoDetalle titulo={encabezado ? encabezado[1] : "Información adicional"} />
+                          <h4 className="pt-1 text-sm font-bold leading-6 text-[#25143C]">
+                            {encabezado
+                              ? encabezado[1].trim()
+                              : "Información adicional"}
+                          </h4>
+                        </div>
+                        <p className="whitespace-pre-line break-words text-sm leading-7 text-[#514B5C]">
+                          {encabezado ? encabezado[2] : bloque}
+                        </p>
+                      </article>
+                    );
+                  })}
+              </div>
+            </div>
           )}
 
           {seleccionado.productosRelacionados.length > 0 && (
@@ -223,8 +325,11 @@ export default function ProtocolosAcordeon({
                   Catálogo
                 </p>
                 <h4 className="mt-1 text-sm font-semibold text-[#1F1B24]">
-                  Productos relacionados
-                </h4>
+                    <span className="inline-flex items-center gap-2">
+                      <IconoDetalle titulo="Productos relacionados" />
+                      Productos relacionados
+                    </span>
+                  </h4>
               </div>
 
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -271,8 +376,11 @@ export default function ProtocolosAcordeon({
                   Información relacionada
                 </p>
                 <h4 className="mt-1 text-sm font-semibold text-[#1F1B24]">
-                  Aplicaciones CDS relacionadas
-                </h4>
+                    <span className="inline-flex items-center gap-2">
+                      <IconoDetalle titulo="Aplicaciones CDS relacionadas" />
+                      Aplicaciones CDS relacionadas
+                    </span>
+                  </h4>
               </div>
 
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
