@@ -19,6 +19,7 @@ type Protocolo = {
   titulo: string;
   contenido: string;
   imagenUrl: string | null;
+  fotoPerfilUrl: string | null;
   videoUrl: string | null;
   productoId: string | null;
   producto: Producto | null;
@@ -69,6 +70,10 @@ export default function ProtocolosPage() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [confirmarSalir, setConfirmarSalir] = useState(false);
   const [borrarId, setBorrarId] = useState<string | null>(null);
+  const [fotoEditandoId, setFotoEditandoId] = useState<string | null>(null);
+  const [fotoBorrador, setFotoBorrador] = useState("");
+  const [subiendoFoto, setSubiendoFoto] = useState(false);
+  const [guardandoFoto, setGuardandoFoto] = useState(false);
 
   async function cargar() {
     const [resProt, resProd] = await Promise.all([
@@ -215,6 +220,58 @@ export default function ProtocolosPage() {
     }
   }
 
+
+  function abrirFotoPerfil(p: Protocolo) {
+    if (subiendoFoto || guardandoFoto) return;
+
+    setFotoBorrador(p.fotoPerfilUrl || p.imagenUrl || "");
+    setFotoEditandoId(p.id);
+  }
+
+  async function guardarFotoPerfil(id: string) {
+    if (subiendoFoto || guardandoFoto) return;
+
+    setGuardandoFoto(true);
+
+    try {
+      const respuesta = await fetch(
+        "/api/admin/protocolos/" + encodeURIComponent(id),
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fotoPerfilUrl: fotoBorrador || null,
+          }),
+        }
+      );
+
+      if (!respuesta.ok) {
+        const datos = await respuesta.json().catch(() => null);
+        throw new Error(
+          datos?.error || "No se pudo guardar la foto"
+        );
+      }
+
+      setFotoEditandoId(null);
+
+      try {
+        await cargar();
+      } catch {
+        alert("Foto guardada. Recarga la página para actualizar la lista.");
+      }
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Error al guardar la foto de perfil"
+      );
+    } finally {
+      setGuardandoFoto(false);
+    }
+  }
+
   async function confirmarBorrar() {
     if (!borrarId) return;
     await fetch(`/api/admin/protocolos/${borrarId}`, { method: "DELETE" });
@@ -237,10 +294,10 @@ export default function ProtocolosPage() {
         )}
         {protocolos.map((p) => (
           <div key={p.id} className="admin-card p-4 flex gap-3">
-            {p.imagenUrl ? (
-              esVideo(p.imagenUrl) ? (
+            {(p.fotoPerfilUrl || p.imagenUrl) ? (
+              esVideo(p.fotoPerfilUrl || p.imagenUrl || "") ? (
                 <video
-                  src={p.imagenUrl}
+                  src={p.fotoPerfilUrl || p.imagenUrl || ""}
                   muted
                   autoPlay
                   loop
@@ -249,7 +306,7 @@ export default function ProtocolosPage() {
                 />
               ) : (
                 <img
-                  src={p.imagenUrl}
+                  src={p.fotoPerfilUrl || p.imagenUrl || ""}
                   alt={p.titulo}
                   className="w-16 h-16 object-cover rounded-lg shrink-0"
                 />
@@ -292,6 +349,73 @@ export default function ProtocolosPage() {
                   Borrar
                 </button>
               </div>
+
+                <div className="mt-3 space-y-2">
+                  <button
+                    type="button"
+                    disabled={subiendoFoto || guardandoFoto}
+                    onClick={() => {
+                      if (fotoEditandoId === p.id) {
+                        setFotoEditandoId(null);
+                      } else {
+                        abrirFotoPerfil(p);
+                      }
+                    }}
+                    className="text-sm font-semibold text-brand-pink hover:underline disabled:opacity-50"
+                  >
+                    {fotoEditandoId === p.id
+                      ? "Cerrar cambio de foto"
+                      : "Cambiar foto de perfil"}
+                  </button>
+
+                  {fotoEditandoId === p.id && (
+                    <div className="space-y-3 rounded-xl border border-pink-100 bg-pink-50/40 p-3">
+                      <p className="text-xs leading-relaxed text-gray-600">
+                        Esta imagen será la miniatura del protocolo.
+                        La portada se cambia dentro del formulario.
+                      </p>
+
+                      <CloudinaryUpload
+                        value={fotoBorrador}
+                        onChange={setFotoBorrador}
+                        onUploadingChange={setSubiendoFoto}
+                        soloImagen
+                      />
+
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          disabled={subiendoFoto || guardandoFoto}
+                          onClick={() => guardarFotoPerfil(p.id)}
+                          className="rounded-lg bg-brand-pink px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                        >
+                          {guardandoFoto
+                            ? "Guardando..."
+                            : "Guardar foto"}
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={subiendoFoto || guardandoFoto}
+                          onClick={() => setFotoBorrador("")}
+                          className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 disabled:opacity-50"
+                        >
+                          Usar portada como miniatura
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={subiendoFoto || guardandoFoto}
+                          onClick={() => setFotoEditandoId(null)}
+                          className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 disabled:opacity-50"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
             </div>
           </div>
         ))}
@@ -317,7 +441,7 @@ export default function ProtocolosPage() {
 
 
             <div>
-              <label className="admin-label">Imagen del protocolo (opcional)</label>
+              <label className="admin-label">Imagen de portada (opcional)</label>
               <CloudinaryUpload
                 value={form.imagenUrl}
                 onChange={(url) => setForm({ ...form, imagenUrl: url })}
@@ -336,7 +460,7 @@ export default function ProtocolosPage() {
                     }
                     className="mt-2 rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
                   >
-                    Quitar imagen del protocolo
+                    Quitar imagen de portada
                   </button>
                 )}
             </div>

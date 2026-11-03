@@ -76,6 +76,7 @@ model Protocolo {
   titulo                String
   contenido             String
   imagenUrl             String?
+  fotoPerfilUrl         String?
   videoUrl              String?
   productoId            String?
   producto              Producto?             @relation(fields: [productoId], references: [id])

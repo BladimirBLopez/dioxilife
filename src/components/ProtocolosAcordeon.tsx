@@ -11,6 +11,7 @@ type Protocolo = {
   titulo: string;
   contenido: string;
   imagenUrl: string | null;
+  fotoPerfilUrl?: string | null;
   videoUrl: string | null;
   productosRelacionados: {
     producto: {
@@ -187,9 +188,9 @@ export default function ProtocolosAcordeon({
             className="w-full flex items-center gap-3 bg-white rounded-xl shadow-sm p-2.5 text-left hover:bg-gray-50 transition-colors"
           >
             <div className="w-14 h-14 shrink-0 relative rounded-lg overflow-hidden bg-gray-100">
-              {p.imagenUrl && (
+              {(p.fotoPerfilUrl || p.imagenUrl) && (
                 <Media
-                  src={p.imagenUrl}
+                  src={p.fotoPerfilUrl || p.imagenUrl || ""}
                   alt={p.titulo}
                   fill
                   className="object-cover"
@@ -221,6 +222,22 @@ export default function ProtocolosAcordeon({
           <h2 className="mb-5 break-words pr-12 text-xl font-bold leading-snug text-[#25143C]">
             {seleccionado.titulo}
           </h2>
+
+          {seleccionado.imagenUrl &&
+            seleccionado.imagenUrl !== seleccionado.videoUrl && (
+              <div className="mb-4 overflow-hidden rounded-xl bg-gray-50">
+                <div className="relative aspect-[4/3]">
+                  <Media
+                    src={seleccionado.imagenUrl}
+                    alt={"Portada de " + seleccionado.titulo}
+                    fill
+                    className="object-contain"
+                    variant="full"
+                  />
+                </div>
+              </div>
+            )}
+
           {seleccionado.videoUrl && (
             <div className="mb-4">
 

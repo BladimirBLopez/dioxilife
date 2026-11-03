@@ -87,6 +87,7 @@ export async function POST(req: NextRequest) {
       contenido,
       activo: activo === true,
       imagenUrl: imagenUrl || null,
+      fotoPerfilUrl: imagenUrl || null,
       videoUrl: videoUrl || null,
 
       // Se conserva temporalmente la relación antigua.

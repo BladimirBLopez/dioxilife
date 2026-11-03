@@ -78,6 +78,7 @@ export default async function Home({
         orderBy: { createdAt: "desc" },
         take: 3,
         select: {
+          fotoPerfilUrl: true,
           id: true,
           titulo: true,
           imagenUrl: true,
