@@ -50,6 +50,7 @@ function organizarBloquesOriginales(
 
 const TIPOS_SECCION: string[] = [
   "Objetivo",
+  "Instrucciones",
   "Descripción",
   "Información general",
   "Características",
@@ -413,28 +414,71 @@ export default function EditorContenidoProtocolo({
             </details>
           ))}
 
-        <button
-          type="button"
-          disabled={
-            disabled || documento.secciones.length >= 40
-          }
-          onClick={() => {
-              setAbiertos((actual) => [
-                ...actual,
-                documento.secciones.length,
-              ]);
 
-              actualizar({
-                secciones: [
-                  ...documento.secciones,
-                  { titulo: "", contenido: "" },
-                ],
-              });
-            }}
-          className="rounded-lg border border-brand-pink px-3 py-2 text-sm font-semibold text-brand-pink disabled:opacity-50"
-        >
-          + Añadir apartado
-        </button>
+          <div className="space-y-2">
+            <label
+              htmlFor="agregar-tipo-protocolo"
+              className="admin-label"
+            >
+              Agregar nueva sección
+            </label>
+
+            <select
+              id="agregar-tipo-protocolo"
+              value=""
+              onChange={(e) => {
+                const titulo = e.target.value;
+
+                if (
+                  !titulo ||
+                  disabled ||
+                  documento.secciones.length >= 40 ||
+                  documento.secciones.some(
+                    (item) => item.titulo === titulo
+                  )
+                ) {
+                  return;
+                }
+
+                setAbiertos((actual) => [
+                  ...actual,
+                  documento.secciones.length,
+                ]);
+
+                actualizar({
+                  secciones: [
+                    ...documento.secciones,
+                    { titulo, contenido: "" },
+                  ],
+                });
+              }}
+              disabled={
+                disabled || documento.secciones.length >= 40
+              }
+              className="admin-input"
+            >
+              <option value="">
+                + Selecciona el tipo de sección
+              </option>
+
+              {TIPOS_SECCION.map((tipo) => (
+                <option
+                  key={tipo}
+                  value={tipo}
+                  disabled={documento.secciones.some(
+                    (item) => item.titulo === tipo
+                  )}
+                >
+                  {tipo}
+                </option>
+              ))}
+            </select>
+
+            <p className="text-xs text-gray-500">
+              Al seleccionar un tipo se creará la sección
+              y se abrirá automáticamente para editarla.
+            </p>
+          </div>
       </div>
 
 
