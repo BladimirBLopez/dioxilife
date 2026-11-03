@@ -75,6 +75,7 @@ export default function ProtocolosPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [form, setForm] = useState(vacio);
   const [formInicial, setFormInicial] = useState(vacio);
+  const [borradorEditor, setBorradorEditor] = useState(false);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [subiendoArchivo, setSubiendoArchivo] = useState(false);
@@ -100,7 +101,8 @@ export default function ProtocolosPage() {
   }, []);
 
   function hayCambiosSinGuardar() {
-    return JSON.stringify(form) !== JSON.stringify(formInicial);
+    return borradorEditor ||
+      JSON.stringify(form) !== JSON.stringify(formInicial);
   }
 
   function pedirCerrarModal() {
@@ -117,6 +119,7 @@ export default function ProtocolosPage() {
   }
 
   function abrirNuevo() {
+    setBorradorEditor(false);
     setEditandoId(null);
     setForm(vacio);
     setFormInicial(vacio);
@@ -124,6 +127,7 @@ export default function ProtocolosPage() {
   }
 
   function abrirEditar(p: Protocolo) {
+    setBorradorEditor(false);
     const datos = {
       titulo: p.titulo,
       contenido: p.contenido,
@@ -144,6 +148,18 @@ export default function ProtocolosPage() {
     e.preventDefault();
 
     if (loading || subiendoArchivo) return;
+
+    if (
+      borradorEditor &&
+      leerContenidoProtocolo(form.contenido).tipo === "anterior"
+    ) {
+      alert(
+        "Hay una descripción o aviso pendiente. " +
+        "Debes organizar el contenido antes de guardar " +
+        "para conservar esos campos."
+      );
+      return;
+    }
 
     if (!form.titulo || !form.contenido) {
       alert("Título y contenido son obligatorios");
@@ -494,6 +510,8 @@ export default function ProtocolosPage() {
             <div>
 
               <EditorContenidoProtocolo
+                  key={editandoId ?? "nuevo"}
+                  onCambiosBorrador={setBorradorEditor}
                   value={form.contenido}
                   onChange={(contenido) =>
                     setForm((actual) => ({

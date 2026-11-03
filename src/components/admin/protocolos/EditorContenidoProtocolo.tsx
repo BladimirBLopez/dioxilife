@@ -14,6 +14,7 @@ type Props = {
   value: string;
   onChange: (valor: string) => void;
   disabled?: boolean;
+  onCambiosBorrador?: (hay: boolean) => void;
 };
 
 function organizarBloquesOriginales(
@@ -121,6 +122,7 @@ export default function EditorContenidoProtocolo({
   value,
   onChange,
   disabled = false,
+  onCambiosBorrador,
 }: Props) {
   const [abiertos, setAbiertos] = useState<number[]>([]);
     const [resumenAnterior, setResumenAnterior] = useState("");
@@ -148,9 +150,10 @@ export default function EditorContenidoProtocolo({
             </label>
             <textarea
               value={resumenAnterior}
-              onChange={(e) =>
-                setResumenAnterior(e.target.value)
-              }
+              onChange={(e) => {
+                setResumenAnterior(e.target.value);
+                onCambiosBorrador?.(true);
+              }}
               disabled={disabled}
               rows={3}
               className="admin-input"
@@ -164,9 +167,10 @@ export default function EditorContenidoProtocolo({
             </label>
             <textarea
               value={avisoAnterior}
-              onChange={(e) =>
-                setAvisoAnterior(e.target.value)
-              }
+              onChange={(e) => {
+                setAvisoAnterior(e.target.value);
+                onCambiosBorrador?.(true);
+              }}
               disabled={disabled}
               rows={4}
               className="admin-input"
@@ -207,6 +211,7 @@ export default function EditorContenidoProtocolo({
               onChange(
                 guardarContenidoProtocolo(documento)
               );
+              onCambiosBorrador?.(false);
             }}
             className="rounded-xl border border-brand-pink px-4 py-3 text-sm font-semibold text-brand-pink transition-colors hover:bg-pink-50 disabled:opacity-50"
           >
