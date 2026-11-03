@@ -255,15 +255,7 @@ export default function ProtocolosAcordeon({
 
               {contenidoLeido.documento.secciones.length > 0 && (
                 <section className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-7 w-1 rounded-full bg-brand-pink" />
-                    <div>
 
-                      <h3 className="text-base font-bold text-[#25143C]">
-                        Apartados
-                      </h3>
-                    </div>
-                  </div>
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {contenidoLeido.documento.secciones.map(

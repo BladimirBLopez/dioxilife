@@ -45,6 +45,19 @@ function organizarBloquesOriginales(
   });
 }
 
+
+const TIPOS_SECCION: string[] = [
+  "Objetivo",
+  "Descripción",
+  "Información general",
+  "Características",
+  "Consideraciones",
+  "Advertencias y seguridad",
+  "Evidencia científica",
+  "Preguntas frecuentes",
+  "Referencias"
+];
+
 export default function EditorContenidoProtocolo({
   value,
   onChange,
@@ -258,17 +271,27 @@ export default function EditorContenidoProtocolo({
               </div>
             </div>
 
-            <input
-              value={seccion.titulo}
-              onChange={(e) =>
+
+<select
+  aria-label="Tipo de sección"
+  value={seccion.titulo}
+  onChange={(e) =>
                 actualizarSeccion(indice, {
                   titulo: e.target.value,
                 })
               }
-              disabled={disabled}
-              className="admin-input"
-              placeholder="Título del apartado"
-            />
+  disabled={disabled}
+  className="admin-input"
+>
+  {!TIPOS_SECCION.includes(seccion.titulo) && (
+    <option value={seccion.titulo}>
+      {seccion.titulo || "Seleccionar sección"}
+    </option>
+  )}
+  {TIPOS_SECCION.map(tipo => (
+    <option key={tipo} value={tipo}>{tipo}</option>
+  ))}
+</select>
 
             <textarea
               value={seccion.contenido}
