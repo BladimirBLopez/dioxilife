@@ -59,6 +59,17 @@ function vistaPreviaContenido(valor: string): string {
   );
 }
 
+
+function obtenerImagenPortada(p: Protocolo): string {
+  const portada = p.videoUrl || p.imagenUrl || "";
+
+  if (!portada || esVideo(portada)) {
+    return "";
+  }
+
+  return portada;
+}
+
 export default function ProtocolosPage() {
   const [protocolos, setProtocolos] = useState<Protocolo[]>([]);
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -224,7 +235,7 @@ export default function ProtocolosPage() {
   function abrirFotoPerfil(p: Protocolo) {
     if (subiendoFoto || guardandoFoto) return;
 
-    setFotoBorrador(p.fotoPerfilUrl || p.imagenUrl || "");
+    setFotoBorrador(p.fotoPerfilUrl || "");
     setFotoEditandoId(p.id);
   }
 
@@ -294,10 +305,10 @@ export default function ProtocolosPage() {
         )}
         {protocolos.map((p) => (
           <div key={p.id} className="admin-card p-4 flex gap-3">
-            {(p.fotoPerfilUrl || p.imagenUrl) ? (
-              esVideo(p.fotoPerfilUrl || p.imagenUrl || "") ? (
+            {p.fotoPerfilUrl ? (
+              esVideo(p.fotoPerfilUrl || "") ? (
                 <video
-                  src={p.fotoPerfilUrl || p.imagenUrl || ""}
+                  src={p.fotoPerfilUrl || ""}
                   muted
                   autoPlay
                   loop
@@ -306,7 +317,7 @@ export default function ProtocolosPage() {
                 />
               ) : (
                 <img
-                  src={p.fotoPerfilUrl || p.imagenUrl || ""}
+                  src={p.fotoPerfilUrl || ""}
                   alt={p.titulo}
                   className="w-16 h-16 object-cover rounded-lg shrink-0"
                 />
@@ -394,13 +405,27 @@ export default function ProtocolosPage() {
                             : "Guardar foto"}
                         </button>
 
+
+                        {obtenerImagenPortada(p) && (
+                          <button
+                            type="button"
+                            disabled={subiendoFoto || guardandoFoto}
+                            onClick={() =>
+                              setFotoBorrador(obtenerImagenPortada(p))
+                            }
+                            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 disabled:opacity-50"
+                          >
+                            Copiar imagen de portada
+                          </button>
+                        )}
+
                         <button
                           type="button"
                           disabled={subiendoFoto || guardandoFoto}
                           onClick={() => setFotoBorrador("")}
-                          className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 disabled:opacity-50"
+                          className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-red-600 disabled:opacity-50"
                         >
-                          Usar portada como miniatura
+                          Quitar foto de perfil
                         </button>
 
                         <button

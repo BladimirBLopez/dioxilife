@@ -188,9 +188,9 @@ export default function ProtocolosAcordeon({
             className="w-full flex items-center gap-3 bg-white rounded-xl shadow-sm p-2.5 text-left hover:bg-gray-50 transition-colors"
           >
             <div className="w-14 h-14 shrink-0 relative rounded-lg overflow-hidden bg-gray-100">
-              {(p.fotoPerfilUrl || p.imagenUrl) && (
+              {p.fotoPerfilUrl && (
                 <Media
-                  src={p.fotoPerfilUrl || p.imagenUrl || ""}
+                  src={p.fotoPerfilUrl || ""}
                   alt={p.titulo}
                   fill
                   className="object-cover"
