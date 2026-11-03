@@ -114,6 +114,42 @@ function textoSinTitulo(titulo: string, contenido: string) {
     : contenido;
 }
 
+
+function agruparContenidoOriginal(contenido: string) {
+  const bloques = contenido
+    .split(/\r?\n\s*\r?\n+/)
+    .map((b) => b.trim())
+    .filter(Boolean);
+
+  const secciones: { titulo: string; contenido: string }[] = [];
+
+  for (const bloque of bloques) {
+    const encontrado = bloque.match(
+      /^([^:\n]{2,60}):\s*([\s\S]+)$/
+    );
+
+    if (encontrado) {
+      secciones.push({
+        titulo: encontrado[1].trim(),
+        contenido: encontrado[2].trim()
+      });
+    } else {
+      const anterior = secciones[secciones.length - 1];
+
+      if (anterior?.titulo === "Descripción") {
+        anterior.contenido += "\n\n" + bloque;
+      } else {
+        secciones.push({
+          titulo: "Descripción",
+          contenido: bloque
+        });
+      }
+    }
+  }
+
+  return secciones;
+}
+
 export default function ProtocolosAcordeon({
   protocolos,
   protocoloInicialId,
@@ -203,11 +239,9 @@ export default function ProtocolosAcordeon({
             <div className="space-y-5">
 
               <section className="rounded-2xl border border-pink-100 bg-gradient-to-br from-pink-50 via-white to-sky-50 p-4 sm:p-5">
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-pink">
-                  Información general
-                </p>
+
                 <h3 className="mb-2 text-lg font-bold text-[#25143C]">
-                  Descripción del protocolo
+                  Resumen
                 </h3>
                 <p className="whitespace-pre-line text-sm leading-7 text-[#514B5C]">
                   {contenidoLeido.documento.resumen}
@@ -234,11 +268,9 @@ export default function ProtocolosAcordeon({
                   <div className="flex items-center gap-3">
                     <div className="h-7 w-1 rounded-full bg-brand-pink" />
                     <div>
-                      <p className="text-[11px] font-bold uppercase tracking-widest text-brand-pink">
-                        Detalles
-                      </p>
+
                       <h3 className="text-base font-bold text-[#25143C]">
-                        Información del protocolo
+                        Apartados
                       </h3>
                     </div>
                   </div>
@@ -248,7 +280,7 @@ export default function ProtocolosAcordeon({
                       (seccion, indice) => (
                         <article
                           key={indice}
-                          className="min-w-0 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+                          className="group min-w-0 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
                         >
                           <div className="mb-3 flex items-start gap-3">
                             <IconoDetalle titulo={seccion.titulo} />
@@ -269,14 +301,7 @@ export default function ProtocolosAcordeon({
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="rounded-2xl border border-pink-100 bg-gradient-to-r from-pink-50 to-sky-50 p-4">
-                <p className="text-xs font-bold uppercase tracking-wider text-brand-pink">
-                  Información del protocolo
-                </p>
-                <h3 className="mt-1 text-lg font-bold text-[#25143C]">
-                  Detalles organizados
-                </h3>
-              </div>
+
 
 
               <p className="border-t border-gray-100 pt-3 text-sm leading-6 text-gray-600">
@@ -286,34 +311,24 @@ export default function ProtocolosAcordeon({
               </p>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {seleccionado.contenido
-                  .split(/\r?\n\s*\r?\n+/)
-                  .map((bloque) => bloque.trim())
-                  .filter(Boolean)
-                  .map((bloque, indice) => {
-                    const encabezado = bloque.match(
-                      /^([^:\n]{2,60}):\s*([\s\S]+)$/
-                    );
+                {agruparContenidoOriginal(seleccionado.contenido)
+                  .map((seccion, indice) => (
+                    <article
+                      key={indice}
+                      className="group min-w-0 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+                    >
+                      <div className="mb-3 flex items-center gap-3">
+                        <IconoDetalle titulo={seccion.titulo} />
+                        <h4 className="min-w-0 text-sm font-semibold leading-6 text-[#25143C]">
+                          {seccion.titulo}
+                        </h4>
+                      </div>
 
-                    return (
-                      <article
-                        key={indice}
-                        className="min-w-0 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
-                      >
-                        <div className="mb-3 flex items-start gap-3">
-                          <IconoDetalle titulo={encabezado ? encabezado[1] : "Información adicional"} />
-                          <h4 className="pt-1 text-sm font-bold leading-6 text-[#25143C]">
-                            {encabezado
-                              ? encabezado[1].trim()
-                              : "Información adicional"}
-                          </h4>
-                        </div>
-                        <p className="whitespace-pre-line break-words text-sm leading-7 text-[#514B5C]">
-                          {encabezado ? encabezado[2] : bloque}
-                        </p>
-                      </article>
-                    );
-                  })}
+                      <p className="whitespace-pre-line break-words text-sm leading-7 text-[#514B5C]">
+                        {textoSinTitulo(seccion.titulo, seccion.contenido)}
+                      </p>
+                    </article>
+                  ))}
               </div>
             </div>
           )}
