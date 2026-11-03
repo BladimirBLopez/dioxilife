@@ -22,6 +22,8 @@ export async function PUT(
     titulo,
     contenido,
     contenidoInicial,
+    estadoInicial,
+    confirmarCambiosApartados,
     imagenUrl,
     videoUrl,
     productoIds,
@@ -42,7 +44,21 @@ export async function PUT(
     );
   }
 
-  if (typeof contenidoInicial !== "string") {
+  if (
+    typeof contenidoInicial !== "string" ||
+    !estadoInicial ||
+    typeof estadoInicial !== "object" ||
+    typeof estadoInicial.titulo !== "string" ||
+    typeof estadoInicial.contenido !== "string" ||
+    typeof estadoInicial.imagenUrl !== "string" ||
+    typeof estadoInicial.videoUrl !== "string" ||
+    typeof estadoInicial.activo !== "boolean" ||
+    !Array.isArray(estadoInicial.productoIds) ||
+    !estadoInicial.productoIds.every(
+      (valor: unknown) => typeof valor === "string"
+    ) ||
+    estadoInicial.contenido !== contenidoInicial
+  ) {
     return NextResponse.json(
       {
         error:
@@ -84,6 +100,62 @@ export async function PUT(
 
   const lecturaNueva =
     leerContenidoProtocolo(contenido);
+
+  if (
+    lecturaAnterior.tipo === "anterior" &&
+    lecturaNueva.tipo === "organizado"
+  ) {
+    const sinEspacios = (texto: string) =>
+      texto.replace(/\s/g, "");
+
+    const textoReconstruido =
+      lecturaNueva.documento.secciones
+        .map((s) => s.contenido)
+        .join("");
+
+    if (
+      sinEspacios(textoReconstruido) !==
+      sinEspacios(existente.contenido)
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Los apartados no representan íntegramente " +
+            "el texto original. No se guardaron cambios."
+        },
+        { status: 409 }
+      );
+    }
+  }
+
+  if (
+    lecturaAnterior.tipo === "organizado" &&
+    lecturaNueva.tipo === "organizado"
+  ) {
+    const textosAnteriores = JSON.stringify(
+      lecturaAnterior.documento.secciones
+        .map((s) => s.contenido).sort()
+    );
+
+    const textosNuevos = JSON.stringify(
+      lecturaNueva.documento.secciones
+        .map((s) => s.contenido).sort()
+    );
+
+    if (
+      textosAnteriores !== textosNuevos &&
+      confirmarCambiosApartados !== true
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Los textos de los apartados cambiaron. " +
+            "Confirma la modificación desde el editor."
+        },
+        { status: 409 }
+      );
+    }
+  }
 
   if (lecturaAnterior.tipo === "anterior") {
     if (lecturaNueva.tipo === "organizado") {
@@ -175,7 +247,42 @@ export async function PUT(
       )]
     : [];
 
-  const protocolo = await prisma.protocolo.update({
+  const protocolo = await prisma.$transaction(
+    async (tx) => {
+      const actual = await tx.protocolo.findUnique({
+        where: { id },
+        select: {
+          titulo: true,
+          contenido: true,
+          imagenUrl: true,
+          videoUrl: true,
+          activo: true,
+          productosRelacionados: {
+            orderBy: { orden: "asc" },
+            select: { productoId: true },
+          },
+        },
+      });
+
+      if (
+        !actual ||
+        actual.titulo !== estadoInicial.titulo ||
+        actual.contenido !== estadoInicial.contenido ||
+        (actual.imagenUrl || "") !==
+          estadoInicial.imagenUrl ||
+        (actual.videoUrl || "") !==
+          estadoInicial.videoUrl ||
+        actual.activo !== estadoInicial.activo ||
+        JSON.stringify(
+          actual.productosRelacionados.map(
+            (r) => r.productoId
+          )
+        ) !== JSON.stringify(estadoInicial.productoIds)
+      ) {
+        return null;
+      }
+
+      return tx.protocolo.update({
     where: {
       id,
       contenido: contenidoInicial,
@@ -211,12 +318,22 @@ export async function PUT(
         },
       },
     },
-  }).catch((error: unknown) => {
+      });
+    },
+    {
+      isolationLevel: "Serializable",
+      maxWait: 5000,
+      timeout: 10000,
+    }
+  ).catch((error: unknown) => {
     if (
       error !== null &&
       typeof error === "object" &&
       "code" in error &&
-      error.code === "P2025"
+      (
+        error.code === "P2025" ||
+        error.code === "P2034"
+      )
     ) {
       return null;
     }

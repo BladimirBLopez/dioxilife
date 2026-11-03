@@ -195,6 +195,34 @@ export default function ProtocolosPage() {
       )) return;
     }
 
+    const previo =
+      leerContenidoProtocolo(formInicial.contenido);
+    const nuevo =
+      leerContenidoProtocolo(form.contenido);
+
+    const cambiaronTextos =
+      Boolean(editandoId) &&
+      previo.tipo === "organizado" &&
+      nuevo.tipo === "organizado" &&
+      JSON.stringify(
+        previo.documento.secciones
+          .map((s) => s.contenido).sort()
+      ) !== JSON.stringify(
+        nuevo.documento.secciones
+          .map((s) => s.contenido).sort()
+      );
+
+    if (
+      cambiaronTextos &&
+      !window.confirm(
+        "Has modificado textos de los apartados. " +
+        "La copia original se conservará, pero la " +
+        "presentación cambiará. ¿Confirmas el guardado?"
+      )
+    ) {
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -209,7 +237,11 @@ export default function ProtocolosPage() {
         videoUrl: form.videoUrl,
         activo: form.activo,
         ...(editandoId
-          ? { contenidoInicial: formInicial.contenido }
+          ? {
+              contenidoInicial: formInicial.contenido,
+              estadoInicial: formInicial,
+              confirmarCambiosApartados: cambiaronTextos,
+            }
           : {}),
         ...(!editandoId || productosCambiaron
           ? { productoIds: form.productoIds }
