@@ -14,7 +14,6 @@ export default async function ProtocolosPage({
   const { protocolo } = await searchParams;
   const [protocolos, totalSucursales] = await Promise.all([
     prisma.protocolo.findMany({
-      where: { activo: true },
       orderBy: { createdAt: "desc" },
       include: {
         productosRelacionados: {
@@ -80,7 +79,18 @@ export default async function ProtocolosPage({
           <ProtocolosAcordeon
             protocolos={protocolos.map((p) => ({
                 ...p,
-                contenido: prepararContenidoPublico(p.contenido),
+                contenido: p.activo
+                  ? prepararContenidoPublico(p.contenido)
+                  : "Ficha informativa. Las indicaciones de uso no están disponibles hasta completar su revisión de seguridad.",
+                productosRelacionados: p.activo
+                  ? p.productosRelacionados
+                  : [],
+                aplicaciones: p.activo
+                  ? p.aplicaciones
+                  : [],
+                imagenUrl: p.activo ? p.imagenUrl : null,
+                videoUrl: p.activo ? p.videoUrl : null,
+                fotoPerfilUrl: p.activo ? p.fotoPerfilUrl : null,
               }))}
             protocoloInicialId={protocolo}
           />
