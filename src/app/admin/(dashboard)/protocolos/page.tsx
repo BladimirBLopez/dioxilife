@@ -440,30 +440,7 @@ export default function ProtocolosPage() {
 
 
 
-            <div>
-              <label className="admin-label">Imagen de portada (opcional)</label>
-              <CloudinaryUpload
-                value={form.imagenUrl}
-                onChange={(url) => setForm({ ...form, imagenUrl: url })}
-                onUploadingChange={setSubiendoArchivo}
-                soloImagen
-              />
-                {form.imagenUrl && (
-                  <button
-                    type="button"
-                    disabled={loading || subiendoArchivo}
-                    onClick={() =>
-                      setForm(actual => ({
-                        ...actual,
-                        imagenUrl: ""
-                      }))
-                    }
-                    className="mt-2 rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
-                  >
-                    Quitar imagen de portada
-                  </button>
-                )}
-            </div>
+
 
             <div>
 
@@ -480,7 +457,7 @@ export default function ProtocolosPage() {
             </div>
 
             <div>
-              <label className="admin-label">Imagen o video del modal (opcional)</label>
+              <label className="admin-label">Imagen o video de portada (opcional)</label>
               <CloudinaryUpload
                 value={form.videoUrl}
                 onChange={(url) => setForm({ ...form, videoUrl: url })}
@@ -498,7 +475,7 @@ export default function ProtocolosPage() {
                     }
                     className="mt-2 rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
                   >
-                    Quitar imagen o video del modal
+                    Quitar imagen o video de portada
                   </button>
                 )}
             </div>

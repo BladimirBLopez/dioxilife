@@ -223,29 +223,16 @@ export default function ProtocolosAcordeon({
             {seleccionado.titulo}
           </h2>
 
-          {seleccionado.imagenUrl &&
-            seleccionado.imagenUrl !== seleccionado.videoUrl && (
-              <div className="mb-4 overflow-hidden rounded-xl bg-gray-50">
-                <div className="relative aspect-[4/3]">
-                  <Media
-                    src={seleccionado.imagenUrl}
-                    alt={"Portada de " + seleccionado.titulo}
-                    fill
-                    className="object-contain"
-                    variant="full"
-                  />
-                </div>
-              </div>
-            )}
 
-          {seleccionado.videoUrl && (
+
+          {(seleccionado.videoUrl || seleccionado.imagenUrl) && (
             <div className="mb-4">
 
 
               <div className="bg-gray-100 relative rounded-lg overflow-hidden aspect-video">
                 <Media
-                  src={seleccionado.videoUrl}
-                  alt={`Video de ${seleccionado.titulo}`}
+                  src={seleccionado.videoUrl || seleccionado.imagenUrl || ""}
+                  alt={`Portada de ${seleccionado.titulo}`}
                   fill
                   className="object-contain"
                   variant="full"
