@@ -55,6 +55,39 @@ export default function EditorContenidoProtocolo({
   if (lectura.tipo === "anterior") {
     return (
       <div className="space-y-3">
+        <div>
+          <label className="admin-label">
+            Aviso debajo de la portada
+          </label>
+
+          <textarea
+            value=""
+            onChange={(e) => {
+              const texto = lectura.texto.trim();
+              const secciones = organizarBloquesOriginales(texto);
+
+              const documento: DocumentoProtocolo = {
+                formato: FORMATO_PROTOCOLO,
+                resumen:
+                  "Información del protocolo pendiente de revisión editorial.",
+                seguridad: e.target.value,
+                secciones,
+                textoOriginal: lectura.texto,
+              };
+
+              onChange(guardarContenidoProtocolo(documento));
+            }}
+            disabled={disabled}
+            rows={3}
+            placeholder="Escribe aquí el aviso que aparecerá debajo de la portada"
+            className="admin-input"
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            Al editar este campo se organiza el contenido existente
+            sin eliminar el texto original.
+          </p>
+        </div>
+
         <label className="admin-label">
           Contenido original
         </label>
@@ -154,7 +187,7 @@ export default function EditorContenidoProtocolo({
 
       <div>
         <label className="admin-label">
-          Seguridad y evidencia
+          Aviso debajo de la portada
         </label>
         <textarea
           value={documento.seguridad}
