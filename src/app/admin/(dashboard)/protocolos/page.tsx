@@ -158,20 +158,25 @@ export default function ProtocolosPage() {
       return;
     }
 
-    const contenidoEditado =
+    const requiereRevision =
       Boolean(editandoId) &&
-      formInicial.contenido !== form.contenido;
-
-    const requiereBorrador =
       Boolean(formInicial.activo) &&
-      contenidoEditado &&
+      formInicial.contenido !== form.contenido &&
       !esCambioSoloPresentacion(
         formInicial.contenido,
         form.contenido
       );
 
-    const activoEfectivo =
-      requiereBorrador ? false : form.activo;
+    if (requiereRevision) {
+      alert(
+        "Las modificaciones de instrucciones médicas " +
+        "requieren revisión de seguridad antes de " +
+        "publicarse. No se cambió el estado del protocolo."
+      );
+      return;
+    }
+
+    const activoEfectivo = form.activo;
 
     const registroActual = editandoId
       ? protocolos.find((p) => p.id === editandoId)
@@ -245,19 +250,6 @@ export default function ProtocolosPage() {
         "Has modificado textos de los apartados. " +
         "La copia original se conservará, pero la " +
         "presentación cambiará. ¿Confirmas el guardado?"
-      )
-    ) {
-      return;
-    }
-
-    if (
-      requiereBorrador &&
-      form.activo &&
-      !window.confirm(
-        "Los cambios de contenido se guardarán " +
-        "como BORRADOR para revisión. " +
-        "La copia original quedará conservada. " +
-        "¿Deseas continuar?"
       )
     ) {
       return;
@@ -448,7 +440,7 @@ export default function ProtocolosPage() {
                     : "inline-flex mt-2 rounded-full border border-gray-200 bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600"
                 }
               >
-                {p.activo ? "Publicado" : "Borrador"}
+                {p.activo ? "Publicado" : "Ficha informativa"}
               </span>
               <p className="mt-2 line-clamp-2 break-words text-xs leading-relaxed text-[#6B6870] sm:text-sm">
                 {vistaPreviaContenido(p.contenido)}
