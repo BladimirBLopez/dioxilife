@@ -664,12 +664,12 @@ export default function ProtocolosPage() {
 
             <div>
               <label className="admin-label">
-                Protocolos relacionados (opcional)
+                Protocolos que este enlaza (opcional)
               </label>
 
               <p className="mb-2 text-xs text-[#8A8790]">
-                Vincula otros protocolos existentes para consulta
-                administrativa.
+                Selecciona los protocolos vinculados desde este
+                registro. Las conexiones entrantes se muestran abajo.
               </p>
 
               <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border border-gray-200 bg-white p-3">
@@ -722,6 +722,49 @@ export default function ProtocolosPage() {
                 {form.protocoloIds.length === 1 ? "" : "s"} seleccionado
                 {form.protocoloIds.length === 1 ? "" : "s"}
               </p>
+
+              {editandoId && (
+                <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/50 p-3">
+                  <p className="text-sm font-semibold text-[#1F1B24]">
+                    Protocolos que enlazan a este
+                  </p>
+                  <p className="mt-1 text-xs text-[#6B6870]">
+                    Solo consulta. Estas conexiones se administran
+                    desde el protocolo de origen.
+                  </p>
+
+                  {protocolos.some(
+                    (p) =>
+                      p.id !== editandoId &&
+                      (p.relacionesOrigen ?? []).some(
+                        (r) => r.relacionadoId === editandoId
+                      )
+                  ) ? (
+                    <ul className="mt-3 space-y-2">
+                      {protocolos
+                        .filter(
+                          (p) =>
+                            p.id !== editandoId &&
+                            (p.relacionesOrigen ?? []).some(
+                              (r) => r.relacionadoId === editandoId
+                            )
+                        )
+                        .map((p) => (
+                          <li
+                            key={p.id}
+                            className="rounded-lg border border-blue-100 bg-white px-3 py-2 text-sm text-[#1F1B24]"
+                          >
+                            {p.titulo}
+                          </li>
+                        ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-3 text-xs text-[#8A8790]">
+                      Ningún otro protocolo enlaza a este.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             <button
