@@ -243,6 +243,27 @@ export default function ProtocolosAcordeon({
 
           {contenidoLeido?.tipo === "organizado" ? (
             <div className="space-y-5">
+              {contenidoLeido.documento.resumen.trim() && (
+                <section className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+                  <h3 className="mb-3 text-sm font-bold text-[#25143C]">
+                    Resumen
+                  </h3>
+                  <p className="whitespace-pre-line break-words text-sm leading-7 text-[#514B5C]">
+                    {contenidoLeido.documento.resumen}
+                  </p>
+                </section>
+              )}
+
+              {contenidoLeido.documento.seguridad.trim() && (
+                <section className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4">
+                  <h3 className="mb-3 text-sm font-bold text-[#25143C]">
+                    Seguridad y evidencia
+                  </h3>
+                  <p className="whitespace-pre-line break-words text-sm leading-7 text-[#514B5C]">
+                    {contenidoLeido.documento.seguridad}
+                  </p>
+                </section>
+              )}
 
 
 
