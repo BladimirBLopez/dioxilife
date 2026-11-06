@@ -4556,6 +4556,10 @@ export default function SeguimientoPublico({
                 nombreCliente: seguimiento.nombreCliente,
                 nombrePlan: seguimiento.nombrePlan,
                 duracionDias: seguimiento.duracionDias,
+                ultimoPeso:
+                  ultimoPeso?.peso != null
+                    ? Number(ultimoPeso.peso)
+                    : null,
               },
               protocolos: seguimiento.actividades,
             }}
