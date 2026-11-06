@@ -92,6 +92,16 @@ export async function GET(
     );
   }
 
+  const ultimoRegistro =
+    await prisma.registroDiaSeguimiento.findFirst({
+      where: {
+        seguimientoId: id,
+        peso: { not: null },
+      },
+      orderBy: { diaPlan: "desc" },
+      select: { peso: true },
+    });
+
   return NextResponse.json(
     {
       cliente: {
@@ -101,6 +111,10 @@ export async function GET(
           seguimiento.nombrePlan,
         duracionDias:
           seguimiento.duracionDias,
+        ultimoPeso:
+          ultimoRegistro?.peso != null
+            ? Number(ultimoRegistro.peso)
+            : null,
       },
       protocolos:
         seguimiento.actividades.flatMap((actividad) => {
