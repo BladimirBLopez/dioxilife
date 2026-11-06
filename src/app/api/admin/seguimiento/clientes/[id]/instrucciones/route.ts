@@ -38,7 +38,6 @@ export async function GET(
 
         actividades: {
           where: {
-            seccion: "ADICIONAL",
             activo: true,
           },
 
