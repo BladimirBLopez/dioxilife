@@ -314,6 +314,7 @@ export default function BotonInstruccionesPeriodo({
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
       doc.text("DioxiLife · Instrucciones del seguimiento", margen + 28, 25);
+      doc.text("WhatsApp +591 70758200", ancho - margen, 25, { align: "right" });
 
       y = 42;
 
@@ -558,6 +559,7 @@ export default function BotonInstruccionesPeriodo({
           margen,
           alto - 10
         );
+        doc.text("WhatsApp +591 70758200", ancho - margen, alto - 10, { align: "right" });
       }
 
       doc.save(
